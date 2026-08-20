@@ -22,6 +22,8 @@
   import VorbelegteFrage from '../muster/VorbelegteFrage.svelte';
   import Verlaufskurve from '../muster/Verlaufskurve.svelte';
   import LesartUmschalter from '../muster/LesartUmschalter.svelte';
+  import Bohnen from '../muster/Bohnen.svelte';
+  import Sterne from '../muster/Sterne.svelte';
 
   const ZEICHEN_LEGENDE = [
     { klasse: 'gut', wort: 'gut' },
@@ -321,6 +323,19 @@
     <p class="hinweis">
       Vorgemerkt und bis heute nicht gebraucht (K41) — kein Bildschirm verlangt sie. Absichtlich nicht gebaut.
     </p>
+  </section>
+
+  <!-- Röstgrad und Bewertung — Systemregel K79, kein Muster aus der Übergabe -->
+  <section class="muster">
+    <h2>Röstgrad & Bewertung · K79</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Bohnen stufe={4} />
+        <Bohnen stufe={undefined} />
+        <Sterne wert={3.5} />
+        <Sterne wert={undefined} />
+      </div>
+    {/each}
   </section>
 </div>
 
