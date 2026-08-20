@@ -4,6 +4,7 @@
   // koennen (Paket 01b bleibt erreichbar, nicht nur historisch).
 
   import Musterblatt from '../Musterblatt.svelte';
+  import TempReferenz from './TempReferenz.svelte';
 
   let musterblattOffen = $state(false);
 </script>
@@ -13,7 +14,10 @@
   <Musterblatt />
 {:else}
   <h1>Einstellungen</h1>
-  <p class="hinweis">Geräte, Setups und Temperatur-Referenz folgen in Etappe B von Paket 03.</p>
+  <p class="hinweis">Geräte, Rüstzeiten, Personen und Backup folgen in späteren Paketen.</p>
+
+  <TempReferenz />
+
   <button type="button" class="link" onclick={() => (musterblattOffen = true)}>Musterblatt ansehen</button>
 {/if}
 

@@ -6,10 +6,11 @@
  * geliefert"): die Temperatur-Referenztabelle traegt deshalb nur die
  * Startbelegung Kessel-27K, nicht erfundene Zwischenwerte.
  *
- * Setups (Muehle+Bruehgeraet+Ablauf gebunden) entstehen erst in Paket 03 —
- * ein Ablauf mit Ruestzeiten ist hier noch nicht spezifiziert.
+ * Setups (Muehle+Bruehgeraet+Ablauf gebunden) stehen ab Paket 03 — der
+ * Ablauf dahinter ist bewusst leer (K48), die echten Ruestzeiten-Buendel
+ * spezifiziert erst der Planer in Paket 06.
  */
-import type { Muehle, Bruehgeraet, Zubehoer } from './schema';
+import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup } from './schema';
 
 export const MUEHLE_SCULPTOR: Muehle = {
   id: 'muehle-sculptor',
@@ -121,4 +122,98 @@ export const ZUBEHOER: readonly Zubehoer[] = [
   ZUBEHOER_KAENNCHEN_350,
   ZUBEHOER_KAENNCHEN_500,
   ZUBEHOER_SCHWANENHALS,
+];
+
+/**
+ * K48 — Ablauf ist reines Rechenmodell (Ressourcen, Ruestzeiten,
+ * Buendel) und erscheint nirgends in der Oberflaeche. Die echten
+ * Ruestzeiten-Buendel sind erst mit dem Planer (Paket 06) spezifiziert;
+ * bis dahin traegt jedes Setup einen leeren Ablauf, damit die
+ * Pflichtbindung Setup.ablaufId nie unerfuellt bleibt.
+ */
+export const ABLAUF_LEER: Ablauf = {
+  id: 'ablauf-leer',
+  schritte: [],
+  buendel: [],
+};
+
+/**
+ * Vier Setups aus "Dein Geraetepark": jedes Profil haengt an einem Setup,
+ * damit ein Mahlgrad nie ohne Muehle gelesen wird (Befund 2). Sculptor und
+ * K6 stehen fuer Pour Over gleichberechtigt nebeneinander — beide Muehlen
+ * sind fuer den Hario V60 vorgesehen, ihre Mahlgrade sind nicht
+ * ineinander umrechenbar.
+ */
+export const SETUP_ESPRESSO: Setup = {
+  id: 'setup-espresso',
+  name: 'Espresso · Sculptor · Mozzafiato',
+  muehleId: MUEHLE_SCULPTOR.id,
+  bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id,
+  zubehoerIds: [ZUBEHOER_KAENNCHEN_350.id, ZUBEHOER_KAENNCHEN_500.id],
+  // Eine Dampflanze — Schaeumen ist sequenziell, nicht parallel.
+  parallelSchaeumen: false,
+  sammelSchaeumen: 'geteilterBezug',
+  begruendungKoffein: true,
+  begruendungBohne: true,
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_POUR_OVER_SCULPTOR: Setup = {
+  id: 'setup-pourover-sculptor',
+  name: 'Pour Over · Sculptor · V60',
+  muehleId: MUEHLE_SCULPTOR.id,
+  bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
+  zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
+  parallelSchaeumen: false,
+  sammelSchaeumen: 'nie',
+  begruendungKoffein: true,
+  begruendungBohne: true,
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_POUR_OVER_K6: Setup = {
+  id: 'setup-pourover-k6',
+  name: 'Pour Over · K6 · V60',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
+  zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
+  parallelSchaeumen: false,
+  sammelSchaeumen: 'nie',
+  begruendungKoffein: true,
+  begruendungBohne: true,
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_MOKA_1: Setup = {
+  id: 'setup-moka-1',
+  name: 'Moka · K6 · Bialetti 1 Tasse',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_BIALETTI_1.id,
+  zubehoerIds: [],
+  parallelSchaeumen: false,
+  sammelSchaeumen: 'nie',
+  begruendungKoffein: true,
+  begruendungBohne: true,
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_MOKA_3: Setup = {
+  id: 'setup-moka-3',
+  name: 'Moka · K6 · Bialetti 3 Tassen',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_BIALETTI_3.id,
+  zubehoerIds: [],
+  parallelSchaeumen: false,
+  sammelSchaeumen: 'nie',
+  begruendungKoffein: true,
+  begruendungBohne: true,
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUPS: readonly Setup[] = [
+  SETUP_ESPRESSO,
+  SETUP_POUR_OVER_SCULPTOR,
+  SETUP_POUR_OVER_K6,
+  SETUP_MOKA_1,
+  SETUP_MOKA_3,
 ];

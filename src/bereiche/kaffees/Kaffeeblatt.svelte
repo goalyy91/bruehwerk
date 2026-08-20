@@ -4,14 +4,50 @@
   // selben Blatt angelegt, nicht in einem eigenen Bereich.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
-  import type { Kaffee, Charge } from '../../daten/schema';
+  import type { Kaffee, Charge, Profil } from '../../daten/schema';
 
-  let { kaffeeId, onZurueck }: { kaffeeId: string; onZurueck: () => void } = $props();
+  let {
+    kaffeeId,
+    onZurueck,
+    onOeffnenProfil,
+  }: { kaffeeId: string; onZurueck: () => void; onOeffnenProfil: (profilId: string) => void } = $props();
 
   const kaffee = $derived(bestand.kaffees.find((k) => k.id === kaffeeId));
   const chargen = $derived(bestand.chargenVon(kaffeeId));
+  const profile = $derived(bestand.profileVon(kaffeeId));
+
+  let neuesProfilOffen = $state(false);
+  let neuerProfilName = $state('');
+  let neuesProfilSetupId = $state('');
+
+  async function profilAnlegen() {
+    if (!kaffee || neuerProfilName.trim() === '' || neuesProfilSetupId === '') return;
+    speicherFehler = undefined;
+    const neu: Profil = {
+      id: crypto.randomUUID(),
+      kaffeeId,
+      setupId: neuesProfilSetupId,
+      name: neuerProfilName.trim(),
+      standard: profile.length === 0,
+      // Startwerte sind bewusst 0/leer — kein Platzhalter, der wie eine
+      // Messung aussieht. Der Dial-in traegt sie ein.
+      ziel: { input: 18, mg: 0, output: 36, zeit: 30 },
+      spielraum: SPIELRAUM_VORGABE,
+      modus: 'dialin',
+    };
+    try {
+      await schreiben('profil', neu);
+      neuesProfilOffen = false;
+      neuerProfilName = '';
+      neuesProfilSetupId = '';
+      onOeffnenProfil(neu.id);
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
 
   const FORMAT_HOEHE = new Intl.NumberFormat('de-DE');
 
@@ -134,6 +170,41 @@
       </label>
       <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === ''}>anlegen</button>
     </div>
+  </section>
+
+  <section class="profile">
+    <h2>Profile</h2>
+    {#if profile.length === 0}
+      <p class="hinweis">keine</p>
+    {:else}
+      <ul class="profilliste">
+        {#each profile as profilEintrag (profilEintrag.id)}
+          <li>
+            <button type="button" class="profilzeile" onclick={() => onOeffnenProfil(profilEintrag.id)}>
+              <span class="name">{profilEintrag.name}</span>
+              <span class="meta">{profilEintrag.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if neuesProfilOffen}
+      <div class="neues-profil">
+        <input type="text" placeholder="Profilname" bind:value={neuerProfilName} />
+        <select bind:value={neuesProfilSetupId}>
+          <option value="">Setup wählen …</option>
+          {#each bestand.setups as setup (setup.id)}
+            <option value={setup.id}>{setup.name}</option>
+          {/each}
+        </select>
+        <button type="button" onclick={profilAnlegen} disabled={neuerProfilName.trim() === '' || neuesProfilSetupId === ''}>
+          anlegen
+        </button>
+      </div>
+    {:else}
+      <button type="button" class="link" onclick={() => (neuesProfilOffen = true)}>+ Profil</button>
+    {/if}
   </section>
 
   {#if speicherFehler}
@@ -271,6 +342,58 @@
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
+  }
+  .profilliste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .profilzeile {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: var(--treffer);
+    border: none;
+    border-bottom: 1px solid var(--linie-zart);
+    background: transparent;
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    color: var(--tinte);
+    text-align: left;
+    cursor: pointer;
+  }
+  .profilzeile .meta {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .neues-profil {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--r3);
+    margin-top: var(--r3);
+  }
+  .neues-profil input[type='text'],
+  .neues-profil select {
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
+    color: var(--tinte);
+    padding: var(--r2);
+    min-height: var(--treffer);
+  }
+  .link {
+    background: none;
+    border: none;
+    color: var(--akzent);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    min-height: var(--treffer);
+    padding: 0;
+    cursor: pointer;
+    display: block;
   }
   .fehler {
     color: var(--kritisch);

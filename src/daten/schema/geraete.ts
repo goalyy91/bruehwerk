@@ -38,6 +38,7 @@ export const TempReferenzPunkt = z.object({
   ts: z.number().int().nonnegative().optional(),
   herkunft: z.enum(['uebernommen', 'gemessen', 'geschaetzt']),
 });
+export type TempReferenzPunkt = z.infer<typeof TempReferenzPunkt>;
 
 export const Sieb = z.object({
   art: z.enum(['einzel', 'doppel']),
