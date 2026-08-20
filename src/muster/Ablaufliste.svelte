@@ -85,6 +85,7 @@
     min-height: 64px;
     padding: 0 var(--r4);
     background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
   }
   .zeile.aktiv {
     background: var(--feld);

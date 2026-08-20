@@ -84,7 +84,7 @@
   .feld {
     flex: 1;
     min-height: 56px;
-    border: none;
+    border: 1px solid var(--feld-rahmen);
     border-radius: var(--radius-chip);
     background: var(--feld);
     color: var(--satz);

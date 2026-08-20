@@ -23,12 +23,29 @@
   } = $props();
 
   let legendeOffen = $state(false);
+  let iKnopf = $state<HTMLButtonElement | undefined>();
+  let legendeOben = $state(0);
 
   const LEGENDE: { art: Art; text: string }[] = [
     { art: 'gemessen', text: 'gemessen oder gerechnet' },
     { art: 'uebernommen', text: 'übernommen' },
     { art: 'geschaetzt', text: 'geschätzt' },
   ];
+
+  // Zweimal (JS-berechnete Breite, dann JS-berechnete Breite UND Position)
+  // ist die Legende trotzdem über den rechten Rand gelaufen — auf dem Gerät
+  // reproduzierbar, an meinem Reasoning allein nicht mehr sicher zu fixen.
+  // Deshalb jetzt die Fassung, die per Konstruktion nicht überlaufen kann:
+  // links UND rechts fest auf --seitenrand verankert (reines CSS, keine
+  // Breite berechnet), zusätzlich als <div> statt <span> — kein
+  // Blockifizierungs-Sonderfall mehr. Nur die Höhe kommt noch aus der
+  // gemessenen Position des i-Knopfs.
+  function oeffneOderSchliesse() {
+    if (!legendeOffen && iKnopf) {
+      legendeOben = iKnopf.getBoundingClientRect().bottom + 8;
+    }
+    legendeOffen = !legendeOffen;
+  }
 </script>
 
 <span class="herkunft">
@@ -43,16 +60,18 @@
     {art === 'geschaetzt' ? `≈ ${wert}` : wert}{#if einheit} {einheit}{/if}
   </span>
   {#if mitLegende}
-    <button type="button" class="i" onclick={() => (legendeOffen = !legendeOffen)} aria-label="Herkunft erklären">i</button>
+    <button bind:this={iKnopf} type="button" class="i" onclick={oeffneOderSchliesse} aria-label="Herkunft erklären">
+      <span class="i-kreis">i</span>
+    </button>
     {#if legendeOffen}
-      <span class="legende">
+      <div class="legende" style:top={`${legendeOben}px`}>
         {#each LEGENDE as e (e.art)}
-          <span class="legende-zeile">
+          <div class="legende-zeile">
             <span class="zeichen" class:voll={e.art === 'gemessen'} class:ring={e.art === 'uebernommen'} class:gestrichelt={e.art === 'geschaetzt'}></span>
             {e.text}
-          </span>
+          </div>
         {/each}
-      </span>
+      </div>
     {/if}
   {/if}
 </span>
@@ -89,20 +108,35 @@
     font-weight: var(--gw-text);
   }
   .i {
-    width: var(--treffer);
-    height: var(--treffer);
-    border: 1px solid var(--linie);
-    border-radius: 50%;
+    /* Trefferfläche bleibt ≥ 32 px, das sichtbare Zeichen ist deutlich
+       kleiner — die Kreisfläche allein war zu dominant. */
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
     background: none;
-    color: var(--gedaempft);
-    font-family: var(--schrift);
-    font-style: italic;
+    padding: 0;
     cursor: pointer;
   }
+  .i-kreis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--linie);
+    border-radius: 50%;
+    color: var(--gedaempft);
+    font-family: var(--schrift);
+    font-size: var(--fs-label);
+  }
   .legende {
-    position: absolute;
-    top: calc(100% + var(--r2));
-    left: 0;
+    position: fixed;
+    left: var(--seitenrand);
+    right: var(--seitenrand);
+    box-sizing: border-box;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -111,7 +145,6 @@
     background: var(--feld-blatt);
     border: 1px solid var(--feld-rahmen);
     box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
-    white-space: nowrap;
   }
   .legende-zeile {
     display: flex;

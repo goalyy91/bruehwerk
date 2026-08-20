@@ -2,11 +2,18 @@
   // Muster 14 · Verlaufskurve (Übergabe, Abschnitt 2 · K40).
   // Eine Linie im Akzent, kein Raster, drei Marken an der senkrechten
   // Achse (y = Mahlgrad, kein Umschalter). Punkte tragen die
-  // Zustandszeichen, gesperrte Bereiche (Totzonen) als schraffierter
-  // Streifen mit Wort darin, Ereignisse (Chargenwechsel) als gestrichelte
+  // Zustandszeichen (dieselben Formen wie der Tokenbeleg: gefüllt · halb ·
+  // schraffiert), gesperrte Bereiche (Totzonen) als schraffierter Streifen
+  // mit Wort darin, Ereignisse (Chargenwechsel) als gestrichelte
   // Senkrechte. Maße: 180 px hoch, Linie 1,5 px, Punkt 7 px.
+  //
+  // Die Punkte liegen als eigene, in echten Pixeln bemessene Elemente über
+  // dem SVG — nicht als <circle> darin. Das SVG wird in x und y
+  // unterschiedlich skaliert (freie Breite, feste Höhe), ein <circle>
+  // würde darin zur Ellipse verzerrt.
 
-  type Punkt = { x: number; y: number; zustand?: 'gut' | 'achtung' | 'kritisch' };
+  type Zustand = 'gut' | 'achtung' | 'kritisch';
+  type Punkt = { x: number; y: number; zustand?: Zustand };
 
   let {
     punkte,
@@ -23,13 +30,11 @@
   const HOEHE = 180;
   const BREITE = 400;
 
-  function px(p: Punkt): { x: number; y: number } {
-    return { x: p.x * BREITE, y: HOEHE - p.y * HOEHE };
-  }
-
   const pfad = $derived(
     punkte.length > 1
-      ? punkte.map((p, i) => `${i === 0 ? 'M' : 'L'} ${px(p).x} ${px(p).y}`).join(' ')
+      ? punkte
+          .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * BREITE} ${HOEHE - p.y * HOEHE}`)
+          .join(' ')
       : '',
   );
 </script>
@@ -60,11 +65,22 @@
       {#if pfad}
         <path d={pfad} class="linie" fill="none" />
       {/if}
-      {#each punkte as p (p.x)}
-        <circle cx={px(p).x} cy={px(p).y} r="3.5" class="punkt" class:achtung={p.zustand === 'achtung'} class:kritisch={p.zustand === 'kritisch'} />
-      {/each}
     </svg>
-    {#if totzone}<div class="totzone-wort">{totzone.wort}</div>{/if}
+    {#if totzone}
+      <div class="totzone-wort">
+        <span class="totzone-muster" aria-hidden="true"></span>
+        {totzone.wort}
+      </div>
+    {/if}
+    {#each punkte as p (p.x)}
+      <span
+        class="punkt"
+        class:achtung={p.zustand === 'achtung'}
+        class:kritisch={p.zustand === 'kritisch'}
+        style:left={`${p.x * 100}%`}
+        style:top={`${(1 - p.y) * 100}%`}
+      ></span>
+    {/each}
   </div>
   <div class="achse">
     {#each achsMarken as marke (marke)}
@@ -88,26 +104,44 @@
     stroke-width: 1.5;
   }
   .punkt {
-    fill: var(--tinte);
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: var(--tinte);
   }
   .punkt.achtung {
-    fill: var(--achtung);
+    background: linear-gradient(90deg, var(--achtung) 50%, transparent 50%);
+    border: 1px solid var(--achtung);
   }
   .punkt.kritisch {
-    fill: var(--kritisch);
-  }
-  .totzone {
-    opacity: 0.5;
+    background: repeating-linear-gradient(45deg, var(--kritisch) 0 2px, transparent 2px 4px);
+    border: 1px solid var(--kritisch);
   }
   .schraffur-strich {
     fill: var(--spur);
+  }
+  .totzone {
+    opacity: 0.5;
   }
   .totzone-wort {
     position: absolute;
     top: var(--r2);
     right: var(--r2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: var(--fs-meta);
     color: var(--gedaempft);
+  }
+  .totzone-muster {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: repeating-linear-gradient(45deg, var(--spur) 0 2px, transparent 2px 4px);
+    border: 1px solid var(--spur);
+    flex: none;
   }
   .ereignis {
     stroke: var(--gedaempft);

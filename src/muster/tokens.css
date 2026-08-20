@@ -191,6 +191,13 @@ body {
   line-height: 1.5;
 }
 
+/* Der native Tipp-Blitz mobiler Browser (kurz hellblau) hat nichts mit
+   unserer Auswahl-Darstellung zu tun — weg damit. */
+button,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Jede Zahl: tabular-nums, 500, -0.01em — die vergessene Regel aus
    Abschnitt 3 der Übergabe. */
 .zahl {

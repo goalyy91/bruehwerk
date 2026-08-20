@@ -91,6 +91,7 @@
     gap: var(--r2);
     padding: var(--r4);
     background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
   }
   .voll.abgelehnt {
     background: var(--ruhig);
@@ -169,6 +170,7 @@
     min-height: var(--angebot-duenn);
     padding: 0 var(--r3);
     background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
   }
   .duenn.abgelehnt {
     background: var(--ruhig);

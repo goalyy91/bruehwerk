@@ -117,7 +117,10 @@
   }
   .wort {
     flex: 1;
+    min-width: 0;
     text-align: center;
+    overflow-wrap: break-word;
+    hyphens: auto;
     font-size: var(--fs-meta);
     color: var(--satz);
     font-weight: var(--gw-text);

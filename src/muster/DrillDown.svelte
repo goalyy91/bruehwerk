@@ -90,7 +90,7 @@
   .eintrag {
     min-height: var(--treffer);
     padding: 0 var(--r3);
-    border: none;
+    border: 1px solid var(--feld-rahmen);
     background: var(--feld);
     color: var(--satz);
     font-family: var(--schrift);

@@ -2,7 +2,9 @@
   // Muster 5 · Ist gegen Ziel (Übergabe, Abschnitt 2 · K3 K5 K6).
   // Ziel im Gruppenkopf (11 px Versalien), Ist-Werte mit dem Ziel vorbelegt.
   // Reihenfolge Output → Preinfusion → Zeit. Führungswert 44 px mit Einheit,
-  // weitere Werte 19 px rechtsbündig in fester Spalte.
+  // weitere Werte 19 px rechtsbündig in fester Spalte — als CSS-Grid über
+  // alle Zeilen, damit die Spalte unabhängig von der Schriftgröße der
+  // Führungswert-Zeile bündig bleibt.
   //
   // Zustände je Zeile: vorbelegt (Ring) · überschrieben (gefüllter Punkt) ·
   // außerhalb des Spielraums (Abweichung als Satz) · außerhalb der
@@ -82,30 +84,34 @@
 
 <style>
   .feld {
-    display: flex;
-    flex-direction: column;
-    gap: var(--r2);
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    column-gap: var(--r2);
+    row-gap: var(--r2);
     padding: var(--r4);
     background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
   }
   .gruppenkopf {
+    grid-column: 1 / -1;
     font-size: var(--fs-label);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
     color: var(--gedaempft);
   }
   .zeile {
-    display: flex;
-    align-items: baseline;
-    gap: var(--r2);
+    display: contents;
   }
   .label {
-    flex: 1;
+    line-height: 1;
     font-size: var(--fs-satz);
     color: var(--satz);
   }
   .wert {
-    width: 6ch;
+    justify-self: end;
+    width: 4ch;
+    line-height: 1;
     text-align: right;
     border: none;
     background: none;
@@ -114,20 +120,24 @@
     color: var(--tinte);
   }
   .wert.fuehrung {
-    width: 8ch;
+    width: 4ch;
     font-size: var(--fs-fuehrung);
   }
   .einheit {
+    justify-self: end;
+    line-height: 1;
     font-size: var(--fs-satz);
     color: var(--gedaempft);
   }
   .satz {
+    grid-column: 1 / -1;
     font-size: var(--fs-satz);
     color: var(--satz);
     padding-left: calc(var(--zeichen) + var(--r2));
   }
 
   .zeichen {
+    align-self: center;
     flex: none;
     width: var(--zeichen);
     height: var(--zeichen);

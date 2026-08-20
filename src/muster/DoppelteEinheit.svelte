@@ -10,20 +10,23 @@
     fuehrendEinheit,
     abgeleitetWert,
     abgeleitetEinheit,
+    leerzeichenVorEinheit = true,
   }: {
     fuehrendWert: string;
     fuehrendEinheit: string;
     abgeleitetWert?: string;
     abgeleitetEinheit?: string;
+    // z. B. „g“ oder „min“ mit Leerzeichen (DIN), „°C“ ohne (K6).
+    leerzeichenVorEinheit?: boolean;
   } = $props();
 </script>
 
 <div class="doppelt">
-  <span class="fuehrend zahl">{fuehrendWert} {fuehrendEinheit}</span>
+  <span class="fuehrend zahl">{fuehrendWert}{leerzeichenVorEinheit ? ' ' : ''}{fuehrendEinheit}</span>
   {#if abgeleitetWert}
     <span class="abgeleitet">
       <span class="zeichen"></span>
-      <span class="zahl">≈ {abgeleitetWert} {abgeleitetEinheit}</span>
+      <span class="zahl">≈ {abgeleitetWert}{leerzeichenVorEinheit ? ' ' : ''}{abgeleitetEinheit}</span>
     </span>
   {/if}
 </div>

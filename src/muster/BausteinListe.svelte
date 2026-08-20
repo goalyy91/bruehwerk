@@ -5,9 +5,10 @@
   // „auftrennen“ am Kopf, zugeklappt als Default. Trägt Gussplan und
   // Wartung.
   //
-  // Ziehen ist im Musterblatt nicht nachgebildet (kein Drag & Drop hier) —
-  // der Zustand „angehoben“ ist als Klick-Demo gezeigt, damit das Aussehen
-  // geprüft werden kann.
+  // Ziehen ist im Musterblatt bewusst nicht nachgebildet (kein Drag & Drop
+  // hier) — der Zustand „angehoben“ ist als Klick-Demo gezeigt, damit das
+  // Aussehen geprüft werden kann. Das echte Ziehen kommt mit dem ersten
+  // Bildschirm, der dieses Muster trägt (Gussplan-Editor, Paket 03).
 
   type Zeile = { id: string; typ: string; kopfwert: string; notiz?: string; meta?: string };
   type Buendel = { titel: string; summe: string; zeilen: Zeile[] };
@@ -45,10 +46,14 @@
             <span class="typ">{zeile.typ}</span>
             <div class="inhalt">
               <span class="kopfwert">{zeile.kopfwert}</span>
-              {#if zeile.notiz}<span class="notiz">{zeile.notiz}</span>{/if}
+              {#if zeile.notiz || zeile.meta}
+                <div class="unterzeile">
+                  <span class="notiz">{zeile.notiz ?? ''}</span>
+                  {#if zeile.meta}<span class="meta">{zeile.meta}</span>{/if}
+                </div>
+              {/if}
             </div>
-            {#if zeile.meta}<span class="meta">{zeile.meta}</span>{/if}
-            <span class="griff" aria-hidden="true">⋮</span>
+            <span class="griff" aria-hidden="true"><span></span><span></span><span></span></span>
           </div>
         {/each}
       </div>
@@ -68,10 +73,14 @@
         <span class="typ">{zeile.typ}</span>
         <div class="inhalt">
           <span class="kopfwert">{zeile.kopfwert}</span>
-          {#if zeile.notiz}<span class="notiz">{zeile.notiz}</span>{/if}
+          {#if zeile.notiz || zeile.meta}
+            <div class="unterzeile">
+              <span class="notiz">{zeile.notiz ?? ''}</span>
+              {#if zeile.meta}<span class="meta">{zeile.meta}</span>{/if}
+            </div>
+          {/if}
         </div>
-        {#if zeile.meta}<span class="meta">{zeile.meta}</span>{/if}
-        <span class="griff" aria-hidden="true">⋮</span>
+        <span class="griff" aria-hidden="true"><span></span><span></span><span></span></span>
       </div>
     {/each}
   </div>
@@ -88,8 +97,8 @@
     gap: var(--r3);
     min-height: 56px;
     padding: 0 var(--r4);
-    border: none;
-    background: var(--ruhig);
+    border: 1px solid var(--feld-rahmen);
+    background: var(--feld);
     color: var(--tinte);
     font-family: var(--schrift);
     cursor: pointer;
@@ -120,6 +129,7 @@
     min-height: 56px;
     padding: 0 var(--r4);
     background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
     cursor: grab;
   }
   .zeile.angehoben {
@@ -134,6 +144,7 @@
   }
   .inhalt {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
   }
@@ -141,16 +152,31 @@
     font-size: var(--fs-urteil);
     color: var(--tinte);
   }
+  .unterzeile {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--r2);
+  }
   .notiz {
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
   .meta {
+    flex: none;
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
   .griff {
     flex: none;
-    color: var(--gedaempft);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .griff span {
+    display: block;
+    width: 14px;
+    height: 2px;
+    background: var(--gedaempft);
   }
 </style>

@@ -107,8 +107,8 @@
             {
               titel: 'Lauf',
               chips: [
-                { id: 'schnell', label: 'lief zu schnell' },
-                { id: 'langsam', label: 'lief zu langsam' },
+                { id: 'schnell', label: 'zu schnell' },
+                { id: 'langsam', label: 'zu langsam' },
                 { id: 'ungleich', label: 'ungleichmäßig' },
               ],
             },
@@ -163,7 +163,13 @@
     <h2>6 · Doppelte Einheit</h2>
     {#each ['hell', 'dunkel'] as const as theme (theme)}
       <div class="thema" data-theme={theme}>
-        <DoppelteEinheit fuehrendWert="121" fuehrendEinheit="°C Kessel" abgeleitetWert="94" abgeleitetEinheit="°C Gruppe" />
+        <DoppelteEinheit
+          fuehrendWert="121"
+          fuehrendEinheit="°C Kessel"
+          abgeleitetWert="94"
+          abgeleitetEinheit="°C Gruppe"
+          leerzeichenVorEinheit={false}
+        />
       </div>
     {/each}
   </section>

@@ -71,24 +71,26 @@
         {#each sortiert(gruppe.chips) as chip (chip.id)}
           {@const z = zustandVon(chip.id)}
           <div class="chip-huelle">
-            <button
-              type="button"
-              class="chip"
-              class:gewaehlt={z.phase === 'gewaehlt'}
-              class:offen={z.phase === 'offen'}
-              onclick={() => klick(chip.id)}
-            >
-              {label(chip, z)}
-            </button>
-            {#if z.phase === 'offen'}
-              <div class="staerke-wahl">
-                <button type="button" onclick={() => waehleStaerke(chip.id, 'leicht')}>leicht</button>
-                <button type="button" onclick={() => waehleStaerke(chip.id, 'deutlich')}>deutlich</button>
-                {#if z.staerke}
-                  <button type="button" class="entfernen" onclick={() => entfernen(chip.id)}>entfernen</button>
-                {/if}
-              </div>
-            {/if}
+            <div class="offen-gruppe" class:sichtbar={z.phase === 'offen'}>
+              <button
+                type="button"
+                class="chip"
+                class:gewaehlt={z.phase === 'gewaehlt'}
+                class:offen={z.phase === 'offen'}
+                onclick={() => klick(chip.id)}
+              >
+                {label(chip, z)}
+              </button>
+              {#if z.phase === 'offen'}
+                <div class="staerke-wahl">
+                  <button type="button" onclick={() => waehleStaerke(chip.id, 'leicht')}>leicht</button>
+                  <button type="button" onclick={() => waehleStaerke(chip.id, 'deutlich')}>deutlich</button>
+                  {#if z.staerke}
+                    <button type="button" class="entfernen" onclick={() => entfernen(chip.id)}>entfernen</button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
           </div>
         {/each}
       </div>
@@ -136,21 +138,28 @@
   .chip-huelle {
     display: flex;
     flex-direction: column;
+  }
+  .offen-gruppe {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
+    border-radius: var(--radius-chip);
+  }
+  .offen-gruppe.sichtbar {
+    padding: 6px;
+    background: var(--ruhig);
+    border: 1px solid var(--linie);
   }
   .chip {
     height: 44px;
     padding: 0 var(--r3);
-    border: none;
+    border: 1px solid var(--feld-rahmen);
     border-radius: var(--radius-chip);
     background: var(--feld);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
-  }
-  .chip.offen {
-    box-shadow: inset 0 0 0 1px var(--linie);
   }
   .chip.gewaehlt {
     background: var(--feld);
@@ -191,7 +200,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 0 var(--r3);
-    border: none;
+    border: 1px solid var(--feld-rahmen);
     border-radius: var(--radius-chip);
     background: var(--feld);
     color: var(--tinte);
