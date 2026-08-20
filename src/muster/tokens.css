@@ -1,0 +1,214 @@
+/*
+ * Tokens. Wörtlich aus der Design-Quelle übernommen
+ * (Sitzung 6 - Übergabe.dc.html, Abschnitt 1 · K74 gültige Musterquelle).
+ *
+ * Zweistufig, K73: erst alle Rohfarben beider Themes im :root — sie
+ * existieren also immer, egal was das System meldet. Danach werden nur
+ * noch Zuordnungen umgeschaltet. Kein Media-Block enthält einen Farbwert,
+ * nur Verweise. [data-theme] gewinnt gegen die Systemeinstellung, weil
+ * :root:not([data-theme]) im Media-Block steht.
+ */
+
+@import '@fontsource-variable/source-serif-4';
+
+:root {
+  /* ---- Rohfarben HELL · immer definiert ---- */
+  --h-papier: #f3f0ea;
+  --h-ruhig: #eeeae2;
+  --h-feld: #e9e4da;
+  --h-feld-blatt: #f3f0ea;
+  --h-linie: #d6cfc3;
+  --h-linie-zart: #e2dbcf;
+  --h-spur: #c3bbac;
+  --h-tinte: #1b1916;
+  --h-satz: #3f3a31;
+  --h-gedaempft: #6b6459;
+  --h-akzent: #96603f;
+  --h-achtung: #7d6415;
+  --h-kritisch: #93332a;
+  --h-marke-gut: #6b6459;
+  --h-feld-rahmen: transparent;
+
+  /* ---- Rohfarben DUNKEL (Set T2) · immer definiert ---- */
+  --d-papier: #201e1a;
+  --d-ruhig: #1a1815;
+  --d-feld: #221f1a;
+  --d-feld-blatt: #2a2620;
+  --d-linie: #3d382f;
+  --d-linie-zart: #322e28;
+  --d-spur: #494540;
+  --d-tinte: #ece9e3;
+  --d-satz: #cdc9c2;
+  --d-gedaempft: #9f9c95;
+  --d-akzent: #cf9a68;
+  --d-achtung: #c9a15a;
+  --d-kritisch: #cd7a63;
+  --d-marke-gut: #9f9c95;
+  --d-feld-rahmen: #3d382f;
+
+  /* ---- Zuordnung · HELL ist Standard ---- */
+  --grund: var(--h-papier);
+  --ruhig: var(--h-ruhig);
+  --feld: var(--h-feld);
+  --feld-blatt: var(--h-feld-blatt);
+  --feld-rahmen: var(--h-feld-rahmen);
+  --linie: var(--h-linie);
+  --linie-zart: var(--h-linie-zart);
+  --spur: var(--h-spur);
+  --tinte: var(--h-tinte);
+  --satz: var(--h-satz);
+  --gedaempft: var(--h-gedaempft);
+  --akzent: var(--h-akzent);
+  --achtung: var(--h-achtung);
+  --kritisch: var(--h-kritisch);
+  --marke-gut: var(--h-marke-gut);
+
+  /* ---- Schrift ---- */
+  --schrift: 'Source Serif 4 Variable', Georgia, serif;
+  --fs-fuehrung: 44px;
+  --fs-titel: 26px;
+  --fs-urteil: 19px;
+  --fs-satz: 15px;
+  --fs-meta: 13px;
+  --fs-label: 11px;
+  --gw-text: 400;
+  --gw-zahl: 500;
+  --gw-titel: 600;
+  --zahl-features: tabular-nums lining-nums; /* + letter-spacing:-0.01em, siehe .zahl */
+  --label-spacing: 0.1em; /* 11px Versalien als Gruppenkopf */
+
+  /* ---- Raum, Maße ---- */
+  --r1: 4px;
+  --r2: 8px;
+  --r3: 12px;
+  --r4: 16px;
+  --r5: 24px;
+  --r6: 32px;
+  --r7: 48px;
+  --seitenrand: 20px;
+  --safe-unten: env(safe-area-inset-bottom, 22px);
+  --treffer: 48px;
+  --fusszeile: 56px;
+  --angebot-duenn: 48px;
+  --radius-feld: 0;
+  --radius-chip: 2px;
+  --typspalte: 98px;
+  --eigenschaftslabel: 104px;
+  --datumspalte: 64px;
+  --flaeschchen: 34px;
+  --rangzahl: 34px;
+  --rangname: 136px;
+  --tastatur: 368px; /* Systemtastatur inkl. Safe Area */
+
+  /* ---- Zustandszeichen ---- */
+  --zeichen: 10px;
+  --zeichen-fuehrung: 11px;
+
+  /* ---- Bewegung ---- */
+  --t-ebene: 200ms;
+  --t-auswahl: 120ms;
+  --t-uebernehmen: 240ms;
+  --e-rein: cubic-bezier(0.2, 0, 0, 1);
+  --e-raus: linear;
+}
+
+/* Dark, wenn das System es sagt und nichts anderes gewählt ist.
+   Enthält nur Verweise — keine Farbwerte. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --grund: var(--d-papier);
+    --ruhig: var(--d-ruhig);
+    --feld: var(--d-feld);
+    --feld-blatt: var(--d-feld-blatt);
+    --feld-rahmen: var(--d-feld-rahmen);
+    --linie: var(--d-linie);
+    --linie-zart: var(--d-linie-zart);
+    --spur: var(--d-spur);
+    --tinte: var(--d-tinte);
+    --satz: var(--d-satz);
+    --gedaempft: var(--d-gedaempft);
+    --akzent: var(--d-akzent);
+    --achtung: var(--d-achtung);
+    --kritisch: var(--d-kritisch);
+    --marke-gut: var(--d-marke-gut);
+  }
+}
+
+/* Ausdrückliche Wahl · gewinnt immer */
+[data-theme='dunkel'] {
+  --grund: var(--d-papier);
+  --ruhig: var(--d-ruhig);
+  --feld: var(--d-feld);
+  --feld-blatt: var(--d-feld-blatt);
+  --feld-rahmen: var(--d-feld-rahmen);
+  --linie: var(--d-linie);
+  --linie-zart: var(--d-linie-zart);
+  --spur: var(--d-spur);
+  --tinte: var(--d-tinte);
+  --satz: var(--d-satz);
+  --gedaempft: var(--d-gedaempft);
+  --akzent: var(--d-akzent);
+  --achtung: var(--d-achtung);
+  --kritisch: var(--d-kritisch);
+  --marke-gut: var(--d-marke-gut);
+}
+[data-theme='hell'] {
+  --grund: var(--h-papier);
+  --ruhig: var(--h-ruhig);
+  --feld: var(--h-feld);
+  --feld-blatt: var(--h-feld-blatt);
+  --feld-rahmen: var(--h-feld-rahmen);
+  --linie: var(--h-linie);
+  --linie-zart: var(--h-linie-zart);
+  --spur: var(--h-spur);
+  --tinte: var(--h-tinte);
+  --satz: var(--h-satz);
+  --gedaempft: var(--h-gedaempft);
+  --akzent: var(--h-akzent);
+  --achtung: var(--h-achtung);
+  --kritisch: var(--h-kritisch);
+  --marke-gut: var(--h-marke-gut);
+}
+
+/* ---- Grundlagen, die an jedem Bildschirm gelten ---- */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--grund);
+  color: var(--tinte);
+  font-family: var(--schrift);
+  font-size: var(--fs-satz);
+  font-weight: var(--gw-text);
+  line-height: 1.5;
+}
+
+/* Jede Zahl: tabular-nums, 500, -0.01em — die vergessene Regel aus
+   Abschnitt 3 der Übergabe. */
+.zahl {
+  font-variant-numeric: var(--zahl-features);
+  font-weight: var(--gw-zahl);
+  letter-spacing: -0.01em;
+}
+
+/* Fokus sichtbar für Tastatur/Screenreader, ohne neues Token — und
+   ausdrücklich eine andere Form als der Akzentstrich der Auswahl (K73). */
+:focus-visible {
+  outline: 2px solid var(--akzent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
