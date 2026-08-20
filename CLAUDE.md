@@ -13,8 +13,8 @@ stehen sie als Arbeitsregeln, nicht hier noch einmal dupliziert.
 
 ## Wo die Wahrheit steht
 
-**`docs/konzept.md` ist die Quelle, nicht dieses Dokument.** Fassung 8, 20.08.2026,
-mit 61 eingearbeiteten Gestaltungspunkten (`K1`–`K61`). Jede Zahl, jede Regel und
+**`docs/konzept.md` ist die Quelle, nicht dieses Dokument.** Fassung 9, 20.08.2026,
+mit 79 eingearbeiteten Gestaltungspunkten (`K1`–`K79`). Jede Zahl, jede Regel und
 jede Formel unten steht dort ausführlich begründet. Bei Widerspruch gewinnt das
 Konzept — und dann gehört dieses Dokument korrigiert.
 

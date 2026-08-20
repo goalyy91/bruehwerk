@@ -1,16 +1,16 @@
 # Brühwerk
 
-**Konzept · Fassung 8 · nach der Gestaltung · 20.08.2026**
+**Konzept · Fassung 9 · nach der Gestaltung · 20.08.2026**
 
-Ein Laborbuch für Kaffee. Setup-bewusstes Shot-Logging, ein Dial-in das aus deinen Daten lernt, eine Alltagskorrektur die zwei Taps dauert, und eine Bestellung, die in Durchgängen denkt statt in Handgriffen. Die Gestaltung ist durch; dieses Konzept trägt ihre einundsechzig Entscheidungen.
+Ein Laborbuch für Kaffee. Setup-bewusstes Shot-Logging, ein Dial-in das aus deinen Daten lernt, eine Alltagskorrektur die zwei Taps dauert, und eine Bestellung, die in Durchgängen denkt statt in Handgriffen. Die Gestaltung ist durch; dieses Konzept trägt ihre neunundsiebzig Entscheidungen.
 
-**Repo-Analyse** velora @ 1.16.2 · **Datenbestand** 8 Kaffees · 20+ Shots · **Gestaltung** abgeschlossen · K1–K61 eingearbeitet · **Status** Konzept, keine Umsetzung
+**Repo-Analyse** velora @ 1.16.2 · **Datenbestand** 8 Kaffees · 20+ Shots · **Gestaltung** abgeschlossen · K1–K79 eingearbeitet · **Status** Konzept, keine Umsetzung
 
 ---
 
 ## Was die Gestaltung zurückgebracht hat
 
-Sechs Sitzungen haben einundsechzig Punkte erzeugt, die das Konzept berühren. Fünf davon nehmen etwas zurück, das hier über mehrere Fassungen aufgebaut worden war — die stehen zuerst.
+Sechs Sitzungen haben neunundsiebzig Punkte erzeugt, die das Konzept berühren. Fünf davon nehmen etwas zurück, das hier über mehrere Fassungen aufgebaut worden war — die stehen zuerst.
 
 > **Die Choreografie verschwindet aus der Oberfläche**
 >
@@ -106,7 +106,7 @@ Gebaut wird die App für dich, auf deinem Telefon, nach deinem Geschmack. Aber d
 | Tür | Was das heute heißt | Was es *nicht* heißt |
 | --- | --- | --- |
 | **Anderes Gerät** | Android/Chrome bleibt das Referenzgerät — dort wird entworfen und getestet. Aber keine Chrome-eigene Fähigkeit ohne Not, Safe-Area-Abstände von Anfang an, und jeder Bildschirm hat einen sichtbaren Rückweg statt sich auf die Android-Geste zu verlassen. | Kein iOS-Testaufwand, keine doppelte Entwicklung, keine Kompromisse im Entwurf. Es ist eine Liste von Dingen, die man *unterlässt*, keine, die man baut. |
-| **Zweiter Mensch** | Nichts im Datenmodell setzt voraus, dass es einen Nutzer gibt — es *erwähnt* ihn nur nirgends. Beim Nachsehen ist das bereits erfüllt: Setups, Profile, Kaffees, Personen sind durchgehend Sammlungen, keine Einzelstücke. Es fehlt lediglich eine Zuordnung, wem etwas gehört. | Kein Login, keine Konten, keine Rechteverwaltung. Der Unterschied zwischen „ein Feld ergänzen" und „die App umbauen" ist genau der, dass das Modell schon plural ist. |
+| **Zweiter Mensch** | Nichts im Datenmodell setzt voraus, dass es einen Nutzer gibt — es *erwähnt* ihn nur nirgends. Beim Nachsehen ist das bereits erfüllt: Setups, Profile, Kaffees, Personen sind durchgehend Sammlungen, keine Einzelstücke. Es fehlt lediglich eine Zuordnung, wem etwas gehört. Aus der Gestaltung dazu K70: die zweite Person ist eine bestehende Person mit eigenem Besitz, Zugehörigkeit über eine Filter-Kopfzeile — kein eigener Mechanismus. | Kein Login, keine Konten, keine Rechteverwaltung. Der Unterschied zwischen „ein Feld ergänzen" und „die App umbauen" ist genau der, dass das Modell schon plural ist. |
 
 > **Der eine Punkt, an dem iOS wirklich wehtäte**
 >
@@ -180,6 +180,12 @@ Die Kennzeichnung gilt nicht nur für die Temperatur — sie zieht sich durch di
 **Gerechnete Werte bekommen kein eigenes Zeichen** K54. Ein Wert, der aus gemessenen Eingaben folgt — Balance aus den Achsen, Ertrag aus Input und Verhältnis — ist genau so sicher wie diese Eingaben. Ein viertes Zeichen hätte eine Unsicherheit behauptet, die nicht existiert, und hätte die Legende von drei auf vier Zeilen verlängert, ohne eine Frage zu beantworten.
 
 Und die Legende selbst erscheint **nur außerhalb des Alltagspfads** K13. Beim Shot-Erfassen stehen die Zeichen ohne Erklärung da. Wer zweimal am Tag loggt, kennt sie nach einer Woche; wer sie nachschlagen will, findet das i-Zeichen im Kaffee-Detail und in den Einstellungen. Eine dauerhaft sichtbare Legende ist Beipackzettel im Arbeitsweg.
+
+Die drei Zeichen haben aus der Gestaltung eine feste Form bekommen, keine freie: **10 px, gefüllt = gut, halb (linke Hälfte gefüllt bei ganzem Rahmen) = Achtung, schraffiert 45° = kritisch — ohne Farbe unterscheidbar, 11 px nur am Führungswert** K63. Dieselbe Strenge gilt für eine kleine Gruppe weiterer Anzeigen, die die Gestaltung als **Systemregel statt Bildschirmdetail** beschlossen hat: Röstgrad steht immer als fünf Bohnen (13 × 17 px, gefüllt/leer, Lücke 4 px) mit dem Wort daneben, Bewertung immer als fünf Sterne, Anbauhöhe immer mit Tausenderpunkt, eine Charge immer mit Nummer und Röstdatum. Keine dieser Formen wird in einem Neben-, Leer- oder Fehlerzustand durch eine schlichtere Ersatzform vereinfacht K79.
+
+#### Wartung
+
+Kein eigener Bereich und kein eigenes Muster — Wartung hängt sich an Bestehendes: das Geräteblatt bekommt eine Zeile für Filter, Entkalken und Sieb (Muster 9, die Baustein-Liste), und am Fuß der Bar können bis zu zwei dünne Angebote stehen, wenn etwas fällig ist. Gezählt wird in **Bezügen**, nicht in Tagen — der Restwert ist geschätzt und trägt entsprechend den gestrichelten Ring. Entkalken führt zusätzlich ein Datum. Bewusst nicht gebaut: kein Countdown, kein Fortschrittsbalken, keine neue Farbe für „bald fällig" K69.
 
 ## Datenmodell
 
@@ -443,6 +449,14 @@ Erst dann öffnet sich mehr. Das ist die Espresso-Diagnostik, und dein Einwand d
 > Die Stärke steckt deshalb im Chip. Ein Tippen öffnet *leicht* und *deutlich*, die Wahl klappt zu, der Chip heißt danach „deutlich zu sauer". Zweites Tippen öffnet erneut, drittes nimmt zurück. Keine zusätzliche Zeile, kein zusätzlicher Tap im Normalfall — und das Regelwerk bekommt eine deutlich schärfere Eingabe.
 
 Der Vorschlag bleibt am Shot, bis der nächste Shot läuft K10. Du kannst ihn also stehen lassen, den Kaffee trinken, nachdenken und ihn erst danach übernehmen — oder ihn mit „Später" liegen lassen, ohne dass er verschwindet. Was ihn beendet, ist immer der nächste Bezug.
+
+Lehnst du einen Vorschlag ab, verschwindet er nicht: er bleibt als gedämpfte Zeile mit Datum und Ring stehen, „doch übernehmen" bleibt tippbar. Er kommt aber nicht bei jedem folgenden Shot wieder — erst wenn **zwei aufeinanderfolgende Shots denselben Befund zeigen**, legt die App ihn erneut vor. Ein Chargenwechsel ist dafür keine Voraussetzung, ein einzelner Shot reicht aber nicht K68 K76.
+
+#### Werte ohne eigenen Leerzustand K64
+
+Ein neuer Kaffee ohne Shots oder ein Profil ohne Dial-in bekommt **keinen eigenen Leerbildschirm**. Statt einer Leerfläche stehen Startvorschläge als geschätzte Werte da — gestrichelter Ring, Tilde, gedämpft, 400, eine Stelle weniger, also z. B. „≈ 3,6" statt einer leeren Zeile. Leere Falten (Erkenntnisse, Verlauf) bleiben ebenfalls stehen und nennen ihren Zustand ausdrücklich, etwa „kein Punkt" oder „keine" — sie fallen nicht weg.
+
+Ein Wert außerhalb der bisherigen Messreihe wird nie abgewiesen und nie stillschweigend korrigiert. Er bleibt groß und gemessen stehen, trägt ein halbes Zeichen (Achtung), und ein Satz nennt die Reihe — z. B. „30 bis 42 g" für alle bisherigen Shots dieser Bohne über alle Chargen, ohne Mindestzahl an Shots. Der Diagnosevorschlag entfällt dann mit einer Begründung, statt eine Diagnose zu erzwingen, die die Daten nicht hergeben K67 K75.
 
 #### Wenn die Auswahl nicht reicht
 
@@ -1037,6 +1051,12 @@ Aber sie ist auch eine Zeile, die man nach dem zwanzigsten Mal nicht mehr liest.
 >
 > Es liegt nahe, dass Koffein bei manchen Leuten von der Uhrzeit abhängt — abends entkoffeiniert, morgens nicht. Die App könnte das lernen. **Ich lasse es zunächst weg**, weil es die Historie halbiert: pro Person und Tageshälfte braucht es doppelt so viele Datenpunkte, bis der Anteil belastbar ist, und bei Gästen mit drei Besuchen im Jahr kommt der nie zustande. Sollte sich in deinen Daten später ein klares Muster zeigen, ist es eine Filterzeile mehr — kein Umbau.
 
+#### Der zweite Mensch K70 K71 K72
+
+Ändert am Modell fast nichts, weil „Person" schon von Anfang an eine eigene Sammlung ist, kein Feld am Nutzer. Der zweite Mensch ist einfach eine weitere Person **mit eigenem Besitz** — eigene Kaffees, eigene Profile, eigene Historie. Zugehörigkeit läuft über eine Filter-Kopfzeile („Kaffee · 6 von 14 · Julian"), die Sicht über das Personenfeld; geteilte Einträge stehen als eigene Gruppe auf ruhiger Fläche mit dem Besitzer als Meta. Kein Login, kein Konto, kein Profilbild.
+
+**Geräte bleiben geteilt** — Wartung, Bezugszähler und Mengenknöpfe hängen am Gerät, nicht am Menschen; personenbezogene Zahlen stehen daneben („davon Julian"). Und zwei kleine Regeln gelten von Anfang an, damit daraus später kein Umbau wird: keine Possessivwörter in Überschriften (der Name steht dort, nicht „meine Kaffees"), und die Zählform „6 von 14" gilt auch bei nur einem Besitzer.
+
 ## Daten, Backup, Ausfallsicherheit
 
 > **Abbildung** — Datenfluss: Bedienung schreibt in IndexedDB als Wahrheit, von dort läuft ein entkoppelter Snapshot ins Cloud-Backup und ein manueller Export in eine Datei. Notion fließt einmalig über die Migration hinein.
@@ -1049,6 +1069,11 @@ Deine Backup-Anforderung wird auf **zwei unabhängigen Wegen** erfüllt, weil ei
 - **Manueller Export als Datei** — ein Tap, vollständiger Bestand, kein Backend beteiligt. Der Weg, der auch dann noch funktioniert, wenn alles andere weg ist.
 
 Die Datenmenge ist unkritisch: fünf Shots am Tag ergeben rund 1.800 Datensätze im Jahr, also wenige hundert Kilobyte. Es gibt keinen Grund, jemals etwas zu löschen.
+
+Zwei Zustände sind aus der Gestaltung mitgekommen, weil ein Alltagspfad, der Netz und Speicher als selbstverständlich behandelt, irgendwann falsch liegt:
+
+- **Die Cloud-Sicherung wartet.** Schlägt sie fehl, erscheint keine Fehlermeldung, sondern eine ruhige Zeile in der Bar mit halbem Zeichen — und erst **ab dem zweiten vergeblichen Versuch**, ohne Zeitschwelle. Die Reihenfolge der Wörter ist „lokal gesichert · Sicherung wartet": das Wichtige zuerst, das Wort „Fehler" kommt nicht vor, weil lokal ja nichts verloren ist K65 K77.
+- **Lokales Schreiben scheitert** — der einzige kritische Zustand im Alltagspfad, weil hier tatsächlich etwas verloren gehen könnte. Ein schraffiertes Zeichen, die eingegebenen Werte bleiben im Feld stehen, „nochmal speichern" als Bodenaktion und „Shot verwerfen" als zweite, bewusst kleinere Option. Diesen Bildschirm verlässt man nicht ohne eine der beiden Entscheidungen K66.
 
 ## Die LLM-Naht
 
@@ -1072,6 +1097,15 @@ Kommt später ein API-Aufbau dazu, ändert sich genau eine Implementierung hinte
 
 Fünf Bereiche, und ein Schnellpfad, der über allem steht. Die **Historie** ist neu und kein Archiv: seit die Bestellung nicht mehr bewertet K57, ist sie der Ort, an dem Urteile entstehen.
 
+### Der erste Start
+
+Vor den fünf Bereichen liegt ein Zustand, den es nur einmal gibt: eine **Kette aus drei
+Zeilen** — Kaffee, Getränk, Gerät — als kleinste Fassung der Ablaufliste (Muster 8), Zeile
+64 px, offener Ring rechts, ohne Zählung und ohne erzwungene Reihenfolge K62. Sie
+verschwindet endgültig, sobald sie leer ist, und ist der **einzige Bildschirm ohne
+sichtbaren Rückweg** — die einzige beschlossene Ausnahme von der sonst überall geltenden
+Regel K78.
+
 | Bereich | Wofür |
 | --- | --- |
 | **Bar** · Start | Bestellung aufnehmen, laufende Liste, Schnellzugriff auf dein Getränk |
@@ -1086,7 +1120,7 @@ Fünf Bereiche, und ein Schnellpfad, der über allem steht. Die **Historie** ist
 
 ## Umsetzung
 
-Neun Pakete. Paket 01 ist abgeschlossen — die Gestaltung ist durch, ihre einundsechzig Punkte stehen in diesem Dokument.
+Neun Pakete. Paket 01 ist abgeschlossen — die Gestaltung ist durch, ihre neunundsiebzig Punkte stehen in diesem Dokument.
 
 Du hattest recht mit dem Einwand — und ich hatte in Fassung 1 unrecht. Ein Design-Pass am Ende ist kein Design, sondern Kosmetik auf fertigen Bildschirmen: die Struktur steht dann schon, und was das Design daran ändern will, kostet Umbau. Umgekehrt kann Design auch nicht ganz am Anfang stehen, denn es braucht etwas zu gestalten. **Der richtige Platz ist dazwischen: nach dem Datenmodell, vor der ersten Zeile Anwendungscode.** Zu diesem Zeitpunkt ist klar, welche Objekte es gibt und welche Wege du durch sie nimmst — und noch nichts davon ist in Markup gegossen.
 
@@ -1100,13 +1134,13 @@ Die **sieben Anthropic-Strategien blockieren dieses Paket nicht mehr**, wie du g
 
 #### Paket 01 — Design abgeschlossen
 
-Sechs Sitzungen: zwölf namenlose Richtungen, daraus die Haltung *Laborbuch*, ein Tokenblatt für beide Themes, fünfzehn Muster, der Alltagspfad, die dichten Bildschirme und die Zustände. Ergebnis sind ein Übergabeprotokoll mit Tokens, Systemregeln und allen Mustern — und einundsechzig Punkte, die dieses Konzept ändern.
+Sechs Sitzungen: zwölf namenlose Richtungen, daraus die Haltung *Laborbuch*, ein Tokenblatt für beide Themes, fünfzehn Muster, der Alltagspfad, die dichten Bildschirme und die Zustände. Ergebnis sind ein Übergabeprotokoll mit Tokens, Systemregeln und allen Mustern — und neunundsiebzig Punkte, die dieses Konzept ändern.
 
 *Danach: es ist entschieden, wie die App aussieht und sich anfühlt, bevor irgendetwas gebaut ist. Eingelöst.*
 
 #### Paket 01b — Das Musterblatt
 
-Die fünfzehn Muster als Bauteile, alle auf einer Seite, beide Themes, geöffnet auf dem echten Telefon. Erst danach der erste Bildschirm.
+Die fünfzehn Muster als Bauteile, alle auf einer Seite, beide Themes, geöffnet auf dem echten Telefon. Erst danach der erste Bildschirm. Gültige Quelle ist `Sitzung 6 - Übergabe.dc.html` aus dem Design-Projekt, nicht das ältere Blatt aus Sitzung 3 — dort fehlen die Treppe (Muster 2) und die Muster 13 bis 15 K74.
 
 Das ist das Code-Gegenstück zur Schlussprüfung aus Sitzung 3: dort standen alle Muster untereinander, damit sichtbar wird, ob sie eine Familie sind. Im Code gilt dasselbe — Token-, Abstands- und Trefferflächenfehler fängt man einmal statt fünfzehnmal, und danach ist jeder Bildschirm eine Komposition.
 
@@ -1191,7 +1225,7 @@ Was aus vier Runden Rückmeldung und sechs Gestaltungssitzungen feststeht. Nicht
 
 #### Geklärt, ohne Folge fürs Konzept
 
-Zehn der einundsechzig Punkte sind in der Gestaltung entschieden worden, ohne dass sich am Konzept etwas ändert. Sie stehen hier, damit die Liste vollständig bleibt und niemand sie später für vergessen hält — ihr Ort ist die Übergabe, nicht dieses Papier.
+Elf der neunundsiebzig Punkte sind in der Gestaltung entschieden worden, ohne dass sich am Konzept etwas ändert. Sie stehen hier, damit die Liste vollständig bleibt und niemand sie später für vergessen hält — ihr Ort ist die Übergabe, nicht dieses Papier.
 
 | Was | Wo es steht | K |
 | --- | --- | --- |
@@ -1201,6 +1235,7 @@ Zehn der einundsechzig Punkte sind in der Gestaltung entschieden worden, ohne da
 | Fußzeilen | sind Felder in Feldhöhe mit „›“, keine Knöpfe | K27 |
 | Textfelder bei Fokus | wandern ins obere Drittel, damit die Tastatur nichts verdeckt | K33 |
 | Jetzt-Zeile | Muster ist da, wird von keinem Bildschirm gebraucht | K41 |
+| Fokus, Muster 15, Tokennamen | Fokus ist der Akzent als Outline (2 px, offset 2, nur `:focus-visible`), nie dieselbe Form wie der Akzentstrich der Auswahl; Muster 15 filtert nie den Umfang; `--feld-blatt` und `--feld-rahmen` sind benannte Tokens | K73 |
 | Vier Punkte sind im Verlauf der Sitzungen von späteren abgelöst worden: K15 → K21 · K29 → K34 · K35 → K53 · K43 → K55 |  |  |
 
 ## Was noch offen ist
@@ -1230,4 +1265,4 @@ Die Gestaltung hat die dichten Bildschirme und den Alltagspfad abgedeckt. Offen 
 
 > **Damit ist das Konzept fertig**
 >
-> Acht Fassungen, vier Runden Rückmeldung, sechs Gestaltungssitzungen, einundsechzig eingearbeitete Punkte. Was jetzt noch fehlt, sind Daten und eine Datei — nichts, worüber noch zu entscheiden wäre.
+> Neun Fassungen, vier Runden Rückmeldung, sechs Gestaltungssitzungen, neunundsiebzig eingearbeitete Punkte. Was jetzt noch fehlt, sind Daten und eine Datei — nichts, worüber noch zu entscheiden wäre.

@@ -1,9 +1,11 @@
-# Nachzug der Gestaltungspunkte K1–K61
+# Nachzug der Gestaltungspunkte K1–K79
 
-Register zum Konzept-Durchgang **Fassung 7 → Fassung 8** (`docs/konzept-kaffee.html`, 20.08.2026).
-Quelle der Punkte: Übergabeprotokoll Sitzung 6, Abschnitt 12.
+Register zum Konzept-Durchgang **Fassung 7 → Fassung 8** (`docs/konzept-kaffee.html`, 20.08.2026)
+und zum Nachzug **Fassung 8 → Fassung 9** (K62–K79, 20.08.2026). Quelle der Punkte K1–K61:
+Übergabeprotokoll Sitzung 6, Abschnitt 12. Quelle der Punkte K62–K79: Übergabeprotokoll
+Sitzung 7, Abschnitt 10.
 
-Alle 61 Punkte sind eingearbeitet. Die Spalte *Ort* nennt den Abschnitt, in dem der Punkt seine
+Alle 79 Punkte sind eingearbeitet. Die Spalte *Ort* nennt den Abschnitt, in dem der Punkt seine
 Hauptstelle hat — die meisten Punkte sind zusätzlich an weiteren Stellen belegt und dort mit
 `K…` markiert.
 
@@ -70,6 +72,24 @@ Hauptstelle hat — die meisten Punkte sind zusätzlich an weiteren Stellen bele
 | K59 | Verschnitt: Extra Shot als Modifikator an einer Position ODER eigene Position; verwerfen als dritter Weg | Die Bestellung › Verschnitt |
 | K60 | Positionen sind änderbar (Getränk, Bohne, Person); der Plan rechnet neu | Die Bestellung › Aufnehmen |
 | K61 | Charge wird am Kaffee im Blatt angelegt: Nummer, Röstdatum, „alte als leer markieren“ — keine Packungsgröße | Datenmodell › Das Kaffeeblatt |
+| K62 | Erststart ist die Kette: drei Zeilen (Kaffee, Getränk, Gerät), Muster 8 klein, ohne Zählung und ohne Fortschritt; verschwindet endgültig, wenn sie leer ist | Navigation › Der erste Start |
+| K63 | Zustandszeichen haben eine feste Form: 10 px, gefüllt = gut, halb (linke Hälfte, ganzer Rahmen) = Achtung, schraffiert 45° = kritisch; 11 px nur am Führungswert | Dein Gerätepark › Drei Herkunftszeichen, nicht vier |
+| K64 | Kein eigener Leerzustand: fehlende eigene Werte erscheinen als geschätzte Startwerte; leere Falten bleiben stehen und nennen ihren Zustand | Dial-in und Alltagskorrektur › Werte ohne eigenen Leerzustand |
+| K65 | Sicherung wartet = ruhige Zeile in der Bar mit halbem Zeichen, erst ab dem zweiten vergeblichen Versuch; nennt zuerst „lokal gesichert“; das Wort „Fehler“ kommt nicht vor | Daten, Backup, Ausfallsicherheit |
+| K66 | Gescheitertes lokales Schreiben ist der einzige kritische Alltagszustand: Werte bleiben im Feld, „nochmal speichern“ und „Shot verwerfen“, kein Verlassen ohne Entscheidung | Daten, Backup, Ausfallsicherheit |
+| K67 | Ein Wert außerhalb der Messreihe wird nie abgewiesen und nie korrigiert: halbes Zeichen, Satz mit der Reihe, Vorschlag entfällt mit Begründung | Dial-in und Alltagskorrektur › Werte ohne eigenen Leerzustand |
+| K68 | Abgelehnter Vorschlag bleibt als gedämpfte Zeile mit Datum und Ring erhalten („doch übernehmen“); kein Wiedervorlegen ohne neue Daten | Dial-in und Alltagskorrektur › Wenn es daneben war |
+| K69 | Wartung ist ein Feature ohne neues Muster: Geräteblatt in Muster 9 plus dünnes Angebot am Fuß der Bar; Zählung in Bezügen, Restwert geschätzt, Entkalken zusätzlich mit Datum | Dein Gerätepark › Wartung |
+| K70 | Zweiter Mensch = bestehende Person mit Besitz; Zugehörigkeit über Filter-Kopfzeile, Sicht über Personenfeld; kein Login, kein Konto, kein Profilbild | Ranking & Personen › Der zweite Mensch |
+| K71 | Keine Possessivwörter in Überschriften; Zählform „6 von 14“ auch bei einem Besitzer; jede Rangliste nennt ihre Person im Gruppenkopf | Ranking & Personen › Der zweite Mensch |
+| K72 | Geräte sind geteilt — Wartung, Bezugszähler und Mengenknöpfe hängen am Gerät, nicht am Menschen; personenbezogene Zahlen stehen daneben | Ranking & Personen › Der zweite Mensch |
+| K73 | Muster 15 darf keinen Umfang filtern; Fokus ist eine Akzent-Outline (2 px, offset 2, focus-visible); --feld-blatt und --feld-rahmen sind benannte Tokens | Entschieden › Geklärt, ohne Folge fürs Konzept |
+| K74 | Sitzung 6 - Übergabe.dc.html ist die gültige Musterquelle; das Musterblatt aus Sitzung 3 ist im Bild überholt | Umsetzung › Paket 01b |
+| K75 | Messreihe = alle Shots einer Bohne über alle Chargen, ohne Mindestzahl; ein einzelner Shot ergibt noch keine Reihe, dann entfällt der Satz | Dial-in und Alltagskorrektur › Werte ohne eigenen Leerzustand |
+| K76 | Abgelehnter Vorschlag kehrt zurück, sobald zwei aufeinanderfolgende Shots denselben Befund zeigen — kein Chargenwechsel nötig, ein einzelner Shot reicht nicht | Dial-in und Alltagskorrektur › Wenn es daneben war |
+| K77 | Sicherungszeile erscheint ab dem zweiten vergeblichen Versuch; keine Zeitschwelle | Daten, Backup, Ausfallsicherheit |
+| K78 | Erststart-Kette behält drei Glieder (Kaffee · Getränk · Gerät); der Erststart ist die einzige beschlossene Ausnahme von „Rückweg immer sichtbar“ | Navigation › Der erste Start |
+| K79 | Beschlossene Darstellungsformen sind Systemregel und gelten in jedem Zustand: Röstgrad fünf Bohnen, Bewertung fünf Sterne, Anbauhöhe mit Tausenderpunkt, Charge mit Nummer und Röstdatum | Dein Gerätepark › Drei Herkunftszeichen, nicht vier |
 
 ## Nicht mehr eigenständig
 
@@ -90,7 +110,7 @@ Erkenntnisse werden aus dem Shot heraus angelegt; der Werkstattbericht (Paket 04
 ein Modell gehen, dessen Rückgabe als Erkenntnis mit Herkunft *übernommen* landet.
 → eingearbeitet im Abschnitt **Die LLM-Naht** und im Datenmodell (`Erkenntnis.herkunft`).
 
-## Was der Durchgang sonst noch verändert hat
+## Was der Durchgang Fassung 7 → 8 sonst noch verändert hat
 
 - **Drei Delta-Abschnitte** aus Fassung 5–7 zu **einem** zusammengezogen: *Was die Gestaltung
   zurückgebracht hat*.
@@ -102,3 +122,20 @@ ein Modell gehen, dessen Rückgabe als Erkenntnis mit Herkunft *übernommen* lan
 - **Navigation** um den fünften Bereich **Historie** erweitert (Folge aus K57).
 - **Umsetzung** um **Paket 01b · Das Musterblatt** erweitert.
 - Masthead, Standfirst und Meta-Zeile auf Fassung 8 gezogen.
+
+## Was der Durchgang Fassung 8 → 9 verändert hat
+
+Reiner Nachzug der Design-Sitzung 7 (K62–K79), kein neuer Gestaltungsinhalt:
+
+- **Navigation** um den Abschnitt *Der erste Start* (K62, K78) ergänzt.
+- **Dein Gerätepark** um die Zeichenmaße (K63), die beschlossenen Darstellungsformen (K79)
+  und den Unterabschnitt *Wartung* (K69) ergänzt.
+- **Dial-in und Alltagskorrektur** um *Werte ohne eigenen Leerzustand* (K64, K67, K75) ergänzt
+  und den Absatz zum abgelehnten Vorschlag um seine Rückkehrbedingung (K68, K76) erweitert.
+- **Daten, Backup, Ausfallsicherheit** um die zwei Netz-/Speicher-Zustände (K65, K66, K77)
+  ergänzt.
+- **Ranking & Personen** um den Unterabschnitt *Der zweite Mensch* (K70, K71, K72) ergänzt,
+  mit Verweis aus *Architektur › Zwei Türen, die offen bleiben*.
+- **Entschieden** um K73 in der Tabelle *Geklärt, ohne Folge fürs Konzept* ergänzt.
+- **Umsetzung** › Paket 01b nennt jetzt die gültige Musterquelle (K74).
+- Masthead auf Fassung 9 gezogen, Zählung der Punkte auf neunundsiebzig korrigiert.
