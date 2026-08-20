@@ -1,0 +1,157 @@
+{
+  "gezogenAm": "2026-08-20T00:00:00.000Z",
+  "quelle": "Notion-Datenbank \"Kaffees\", collection://e8d341c9-8fa0-417b-913a-d11155eca4e5, ueber den Notion-Connector in dieser Session gezogen. Kein NOTION_TOKEN im Repo — siehe CLAUDE.md \"Datenquelle\".",
+  "hinweis": "Wortgetreue Ablage: Properties plus roher Markdown-Inhalt je Kaffee-Seite. Bewusst nicht vorgeparst, damit src/daten/migration/notion.ts jederzeit gegen die Originaldaten neu laufen kann.",
+  "seiten": [
+    {
+      "id": "354744b7396981729759f0996a01b277",
+      "titel": "Espresso Entcoffeiniert",
+      "url": "https://app.notion.com/p/354744b7396981729759f0996a01b277",
+      "properties": {
+        "Best Fit": "Cappuccino",
+        "Bestes Profil": "ST-1",
+        "Bewertung": "⭐⭐⭐⭐",
+        "Dial-in": "Laufend",
+        "Dose (g)": 17.8,
+        "Erkenntnisse": "Sweet Spot bei MG 3,70 · KT 119 · Yield 42g · 28s – Milchschokolade, Mandel, Aroma 7/10, Körper 7/10. MG 3,65 etwas mehr Balance, 3,70 mehr Aroma und Körper – für Cappuccino bevorzugt. MG 3,75–3,90 bestätigter toter Bereich (röstartig, keine Aromatik). KT 119 Obergrenze. Jede neue Charge braucht Rekalibrierung da Laufzeit stark schwankt.",
+        "KT": 119,
+        "Name": "Espresso Entcoffeiniert",
+        "Preinfusion (s)": 6,
+        "Röster": "Café Langen (Typisch Langen)",
+        "Tasting-Text": "Süße da, Schokolade in der Nase, leichte Nougat-Note. Säure noch leicht präsent, Bitter fast weg. Im abgekühlten Zustand gute Balance. Dial-In läuft noch.",
+        "Verkostet": "__YES__",
+        "Yield (g)": 42,
+        "Zeit (s)": 28
+      },
+      "inhalt": "## Varianten\n### Espresso \\[Standard\\] \\[Laufend\\]\nDose: 17.8g \\| MG: 3.9 \\| RPM: 1200 \\| KT: 119 \\| Yield: 42g \\| Zeit: 28s \\| Pre: 6s\nHinweise: MG 3,70 fixiert – mehr Aroma und Körper als 3,65, besser für Cappuccino (80%). Bei neuer Charge Rekalibrierung nötig.\n## Dial-in Log\n### Espresso\n#### Shot 1\nParameter: Dose 17.8g \\| MG 3.9 \\| RPM 1200 \\| KT 119 \\| Yield 42g \\| Zeit 28s \\| Pre 6s\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n### Shot 1\nParameter: Dose 17.8g \\| MG 3,65 \\| Yield 42g \\| Zeit 38s \\| KT 121\nÄnderung: – (Erster Shot, alte Packung)\nErgebnis: Säurespitze, Bitter im Nachklang, erdig, unbalanciert. KT 121 zu heiß für Robusta-Anteil.\n### Shot 2\nParameter: Dose 17.8g \\| MG 3,65 \\| Yield 42g \\| Zeit 37s \\| KT 119\nÄnderung: KT 121 → 119\nErgebnis: Besser, aber 37s immer noch zu lang. Salz im ersten Schluck = Überextraktionssignal.\n### Shot 3\nParameter: Dose 17.8g \\| MG 3,70 \\| Yield 40g \\| Zeit unbekannt \\| KT 119\nÄnderung: MG gröber (3,65 → 3,70), Yield reduziert (42 → 40g)\nErgebnis: Nicht dokumentiert – neue Packung geöffnet (Röstdatum 13.03.2026).\n### Shot 4\nParameter: Dose 17.8g \\| MG 3,85 \\| Yield 42g \\| Zeit 34s \\| KT 119\nÄnderung: MG gröber (3,70 → 3,85), neue Packung\nErgebnis: Süße da, Schokolade, leichte Nougat-Note. Säure noch präsent, Bitter fast weg. Im abgekühlten Zustand gute Balance.\n### Shot 5\nParameter: Dose 17.8g \\| MG 3,85 \\| Yield 42g \\| Zeit 24s \\| KT 119\nÄnderung: Neue Packung (Röstdatum 06.05.2026) – gleiche Parameter\nErgebnis: Zu schnell (24s). Robusta-Abgang dominant, Röstaromen, leichte Süße in der Nase. Frische Bohne läuft schneller.\n### Shot 6\nParameter: Dose 17.8g \\| MG 3,80 \\| Yield 42,5g \\| Zeit 31s \\| KT 119\nÄnderung: MG feiner (3,85 → 3,80)\nErgebnis: Balance gut, Bitter weg, Säure angenehm, leichte Süße. Aber aromatisch flach – kein Nougat, keine Schokolade. Im Abgekühlten etwas interessanter. Unterextraktion.\n### Shot 7\nParameter: Dose 17.8g \\| MG 3,75 \\| Yield 42g \\| Zeit 31s \\| KT 119\nÄnderung: MG feiner (3,80 → 3,75)\nErgebnis: Würzig, rösti, Säure da, Süße nur Nuance. Kaum Laufzeitunterschied zu Shot 6. MG 3,75–3,85 toter Bereich bestätigt.\n### Shot 8\nParameter: Dose 17.8g \\| MG 3,75 \\| Yield 42,1g \\| Zeit 24s \\| KT 120\nÄnderung: KT 119 → 120\nErgebnis: Mehr Säure, Puck instabil ab 35g, unausgewogen. KT 120 überfordert Robusta. Puck-Kollaps strukturell bedingt (Entcoff-Bohnenstruktur). MG 3,75–3,85 ist toter Bereich.\n### Shot 9\nParameter: Dose 17.8g \\| MG 3,60 \\| Yield 36,2g \\| Zeit 31s \\| KT 119\nÄnderung: MG feiner (3,75 → 3,60), Yield reduziert (42 → 36g), neue Packung (Röstdatum 22.05.2026)\nErgebnis: Karamell, Marzipan in der Nase. Spitze Säure, harscher Abgang, salziger Geschmack – klassische Unterextraktion. Süße ansatzweise da.\n### Shot 10\nParameter: Dose 17.8g \\| MG 3,60 \\| Yield 38g \\| Zeit 28s \\| KT 119\nÄnderung: Yield erhöht (36 → 38g)\nErgebnis: Leichte Frucht, Süße, Nuss – alles Nuancen. Erster Schluck fein, nicht bitter, leichte Säure. Body dünn, Rundheit fehlt. Säure präsenter beim Abkühlen. Unterextraktion noch nicht überwunden.\n### Shot 11\nParameter: Dose 17.8g \\| MG 4,0 \\| Yield 40g \\| Zeit 28s \\| KT 119\nÄnderung: MG gröber (3,60 → 4,0) – Laufzeit hatte sich in Folgeshots stark verlängert\nErgebnis: Halbwegs balanciert, angenehm weich, Säure leicht zu präsent, etwas dünn, samtige Süße fehlt. Bisher bester Shot der Charge.\n### Shot 12\nParameter: Dose 17.8g \\| MG 3,90 \\| Yield 40,5g \\| Zeit 27s \\| KT 119\nÄnderung: MG feiner (4,0 → 3,90)\nErgebnis: Röstaromen dominant, Aroma 4/10, Süße 4/10, Balance 6/10. Toter MG-Bereich 3,75–3,90 erneut bestätigt.\n### Shot 13\nParameter: Dose 17.8g \\| MG 3,65 \\| Yield 41,5g \\| Zeit 26s \\| KT 119\nÄnderung: MG feiner (3,90 → 3,65)\nErgebnis: Milchschokolade, Mandel. Aroma 6/10, Süße 6/10, Bitterkeit 8/10 (eingebunden), Balance 8/10, Gesamt 7/10.\n### Shot 14\nParameter: Dose 17.8g \\| MG 3,70 \\| Yield 42g \\| Zeit 28s \\| KT 119\nÄnderung: MG gröber (3,65 → 3,70)\nErgebnis: Milchschokolade, Mandel. Aroma 7/10, Körper 7/10, Balance 7/10, Gesamt 7/10. Mehr Aroma und Körper als 3,65, besser für Cappuccino – fixiert.\n"
+    },
+    {
+      "id": "354744b7396981e6bd5cf4a8b781923d",
+      "titel": "Huila Women Coffee",
+      "url": "https://app.notion.com/p/354744b7396981e6bd5cf4a8b781923d",
+      "properties": {
+        "Best Fit": "Pour Over",
+        "Bestes Profil": "PO-1",
+        "Bewertung": "⭐⭐⭐⭐",
+        "Erkenntnisse": "",
+        "Name": "Huila Women Coffee",
+        "Röster": "Schindel",
+        "Tasting-Text": "Fruchtsäure die süß klingt, leichte Frucht in der Nase, Nuss, leichte Süße, Abgang bleibt. Mit Abkühlung kommt Frucht deutlicher durch, Körper nimmt etwas ab. Leichte Adstringenz im Abgang (Fines-Effekt Espresso-Burrs).",
+        "Verkostet": "__YES__"
+      },
+      "inhalt": "## Varianten\n### Pour Over \\[Standard\\]\nDose: 18g \\| MG: 7.8 \\| RPM: 800 \\| KT: 96 \\| Yield: 290g \\| DLZ: \\~4:30\nHinweise: Dial-In noch offen – MG 7.9 als nächster Schritt geplant. Espresso-Burrs produzieren Fines, Adstringenz am Ende strukturell bedingt.\n## Aufguss\n\\[50g \\| 0:30\\] Bloom: Spirale außen nach innen, alles benetzen inkl. Rand. Einmal sanft den V60 swirlen. Warten bis 0:50–0:55.\n\\[240g \\| –\\] Hauptguss: Kontinuierlich bis 290g Gesamtgewicht. Langsame, fließende Spirale Mitte → außen → Mitte. Strahl ca. 6 cm über Bett, 1 cm Abstand zum Filterrand.\n\\[– \\| warten\\] Drawdown: Vollständig durchlaufen lassen. Ziel-DLZ gesamt: 4:00–4:30.\n"
+    },
+    {
+      "id": "354744b7396981fc81e0d9196860d793",
+      "titel": "FairLangen Espresso BIO",
+      "url": "https://app.notion.com/p/354744b7396981fc81e0d9196860d793",
+      "properties": {
+        "Best Fit": "Cappuccino",
+        "Bestes Profil": "ST-1",
+        "Bewertung": "⭐⭐⭐⭐",
+        "Dial-in": "Abgeschlossen",
+        "Dose (g)": 17.8,
+        "Erkenntnisse": "",
+        "KT": 118,
+        "Name": "FairLangen Espresso BIO",
+        "Preinfusion (s)": 0,
+        "Röster": "Café Langen",
+        "Tasting-Text": "Marzipan und Amaretto in Nase und Mund. Süße deutlich präsent. Robusta gut integriert. Leichte Säure im Hintergrund.",
+        "Verkostet": "__YES__",
+        "Yield (g)": 36,
+        "Zeit (s)": 21
+      },
+      "inhalt": "## Varianten\n### Espresso \\[Standard\\]\nDose: 17.8g \\| MG: 3.35 \\| KT: 118 \\| RPM: 1000 \\| Yield: 36g \\| Zeit: 24s\nHinweise: Bisher bester Shot – Süße und Bitterkeit sehr gut eingebunden, Mandel/Zartbitterschokolade, Abgang lang und fein, Crema dicht. Säure noch leicht zu spitz/dominant. Nächster Test: MG 3,33 (minimal feiner) um Säure einzubinden ohne Bitterkeit zu überziehen.\n### Ristretto\nDose: 17.8g \\| MG: 3.1 \\| Yield: 26.5g \\| KT: 118 \\| Zeit: 20s\nHinweise: Dial-In läuft. MG 3.1 nach erstem Shot der zu schnell durchlief.\n## Dial-in Log\n### Espresso\n#### Shot 1\nParameter: Dose 17.8g \\| MG 3.4 \\| KT 120 \\| Yield 36g \\| Zeit 24s \\| FD 4s\nÄnderung: – (Referenzshot, alte Charge)\nErgebnis: Viel Robusta-Geschmack, leichter Marzipan-Anflug in der Nase. Im Mund fehlt Süße und Säure. Abgang stark astringierend.\n#### Shot 2\nParameter: Dose 17.8g \\| MG 3.3 \\| KT 118 \\| Yield 36.3g \\| Zeit 26s \\| FD 4.5s\nÄnderung: KT 120 → 118, MG 3.4 → 3.3\nErgebnis: Robusta wesentlich besser integriert. Säure etwas präsenter als gewünscht, Süße fehlt leicht. Marzipan in der Nase, nicht im Mund.\n#### Shot 3\nParameter: Dose 17.8g \\| MG 3.2 \\| KT 118 \\| Yield 37.9g \\| Zeit 26s \\| FD 6s\nÄnderung: MG 3.3 → 3.2\nErgebnis: Säure weiterhin präsent, Robusta wieder deutlicher, Körper fehlte. FD auffällig spät trotz feinerem MG – Channeling-Verdacht, nicht belastbar.\n#### Shot 4\nParameter: Dose 17.8g \\| MG 3.2 \\| KT 118 \\| Yield 36.4g \\| Zeit 30s \\| FD 5s\nÄnderung: – (Wiederholung von Shot 3, sorgfältigere Verteilung/Tamping zur Kontrolle von Channeling)\nErgebnis: Robusta sehr deutlich, nur Hauch von Marzipan in der Nase, im Mund sehr schwach. Ändert sich auch im kühleren Zustand kaum.\n#### Shot 5\nParameter: Dose 17.8g \\| MG 3.4 \\| KT 118 \\| Yield 36.4g \\| Zeit 21s \\| FD 5-6s\nÄnderung: MG 3.2 → 3.4 (zurück zum Ausgangswert, KT 118 gehalten)\nErgebnis: Bester Shot der alten Charge – Marzipan/Amaretto in Nase und Mund, Süße deutlich präsent, Robusta gut integriert, nur ganz leichte Säure.\n#### Shot 6\nParameter: Dose 17.8g \\| MG 3.4 \\| KT 118 \\| Yield 37g \\| Zeit 20s\nÄnderung: Neue Charge (ca. 2,5 Monate geröstet). MG 3.15 kurz gegentestet (nicht formal dokumentiert), dann MG 3.4 wie bisheriger Bestwert.\nErgebnis: Gesamteindruck 5/10 – viel Robusta/Tabak/Röstaromen, Marzipan fehlt, Bitterkeit unausgeglichen (4/10), Balance schwach (4/10). Neue Charge verhält sich trotz identischer Parameter deutlich anders als die alte.\n#### Shot 7\nParameter: Dose 17.8g \\| MG 3.3 \\| KT 118 \\| RPM 1000 \\| Yield 36g \\| Zeit 28s\nÄnderung: MG 3.4 → 3.3, RPM 1200 → 1000\nErgebnis: Gesamteindruck 6/10 – Aroma zurück (Mandel, Milchschokolade), aber zu langsam gelaufen – dadurch Bitterkeit und Unausgeglichenheit.\n#### Shot 8\nParameter: Dose 17.8g \\| MG 3.35 \\| KT 118 \\| RPM 1000 \\| Yield 36g \\| Zeit 24s\nÄnderung: MG 3.3 → 3.35\nErgebnis: Gesamteindruck 7/10 – bisher bester Shot der neuen Charge. Süße (7) und Bitterkeit (7) gut eingebunden, Mandel/Zartbitterschokolade, langer Abgang, dichte Crema. Säure (5) noch leicht spitz/dominant.\n"
+    },
+    {
+      "id": "362744b73969818ea8c6d455268d13f7",
+      "titel": "Bio Espresso DECAF No. 19",
+      "url": "https://app.notion.com/p/362744b73969818ea8c6d455268d13f7",
+      "properties": {
+        "Best Fit": "Cappuccino",
+        "Bestes Profil": "ST-1",
+        "Bewertung": "⭐⭐⭐⭐",
+        "Dose (g)": 17.8,
+        "Erkenntnisse": "",
+        "KT": 121,
+        "Name": "Bio Espresso DECAF No. 19",
+        "Preinfusion (s)": 6,
+        "Röster": "Lena & Louise",
+        "Tasting-Text": "Leichte Marzipan-Nase, Süße erkennbar, Säure zu spitz. Puck kollabiert ab ~27g.",
+        "Verkostet": "__YES__",
+        "Yield (g)": 32.5,
+        "Zeit (s)": 33
+      },
+      "inhalt": "## Varianten\n### Espresso \\[Standard\\]\nDose: 17.8g \\| MG: 2.55 \\| KT: 121 \\| Yield: 32g \\| Zeit: 33s \\| Pre: 6s\nHinweise: Nächster Shot MG 2.6 – Hypothese: gröber = weniger Puck-Druck = stabileres Bett = längeres Extraktionsfenster vor Kollaps. Fluss beobachten, Stop kurz vor Sprudeln. Ziel: mehr Süße, Säure integrieren.\n"
+    },
+    {
+      "id": "364744b7396981348fd3c457a264d292",
+      "titel": "Red Honey Espresso",
+      "url": "https://app.notion.com/p/364744b7396981348fd3c457a264d292",
+      "properties": {
+        "Best Fit": "Espresso",
+        "Bestes Profil": "ST-2",
+        "Bewertung": "⭐⭐⭐⭐⭐",
+        "Dial-in": "Abgeschlossen",
+        "Dose (g)": 18,
+        "Erkenntnisse": "",
+        "KT": 120,
+        "Name": "Red Honey Espresso",
+        "Preinfusion (s)": 4,
+        "Röster": "Art Kaffee",
+        "Tasting-Text": "Süße Frucht, Karamell, seidiger Körper. Öffnet sich beim Abkühlen.",
+        "Verkostet": "__YES__",
+        "Yield (g)": 35,
+        "Zeit (s)": 25
+      },
+      "inhalt": "## Varianten\n### Espresso \\[Standard\\] \\[Abgeschlossen\\]\nDose: 18g \\| MG: 2.55 \\| RPM: 1200 \\| KT: 120 \\| Yield: 36g \\| Zeit: 25s \\| Pre: 4s\nHinweise: MG ist chargenabhängig – Charge 1 lief bei 2.95, Charge 2 bei 2.60. Enges Extraktionsfenster: Yield max. 38g, sonst harscher Tail. KT 120 kritisch: 119 = zu wenig Frucht, 121 = Abgang dominant. Kaffee öffnet sich beim Abkühlen – kurz warten. DLZ schwankt bohnenbedingt. Bei neuer Charge: erste 1–2 Wochen können flacher wirken, MG bei Bedarf anpassen wenn Bohnen ausgegast sind. Peak bei ~28 Tagen – Einfrierzeitpunkt.\n### Cold Brew\nDose: 60g \\| MG: 9.00 \\| RPM: 800 \\| Yield: 600g\nHinweise: Steepzeit 13–14h im Kühlschrank, max. 18h. Enges Extraktionsfenster wie beim Espresso – lieber kürzer als länger. Brita-Wasser kalt. Pur über Eis oder 1:1 mit Wasser strecken. Im Kühlschrank 5–7 Tage haltbar.\n## Dial-in Log\n### Espresso\n#### Shot 1\nParameter: Dose 18g \\| MG 3.40 \\| KT 119 \\| Yield 65g \\| Zeit 17s\nÄnderung: – (Erster Shot)\nErgebnis: Zu schnell, zu viel – diagnostisch wertlos\n#### Shot 2\nParameter: Dose 18g \\| MG 3.10 \\| KT 119 \\| Yield 47g \\| Zeit 24s \\| Pre: 0s\nÄnderung: MG feiner (3.40 → 3.10), Yield reduziert\nErgebnis: Frucht da, leer, metallisch-rostiger Abgang. Unterextraktion + Tail erkannt.\n#### Shot 3\nParameter: Dose 18g \\| MG 2.90 \\| KT 119 \\| Yield 42g \\| Zeit 24s \\| Pre: 0s\nÄnderung: MG feiner (3.10 → 2.90), Yield reduziert (42g → 42g)\nErgebnis: Frucht verschwunden. Zu fein begrub die Frucht.\n#### Shot 4\nParameter: Dose 18g \\| MG 3.00 \\| KT 119 \\| Yield 37.9g \\| Zeit 27s \\| Pre: 0s\nÄnderung: MG gröber (2.90 → 3.00), Yield reduziert (42g → 38g)\nErgebnis: Frucht angedeutet, Säure, astringierender Abgang. Erkältet – eingeschränkte Sensorik.\n#### Shot 5\nParameter: Dose 18g \\| MG 3.00 \\| KT 119 \\| Yield 42.3g \\| Zeit 24s \\| Pre: 0s\nÄnderung: Yield erhöht (38g → 42g)\nErgebnis: Tabak, harsch, Frucht da. Tail-Effekt bei 42g bestätigt. Erkältet.\n#### Shot 6\nParameter: Dose 18g \\| MG 3.00 \\| KT 119 \\| Yield 39.4g \\| Zeit 23s \\| Pre: 4s\nÄnderung: Preinfusion eingeführt (3–4s)\nErgebnis: Wenig Frucht, leicht bitter.\n#### Shot 7\nParameter: Dose 18g \\| MG 2.90 \\| KT 119 \\| Yield 37g \\| Zeit 29s \\| Pre: 4s\nÄnderung: MG feiner (3.00 → 2.90)\nErgebnis: Frucht fehlt weiter. PI stabilisiert DLZ – MG nicht der entscheidende Hebel.\n#### Shot 8\nParameter: Dose 18g \\| MG 3.00 \\| KT 120 \\| Yield 39g \\| Zeit 20s \\| Pre: 4s\nÄnderung: KT erhöht (119 → 120), MG gröber (2.90 → 3.00)\nErgebnis: Bestes Aromabild bisher – süße Frucht, Karamell. Säure + Abgang bleiben. Channeling (Blubbern).\n#### Shot 9\nParameter: Dose 18g \\| MG 2.95 \\| KT 120 \\| Yield 36g \\| Zeit 27s \\| Pre: 4s\nÄnderung: MG feiner (3.00 → 2.95), Yield reduziert (39g → 36g)\nErgebnis: Frucht + Karamell in Nase. Heiß: Frucht + leichte Säure. Abkühlend: Süße + seidiger Körper. Referenz-Shot.\n#### Shot 10\nParameter: Dose 18g \\| MG 2.95 \\| KT 121 \\| Yield 37.8g \\| Zeit 21s \\| Pre: 4s\nÄnderung: KT erhöht (120 → 121)\nErgebnis: Schlechter als Shot 9. KT 121 betont Abgang, Säure dominiert. KT 120 bleibt Referenzpunkt.\n#### Shot 11\nParameter: Dose 18g \\| MG 2.95 \\| KT 120 \\| Yield 36g \\| Zeit 21s \\| Pre: 4s\nÄnderung: Neue Charge (Röstdatum 21.05.2026, ~14 Tage alt)\nErgebnis: Frucht weg. Zu schnell – DLZ-Instabilität durch CO₂-Ausgasung. Bohnen zu frisch.\n#### Shot 12\nParameter: Dose 18g \\| MG 2.75 \\| KT 120 \\| Yield – \\| Zeit \\<20s \\| Pre: 4s\nÄnderung: MG feiner (2.95 → 2.75)\nErgebnis: Immer noch zu schnell.\n#### Shot 13\nParameter: Dose 18g \\| MG 2.60 \\| KT 120 \\| Yield 35g \\| Zeit 25s \\| Pre: 4s\nÄnderung: MG feiner (2.75 → 2.60)\nErgebnis: Samtig cremig, Hauch Süße und Säure, Röstung im Abgang. Später: Frucht da, Süße da, Säure leicht spitz. Arbeitsparameter neue Charge – Referenz-Shot.\n#### Shot 14\nParameter: Dose 18g \\| MG 2.60 \\| KT 120 \\| Yield 36.3g \\| Zeit 25s \\| FD 4s \\| Pre: 4s\nÄnderung: Monitoring-Shot bei Peak (28 Tage)\nErgebnis: Frucht klar in der Nase nach Umrühren. Erster Schluck: Säure und Bitter präsent, Süße versteckt. Abgekühlt: Frucht erkennbar, Säure spitz, Mundgefühl dünn. Nächster Versuch: Yield 38g testen.\n#### Shot 15\nParameter: Dose 18g \\| MG 2.55 \\| RPM 1200 \\| KT 120 \\| Yield 36g \\| Zeit 25s \\| Pre 4s\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n"
+    },
+    {
+      "id": "375744b73969810592ebdeadfa49b3e3",
+      "titel": "Art Kaffee – Single Origin Filterkaffee (Äthiopien Limu Grade 1)",
+      "url": "https://app.notion.com/p/375744b73969810592ebdeadfa49b3e3",
+      "properties": {
+        "Best Fit": "Pour Over",
+        "Bestes Profil": "PO-1",
+        "Chat-URL": "",
+        "Erkenntnisse": "",
+        "Name": "Art Kaffee – Single Origin Filterkaffee (Äthiopien Limu Grade 1)",
+        "Röster": "Art Kaffee Rösterei",
+        "Tasting-Text": "Himbeere, Brauner Zucker, Zimt, Honig – PO-1 Score 8.0",
+        "Verkostet": "__YES__"
+      },
+      "inhalt": "## Varianten\n### Pour Over \\[Laufend\\]\nDose: 18g \\| MG: 120 \\| BT: 93 \\| Yield: 250g \\| Zeit: 0:00\nHinweise: Mühle: KINGrinder K6. Channeling durch ungleichmäßige Bloom-Sättigung identifiziert – bisher immer von innen nach außen gebloomt. Nächster Schritt: Bloom von außen nach innen, 45s, MG 120 Clicks.\n### Cold Brew\nDose: 75g \\| MG: 9.50 \\| RPM: 800 \\| Yield: 900g \\| Zeit: 14:00\nHinweise: Ratio 1:12, ready to drink – pur auf Eis servieren. Durchgehend 4–6°C, nie bei Raumtemperatur starten. Ziehzeit nicht verlängern – Espresso-Burr-Fines treiben Extraktion in letzten Stunden überproportional. Innerhalb 3–4 Tagen trinken.\n## Aufguss\n\\[36g \\| 45s\\] Bloom: Von außen nach innen spiralieren – alle Grounds vollständig benetzen, Mitte zuletzt.\n\\[214g \\| –\\] Kontinuierlicher Guss bis 250g, Spirale nah am Bett, 3–4g/s.\n## Analyse\n**Kaffee:** Art Kaffee Single Origin Filterkaffee – Äthiopien Limu Grade 1\n**Farm:** Tega & Tula Special Coffee Farm, Region Kaffa\n**Varietät:** Heirloom \\| **Höhe:** 1860–1910m \\| **Aufbereitung:** vermutlich washed (nicht bestätigt)\n**Aromen laut Röster:** Himbeere, Brauner Zucker, Zimt, Honig\n**Profilscores:**\nPO-1 Elegant & Fruchtklar: 8.0 ✓\nST-2 Elegant Sweet / Modern: 6.0\nST-1 Sweet Balance: 3.5\n**Begründung PO-1 Match:**\nÄthiopien washed, hell geröstet, als Filterkaffee deklariert. Rote Frucht (Himbeere) ohne Säurespitzen, süßer Abgang (Honig, brauner Zucker), kein Funk, kein Zitrus. Klassisches PO-1-Profil. Score würde bei bestätigtem Washed auf 8.5 steigen.\n**Unsicherheit:** Aufbereitung nicht angegeben – Tega & Tula typischerweise fully washed, ein Händler listet trockene Aufbereitung. Aromensprache deutet eher auf sauberes Washed oder leichtes Honey hin.\n## Dial-in Log\n### Pour Over\n#### Shot 1\nParameter: Dose 16g \\| MG 7.90 \\| BT 93°C \\| Yield 256g \\| Zeit 5:10\nÄnderung: – (Erster Aufguss)\nErgebnis: Wässrig, sehr schwach, kaum Nase. Leichter floraler Eindruck am Gaumen, schwache Frucht vorhanden. DLZ 5:10 (bis fast nichts) / 5:40 (letzter Tropfen) – Bett verstopft durch Fines-Überschuss (Espresso-Burrs).\n#### Shot 2\nParameter: Dose 16g \\| MG 8.50 \\| BT 93°C \\| Yield 256g \\| Zeit 5:45\nÄnderung: MG gröber (7.90 → 8.50)\nErgebnis: Etwas mehr Frucht und Säure, aber weiterhin wässrig und dünn. DLZ sogar länger als Shot 1 – Verstopfung nicht gelöst. Espresso-Burr-Fines-Problem bestätigt. Dial-In mit Sculptor pausiert – weiter mit KINGrinder K6.\n#### Shot 3 (KINGrinder K6)\nParameter: Dose 16g \\| MG 100 Clicks \\| BT 93°C \\| Yield 240g \\| Zeit 4:30\nÄnderung: Wechsel auf KINGrinder K6\nErgebnis: Dünn, wenig Geschmack. DLZ 4–5 min.\n#### Shot 4 (KINGrinder K6)\nParameter: Dose 15g \\| MG 95 Clicks \\| BT 93°C \\| Yield 240g \\| Zeit 9:00\nÄnderung: MG feiner (100 → 95 Clicks)\nErgebnis: Sehr wässrig, kaum Nase, sehr schwach. DLZ 9 min – Bett verstopft, Channeling durch Fines.\n#### Shot 5 (KINGrinder K6)\nParameter: Dose 15g \\| MG 110 Clicks \\| BT 93°C \\| Yield 240g \\| Zeit 4:37\nÄnderung: MG gröber (95 → 110 Clicks)\nErgebnis: Etwas besser, noch dünn. DLZ 4:37.\n#### Shot 6 (KINGrinder K6)\nParameter: Dose 15g \\| MG 125 Clicks \\| BT 93°C \\| Yield 240g \\| Zeit 4:05\nÄnderung: MG gröber (110 → 125 Clicks)\nErgebnis: Fruchtnote und leichte Süßnote in der Nase. DLZ 3:50–4:20. Tasse noch dünn, aber Charakter sichtbar.\n#### Shot 7 (KINGrinder K6)\nParameter: Dose 18g \\| MG 115 Clicks \\| BT 93°C \\| Yield 250g \\| Zeit 4:30\nÄnderung: Dose erhöht (15g → 18g), MG feiner (125 → 115 Clicks)\nErgebnis: Bergamotte, zitrusfloral in der Nase. Im Mund spärlich, Körper und Süße fehlen. Bloom von innen nach außen als Channeling-Ursache identifiziert.\n#### Shot 8 (KINGrinder K6)\nParameter: Dose 18g \\| MG 108 Clicks \\| BT 93°C \\| Yield 250g \\| Zeit 4:30\nÄnderung: MG feiner (115 → 108 Clicks)\nErgebnis: Aroma 6/10, Geschmack 4/10, Säure 5/10, Süße 5/10, Bitterkeit 6/10, Körper 4/10, Balance 4/10, Abgang 5/10, Gesamt 4/10. Wässrig, Bitterkeit spürbar – Channeling bestätigt durch hartnäckige DLZ und Bitterkeit trotz dünner Tasse.\n"
+    },
+    {
+      "id": "3b9744b7396981f7b759c6a665042f89",
+      "titel": "Kimbo Espresso Barista Decaf",
+      "url": "https://app.notion.com/p/3b9744b7396981f7b759c6a665042f89",
+      "properties": {
+        "Chat-URL": "",
+        "Dial-in": "Laufend",
+        "Erkenntnisse": "1 Tasse 7g · 3 Tassen 16g. Wasser im Wasserkocher erhitzen. Bei mittel bis niedriger Temperatur Kaffee kochen. Sobald Kaffee läuft, Temperatur zurückdrehen. Beim ersten Blubbern abschrecken.",
+        "Name": "Kimbo Espresso Barista Decaf",
+        "Röster": "Kimbo",
+        "Tasting-Text": "Röstig, leichte Süße, dunkle Schokolade, würziger Nachhall mit Noten von Tabak.",
+        "Verkostet": "__YES__"
+      },
+      "inhalt": "## Varianten\n### Bialetti 1er \\[Standard\\] \\[Laufend\\]\nDose: 7.5g \\| MG: 60\n### Bialetti 3er \\[Laufend\\]\nDose: 17,5g \\| MG: 60\n## Dial-in Log\n**Hinweis: Shots 1–3 liefen auf falscher Mühlenskala (K6-Klicks fälschlich analog Comandante gezählt/interpretiert, tatsächlich viel zu fein). Werte nicht direkt mit Shot 4 vergleichbar. Ab Shot 4 korrekte KINGrinder-K6-Skala.**\n### Bialetti 1er\n#### Shot 1 (alte Skala – ungültig)\nParameter: MG 21 (fälschlich als K6 interpretiert) \\| Bialetti 1-Tasse, ~6g\nÄnderung: – (Erster Versuch, Referenz Café Langen Decaf 19 „Klicks“ als Ausgangspunkt)\nErgebnis: Bisschen bitter\n#### Shot 2 (alte Skala – ungültig)\nParameter: MG 23 (fälschlich als K6 interpretiert) \\| Dose ~5,8g (1-Tasse, Trichter randvoll ohne Pressen), locker eingefüllt\nÄnderung: MG gröber (21 → 23), Gegenmaßnahme zu Bitterkeit\nErgebnis: Geschmacksneutral, fast dünn, leichte Adstringenz im Abgang. Kaffeesatz zeigte unregelmäßige, teils seitliche Luftlöcher im Puck → Verdacht auf Kanalbildung durch lockere Füllung.\n#### Shot 3 (alte Skala – ungültig)\nParameter: MG 23 (fälschlich als K6 interpretiert, unverändert) \\| Dose ~5,8g (1-Tasse) \\| WDT-Nadel durchs Pulver + leichtes Einebnen (kein Pressen)\nÄnderung: Nur Verteilung/Packdichte geändert, MG konstant gehalten\nErgebnis: Deutlicher Sprung – spürbarer Körper statt dünn/wässrig, aromaintensiver, Crema früher/kräftiger. Aber leichte Adstringenz, Hauch Säure, Hauch Bitterkeit im Abgang. Abbruch beim ersten Blubbern.\n#### Shot 4\nParameter: Dose 7.5g \\| MG 60\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n#### Shot 5\nParameter: Dose 7.5g \\| MG 60\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n### Bialetti 3er\n#### Shot 1 (korrekte K6-Skala, Mühle als KINGrinder K6 bestätigt)\nParameter: MG 60 (K6-Klicks) \\| Dose 17g \\| Ohne WDT, nur mit Finger glattgestrichen, keine Klumpen, gute Verteilung \\| Hitzemanagement unverändert (Stufe 2→1, Abschreck beim ersten Blubbern)\nÄnderung: Wechsel auf korrekten Mahlgradbereich lt. Hersteller-Tabelle (60–70 Klicks für Moka), kompletter Neustart der Skala\nErgebnis: Welten besser als alle bisherigen Versuche. Etwas stumpf, minimal bitter hinten raus, aber insgesamt deutlich runder/voller. Wunsch: mehr Körper und mehr Säure, weniger Stumpfheit/Bitterkeit im Abgang.\n#### Shot 5\nParameter: Dose 6.5g \\| MG 59\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n#### Shot 6\nParameter: Dose 7.5g \\| MG 60 \\| RPM 1200\nÄnderung: Parameter in der App angepasst\nErgebnis: –\n"
+    },
+    {
+      "id": "3be744b7396981b0af07d913e40dc213",
+      "titel": "Manaresi Caffè Arabica",
+      "url": "https://app.notion.com/p/3be744b7396981b0af07d913e40dc213",
+      "properties": {
+        "Chat-URL": "",
+        "Dial-in": "Laufend",
+        "Dose (g)": 7.5,
+        "Erkenntnisse": "Nächster Schritt: MG 65 halten, Puck nach portionsweisem Einfüllen leicht andrücken, danach randvoll auffüllen (Dose steigt dadurch natürlich über 7,5g – nicht auf Fixwert normieren, tatsächliche Dose nach dem Andrücken wiegen und dokumentieren). Ziel: mehr Körper/Geschmack bei weiterhin niedriger Bitterkeit. Herdführung unverändert (20%→10%, Abschrecken bei erstem Durchschießen).",
+        "Name": "Manaresi Caffè Arabica",
+        "Röster": "Manaresi",
+        "Tasting-Text": "Dunkle Schokolade, Röstaromen, Nuss – klassisch italienischer Stil.",
+        "Verkostet": "__YES__"
+      },
+      "inhalt": "## Varianten\n### Bialetti \\[Standard\\] \\[Laufend\\]\nDose: 7.5g \\| MG: 65\n## Dial-in Log\n### Bialetti\n#### Shot 1\nParameter: MG unbekannt/sehr fein (genauer Wert nicht dokumentiert) \\| Bialetti\nÄnderung: – (Erster Versuch)\nErgebnis: Sehr wässrig, \"eher Tee statt Kaffee\"\n#### Shot 2\nParameter: MG 30 \\| Dose ~18g (3-Tassen) \\| Herd 30%→10%, Abschrecken bei erstem Durchschießen\nÄnderung: Deutlich gröber als Shot 1, um Wässrigkeit zu beheben\nErgebnis: Anfangs ausgelaufener Kaffee dunkel, cremig, voller Körper – aber nur 50g von 120g Füllwasser liefen durch (vorzeitiger Abbruch, Verdacht auf frühen Dampfdurchbruch/Channeling)\n#### Shot 3\nParameter: MG 60 \\| Dose 7.5g (1-Tasse) \\| portionsweise eingefüllt & verteilt (kein WDT), Herd 20%→10%\nÄnderung: Wechsel auf korrekte K6-Herstellerskala (KINGrinder-Tabelle: 60-70 Klicks für Moka Pot), vorheriger MG-Wert 30 lag nach dieser Skala deutlich zu fein\nErgebnis: Bitter, leicht verbrannt\n#### Shot 4\nParameter: MG 63 \\| Dose 7.5g (1-Tasse) \\| sonst unverändert\nÄnderung: MG gröber (60 → 63)\nErgebnis: Besser, aber weiterhin leicht bitter\n#### Shot 5\nParameter: MG 65 \\| Dose 7.5g (1-Tasse) \\| sonst unverändert\nÄnderung: MG gröber (63 → 65)\nErgebnis: Bitterkeit gut im Griff, aber Körper und Geschmack dünn\n"
+    }
+  ]
+}
