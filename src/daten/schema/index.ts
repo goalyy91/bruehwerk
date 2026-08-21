@@ -9,3 +9,4 @@ export * from './kaffee';
 export * from './shot';
 export * from './getraenk';
 export * from './bestellung';
+export * from './einstellungen';

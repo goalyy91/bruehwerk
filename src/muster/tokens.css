@@ -192,10 +192,16 @@ body {
 }
 
 /* Der native Tipp-Blitz mobiler Browser (kurz hellblau) hat nichts mit
-   unserer Auswahl-Darstellung zu tun — weg damit. */
+   unserer Auswahl-Darstellung zu tun — weg damit.
+   touch-action:manipulation nimmt zusaetzlich die eingebaute
+   Doppeltipp-zum-Zoomen-Erkennung raus (dort wartet der Browser bis zu
+   300ms, ob ein zweiter Tipp kommt, bevor er den ersten ausloest) — das war
+   vermutlich der Grund, warum kleine Symbol-Buttons auf dem Telefon sehr
+   genau/mehrfach getroffen werden mussten. */
 button,
 [role='button'] {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Jede Zahl: tabular-nums, 500, -0.01em — die vergessene Regel aus

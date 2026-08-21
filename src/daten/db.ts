@@ -25,10 +25,17 @@ import type {
   Durchgang,
   Position,
   Bestellung,
+  AppEinstellungen,
 } from './schema';
 
 const DB_NAME = 'bruehwerk';
-const DB_VERSION = 1;
+/**
+ * Version 2 fuegt den Store 'einstellungen' hinzu (Korrekturrunde, Teil 1).
+ * upgrade() legt Stores deshalb nur noch an, wenn sie fehlen — sonst wuerde
+ * ein Versionssprung auf einer bereits bestehenden DB an einem erneuten
+ * createObjectStore() fuer 'setup' etc. krachen.
+ */
+const DB_VERSION = 2;
 
 /**
  * Der Store-Katalog steht als eine Konstante da, nicht verstreut — Paket 03
@@ -54,6 +61,7 @@ export const SAMMLUNGEN = [
   'durchgang',
   'position',
   'bestellung',
+  'einstellungen',
 ] as const;
 export type Sammlung = (typeof SAMMLUNGEN)[number];
 
@@ -85,6 +93,7 @@ export interface BruehwerkSchema extends DBSchema {
     indexes: { 'by-person': string; 'by-durchgang': string };
   };
   bestellung: { key: string; value: Bestellung; indexes: { 'by-ts': number } };
+  einstellungen: { key: string; value: AppEinstellungen };
 }
 
 export type BruehwerkDB = IDBPDatabase<BruehwerkSchema>;
@@ -103,46 +112,64 @@ export function oeffneDB(name: string = DB_NAME): Promise<BruehwerkDB> {
   if (!verbindung) {
     verbindung = openDB<BruehwerkSchema>(name, DB_VERSION, {
       upgrade(db) {
-        db.createObjectStore('setup', { keyPath: 'id' });
-        db.createObjectStore('muehle', { keyPath: 'id' });
-        db.createObjectStore('bruehgeraet', { keyPath: 'id' });
-        db.createObjectStore('zubehoer', { keyPath: 'id' });
-        db.createObjectStore('ablauf', { keyPath: 'id' });
-        db.createObjectStore('kaffee', { keyPath: 'id' });
+        const hat = (name: Sammlung) => db.objectStoreNames.contains(name);
 
-        const charge = db.createObjectStore('charge', { keyPath: 'id' });
-        charge.createIndex('by-kaffee', 'kaffeeId');
+        if (!hat('setup')) db.createObjectStore('setup', { keyPath: 'id' });
+        if (!hat('muehle')) db.createObjectStore('muehle', { keyPath: 'id' });
+        if (!hat('bruehgeraet')) db.createObjectStore('bruehgeraet', { keyPath: 'id' });
+        if (!hat('zubehoer')) db.createObjectStore('zubehoer', { keyPath: 'id' });
+        if (!hat('ablauf')) db.createObjectStore('ablauf', { keyPath: 'id' });
+        if (!hat('kaffee')) db.createObjectStore('kaffee', { keyPath: 'id' });
 
-        const profil = db.createObjectStore('profil', { keyPath: 'id' });
-        profil.createIndex('by-kaffee', 'kaffeeId');
+        if (!hat('charge')) {
+          const charge = db.createObjectStore('charge', { keyPath: 'id' });
+          charge.createIndex('by-kaffee', 'kaffeeId');
+        }
 
-        db.createObjectStore('gussplan', { keyPath: 'id' });
+        if (!hat('profil')) {
+          const profil = db.createObjectStore('profil', { keyPath: 'id' });
+          profil.createIndex('by-kaffee', 'kaffeeId');
+        }
 
-        const shot = db.createObjectStore('shot', { keyPath: 'id' });
-        shot.createIndex('by-kaffee', 'kaffeeId');
-        shot.createIndex('by-ts', 'ts');
-        shot.createIndex('by-profil', 'profilId');
+        if (!hat('gussplan')) db.createObjectStore('gussplan', { keyPath: 'id' });
 
-        db.createObjectStore('symptom', { keyPath: 'id' });
+        if (!hat('shot')) {
+          const shot = db.createObjectStore('shot', { keyPath: 'id' });
+          shot.createIndex('by-kaffee', 'kaffeeId');
+          shot.createIndex('by-ts', 'ts');
+          shot.createIndex('by-profil', 'profilId');
+        }
 
-        const tasting = db.createObjectStore('tasting', { keyPath: 'id' });
-        tasting.createIndex('by-shot', 'shotId');
+        if (!hat('symptom')) db.createObjectStore('symptom', { keyPath: 'id' });
 
-        db.createObjectStore('aromaset', { keyPath: 'id' });
-        db.createObjectStore('getraenk', { keyPath: 'id' });
+        if (!hat('tasting')) {
+          const tasting = db.createObjectStore('tasting', { keyPath: 'id' });
+          tasting.createIndex('by-shot', 'shotId');
+        }
 
-        const ansatz = db.createObjectStore('ansatz', { keyPath: 'id' });
-        ansatz.createIndex('by-kaffee', 'kaffeeId');
+        if (!hat('aromaset')) db.createObjectStore('aromaset', { keyPath: 'id' });
+        if (!hat('getraenk')) db.createObjectStore('getraenk', { keyPath: 'id' });
 
-        db.createObjectStore('person', { keyPath: 'id' });
-        db.createObjectStore('durchgang', { keyPath: 'id' });
+        if (!hat('ansatz')) {
+          const ansatz = db.createObjectStore('ansatz', { keyPath: 'id' });
+          ansatz.createIndex('by-kaffee', 'kaffeeId');
+        }
 
-        const position = db.createObjectStore('position', { keyPath: 'id' });
-        position.createIndex('by-person', 'personId');
-        position.createIndex('by-durchgang', 'durchgangId');
+        if (!hat('person')) db.createObjectStore('person', { keyPath: 'id' });
+        if (!hat('durchgang')) db.createObjectStore('durchgang', { keyPath: 'id' });
 
-        const bestellung = db.createObjectStore('bestellung', { keyPath: 'id' });
-        bestellung.createIndex('by-ts', 'ts');
+        if (!hat('position')) {
+          const position = db.createObjectStore('position', { keyPath: 'id' });
+          position.createIndex('by-person', 'personId');
+          position.createIndex('by-durchgang', 'durchgangId');
+        }
+
+        if (!hat('bestellung')) {
+          const bestellung = db.createObjectStore('bestellung', { keyPath: 'id' });
+          bestellung.createIndex('by-ts', 'ts');
+        }
+
+        if (!hat('einstellungen')) db.createObjectStore('einstellungen', { keyPath: 'id' });
       },
     });
   }

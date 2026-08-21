@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Kaffee, Bruehgeraet, Muehle, Shot, Profil } from './index';
+import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein } from './index';
 import { MUEHLE_K6, BRUEHGERAET_MOZZAFIATO, BRUEHGERAET_BIALETTI_1 } from '../stammdaten';
 
 const KAFFEE_BASIS = {
@@ -32,6 +32,12 @@ describe('Kaffee — Grenzfaelle', () => {
   it('botanik muss auf 100 summieren', () => {
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 40 } }).success).toBe(false);
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 30 } }).success).toBe(true);
+  });
+
+  it('ein altes status-Feld (offen/angebrochen/leer) laesst sich weiterhin lesen — es faellt dabei weg (UX-2)', () => {
+    const ergebnis = Kaffee.safeParse({ ...KAFFEE_BASIS, status: 'angebrochen' });
+    expect(ergebnis.success).toBe(true);
+    if (ergebnis.success) expect(ergebnis.data).not.toHaveProperty('status');
   });
 });
 
@@ -108,5 +114,47 @@ describe('Shot und Profil — Grundform', () => {
       modus: 'dialin',
     };
     expect(Profil.safeParse(profil).success).toBe(true);
+  });
+});
+
+describe('GussBaustein — sechs typisierte Bausteine plus Altbestand', () => {
+  it('jeder Konzept-Baustein ist gueltig', () => {
+    const bausteine: unknown[] = [
+      { typ: 'vorbereiten', filterSpuelen: true, gefaessVorwaermen: false },
+      { typ: 'bloom', menge: 50, dauer: 30 },
+      { typ: 'guss', zielmenge: 150, dauer: 30, muster: 'spirale' },
+      { typ: 'agitation', art: 'rao-spin' },
+      { typ: 'warten', modus: 'bis-durchgelaufen' },
+      { typ: 'bypass', menge: 20, temperatur: 90 },
+    ];
+    for (const b of bausteine) expect(GussBaustein.safeParse(b).success).toBe(true);
+  });
+
+  it('die alte generische Form (Notion-Migration) bleibt gueltig', () => {
+    const alt = { typ: 'frei', menge: 50, dauer: 30, rolle: 'Bloom', text: 'gleichmaessig durchfeuchten' };
+    expect(GussBaustein.safeParse(alt).success).toBe(true);
+  });
+
+  it('ein unbekannter typ faellt durch', () => {
+    expect(GussBaustein.safeParse({ typ: 'unbekannt', menge: 1 }).success).toBe(false);
+  });
+
+  it('guss ohne Muster ist gueltig — Muster ist optional', () => {
+    expect(GussBaustein.safeParse({ typ: 'guss', zielmenge: 300 }).success).toBe(true);
+  });
+
+  it('ein Gussplan mit gemischten Bausteintypen ist gueltig', () => {
+    const plan = {
+      id: 'g1',
+      name: 'V60 Standard',
+      gesamtwasser: 300,
+      lesart: 'kumulativ',
+      bausteine: [
+        { typ: 'bloom', menge: 50, dauer: 30 },
+        { typ: 'guss', zielmenge: 300, muster: 'zentrum' },
+        { typ: 'frei', menge: 0, rolle: 'Warten', text: 'bis durchgelaufen' },
+      ],
+    };
+    expect(Gussplan.safeParse(plan).success).toBe(true);
   });
 });

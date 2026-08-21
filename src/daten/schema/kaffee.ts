@@ -13,6 +13,7 @@ export const Aufbereitung = z.enum([
   'wet-hulled',
   'sonstige',
 ]);
+export type Aufbereitung = z.infer<typeof Aufbereitung>;
 
 export const Entkoffeinierung = z.enum(['swiss-water', 'co2', 'ea', 'mc', 'unbekannt']);
 
@@ -63,7 +64,10 @@ export const Kaffee = z.object({
   chargeIds: z.array(Id).default([]),
   aktuelleChargeId: Id.optional(),
   bewertung: z.number().min(0).max(5).optional(),
-  status: z.enum(['offen', 'angebrochen', 'leer']).optional(),
+  // UX-2: kein eigener Kaffee-Status mehr (offen/angebrochen/leer) — doppelt
+  // gefuehrt neben Charge.leer und in der Praxis nie zwei offene Chargen
+  // gleichzeitig. Eine neue Charge markiert die vorherige automatisch als
+  // leer (Kaffeeblatt.svelte), das reicht.
   erkenntnisse: z.array(Erkenntnis).default([]),
 });
 export type Kaffee = z.infer<typeof Kaffee>;
@@ -92,6 +96,7 @@ export const ZielWerte = z.object({
   pre: z.number().nonnegative().optional(),
   zeit: z.number().nonnegative(),
 });
+export type ZielWerte = z.infer<typeof ZielWerte>;
 
 /**
  * Deckungsgleich mit domain/spielraum.ts::Spielraum — importiert statt neu
@@ -109,12 +114,83 @@ function pruefeSpielraumTyp(s: z.infer<typeof SpielraumSchema>): Spielraum {
 }
 void pruefeSpielraumTyp;
 
-const GussBaustein = z.object({
+/**
+ * Sechs typisierte Bausteine — "Pour Over: der Gussplan" in docs/konzept.md,
+ * Abschnitt "Bausteine mit Notizzeile". Jeder traegt zusaetzlich `notiz`
+ * fuer das, was kein Feld abdeckt.
+ *
+ * `frei` ist die alte, generische Form (menge/dauer/rolle/text) und bleibt
+ * gueltig, weil das Notion-Format `[50g | 30s] Bloom: Beschreibung` genau
+ * diese Form hat — die Migration (Paket 02) uebersetzt eins zu eins dorthin.
+ * Kein importierter Plan wird durch die Typisierung ungueltig.
+ */
+const BausteinVorbereiten = z.object({
+  typ: z.literal('vorbereiten'),
+  filterSpuelen: z.boolean(),
+  gefaessVorwaermen: z.boolean(),
+  notiz: z.string().optional(),
+});
+
+const BausteinBloom = z.object({
+  typ: z.literal('bloom'),
+  menge: z.number().nonnegative(),
+  dauer: z.number().nonnegative(),
+  notiz: z.string().optional(),
+});
+
+export const GussMuster = z.enum(['zentrum', 'spirale', 'aussen']);
+
+const BausteinGuss = z.object({
+  typ: z.literal('guss'),
+  zielmenge: z.number().nonnegative(),
+  dauer: z.number().nonnegative().optional(),
+  muster: GussMuster.optional(),
+  /** Nur belegt, wenn dieser Guss von der Kannen-Temperatur abweicht. */
+  temperaturAbweichend: z.number().optional(),
+  notiz: z.string().optional(),
+});
+
+export const AgitationArt = z.enum(['schwenken', 'rao-spin', 'ruehren', 'klopfen']);
+
+const BausteinAgitation = z.object({
+  typ: z.literal('agitation'),
+  art: AgitationArt,
+  notiz: z.string().optional(),
+});
+
+const BausteinWarten = z.object({
+  typ: z.literal('warten'),
+  modus: z.enum(['bis-durchgelaufen', 'feste-dauer']),
+  dauer: z.number().nonnegative().optional(),
+  notiz: z.string().optional(),
+});
+
+const BausteinBypass = z.object({
+  typ: z.literal('bypass'),
+  menge: z.number().nonnegative(),
+  temperatur: z.number().optional(),
+  notiz: z.string().optional(),
+});
+
+/** Altbestand — Notion-Migration und alles vor der Typisierung. */
+const BausteinFrei = z.object({
+  typ: z.literal('frei'),
   menge: z.number().nonnegative(),
   dauer: z.number().nonnegative().optional(),
   rolle: z.string().min(1),
   text: z.string().optional(),
 });
+
+export const GussBaustein = z.discriminatedUnion('typ', [
+  BausteinVorbereiten,
+  BausteinBloom,
+  BausteinGuss,
+  BausteinAgitation,
+  BausteinWarten,
+  BausteinBypass,
+  BausteinFrei,
+]);
+export type GussBaustein = z.infer<typeof GussBaustein>;
 
 export const Gussplan = z.object({
   id: Id,

@@ -22,6 +22,14 @@
   import VorbelegteFrage from '../muster/VorbelegteFrage.svelte';
   import Verlaufskurve from '../muster/Verlaufskurve.svelte';
   import LesartUmschalter from '../muster/LesartUmschalter.svelte';
+  import Bohnen from '../muster/Bohnen.svelte';
+  import Sterne from '../muster/Sterne.svelte';
+  import Einzelauswahl from '../muster/Einzelauswahl.svelte';
+  import Schalter from '../muster/Schalter.svelte';
+  import Kopfzeile from '../muster/Kopfzeile.svelte';
+
+  let einzelauswahlDemo = $state('b');
+  let schalterDemo = $state(true);
 
   const ZEICHEN_LEGENDE = [
     { klasse: 'gut', wort: 'gut' },
@@ -321,6 +329,46 @@
     <p class="hinweis">
       Vorgemerkt und bis heute nicht gebraucht (K41) — kein Bildschirm verlangt sie. Absichtlich nicht gebaut.
     </p>
+  </section>
+
+  <!-- Röstgrad und Bewertung — Systemregel K79, kein Muster aus der Übergabe -->
+  <section class="muster">
+    <h2>Röstgrad & Bewertung · K79</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Bohnen stufe={4} />
+        <Bohnen stufe={undefined} />
+        <Sterne wert={3.5} />
+        <Sterne wert={undefined} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Einzelauswahl/Schalter — Ergaenzung fuer Verwaltungsformulare, kein natives select/checkbox -->
+  <section class="muster">
+    <h2>Einzelauswahl & Schalter · Formulare</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Einzelauswahl
+          optionen={[
+            { wert: 'a', label: 'Single' },
+            { wert: 'b', label: 'Blend' },
+          ]}
+          wert={einzelauswahlDemo}
+          onWahl={(w) => (einzelauswahlDemo = w)}
+        />
+        <Schalter label="entkoffeiniert" an={schalterDemo} onWahl={(a) => (schalterDemo = a)} />
+      </div>
+    {/each}
+  </section>
+
+  <section class="muster">
+    <h2>Kopfzeile · Formulare</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} />
+      </div>
+    {/each}
   </section>
 </div>
 
