@@ -43,9 +43,9 @@ export const BRUEHGERAET_MOZZAFIATO: Bruehgeraet = {
   // Gattungsregel, keine Messung an dieser Maschine). Deckt den genutzten
   // KT-Bereich 119-121 ab; die echte Messreihe ersetzt das spaeter.
   tempReferenz: [
-    { kt: 119, flush: 3, gruppe: 92, herkunft: 'geschaetzt' },
-    { kt: 120, flush: 3, gruppe: 93, herkunft: 'geschaetzt' },
-    { kt: 121, flush: 3, gruppe: 94, herkunft: 'geschaetzt' },
+    { kt: 119, gruppe: 92, herkunft: 'geschaetzt' },
+    { kt: 120, gruppe: 93, herkunft: 'geschaetzt' },
+    { kt: 121, gruppe: 94, herkunft: 'geschaetzt' },
   ],
 };
 

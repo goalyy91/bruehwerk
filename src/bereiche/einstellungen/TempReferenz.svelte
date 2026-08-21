@@ -27,7 +27,6 @@
   const reihe = $derived([...werte].sort((a, b) => a.kt - b.kt));
 
   let neuKt = $state('');
-  let neuFlush = $state('3');
   let neuGruppe = $state('');
   let neuHerkunft = $state<TempReferenzPunkt['herkunft']>('uebernommen');
 
@@ -41,7 +40,6 @@
     if (neuKt === '' || neuGruppe === '') return;
     const punkt: TempReferenzPunkt = {
       kt: Number(neuKt.replace(',', '.')),
-      flush: Number(neuFlush.replace(',', '.')),
       gruppe: Number(neuGruppe.replace(',', '.')),
       herkunft: neuHerkunft,
     };
@@ -67,7 +65,7 @@
         <span class="werte">
           <span class="zahl">{punkt.kt} °C Kessel</span>
           <span class="abgeleitet zahl" class:gedaempft={punkt.herkunft === 'geschaetzt'}>
-            {punkt.herkunft === 'geschaetzt' ? `≈ ${Math.round(punkt.gruppe)}` : punkt.gruppe} °C Gruppe · {punkt.flush} s Flush
+            {punkt.herkunft === 'geschaetzt' ? `≈ ${Math.round(punkt.gruppe)}` : punkt.gruppe} °C Gruppe
           </span>
         </span>
         <button type="button" class="entfernen" onclick={() => zeileEntfernen(i)}>entfernen</button>
@@ -78,7 +76,6 @@
 
 <div class="neue-zeile">
   <label>Kessel <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
-  <label>Flush <input type="text" inputmode="decimal" placeholder="s" bind:value={neuFlush} /></label>
   <label>Gruppe <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
   <div class="herkunft-feld">
     <span class="feld-label">Herkunft</span>

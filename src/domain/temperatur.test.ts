@@ -3,9 +3,9 @@ import { kesselZuGruppe, gruppeZuKessel, type TempReferenzPunkt } from './temper
 
 // Startbelegung aus stammdaten.ts: Kessel - 27 K (grob 1:1 im genutzten Bereich).
 const GESCHAETZT: TempReferenzPunkt[] = [
-  { kt: 119, flush: 3, gruppe: 92, herkunft: 'geschaetzt' },
-  { kt: 120, flush: 3, gruppe: 93, herkunft: 'geschaetzt' },
-  { kt: 121, flush: 3, gruppe: 94, herkunft: 'geschaetzt' },
+  { kt: 119, gruppe: 92, herkunft: 'geschaetzt' },
+  { kt: 120, gruppe: 93, herkunft: 'geschaetzt' },
+  { kt: 121, gruppe: 94, herkunft: 'geschaetzt' },
 ];
 
 describe('kesselZuGruppe', () => {
@@ -46,10 +46,10 @@ describe('gruppeZuKessel — rueckwaerts lesen', () => {
 
 describe('nur Zeilen gleicher Herkunft werden verglichen', () => {
   const GEMISCHT: TempReferenzPunkt[] = [
-    { kt: 119, flush: 3, gruppe: 92, herkunft: 'geschaetzt' },
-    { kt: 121, flush: 3, gruppe: 94, herkunft: 'geschaetzt' },
-    { kt: 122, flush: 3, gruppe: 96, herkunft: 'gemessen' },
-    { kt: 124, flush: 3, gruppe: 98, herkunft: 'gemessen' },
+    { kt: 119, gruppe: 92, herkunft: 'geschaetzt' },
+    { kt: 121, gruppe: 94, herkunft: 'geschaetzt' },
+    { kt: 122, gruppe: 96, herkunft: 'gemessen' },
+    { kt: 124, gruppe: 98, herkunft: 'gemessen' },
   ];
 
   it('interpoliert innerhalb der gemessenen Gruppe, nicht ueber die geschaetzte hinweg', () => {

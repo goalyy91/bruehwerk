@@ -31,7 +31,6 @@ export type Muehle = z.infer<typeof Muehle>;
 
 export const TempReferenzPunkt = z.object({
   kt: z.number(),
-  flush: z.number().nonnegative(),
   gruppe: z.number(),
   // Optional: die Konzepttabelle traegt "-" fuer Reihen ohne Messdatum
   // (z. B. die geschaetzte Startbelegung).

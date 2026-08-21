@@ -24,7 +24,6 @@ export type Herkunft = 'gemessen' | 'uebernommen' | 'geschaetzt';
 
 export interface TempReferenzPunkt {
   readonly kt: number;
-  readonly flush: number;
   readonly gruppe: number;
   readonly herkunft: Herkunft;
 }

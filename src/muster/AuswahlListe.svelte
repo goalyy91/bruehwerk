@@ -41,6 +41,13 @@
 
   const gewaehlteOption = $derived(optionen.find((o) => o.wert === wert));
 
+  // Die gewaehlte Option steht beim Aufklappen ganz oben (mit Haken) statt
+  // an ihrer normalen Position in der Liste — man muss nicht erst suchen,
+  // was gerade gilt, bevor man etwas anderes waehlt.
+  const geordneteOptionen = $derived(
+    gewaehlteOption ? [gewaehlteOption, ...optionen.filter((o) => o.wert !== wert)] : optionen,
+  );
+
   function waehlen(neu: string) {
     onWahl(neu);
     offen = false;
@@ -60,7 +67,7 @@
 
   {#if offen}
     <div class="liste">
-      {#each optionen as option (option.wert)}
+      {#each geordneteOptionen as option (option.wert)}
         <button
           type="button"
           class="zeile"
