@@ -44,15 +44,19 @@
 
   let speicherFehler = $state<string | undefined>(undefined);
   let neueChargeNummer = $state('');
+  // Default: heute, im Format, das <input type="date"> erwartet (YYYY-MM-DD).
+  let neuesRoestdatum = $state(new Date().toISOString().slice(0, 10));
 
   async function chargeAnlegen() {
-    if (!kaffee || neueChargeNummer.trim() === '') return;
+    if (!kaffee || neueChargeNummer.trim() === '' || neuesRoestdatum === '') return;
     speicherFehler = undefined;
     const neue: Charge = {
       id: crypto.randomUUID(),
       kaffeeId,
       nummer: neueChargeNummer.trim(),
-      roestdatum: Date.now(),
+      // Das Roestdatum ist relevant (Frischeeinschaetzung, Vergleich im
+      // Verlauf) und wird deshalb mitgegeben, nicht aus "heute" geraten.
+      roestdatum: new Date(`${neuesRoestdatum}T00:00:00`).getTime(),
       leer: false,
     };
     try {
@@ -67,6 +71,7 @@
         aktuelleChargeId: neue.id,
       });
       neueChargeNummer = '';
+      neuesRoestdatum = new Date().toISOString().slice(0, 10);
     } catch (fehler) {
       speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
     }
@@ -185,7 +190,8 @@
 
     <div class="neue-charge">
       <input type="text" placeholder="Chargennummer" bind:value={neueChargeNummer} />
-      <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === ''}>anlegen</button>
+      <input type="date" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
+      <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === '' || neuesRoestdatum === ''}>anlegen</button>
     </div>
   </section>
 
@@ -330,7 +336,8 @@
     gap: var(--r3);
     margin-top: var(--r3);
   }
-  .neue-charge input[type='text'] {
+  .neue-charge input[type='text'],
+  .neue-charge input[type='date'] {
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     background: var(--feld);

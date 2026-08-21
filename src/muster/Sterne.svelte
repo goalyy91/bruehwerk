@@ -26,7 +26,9 @@
   {#each Array(STUFEN) as _, i (i)}
     {@const anteil = wert === undefined ? 0 : Math.min(1, Math.max(0, wert - i))}
     {#if onWahl}
-      <button type="button" class="stern tippbar" style:--anteil={anteil} onclick={() => onWahl(i + 1)} aria-label={`Bewertung ${i + 1}`}></button>
+      <button type="button" class="knopf" onclick={() => onWahl(i + 1)} aria-label={`Bewertung ${i + 1}`}>
+        <span class="stern" style:--anteil={anteil}></span>
+      </button>
     {:else}
       <span class="stern" style:--anteil={anteil}></span>
     {/if}
@@ -61,8 +63,17 @@
     overflow: hidden;
     white-space: nowrap;
   }
-  .stern.tippbar {
-    padding: 0;
+  /* Sichtbarer Stern bleibt 14x14 (K79) — die Trefferflaeche wird per
+     Padding+Gegen-Margin auf dem umschliessenden Knopf unsichtbar
+     vergroessert, ohne den Stern selbst oder seinen Abstand zu den
+     Nachbarn zu veraendern (Rueckmeldung: zu klein zum Tippen). Eigener
+     Knopf-Wrapper statt Padding direkt auf .stern, weil .stern seine
+     ::before/::after ueber inset:0 positioniert — Padding dort haette die
+     Sternform selbst verschoben. */
+  .knopf {
+    display: flex;
+    padding: 9px;
+    margin: -9px;
     background: transparent;
     border: none;
     cursor: pointer;

@@ -6,6 +6,12 @@
   // oder eine Setup-Auswahl mit freien Namen. Kein Overlay, keine eigene
   // Buehne: bleibt ein einfaches Bauteil im Fluss der Seite, ruehrt also den
   // Verlauf aus dem Navigations-Umbau (UX-1) nicht an.
+  //
+  // Rueckmeldung: ohne umrahmenden Kasten sah die leere/unausgewaehlte
+  // Liste wie gewoehnlicher Fliesstext aus, nicht wie ein Bedienelement —
+  // erst der Tap (und die Markierung danach) machte sichtbar, dass da
+  // etwas zum Auswaehlen war. Jetzt derselbe Kasten wie ein Textfeld
+  // (--feld/--feld-rahmen), von Anfang an erkennbar.
 
   let {
     optionen,
@@ -37,6 +43,8 @@
   .liste {
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--feld-rahmen);
+    background: var(--feld);
   }
   .zeile {
     display: flex;
@@ -44,7 +52,7 @@
     justify-content: space-between;
     width: 100%;
     min-height: var(--treffer);
-    padding: 0;
+    padding: 0 var(--r3);
     border: none;
     border-bottom: 1px solid var(--linie-zart);
     background: transparent;

@@ -65,12 +65,15 @@
     gap: 4px;
   }
   .knopf {
-    padding: 0;
+    /* Sichtbare Flaeche bleibt 13x17 (K79) — die Trefferflaeche wird per
+       Padding+Gegen-Margin unsichtbar vergroessert, ohne den Abstand
+       zwischen den Bohnen zu veraendern (Rueckmeldung: zu klein zum
+       Tippen). */
+    padding: 9px;
+    margin: -9px;
     border: none;
     background: transparent;
     cursor: pointer;
-    /* Sichtbare Flaeche bleibt 13x17 (K79), Trefferflaeche wird ueber
-       Padding im umgebenden Formularkontext sichergestellt. */
   }
   .bohne {
     width: 13px;

@@ -104,13 +104,15 @@
 
   <section class="gruppe">
     <h2>Röstung &amp; Bewertung</h2>
-    <div class="zeile spalte">
-      <span class="label">Röstgrad</span>
-      <Bohnen stufe={entwurf.roestgrad} onWahl={(s) => (entwurf!.roestgrad = s)} />
-    </div>
-    <div class="zeile spalte">
-      <span class="label">Bewertung</span>
-      <Sterne wert={entwurf.bewertung} onWahl={(w) => (entwurf!.bewertung = w)} />
+    <div class="blick-zeile">
+      <div class="blick-eintrag">
+        <span class="label">Röstgrad</span>
+        <Bohnen stufe={entwurf.roestgrad} onWahl={(s) => (entwurf!.roestgrad = s)} />
+      </div>
+      <div class="blick-eintrag">
+        <span class="label">Bewertung</span>
+        <Sterne wert={entwurf.bewertung} onWahl={(w) => (entwurf!.bewertung = w)} />
+      </div>
     </div>
     <div class="zeile">
       <span class="label">Röstgrad (Röster)</span>
@@ -203,6 +205,22 @@
     gap: var(--r1);
   }
   .zeile.spalte .label {
+    width: auto;
+  }
+  /* Roestgrad + Bewertung nebeneinander statt gestapelt — dieselbe
+     Anordnung wie in der Leseansicht (Kaffeeblatt.svelte ".blick"), macht
+     das Vergleichen leichter und braucht weniger Scrollhoehe. */
+  .blick-zeile {
+    display: flex;
+    gap: var(--r6);
+    padding: var(--r2) 0 var(--r3);
+  }
+  .blick-eintrag {
+    display: flex;
+    flex-direction: column;
+    gap: var(--r1);
+  }
+  .blick-eintrag .label {
     width: auto;
   }
   .label {
