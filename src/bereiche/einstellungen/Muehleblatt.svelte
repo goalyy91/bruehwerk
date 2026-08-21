@@ -9,6 +9,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import type { Muehle } from '../../daten/schema';
@@ -42,8 +43,7 @@
   }
 </script>
 
-<button type="button" class="zurueck" onclick={onZurueck}>‹ Geräte</button>
-<h1>{bestehend ? 'Mühle bearbeiten' : 'Neue Mühle'}</h1>
+<Kopfzeile titel={bestehend ? 'Mühle bearbeiten' : 'Neue Mühle'} {onZurueck} />
 
 <div class="feld-zeile">
   <span class="label">Name</span>
@@ -90,22 +90,6 @@
 {/if}
 
 <style>
-  .zurueck {
-    background: none;
-    border: none;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    min-height: var(--treffer);
-    padding: 0;
-    cursor: pointer;
-    display: block;
-  }
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0 0 var(--r4);
-  }
   .feld-zeile {
     display: flex;
     align-items: center;

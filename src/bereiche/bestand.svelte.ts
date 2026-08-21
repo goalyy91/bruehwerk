@@ -22,6 +22,8 @@ class Bestand {
   bruehgeraete = $state<SammlungWert['bruehgeraet'][]>([]);
   zubehoer = $state<SammlungWert['zubehoer'][]>([]);
   setups = $state<SammlungWert['setup'][]>([]);
+  /** Singleton, keine Liste — daher eigenes Feld statt eines Arrays. */
+  einstellungen = $state<SammlungWert['einstellungen'] | undefined>(undefined);
 
   geladen = $state(false);
   ladeFehler = $state<Error | undefined>(undefined);
@@ -32,7 +34,7 @@ class Bestand {
       // Beim allerersten Start ist die DB leer — dann traegt seedFallsLeer
       // den Geraetepark aus stammdaten.ts ein, bevor gelesen wird.
       await seedFallsLeer();
-      const [kaffees, chargen, profile, gusslpaene, shots, muehlen, bruehgeraete, zubehoer, setups] =
+      const [kaffees, chargen, profile, gusslpaene, shots, muehlen, bruehgeraete, zubehoer, setups, einstellungen] =
         await Promise.all([
           alle('kaffee'),
           alle('charge'),
@@ -43,6 +45,7 @@ class Bestand {
           alle('bruehgeraet'),
           alle('zubehoer'),
           alle('setup'),
+          alle('einstellungen'),
         ]);
       this.kaffees = kaffees;
       this.chargen = chargen;
@@ -53,6 +56,7 @@ class Bestand {
       this.bruehgeraete = bruehgeraete;
       this.zubehoer = zubehoer;
       this.setups = setups;
+      this.einstellungen = einstellungen[0];
       this.geladen = true;
     } catch (fehler) {
       this.ladeFehler = fehler instanceof Error ? fehler : new Error(String(fehler));
@@ -83,6 +87,10 @@ export const bestand = new Bestand();
 /** Schreibt einen Datensatz und haelt den Speicher synchron — wirft SchreibFehler weiter (K66). */
 export async function schreiben<S extends Sammlung>(sammlung: S, wert: SammlungWert[S]): Promise<void> {
   await ablageSchreiben(sammlung, wert);
+  if (sammlung === 'einstellungen') {
+    bestand.einstellungen = wert as SammlungWert['einstellungen'];
+    return;
+  }
   const liste = listeFuer(sammlung);
   if (!liste) return;
   const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === (wert as { id: string }).id);

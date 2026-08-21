@@ -11,7 +11,12 @@
   // trotzdem — hier die Loesung in derselben Formsprache statt einer
   // nativen.
 
-  type Option<T extends string> = { wert: T; label: string };
+  // Optionales `symbol` je Option — dieselben drei Herkunftszeichen aus K54
+  // (gefuellter Punkt · Ring · gestrichelter Ring, siehe Herkunft.svelte),
+  // fuer Auswahlen wie die Herkunft-Zeile der Temperaturtabelle. Rein
+  // additiv: wer es weglaesst, sieht nur den Text wie bisher.
+  type Zeichen = 'punkt' | 'ring' | 'gestrichelt';
+  type Option<T extends string> = { wert: T; label: string; symbol?: Zeichen };
 
   let {
     optionen,
@@ -32,6 +37,9 @@
       class:gewaehlt={option.wert === wert}
       onclick={() => onWahl(option.wert)}
     >
+      {#if option.symbol}
+        <span class="zeichen" class:voll={option.symbol === 'punkt'} class:ring={option.symbol === 'ring'} class:gestrichelt={option.symbol === 'gestrichelt'}></span>
+      {/if}
       {option.label}
     </button>
   {/each}
@@ -44,6 +52,9 @@
     gap: 6px;
   }
   .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: 1px solid var(--feld-rahmen);
@@ -53,6 +64,22 @@
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
+  }
+  .zeichen {
+    display: inline-block;
+    width: var(--zeichen);
+    height: var(--zeichen);
+    border-radius: 50%;
+    flex: none;
+  }
+  .zeichen.voll {
+    background: var(--tinte);
+  }
+  .zeichen.ring {
+    border: 1px solid var(--gedaempft);
+  }
+  .zeichen.gestrichelt {
+    border: 1px dashed var(--gedaempft);
   }
   .chip.gewaehlt {
     color: var(--tinte);

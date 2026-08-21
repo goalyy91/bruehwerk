@@ -2,12 +2,16 @@
   // Setupblatt — Teil G der Korrekturrunde. ablaufId bleibt fest auf
   // ABLAUF_LEER: Ablauf ist reines, oberflaechenloses Rechenmodell (K48),
   // die echten Ruestzeiten-Buendel spezifiziert erst der Planer (Paket 06).
+  //
+  // parallelSchaeumen/sammelSchaeumen/Begruendungsschalter sind hier raus —
+  // "Setup" meinte an diesen Konzeptstellen allgemeine Einstellungen, nicht
+  // diese Geraete-Kombination. Stehen jetzt global in Einstellungen.svelte.
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
   import { ABLAUF_LEER } from '../../daten/stammdaten';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
-  import Schalter from '../../muster/Schalter.svelte';
   import type { Setup } from '../../daten/schema';
 
   let { setupId, onZurueck }: { setupId?: string; onZurueck: () => void } = $props();
@@ -21,10 +25,6 @@
       muehleId: bestand.muehlen[0]?.id ?? '',
       bruehgeraetId: bestand.bruehgeraete[0]?.id ?? '',
       zubehoerIds: [],
-      parallelSchaeumen: false,
-      sammelSchaeumen: 'nie',
-      begruendungKoffein: true,
-      begruendungBohne: true,
       ablaufId: ABLAUF_LEER.id,
     };
   }
@@ -43,8 +43,7 @@
   }
 </script>
 
-<button type="button" class="zurueck" onclick={onZurueck}>‹ Geräte</button>
-<h1>{bestehend ? 'Setup bearbeiten' : 'Neues Setup'}</h1>
+<Kopfzeile titel={bestehend ? 'Setup bearbeiten' : 'Neues Setup'} {onZurueck} />
 
 {#if bestand.muehlen.length === 0 || bestand.bruehgeraete.length === 0}
   <p class="hinweis">Erst eine Mühle und ein Brühgerät anlegen.</p>
@@ -69,27 +68,6 @@
       onWahl={(w) => (entwurf.bruehgeraetId = w)}
     />
   </div>
-  <div class="feld-zeile">
-    <Schalter label="paralleles Schäumen möglich" an={entwurf.parallelSchaeumen} onWahl={(a) => (entwurf.parallelSchaeumen = a)} />
-  </div>
-  <div class="feld-zeile">
-    <span class="label">Sammel-Schäumen</span>
-    <Einzelauswahl
-      optionen={[
-        { wert: 'nie', label: 'nie' },
-        { wert: 'geteilterBezug', label: 'geteilter Bezug' },
-        { wert: 'immer', label: 'immer' },
-      ]}
-      wert={entwurf.sammelSchaeumen}
-      onWahl={(w) => (entwurf.sammelSchaeumen = w as Setup['sammelSchaeumen'])}
-    />
-  </div>
-  <div class="feld-zeile">
-    <Schalter label="Begründung bei Koffein-Vorbelegung" an={entwurf.begruendungKoffein} onWahl={(a) => (entwurf.begruendungKoffein = a)} />
-  </div>
-  <div class="feld-zeile">
-    <Schalter label="Begründung bei Bohnen-Vorschlag" an={entwurf.begruendungBohne} onWahl={(a) => (entwurf.begruendungBohne = a)} />
-  </div>
 
   <button type="button" class="primaer" onclick={speichern} disabled={entwurf.name.trim() === ''}>
     {bestehend ? 'speichern' : 'anlegen'}
@@ -101,22 +79,6 @@
 {/if}
 
 <style>
-  .zurueck {
-    background: none;
-    border: none;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    min-height: var(--treffer);
-    padding: 0;
-    cursor: pointer;
-    display: block;
-  }
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0 0 var(--r4);
-  }
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);

@@ -111,17 +111,19 @@ export const Ablauf = z.object({
 });
 export type Ablauf = z.infer<typeof Ablauf>;
 
+/**
+ * parallelSchaeumen/sammelSchaeumen/begruendungKoffein/begruendungBohne
+ * standen hier bis zur Korrekturrunde — "Setup" war im Konzept an dieser
+ * Stelle als "allgemeine Einstellungen" gemeint, nicht als diese
+ * Geraete-Kombination. Alle vier sind jetzt globale App-Einstellungen,
+ * siehe schema/einstellungen.ts::AppEinstellungen.
+ */
 export const Setup = z.object({
   id: Id,
   name: z.string().min(1),
   muehleId: Id,
   bruehgeraetId: Id,
   zubehoerIds: z.array(Id).default([]),
-  parallelSchaeumen: z.boolean(),
-  sammelSchaeumen: z.enum(['nie', 'geteilterBezug', 'immer']),
-  /** K31 — zwei getrennte Schalter, Standard an. */
-  begruendungKoffein: z.boolean().default(true),
-  begruendungBohne: z.boolean().default(true),
   ablaufId: Id,
 });
 export type Setup = z.infer<typeof Setup>;

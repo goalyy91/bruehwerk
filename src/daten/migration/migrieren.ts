@@ -1,17 +1,24 @@
 /**
  * Die eigentliche Migration — nimmt SeedSeite[] entgegen und liefert
- * schreibfertige Datensaetze. `notion.ts` parst, `pruefung.ts` klassifiziert
- * und zaehlt; diese Datei ist der dritte, bisher fehlende Schritt: sie
- * setzt Setup-Bindung (Paket-03-Scope, siehe pruefung.ts-Kommentar) und
- * erzeugt Kaffee/Charge/Profil/Shot/Gussplan zum Schreiben.
+ * schreibfertige Datensaetze. `notion.ts` parst; diese Datei ist der
+ * dritte, bisher fehlende Schritt: sie setzt Setup-Bindung (Paket-03-Scope,
+ * siehe pruefung.ts-Kommentar) und erzeugt Kaffee/Charge/Profil/Shot/
+ * Gussplan zum Schreiben.
  *
- * Grundregel, identisch zu pruefung.ts: **nicht eindeutig zuordenbar wird
- * uebersprungen und im Bericht genannt, nie geraten.** Diese Datei fuegt
- * dem Bericht aus pruefeSeiten() zusaetzliche offene Punkte hinzu, statt
- * ihn zu ersetzen.
+ * Eigenstaendig von pruefung.ts: pruefeSeiten() bleibt die strenge,
+ * "gueltige Mahlgradbereiche"-Voransicht (weiterhin getestet, unveraendert
+ * gueltig) — aber diese Datei klassifiziert bewusst lockerer, weil die
+ * engen Bereiche in der Praxis den Grossteil der echten Historie
+ * ausgeschlossen haetten (nur 1 von 8 Kaffees lag im schmalen Fenster).
+ * Zuordnungsregel: Zahl >= 50 -> K6 (Klicks, ganzzahlig), sonst Sculptor.
+ * Falsche Zuordnungen sind billig zu korrigieren, weil Profile am
+ * Profilblatt das Setup nachtraeglich wechseln koennen.
+ *
+ * Grundregel bleibt: **nicht eindeutig zuordenbar wird uebersprungen und
+ * im Bericht genannt, nie geraten.**
  */
 import { parseKaffeeSeite, type ProfilEntwurf, type ShotEntwurf, type GussBausteinEntwurf } from './notion';
-import { pruefeSeiten, ersteZahl, erkenneDecaf, sterneOderZahl, type SeedSeite, type OffenerPunkt } from './pruefung';
+import { ersteZahl, erkenneDecaf, sterneOderZahl, type SeedSeite, type OffenerPunkt } from './pruefung';
 import { SETUP_ESPRESSO, SETUP_MOKA_1 } from '../stammdaten';
 import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
 import type { Kaffee, Charge, Profil, Shot, Gussplan, GussBaustein, ZielWerte } from '../schema';
@@ -34,6 +41,18 @@ export interface MigrationsErgebnis {
 }
 
 const EINE_MINUTE_MS = 60_000;
+/** Schwelle statt schmaler Fenster: >= 50 ist K6 (Klicks), sonst Sculptor. */
+const K6_SCHWELLE = 50;
+
+type MuehlenKandidat = 'sculptor' | 'k6';
+
+/** Einzige Zahl -> Muehle. null nur, wenn ueberhaupt keine Zahl lesbar ist ("unbekannt/sehr fein" o.ae.). */
+function erkenneMuehle(mgRoh: string | undefined): MuehlenKandidat | null {
+  if (mgRoh === undefined) return null;
+  const zahl = ersteZahl(mgRoh);
+  if (zahl === null) return null;
+  return zahl >= K6_SCHWELLE ? 'k6' : 'sculptor';
+}
 
 /** input/mg/output/zeit sind in ZielWerte Pflicht — fehlt eines, gibt es keine gueltige Rezeptur. */
 function bauZielWerte(parameter: Record<string, string>): ZielWerte | { fehlt: string[] } {
@@ -79,8 +98,7 @@ function gussBausteinAusEntwurf(e: GussBausteinEntwurf): GussBaustein {
 }
 
 export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number): MigrationsErgebnis {
-  const bericht = pruefeSeiten(seiten);
-  const offenZusaetzlich: OffenerPunkt[] = [];
+  const offen: OffenerPunkt[] = [];
 
   const kaffees: Kaffee[] = [];
   const chargen: Charge[] = [];
@@ -88,10 +106,12 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
   const shots: Shot[] = [];
   const gussplaene: Gussplan[] = [];
 
-  for (let si = 0; si < seiten.length; si++) {
-    const seite = seiten[si]!;
-    const kaffeeBefund = bericht.kaffees[si];
-    if (!kaffeeBefund || !kaffeeBefund.roester) continue; // kein Roester -> schon in bericht.offen, kein gueltiger Kaffee schreibbar
+  for (const seite of seiten) {
+    const roester = seite.properties['Röster'];
+    if (typeof roester !== 'string' || roester.trim() === '') {
+      offen.push({ quelle: seite.titel, was: 'Kaffee ohne Röster', warum: 'Property "Röster" fehlt oder ist leer' });
+      continue;
+    }
 
     const entwurf = parseKaffeeSeite(seite.inhalt);
     const kaffeeId = seite.id;
@@ -114,7 +134,7 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
     // in Freitext und werden nicht herausgeraten.
     const chargeId = `${kaffeeId}-charge-migration`;
     chargen.push({ id: chargeId, kaffeeId, nummer: 'unbekannt (Migration)', roestdatum: gezogenAmMs, leer: false });
-    offenZusaetzlich.push({
+    offen.push({
       quelle: seite.titel,
       was: 'Charge ist ein Platzhalter',
       warum: 'Notion hat keine Chargen/Röstdaten strukturiert geführt — am Kaffeeblatt nachtragen',
@@ -123,7 +143,7 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
     kaffees.push({
       id: kaffeeId,
       name: seite.titel,
-      roester: kaffeeBefund.roester,
+      roester,
       aktiv: true,
       art: 'single',
       herkunft: [],
@@ -140,12 +160,19 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
     const migrierteProfilIds: string[] = [];
 
     entwurf.profile.forEach((p: ProfilEntwurf, pi: number) => {
-      const befund = kaffeeBefund.profile[pi];
-      if (!befund || befund.muehle === null) return; // schon in bericht.offen (Muehle nicht erkennbar)
+      const muehle = erkenneMuehle(p.parameter['MG']);
+      if (muehle === null) {
+        offen.push({
+          quelle: `${seite.titel} / Variante "${p.varianteName}"`,
+          was: p.parameter['MG'] === undefined ? 'kein MG-Parameter' : `MG "${p.parameter['MG']}" nicht als Zahl lesbar`,
+          warum: 'weder Sculptor noch K6 zuordenbar',
+        });
+        return;
+      }
 
       const ziel = bauZielWerte(p.parameter);
       if ('fehlt' in ziel) {
-        offenZusaetzlich.push({
+        offen.push({
           quelle: `${seite.titel} / Variante "${p.varianteName}"`,
           was: `fehlende Parameter: ${ziel.fehlt.join(', ')}`,
           warum: 'ohne Dose/MG/Yield/Zeit gibt es keine gueltige Rezeptur',
@@ -153,12 +180,12 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
         return;
       }
 
-      const setupId = befund.muehle === 'sculptor' ? SETUP_ESPRESSO.id : SETUP_MOKA_1.id;
-      if (befund.muehle === 'k6') {
-        offenZusaetzlich.push({
+      const setupId = muehle === 'sculptor' ? SETUP_ESPRESSO.id : SETUP_MOKA_1.id;
+      if (muehle === 'k6') {
+        offen.push({
           quelle: `${seite.titel} / Variante "${p.varianteName}"`,
           was: 'Setup angenommen: Moka 1 Tasse',
-          warum: 'MG-Bereich 60–70 ist eindeutig K6, aber nicht zwischen Moka 1er/3er unterscheidbar — am Profilblatt korrigierbar',
+          warum: 'MG >= 50 ist eindeutig K6, aber nicht zwischen Moka 1er/3er/Pour-Over unterscheidbar — am Profilblatt korrigierbar',
         });
       }
 
@@ -194,7 +221,7 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
         const zielProfil = profile.find((p) => p.id === zielProfilId);
         if (zielProfil) zielProfil.gussplanId = gussplanId;
       } else {
-        offenZusaetzlich.push({
+        offen.push({
           quelle: seite.titel,
           was: `Gussplan mit ${entwurf.gussbausteine.length} Bausteinen ohne eindeutiges Profil`,
           warum: migrierteProfilIds.length === 0 ? 'kein Profil dieses Kaffees wurde migriert' : 'mehrere Profile — nicht eindeutig, welchem der Gussplan gehört',
@@ -204,15 +231,22 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
 
     // Shots — Zuordnung zum Profil ueber die Gruppen-Ueberschrift, sonst
     // (bei genau einem migrierten Profil) auf dieses. Sonst: melden, nicht raten.
-    let letzterIndex = 0;
-    const shotsDieserSeite = entwurf.shots.filter((_: ShotEntwurf, si2: number) => kaffeeBefund.shots[si2]?.muehle !== null);
+    const gueltigeShots = entwurf.shots.filter((s: ShotEntwurf) => erkenneMuehle(s.parameter['MG']) !== null);
+    let laufindex = 0;
     entwurf.shots.forEach((s: ShotEntwurf, shi: number) => {
-      const befund = kaffeeBefund.shots[shi];
-      if (!befund || befund.muehle === null) return; // schon in bericht.offen
+      const muehle = erkenneMuehle(s.parameter['MG']);
+      if (muehle === null) {
+        offen.push({
+          quelle: `${seite.titel} / ${s.gruppe || '(ohne Gruppe)'} Shot ${s.nummer}`,
+          was: s.parameter['MG'] === undefined ? 'kein MG-Parameter' : `MG "${s.parameter['MG']}" nicht als Zahl lesbar`,
+          warum: 'weder Sculptor noch K6 zuordenbar',
+        });
+        return;
+      }
 
       const ziel = bauZielWerte(s.parameter);
       if ('fehlt' in ziel) {
-        offenZusaetzlich.push({
+        offen.push({
           quelle: `${seite.titel} / ${s.gruppe || '(ohne Gruppe)'} Shot ${s.nummer}`,
           was: `fehlende Parameter: ${ziel.fehlt.join(', ')}`,
           warum: 'ohne Dose/MG/Yield/Zeit gibt es keinen gueltigen Shot',
@@ -223,20 +257,20 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
       const passendesProfil = profilIdVon.get(s.gruppe.toLowerCase());
       const profilId = passendesProfil ?? (migrierteProfilIds.length === 1 ? migrierteProfilIds[0] : undefined);
       if (!profilId) {
-        offenZusaetzlich.push({
+        offen.push({
           quelle: `${seite.titel} / ${s.gruppe || '(ohne Gruppe)'} Shot ${s.nummer}`,
           was: 'kein eindeutiges Profil zuordenbar',
           warum: 'Gruppe passt zu keiner migrierten Variante, und es gibt mehr als ein Profil',
         });
         return;
       }
-      const setupId = befund.muehle === 'sculptor' ? SETUP_ESPRESSO.id : SETUP_MOKA_1.id;
+      const setupId = muehle === 'sculptor' ? SETUP_ESPRESSO.id : SETUP_MOKA_1.id;
 
       // Synthetische, aufsteigende Zeitstempel — Notion hat keine echten
       // Datumsangaben je Shot gefuehrt (nur gelegentlich in Freitext). Sie
       // erhalten die Reihenfolge, sind aber KEINE echten Zeitpunkte.
-      const ts = gezogenAmMs - (shotsDieserSeite.length - 1 - letzterIndex) * EINE_MINUTE_MS;
-      letzterIndex++;
+      const ts = gezogenAmMs - (gueltigeShots.length - 1 - laufindex) * EINE_MINUTE_MS;
+      laufindex++;
 
       const freitext = [s.aenderung, s.ergebnis].filter((t) => t && t !== '–').join(' · ') || undefined;
 
@@ -265,12 +299,6 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
     profile,
     shots,
     gussplaene,
-    bericht: {
-      kaffees: kaffees.length,
-      profile: profile.length,
-      shots: shots.length,
-      gussplaene: gussplaene.length,
-      offen: [...bericht.offen, ...offenZusaetzlich],
-    },
+    bericht: { kaffees: kaffees.length, profile: profile.length, shots: shots.length, gussplaene: gussplaene.length, offen },
   };
 }

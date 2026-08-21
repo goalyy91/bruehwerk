@@ -26,6 +26,7 @@
   import Sterne from '../muster/Sterne.svelte';
   import Einzelauswahl from '../muster/Einzelauswahl.svelte';
   import Schalter from '../muster/Schalter.svelte';
+  import Kopfzeile from '../muster/Kopfzeile.svelte';
 
   let einzelauswahlDemo = $state('b');
   let schalterDemo = $state(true);
@@ -357,6 +358,15 @@
           onWahl={(w) => (einzelauswahlDemo = w)}
         />
         <Schalter label="entkoffeiniert" an={schalterDemo} onWahl={(a) => (schalterDemo = a)} />
+      </div>
+    {/each}
+  </section>
+
+  <section class="muster">
+    <h2>Kopfzeile · Formulare</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} />
       </div>
     {/each}
   </section>

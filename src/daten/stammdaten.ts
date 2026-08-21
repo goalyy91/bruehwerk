@@ -150,11 +150,6 @@ export const SETUP_ESPRESSO: Setup = {
   muehleId: MUEHLE_SCULPTOR.id,
   bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id,
   zubehoerIds: [ZUBEHOER_KAENNCHEN_350.id, ZUBEHOER_KAENNCHEN_500.id],
-  // Eine Dampflanze — Schaeumen ist sequenziell, nicht parallel.
-  parallelSchaeumen: false,
-  sammelSchaeumen: 'geteilterBezug',
-  begruendungKoffein: true,
-  begruendungBohne: true,
   ablaufId: ABLAUF_LEER.id,
 };
 
@@ -164,10 +159,6 @@ export const SETUP_POUR_OVER_SCULPTOR: Setup = {
   muehleId: MUEHLE_SCULPTOR.id,
   bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
   zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
-  parallelSchaeumen: false,
-  sammelSchaeumen: 'nie',
-  begruendungKoffein: true,
-  begruendungBohne: true,
   ablaufId: ABLAUF_LEER.id,
 };
 
@@ -177,10 +168,6 @@ export const SETUP_POUR_OVER_K6: Setup = {
   muehleId: MUEHLE_K6.id,
   bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
   zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
-  parallelSchaeumen: false,
-  sammelSchaeumen: 'nie',
-  begruendungKoffein: true,
-  begruendungBohne: true,
   ablaufId: ABLAUF_LEER.id,
 };
 
@@ -190,10 +177,6 @@ export const SETUP_MOKA_1: Setup = {
   muehleId: MUEHLE_K6.id,
   bruehgeraetId: BRUEHGERAET_BIALETTI_1.id,
   zubehoerIds: [],
-  parallelSchaeumen: false,
-  sammelSchaeumen: 'nie',
-  begruendungKoffein: true,
-  begruendungBohne: true,
   ablaufId: ABLAUF_LEER.id,
 };
 
@@ -203,10 +186,6 @@ export const SETUP_MOKA_3: Setup = {
   muehleId: MUEHLE_K6.id,
   bruehgeraetId: BRUEHGERAET_BIALETTI_3.id,
   zubehoerIds: [],
-  parallelSchaeumen: false,
-  sammelSchaeumen: 'nie',
-  begruendungKoffein: true,
-  begruendungBohne: true,
   ablaufId: ABLAUF_LEER.id,
 };
 

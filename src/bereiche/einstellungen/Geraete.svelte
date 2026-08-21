@@ -1,48 +1,48 @@
 <script lang="ts">
-  // Geraete — Teil G der Korrekturrunde: Mühlen, Brühgeräte und Setups
-  // selbst anlegen/bearbeiten, ohne dass jede Änderung eine Code-Änderung
-  // braucht. Kein Löschen vorerst — der seltenere Fall, kommt bei Bedarf.
+  // Geraete — reine Anzeige, kein eigener Navigations-Zustand mehr (Teil 5
+  // der Korrekturrunde). Zwei Bildschirme mit je eigenem Zurueck-Button
+  // uebereinander kamen genau daher, dass diese Komponente frueher eine
+  // eigene Navigations-Ebene neben Einstellungen.svelte fuehrte.
+  // Einstellungen.svelte ist jetzt der einzige Navigations-Eigentuemer fuer
+  // den gesamten Geraete-Teilbaum, so wie Kaffees.svelte es fuer
+  // Kaffee/Profil bereits richtig macht.
 
   import { bestand } from '../bestand.svelte';
-  import Muehleblatt from './Muehleblatt.svelte';
-  import Bruehgeraetblatt from './Bruehgeraetblatt.svelte';
-  import Setupblatt from './Setupblatt.svelte';
 
-  type Blatt = { typ: 'muehle' | 'bruehgeraet' | 'setup'; id?: string };
-  let blatt = $state<Blatt | undefined>(undefined);
+  let {
+    onOeffnenMuehle,
+    onOeffnenBruehgeraet,
+    onOeffnenSetup,
+  }: {
+    onOeffnenMuehle: (id?: string) => void;
+    onOeffnenBruehgeraet: (id?: string) => void;
+    onOeffnenSetup: (id?: string) => void;
+  } = $props();
 </script>
 
-{#if blatt?.typ === 'muehle'}
-  <Muehleblatt muehleId={blatt.id} onZurueck={() => (blatt = undefined)} />
-{:else if blatt?.typ === 'bruehgeraet'}
-  <Bruehgeraetblatt bruehgeraetId={blatt.id} onZurueck={() => (blatt = undefined)} />
-{:else if blatt?.typ === 'setup'}
-  <Setupblatt setupId={blatt.id} onZurueck={() => (blatt = undefined)} />
-{:else}
-  <h2>Mühlen</h2>
-  <ul class="liste">
-    {#each bestand.muehlen as m (m.id)}
-      <li><button type="button" class="zeile" onclick={() => (blatt = { typ: 'muehle', id: m.id })}>{m.name}</button></li>
-    {/each}
-  </ul>
-  <button type="button" class="fusszeile" onclick={() => (blatt = { typ: 'muehle' })}>+ Mühle</button>
+<h2>Mühlen</h2>
+<ul class="liste">
+  {#each bestand.muehlen as m (m.id)}
+    <li><button type="button" class="zeile" onclick={() => onOeffnenMuehle(m.id)}>{m.name}</button></li>
+  {/each}
+</ul>
+<button type="button" class="fusszeile" onclick={() => onOeffnenMuehle()}>+ Mühle</button>
 
-  <h2>Brühgeräte</h2>
-  <ul class="liste">
-    {#each bestand.bruehgeraete as b (b.id)}
-      <li><button type="button" class="zeile" onclick={() => (blatt = { typ: 'bruehgeraet', id: b.id })}>{b.name}</button></li>
-    {/each}
-  </ul>
-  <button type="button" class="fusszeile" onclick={() => (blatt = { typ: 'bruehgeraet' })}>+ Brühgerät</button>
+<h2>Brühgeräte</h2>
+<ul class="liste">
+  {#each bestand.bruehgeraete as b (b.id)}
+    <li><button type="button" class="zeile" onclick={() => onOeffnenBruehgeraet(b.id)}>{b.name}</button></li>
+  {/each}
+</ul>
+<button type="button" class="fusszeile" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
 
-  <h2>Setups</h2>
-  <ul class="liste">
-    {#each bestand.setups as s (s.id)}
-      <li><button type="button" class="zeile" onclick={() => (blatt = { typ: 'setup', id: s.id })}>{s.name}</button></li>
-    {/each}
-  </ul>
-  <button type="button" class="fusszeile" onclick={() => (blatt = { typ: 'setup' })}>+ Setup</button>
-{/if}
+<h2>Setups</h2>
+<ul class="liste">
+  {#each bestand.setups as s (s.id)}
+    <li><button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>{s.name}</button></li>
+  {/each}
+</ul>
+<button type="button" class="fusszeile" onclick={() => onOeffnenSetup()}>+ Setup</button>
 
 <style>
   h2 {

@@ -8,6 +8,7 @@
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import DoppelteEinheit from '../../muster/DoppelteEinheit.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import ShotErfassung from '../shot/ShotErfassung.svelte';
   import type { Profil } from '../../daten/schema';
@@ -71,18 +72,16 @@
   }
 </script>
 
-<button type="button" class="zurueck" onclick={() => (shotErfassungOffen ? (shotErfassungOffen = false) : onZurueck())}>
-  ‹ zurück
-</button>
-
 {#if !profil}
+  <Kopfzeile titel="Profil" onZurueck={onZurueck} />
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else if shotErfassungOffen}
+  <Kopfzeile titel="Shot loggen" onZurueck={() => (shotErfassungOffen = false)} />
   <ShotErfassung {profilId} onFertig={() => (shotErfassungOffen = false)} />
 {:else}
+  <Kopfzeile titel={profil.name} {onZurueck} />
   <button type="button" class="shot-loggen" onclick={() => (shotErfassungOffen = true)}>Shot loggen</button>
 
-  <h1>{profil.name}</h1>
   <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
 
   <section class="setup-wahl">
@@ -179,17 +178,6 @@
 {/if}
 
 <style>
-  .zurueck {
-    background: none;
-    border: none;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    min-height: var(--treffer);
-    padding: 0;
-    cursor: pointer;
-    display: block;
-  }
   .shot-loggen {
     display: block;
     min-height: var(--treffer);
@@ -201,11 +189,6 @@
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
-  }
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0;
   }
   .setup {
     font-size: var(--fs-meta);

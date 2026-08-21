@@ -15,6 +15,7 @@
   import Sterne from '../../muster/Sterne.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import type { Kaffee, Charge, Profil, Aufbereitung } from '../../daten/schema';
 
   let {
@@ -122,12 +123,11 @@
   ];
 </script>
 
-<button type="button" class="zurueck" onclick={onZurueck}>‹ Kaffees</button>
-
 {#if !kaffee}
+  <Kopfzeile titel="Kaffees" onZurueck={onZurueck} />
   <p class="hinweis">Kaffee nicht gefunden.</p>
 {:else}
-  <h1>{kaffee.name}</h1>
+  <Kopfzeile titel={kaffee.name} onZurueck={onZurueck} />
   <p class="roester">{kaffee.roester}</p>
 
   <section class="eigenschaften">
@@ -271,21 +271,6 @@
 {/if}
 
 <style>
-  .zurueck {
-    background: none;
-    border: none;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    padding: var(--r2) 0;
-    min-height: var(--treffer);
-    cursor: pointer;
-  }
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0;
-  }
   .roester {
     font-size: var(--fs-satz);
     color: var(--gedaempft);
