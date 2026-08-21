@@ -12,6 +12,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { bildeMessreihe } from '../../domain/messreihe';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
+  import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import type { Shot, Urteil as UrteilTyp } from '../../daten/schema';
 
@@ -48,6 +49,25 @@
     mg = profil.ziel.mg;
     rpm = profil.ziel.rpm;
     kt = profil.ziel.kt;
+  });
+
+  // Einstellwerte als Werteliste (docs/konzept.md:721 — "Ziel im
+  // Gruppenkopf, Führungswert groß, die Einstellwerte darunter"): stehen
+  // deshalb unterhalb der Ziel-Karte, nicht davor. Kein hinweis-Text hier
+  // (keine Gruppentemperatur-Anzeige) — anders als im Profilblatt war das
+  // hier nie vorgesehen, das bleibt ein reines Eingabefeld.
+  const einstellwerte = $derived.by((): WertelisteZeile[] => {
+    const zeilen: WertelisteZeile[] = [
+      { label: 'Input', wert: input, einheit: 'g', onAendern: (w) => (input = w) },
+      { label: 'Mahlgrad', wert: mg, einheit: muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined, onAendern: (w) => (mg = w) },
+    ];
+    if (muehle?.rpmEinstellbar) {
+      zeilen.push({ label: 'Drehzahl', wert: rpm ?? '', einheit: 'rpm', onAendern: (w) => (rpm = w) });
+    }
+    if (bruehgeraet?.ktEinstellbar) {
+      zeilen.push({ label: 'Kessel', wert: kt ?? '', einheit: '°C', onAendern: (w) => (kt = w) });
+    }
+    return zeilen;
   });
 
   type Phase = 'eingabe' | 'schreibfehler' | 'alltagskorrektur' | 'fertig';
@@ -154,22 +174,8 @@
   <h1>{kaffee.name}</h1>
   <p class="setup">{profil.name}</p>
 
-  <div class="eingestellt">
-    <label>Input <input type="text" inputmode="decimal" value={input}
-      onchange={(e) => (input = Number((e.currentTarget as HTMLInputElement).value.replace(',', '.')))} /> g</label>
-    <label>Mahlgrad <input type="text" inputmode="decimal" value={mg}
-      onchange={(e) => (mg = Number((e.currentTarget as HTMLInputElement).value.replace(',', '.')))} />
-      {muehle?.skala.typ === 'klicks' ? 'Klicks' : ''}</label>
-    {#if muehle?.rpmEinstellbar}
-      <label>Drehzahl <input type="text" inputmode="decimal" value={rpm ?? ''}
-        onchange={(e) => (rpm = Number((e.currentTarget as HTMLInputElement).value))} /> rpm</label>
-    {/if}
-    {#if bruehgeraet?.ktEinstellbar}
-      <label>Kessel <input type="text" inputmode="decimal" value={kt ?? ''}
-        onchange={(e) => (kt = Number((e.currentTarget as HTMLInputElement).value))} /> °C</label>
-    {/if}
-  </div>
-
+  <!-- docs/konzept.md:721 — "Ziel im Gruppenkopf, Führungswert groß, die
+       Einstellwerte darunter": Ziel-Karte zuerst, Einstellwerte danach. -->
   <IstGegenZiel
     titel="Ziel"
     zeilen={[
@@ -179,6 +185,10 @@
     ]}
     onAenderung={(werte) => (istWerte = werte)}
   />
+
+  <div class="eingestellt">
+    <Werteliste zeilen={einstellwerte} />
+  </div>
 
   <div class="urteil-block">
     <p class="frage">Wie war er?</p>
@@ -198,27 +208,7 @@
     margin: 0 0 var(--r4);
   }
   .eingestellt {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--r3);
-    margin-bottom: var(--r4);
-  }
-  .eingestellt label {
-    display: flex;
-    align-items: center;
-    gap: var(--r1);
-    font-size: var(--fs-meta);
-    color: var(--satz);
-  }
-  .eingestellt input {
-    width: 64px;
-    font-family: var(--schrift);
-    font-variant-numeric: var(--zahl-features);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
+    margin-top: var(--r4);
   }
   .urteil-block {
     margin-top: var(--r5);
