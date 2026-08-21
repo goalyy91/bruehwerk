@@ -104,7 +104,7 @@
       zeilen.push({
         label: 'Kesseltemperatur',
         wert: profil.ziel.kt ?? '',
-        einheit: '°C Kessel',
+        einheit: '°C',
         onAendern: (w) => zielSpeichern('kt', w),
         hinweis: ktHinweis,
       });

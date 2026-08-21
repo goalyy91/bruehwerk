@@ -91,7 +91,8 @@
     color: var(--gedaempft);
   }
   .hinweis {
-    grid-column: 1 / -1;
+    grid-column: 2 / -1;
+    text-align: right;
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }

@@ -174,8 +174,10 @@
   <h1>{kaffee.name}</h1>
   <p class="setup">{profil.name}</p>
 
-  <!-- docs/konzept.md:721 — "Ziel im Gruppenkopf, Führungswert groß, die
-       Einstellwerte darunter": Ziel-Karte zuerst, Einstellwerte danach. -->
+  <div class="eingestellt">
+    <Werteliste zeilen={einstellwerte} />
+  </div>
+
   <IstGegenZiel
     titel="Ziel"
     zeilen={[
@@ -185,10 +187,6 @@
     ]}
     onAenderung={(werte) => (istWerte = werte)}
   />
-
-  <div class="eingestellt">
-    <Werteliste zeilen={einstellwerte} />
-  </div>
 
   <div class="urteil-block">
     <p class="frage">Wie war er?</p>
@@ -208,7 +206,7 @@
     margin: 0 0 var(--r4);
   }
   .eingestellt {
-    margin-top: var(--r4);
+    margin-bottom: var(--r4);
   }
   .urteil-block {
     margin-top: var(--r5);
