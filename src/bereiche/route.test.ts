@@ -14,12 +14,15 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'einstellungen' },
   { name: 'geraete' },
   { name: 'musterblatt' },
-  { name: 'muehle' },
   { name: 'muehle', id: 'm1' },
-  { name: 'bruehgeraet' },
+  { name: 'muehleNeu' },
+  { name: 'muehleBearbeiten', id: 'm1' },
   { name: 'bruehgeraet', id: 'b1' },
-  { name: 'setup' },
+  { name: 'bruehgeraetNeu' },
+  { name: 'bruehgeraetBearbeiten', id: 'b1' },
   { name: 'setup', id: 's1' },
+  { name: 'setupNeu' },
+  { name: 'setupBearbeiten', id: 's1' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -51,6 +54,13 @@ describe('route — elternVon', () => {
 
   it('kaffeeBearbeiten -> kaffee', () => {
     expect(elternVon({ name: 'kaffeeBearbeiten', kaffeeId: 'k1' })).toEqual({ name: 'kaffee', kaffeeId: 'k1' } satisfies Route);
+  });
+
+  it('muehleBearbeiten -> muehle -> geraete', () => {
+    const bearbeiten: Route = { name: 'muehleBearbeiten', id: 'm1' };
+    const ansicht = elternVon(bearbeiten);
+    expect(ansicht).toEqual({ name: 'muehle', id: 'm1' } satisfies Route);
+    expect(elternVon(ansicht!)).toEqual({ name: 'geraete' } satisfies Route);
   });
 
   it('muehle -> geraete -> einstellungen -> Wurzel', () => {
@@ -85,9 +95,11 @@ describe('route — tabVon', () => {
   it('Geraete-Teilbaum gehoert komplett zu einstellungen', () => {
     expect(tabVon({ name: 'geraete' })).toBe('einstellungen');
     expect(tabVon({ name: 'musterblatt' })).toBe('einstellungen');
-    expect(tabVon({ name: 'muehle' })).toBe('einstellungen');
-    expect(tabVon({ name: 'bruehgeraet' })).toBe('einstellungen');
-    expect(tabVon({ name: 'setup' })).toBe('einstellungen');
+    expect(tabVon({ name: 'muehle', id: 'm1' })).toBe('einstellungen');
+    expect(tabVon({ name: 'muehleNeu' })).toBe('einstellungen');
+    expect(tabVon({ name: 'muehleBearbeiten', id: 'm1' })).toBe('einstellungen');
+    expect(tabVon({ name: 'bruehgeraet', id: 'b1' })).toBe('einstellungen');
+    expect(tabVon({ name: 'setup', id: 's1' })).toBe('einstellungen');
   });
 });
 

@@ -24,9 +24,15 @@ export type Route =
   | { name: 'einstellungen' }
   | { name: 'geraete' }
   | { name: 'musterblatt' }
-  | { name: 'muehle'; id?: string }
-  | { name: 'bruehgeraet'; id?: string }
-  | { name: 'setup'; id?: string };
+  | { name: 'muehle'; id: string }
+  | { name: 'muehleNeu' }
+  | { name: 'muehleBearbeiten'; id: string }
+  | { name: 'bruehgeraet'; id: string }
+  | { name: 'bruehgeraetNeu' }
+  | { name: 'bruehgeraetBearbeiten'; id: string }
+  | { name: 'setup'; id: string }
+  | { name: 'setupNeu' }
+  | { name: 'setupBearbeiten'; id: string };
 
 export const START: Route = { name: 'bar' };
 
@@ -57,11 +63,23 @@ export function zuPfad(route: Route): string {
     case 'musterblatt':
       return '/einstellungen/musterblatt';
     case 'muehle':
-      return `/einstellungen/geraete/muehle/${route.id ?? 'neu'}`;
+      return `/einstellungen/geraete/muehle/${route.id}`;
+    case 'muehleNeu':
+      return '/einstellungen/geraete/muehle/neu';
+    case 'muehleBearbeiten':
+      return `/einstellungen/geraete/muehle/${route.id}/bearbeiten`;
     case 'bruehgeraet':
-      return `/einstellungen/geraete/bruehgeraet/${route.id ?? 'neu'}`;
+      return `/einstellungen/geraete/bruehgeraet/${route.id}`;
+    case 'bruehgeraetNeu':
+      return '/einstellungen/geraete/bruehgeraet/neu';
+    case 'bruehgeraetBearbeiten':
+      return `/einstellungen/geraete/bruehgeraet/${route.id}/bearbeiten`;
     case 'setup':
-      return `/einstellungen/geraete/setup/${route.id ?? 'neu'}`;
+      return `/einstellungen/geraete/setup/${route.id}`;
+    case 'setupNeu':
+      return '/einstellungen/geraete/setup/neu';
+    case 'setupBearbeiten':
+      return `/einstellungen/geraete/setup/${route.id}/bearbeiten`;
   }
 }
 
@@ -91,10 +109,24 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 2 && t[1] === 'musterblatt') return { name: 'musterblatt' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
     if (t.length === 4 && t[1] === 'geraete') {
-      const id = t[3] === 'neu' ? undefined : t[3];
-      if (t[2] === 'muehle') return { name: 'muehle', id };
-      if (t[2] === 'bruehgeraet') return { name: 'bruehgeraet', id };
-      if (t[2] === 'setup') return { name: 'setup', id };
+      const typ = t[2];
+      if (t[3] === 'neu') {
+        if (typ === 'muehle') return { name: 'muehleNeu' };
+        if (typ === 'bruehgeraet') return { name: 'bruehgeraetNeu' };
+        if (typ === 'setup') return { name: 'setupNeu' };
+      } else {
+        const id = t[3]!;
+        if (typ === 'muehle') return { name: 'muehle', id };
+        if (typ === 'bruehgeraet') return { name: 'bruehgeraet', id };
+        if (typ === 'setup') return { name: 'setup', id };
+      }
+    }
+    if (t.length === 5 && t[1] === 'geraete' && t[4] === 'bearbeiten') {
+      const typ = t[2];
+      const id = t[3]!;
+      if (typ === 'muehle') return { name: 'muehleBearbeiten', id };
+      if (typ === 'bruehgeraet') return { name: 'bruehgeraetBearbeiten', id };
+      if (typ === 'setup') return { name: 'setupBearbeiten', id };
     }
   }
 
@@ -124,9 +156,18 @@ export function elternVon(route: Route): Route | undefined {
     case 'musterblatt':
       return { name: 'einstellungen' };
     case 'muehle':
+    case 'muehleNeu':
     case 'bruehgeraet':
+    case 'bruehgeraetNeu':
     case 'setup':
+    case 'setupNeu':
       return { name: 'geraete' };
+    case 'muehleBearbeiten':
+      return { name: 'muehle', id: route.id };
+    case 'bruehgeraetBearbeiten':
+      return { name: 'bruehgeraet', id: route.id };
+    case 'setupBearbeiten':
+      return { name: 'setup', id: route.id };
   }
 }
 
@@ -149,8 +190,14 @@ export function tabVon(route: Route): Bereich {
     case 'geraete':
     case 'musterblatt':
     case 'muehle':
+    case 'muehleNeu':
+    case 'muehleBearbeiten':
     case 'bruehgeraet':
+    case 'bruehgeraetNeu':
+    case 'bruehgeraetBearbeiten':
     case 'setup':
+    case 'setupNeu':
+    case 'setupBearbeiten':
       return 'einstellungen';
   }
 }

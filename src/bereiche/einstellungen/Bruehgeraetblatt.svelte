@@ -18,14 +18,22 @@
   //  - Temperaturtabelle zieht hierher, nur sichtbar wenn PID an ist.
 
   import { untrack } from 'svelte';
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import TempReferenz from './TempReferenz.svelte';
   import type { Bruehgeraet } from '../../daten/schema';
 
-  let { bruehgeraetId, onZurueck }: { bruehgeraetId?: string; onZurueck: () => void } = $props();
+  let {
+    bruehgeraetId,
+    onZurueck,
+    onGeloescht,
+  }: {
+    bruehgeraetId?: string;
+    onZurueck: () => void;
+    onGeloescht: () => void;
+  } = $props();
 
   const bestehend = $derived(bruehgeraetId ? bestand.bruehgeraete.find((b) => b.id === bruehgeraetId) : undefined);
 
@@ -101,6 +109,21 @@
 
   function zahl(e: Event): number {
     return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
+  }
+
+  // Kein stilles Kaskadenloeschen (offene-punkte-ux.md Punkt 1): ein
+  // Bruehgeraet, das noch in einem Setup steckt, wuerde
+  // bestand.bruehgeraetVon() sonst ploetzlich undefined liefern.
+  async function geraetLoeschen() {
+    if (!bestehend) return;
+    const anzahl = bestand.setups.filter((s) => s.bruehgeraetId === bestehend.id).length;
+    if (anzahl > 0) {
+      alert(`„${bestehend.name}“ wird noch von ${anzahl} Setup${anzahl === 1 ? '' : 's'} benutzt und kann nicht gelöscht werden.`);
+      return;
+    }
+    if (!confirm(`„${bestehend.name}“ wirklich löschen?`)) return;
+    await loeschen('bruehgeraet', bestehend.id);
+    onGeloescht();
   }
 </script>
 
@@ -207,6 +230,10 @@
   <p class="fehler">Nicht gespeichert: {fehler}</p>
 {/if}
 
+{#if bestehend}
+  <button type="button" class="loeschen" onclick={geraetLoeschen}>Brühgerät löschen</button>
+{/if}
+
 <style>
   .feld-zeile {
     display: flex;
@@ -266,5 +293,17 @@
     color: var(--kritisch);
     font-size: var(--fs-satz);
     margin-top: var(--r3);
+  }
+  .loeschen {
+    display: block;
+    min-height: var(--treffer);
+    margin-top: var(--r5);
+    padding: 0 var(--r4);
+    background: none;
+    border: 1px solid var(--kritisch);
+    color: var(--kritisch);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    cursor: pointer;
   }
 </style>

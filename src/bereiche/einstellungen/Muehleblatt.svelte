@@ -8,13 +8,21 @@
   // Entwurf auf einmal.
 
   import { untrack } from 'svelte';
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import type { Muehle } from '../../daten/schema';
 
-  let { muehleId, onZurueck }: { muehleId?: string; onZurueck: () => void } = $props();
+  let {
+    muehleId,
+    onZurueck,
+    onGeloescht,
+  }: {
+    muehleId?: string;
+    onZurueck: () => void;
+    onGeloescht: () => void;
+  } = $props();
 
   const bestehend = $derived(muehleId ? bestand.muehlen.find((m) => m.id === muehleId) : undefined);
 
@@ -44,6 +52,21 @@
 
   function zahl(e: Event): number {
     return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
+  }
+
+  // Kein stilles Kaskadenloeschen (offene-punkte-ux.md Punkt 1): eine Muehle,
+  // die noch in einem Setup steckt, wuerde bestand.muehleVon() sonst
+  // ploetzlich undefined liefern.
+  async function geraetLoeschen() {
+    if (!bestehend) return;
+    const anzahl = bestand.setups.filter((s) => s.muehleId === bestehend.id).length;
+    if (anzahl > 0) {
+      alert(`„${bestehend.name}“ wird noch von ${anzahl} Setup${anzahl === 1 ? '' : 's'} benutzt und kann nicht gelöscht werden.`);
+      return;
+    }
+    if (!confirm(`„${bestehend.name}“ wirklich löschen?`)) return;
+    await loeschen('muehle', bestehend.id);
+    onGeloescht();
   }
 </script>
 
@@ -91,6 +114,10 @@
 
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler}</p>
+{/if}
+
+{#if bestehend}
+  <button type="button" class="loeschen" onclick={geraetLoeschen}>Mühle löschen</button>
 {/if}
 
 <style>
@@ -147,5 +174,17 @@
     color: var(--kritisch);
     font-size: var(--fs-satz);
     margin-top: var(--r3);
+  }
+  .loeschen {
+    display: block;
+    min-height: var(--treffer);
+    margin-top: var(--r5);
+    padding: 0 var(--r4);
+    background: none;
+    border: 1px solid var(--kritisch);
+    color: var(--kritisch);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    cursor: pointer;
   }
 </style>

@@ -29,8 +29,11 @@
   import ShotErfassung from './shot/ShotErfassung.svelte';
   import Einstellungen from './einstellungen/Einstellungen.svelte';
   import Geraete from './einstellungen/Geraete.svelte';
+  import MuehleAnsicht from './einstellungen/MuehleAnsicht.svelte';
   import Muehleblatt from './einstellungen/Muehleblatt.svelte';
+  import BruehgeraetAnsicht from './einstellungen/BruehgeraetAnsicht.svelte';
   import Bruehgeraetblatt from './einstellungen/Bruehgeraetblatt.svelte';
+  import SetupAnsicht from './einstellungen/SetupAnsicht.svelte';
   import Setupblatt from './einstellungen/Setupblatt.svelte';
   import Musterblatt from './Musterblatt.svelte';
 
@@ -105,19 +108,43 @@
     {:else if route.name === 'geraete'}
       <Kopfzeile titel="Geräte" onZurueck={() => navigation.zurueck()} />
       <Geraete
-        onOeffnenMuehle={(id) => navigation.gehe({ name: 'muehle', id })}
-        onOeffnenBruehgeraet={(id) => navigation.gehe({ name: 'bruehgeraet', id })}
-        onOeffnenSetup={(id) => navigation.gehe({ name: 'setup', id })}
+        onOeffnenMuehle={(id) => navigation.gehe(id ? { name: 'muehle', id } : { name: 'muehleNeu' })}
+        onOeffnenBruehgeraet={(id) => navigation.gehe(id ? { name: 'bruehgeraet', id } : { name: 'bruehgeraetNeu' })}
+        onOeffnenSetup={(id) => navigation.gehe(id ? { name: 'setup', id } : { name: 'setupNeu' })}
       />
     {:else if route.name === 'musterblatt'}
       <Kopfzeile titel="Musterblatt" onZurueck={() => navigation.zurueck()} />
       <Musterblatt />
     {:else if route.name === 'muehle'}
-      <Muehleblatt muehleId={route.id} onZurueck={() => navigation.zurueck()} />
+      <MuehleAnsicht
+        muehleId={route.id}
+        onZurueck={() => navigation.zurueck()}
+        onBearbeiten={() => navigation.gehe({ name: 'muehleBearbeiten', id: route.id })}
+      />
+    {:else if route.name === 'muehleNeu'}
+      <Muehleblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+    {:else if route.name === 'muehleBearbeiten'}
+      <Muehleblatt muehleId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
     {:else if route.name === 'bruehgeraet'}
-      <Bruehgeraetblatt bruehgeraetId={route.id} onZurueck={() => navigation.zurueck()} />
+      <BruehgeraetAnsicht
+        bruehgeraetId={route.id}
+        onZurueck={() => navigation.zurueck()}
+        onBearbeiten={() => navigation.gehe({ name: 'bruehgeraetBearbeiten', id: route.id })}
+      />
+    {:else if route.name === 'bruehgeraetNeu'}
+      <Bruehgeraetblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+    {:else if route.name === 'bruehgeraetBearbeiten'}
+      <Bruehgeraetblatt bruehgeraetId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
     {:else if route.name === 'setup'}
-      <Setupblatt setupId={route.id} onZurueck={() => navigation.zurueck()} />
+      <SetupAnsicht
+        setupId={route.id}
+        onZurueck={() => navigation.zurueck()}
+        onBearbeiten={() => navigation.gehe({ name: 'setupBearbeiten', id: route.id })}
+      />
+    {:else if route.name === 'setupNeu'}
+      <Setupblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+    {:else if route.name === 'setupBearbeiten'}
+      <Setupblatt setupId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
     {/if}
   </main>
 

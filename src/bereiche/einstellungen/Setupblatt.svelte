@@ -8,13 +8,21 @@
   // diese Geraete-Kombination. Stehen jetzt global in Einstellungen.svelte.
 
   import { untrack } from 'svelte';
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import { ABLAUF_LEER } from '../../daten/stammdaten';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import type { Setup } from '../../daten/schema';
 
-  let { setupId, onZurueck }: { setupId?: string; onZurueck: () => void } = $props();
+  let {
+    setupId,
+    onZurueck,
+    onGeloescht,
+  }: {
+    setupId?: string;
+    onZurueck: () => void;
+    onGeloescht: () => void;
+  } = $props();
 
   const bestehend = $derived(setupId ? bestand.setups.find((s) => s.id === setupId) : undefined);
 
@@ -44,6 +52,21 @@
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
+  }
+
+  // Kein stilles Kaskadenloeschen (offene-punkte-ux.md Punkt 1): ein Setup,
+  // das noch in einem Profil steckt, wuerde dort eine kaputte Referenz
+  // hinterlassen.
+  async function setupLoeschen() {
+    if (!bestehend) return;
+    const anzahl = bestand.profile.filter((p) => p.setupId === bestehend.id).length;
+    if (anzahl > 0) {
+      alert(`„${bestehend.name}“ wird noch von ${anzahl} Profil${anzahl === 1 ? '' : 'en'} benutzt und kann nicht gelöscht werden.`);
+      return;
+    }
+    if (!confirm(`„${bestehend.name}“ wirklich löschen?`)) return;
+    await loeschen('setup', bestehend.id);
+    onGeloescht();
   }
 </script>
 
@@ -80,6 +103,10 @@
 
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler}</p>
+{/if}
+
+{#if bestehend}
+  <button type="button" class="loeschen" onclick={setupLoeschen}>Setup löschen</button>
 {/if}
 
 <style>
@@ -132,5 +159,17 @@
     color: var(--kritisch);
     font-size: var(--fs-satz);
     margin-top: var(--r3);
+  }
+  .loeschen {
+    display: block;
+    min-height: var(--treffer);
+    margin-top: var(--r5);
+    padding: 0 var(--r4);
+    background: none;
+    border: 1px solid var(--kritisch);
+    color: var(--kritisch);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    cursor: pointer;
   }
 </style>
