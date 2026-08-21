@@ -31,34 +31,36 @@
 
 <Migration />
 
-<h2>Allgemein</h2>
+<h2>Verhalten</h2>
 {#if bestand.einstellungen}
-  <div class="einstellung-zeile">
-    <Schalter
-      label="Begründung: Koffein"
-      an={bestand.einstellungen.begruendungKoffein}
-      onWahl={(a) => einstellungAendern('begruendungKoffein', a)}
-    />
-    <p class="erklaerung">Zeigt, worauf sich eine automatisch vorbelegte Koffein-Frage stützt (z. B. „7 von 8 zuletzt").</p>
-  </div>
-  <div class="einstellung-zeile">
-    <Schalter
-      label="Begründung: Bohne"
-      an={bestand.einstellungen.begruendungBohne}
-      onWahl={(a) => einstellungAendern('begruendungBohne', a)}
-    />
-    <p class="erklaerung">Zeigt, worauf sich ein automatischer Bohnenvorschlag stützt.</p>
-  </div>
-  <div class="einstellung-zeile">
-    <span class="einstellung-label">Milch schäumen</span>
-    <LesartUmschalter
-      optionA="pro Getränk"
-      optionB="gesammelt"
-      start={bestand.einstellungen.sammelSchaeumen === 'gesammelt' ? 'b' : 'a'}
-      onWahl={(l) => einstellungAendern('sammelSchaeumen', l === 'b' ? 'gesammelt' : 'einzeln')}
-    />
-    <p class="erklaerung">Bei mehreren Milchgetränken im selben Durchgang — die App entscheidet das nicht selbst.</p>
-  </div>
+  <section class="karte">
+    <div class="einstellung-zeile">
+      <Schalter
+        label="Begründung: Koffein"
+        an={bestand.einstellungen.begruendungKoffein}
+        onWahl={(a) => einstellungAendern('begruendungKoffein', a)}
+      />
+      <p class="erklaerung">Zeigt, worauf sich eine automatisch vorbelegte Koffein-Frage stützt (z. B. „7 von 8 zuletzt").</p>
+    </div>
+    <div class="einstellung-zeile">
+      <Schalter
+        label="Begründung: Bohne"
+        an={bestand.einstellungen.begruendungBohne}
+        onWahl={(a) => einstellungAendern('begruendungBohne', a)}
+      />
+      <p class="erklaerung">Zeigt, worauf sich ein automatischer Bohnenvorschlag stützt.</p>
+    </div>
+    <div class="einstellung-zeile letzte">
+      <span class="einstellung-label">Milch schäumen</span>
+      <LesartUmschalter
+        optionA="pro Getränk"
+        optionB="gesammelt"
+        start={bestand.einstellungen.sammelSchaeumen === 'gesammelt' ? 'b' : 'a'}
+        onWahl={(l) => einstellungAendern('sammelSchaeumen', l === 'b' ? 'gesammelt' : 'einzeln')}
+      />
+      <p class="erklaerung">Bei mehreren Milchgetränken im selben Durchgang — die App entscheidet das nicht selbst.</p>
+    </div>
+  </section>
 {/if}
 
 <Backup />
@@ -90,8 +92,17 @@
     cursor: pointer;
     display: block;
   }
+  .karte {
+    background: var(--feld-blatt);
+    border: 1px solid var(--linie);
+    border-radius: var(--radius-feld);
+    padding: var(--r4);
+  }
   .einstellung-zeile {
     margin-bottom: var(--r3);
+  }
+  .einstellung-zeile.letzte {
+    margin-bottom: 0;
   }
   .einstellung-label {
     display: block;
