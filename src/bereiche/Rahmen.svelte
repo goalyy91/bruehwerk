@@ -33,6 +33,8 @@
   import Muehleblatt from './einstellungen/Muehleblatt.svelte';
   import BruehgeraetAnsicht from './einstellungen/BruehgeraetAnsicht.svelte';
   import Bruehgeraetblatt from './einstellungen/Bruehgeraetblatt.svelte';
+  import TempReferenzScreen from './einstellungen/TempReferenzScreen.svelte';
+  import { bruehgeraetEntwurf } from './einstellungen/bruehgeraetEntwurf.svelte';
   import SetupAnsicht from './einstellungen/SetupAnsicht.svelte';
   import Setupblatt from './einstellungen/Setupblatt.svelte';
   import Musterblatt from './Musterblatt.svelte';
@@ -132,9 +134,20 @@
         onBearbeiten={() => navigation.gehe({ name: 'bruehgeraetBearbeiten', id: route.id })}
       />
     {:else if route.name === 'bruehgeraetNeu'}
-      <Bruehgeraetblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Bruehgeraetblatt
+        onZurueck={() => { bruehgeraetEntwurf.verwerfen(); navigation.zurueck(); }}
+        onOeffnenTempReferenz={() => navigation.gehe({ name: 'tempReferenz' })}
+        onGeloescht={() => { bruehgeraetEntwurf.verwerfen(); navigation.ersetze({ name: 'geraete' }); }}
+      />
     {:else if route.name === 'bruehgeraetBearbeiten'}
-      <Bruehgeraetblatt bruehgeraetId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Bruehgeraetblatt
+        bruehgeraetId={route.id}
+        onZurueck={() => { bruehgeraetEntwurf.verwerfen(); navigation.zurueck(); }}
+        onOeffnenTempReferenz={() => navigation.gehe({ name: 'tempReferenz' })}
+        onGeloescht={() => { bruehgeraetEntwurf.verwerfen(); navigation.ersetze({ name: 'geraete' }); }}
+      />
+    {:else if route.name === 'tempReferenz'}
+      <TempReferenzScreen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'setup'}
       <SetupAnsicht
         setupId={route.id}

@@ -17,6 +17,13 @@
   // Seite (der Rest des Formulars ruckt runter), kein modaler Dialog, kein
   // neuer Verlaufseintrag — ruehrt den Verlauf aus dem Navigations-Umbau
   // (UX-1) nicht an.
+  //
+  // Optionales `symbol` je Option — dieselben drei Herkunftszeichen aus K54
+  // (gefuellter Punkt · Ring · gestrichelter Ring, siehe Herkunft.svelte /
+  // Einzelauswahl.svelte), fuer Auswahlen wie die Herkunft-Zeile der
+  // Temperaturtabelle. Rein additiv: wer es weglaesst (z. B. Aufbereitung
+  // beim Kaffee), sieht nur den Text wie bisher.
+  type Zeichen = 'punkt' | 'ring' | 'gestrichelt';
 
   let {
     optionen,
@@ -24,7 +31,7 @@
     onWahl,
     platzhalter = 'wählen …',
   }: {
-    optionen: readonly { wert: string; label: string }[];
+    optionen: readonly { wert: string; label: string; symbol?: Zeichen }[];
     wert: string;
     onWahl: (wert: string) => void;
     platzhalter?: string;
@@ -42,7 +49,12 @@
 
 <div class="auswahlfeld">
   <button type="button" class="feld" class:offen aria-expanded={offen} onclick={() => (offen = !offen)}>
-    <span class="wert" class:platzhalter={!gewaehlteOption}>{gewaehlteOption?.label ?? platzhalter}</span>
+    <span class="wert" class:platzhalter={!gewaehlteOption}>
+      {#if gewaehlteOption?.symbol}
+        <span class="zeichen" class:voll={gewaehlteOption.symbol === 'punkt'} class:ring={gewaehlteOption.symbol === 'ring'} class:gestrichelt={gewaehlteOption.symbol === 'gestrichelt'}></span>
+      {/if}
+      {gewaehlteOption?.label ?? platzhalter}
+    </span>
     <span class="pfeil" class:offen aria-hidden="true">▾</span>
   </button>
 
@@ -56,7 +68,12 @@
           aria-pressed={option.wert === wert}
           onclick={() => waehlen(option.wert)}
         >
-          <span class="label">{option.label}</span>
+          <span class="label">
+            {#if option.symbol}
+              <span class="zeichen" class:voll={option.symbol === 'punkt'} class:ring={option.symbol === 'ring'} class:gestrichelt={option.symbol === 'gestrichelt'}></span>
+            {/if}
+            {option.label}
+          </span>
           {#if option.wert === wert}<span class="haken" aria-hidden="true">✓</span>{/if}
         </button>
       {/each}
@@ -87,10 +104,34 @@
     border-bottom: none;
   }
   .wert {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--tinte);
   }
   .wert.platzhalter {
     color: var(--gedaempft);
+  }
+  .label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .zeichen {
+    display: inline-block;
+    width: var(--zeichen);
+    height: var(--zeichen);
+    border-radius: 50%;
+    flex: none;
+  }
+  .zeichen.voll {
+    background: var(--tinte);
+  }
+  .zeichen.ring {
+    border: 1px solid var(--gedaempft);
+  }
+  .zeichen.gestrichelt {
+    border: 1px dashed var(--gedaempft);
   }
   .pfeil {
     flex-shrink: 0;

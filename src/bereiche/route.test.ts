@@ -23,6 +23,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'setup', id: 's1' },
   { name: 'setupNeu' },
   { name: 'setupBearbeiten', id: 's1' },
+  { name: 'tempReferenz' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -63,6 +64,10 @@ describe('route — elternVon', () => {
     expect(elternVon(ansicht!)).toEqual({ name: 'geraete' } satisfies Route);
   });
 
+  it('tempReferenz -> geraete (Fallback ohne eigene Verlaufstiefe)', () => {
+    expect(elternVon({ name: 'tempReferenz' })).toEqual({ name: 'geraete' } satisfies Route);
+  });
+
   it('muehle -> geraete -> einstellungen -> Wurzel', () => {
     const muehle: Route = { name: 'muehle', id: 'm1' };
     const geraete = elternVon(muehle);
@@ -100,6 +105,7 @@ describe('route — tabVon', () => {
     expect(tabVon({ name: 'muehleBearbeiten', id: 'm1' })).toBe('einstellungen');
     expect(tabVon({ name: 'bruehgeraet', id: 'b1' })).toBe('einstellungen');
     expect(tabVon({ name: 'setup', id: 's1' })).toBe('einstellungen');
+    expect(tabVon({ name: 'tempReferenz' })).toBe('einstellungen');
   });
 });
 

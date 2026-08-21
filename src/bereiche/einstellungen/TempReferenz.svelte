@@ -8,23 +8,28 @@
   // statt eigener Geraete-Auswahl — sie hing schon in Bruehgeraetblatt, wo
   // PID an ist) und zeigt eine vertikale Zeilenliste statt einer breiten
   // <table>, die seitlich ueber den Bildschirmrand lief.
+  //
+  // offene-punkte-ux.md Punkt 3: arbeitet jetzt auf reinen Werten statt
+  // direkt auf der Ablage (werte/onAendern statt bruehgeraetId + schreiben)
+  // — dasselbe Muster wie GussplanEditor.svelte fuer Profile. Damit
+  // funktioniert diese Komponente auch fuer ein noch nicht gespeichertes
+  // Geraet: der Aufrufer (TempReferenzScreen.svelte) haelt den Entwurf.
+  //
+  // Herkunft-Auswahl ist jetzt eine AuswahlListe statt Einzelauswahl-Chips
+  // — dieselbe Form wie die Aufbereitungsart beim Kaffee, nur mit den
+  // Herkunftszeichen (K54) neben dem Text.
 
-  import { bestand, schreiben } from '../bestand.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
-  import type { Bruehgeraet, TempReferenzPunkt } from '../../daten/schema';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
+  import type { TempReferenzPunkt } from '../../daten/schema';
 
-  let { bruehgeraetId }: { bruehgeraetId: string } = $props();
+  let { werte, onAendern }: { werte: TempReferenzPunkt[]; onAendern: (werte: TempReferenzPunkt[]) => void } = $props();
 
-  const geraet = $derived(bestand.bruehgeraete.find((b) => b.id === bruehgeraetId));
-  const reihe = $derived(
-    geraet ? [...geraet.tempReferenz].sort((a, b) => a.kt - b.kt) : ([] as TempReferenzPunkt[]),
-  );
+  const reihe = $derived([...werte].sort((a, b) => a.kt - b.kt));
 
   let neuKt = $state('');
   let neuFlush = $state('3');
   let neuGruppe = $state('');
   let neuHerkunft = $state<TempReferenzPunkt['herkunft']>('uebernommen');
-  let speicherFehler = $state<string | undefined>(undefined);
 
   const HERKUNFT_OPTIONEN: { wert: TempReferenzPunkt['herkunft']; label: string; symbol: 'punkt' | 'ring' | 'gestrichelt' }[] = [
     { wert: 'gemessen', label: 'gemessen', symbol: 'punkt' },
@@ -32,34 +37,21 @@
     { wert: 'geschaetzt', label: 'geschätzt', symbol: 'gestrichelt' },
   ];
 
-  async function zeileHinzufuegen() {
-    if (!geraet || neuKt === '' || neuGruppe === '') return;
-    speicherFehler = undefined;
+  function zeileHinzufuegen() {
+    if (neuKt === '' || neuGruppe === '') return;
     const punkt: TempReferenzPunkt = {
       kt: Number(neuKt.replace(',', '.')),
       flush: Number(neuFlush.replace(',', '.')),
       gruppe: Number(neuGruppe.replace(',', '.')),
       herkunft: neuHerkunft,
     };
-    const aktualisiert: Bruehgeraet = { ...geraet, tempReferenz: [...geraet.tempReferenz, punkt] };
-    try {
-      await schreiben('bruehgeraet', aktualisiert);
-      neuKt = '';
-      neuGruppe = '';
-    } catch (fehler) {
-      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
+    onAendern([...werte, punkt]);
+    neuKt = '';
+    neuGruppe = '';
   }
 
-  async function zeileEntfernen(index: number) {
-    if (!geraet) return;
-    speicherFehler = undefined;
-    const rest = reihe.filter((_, i) => i !== index);
-    try {
-      await schreiben('bruehgeraet', { ...geraet, tempReferenz: rest });
-    } catch (fehler) {
-      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
+  function zeileEntfernen(index: number) {
+    onAendern(reihe.filter((_, i) => i !== index));
   }
 </script>
 
@@ -88,13 +80,12 @@
   <label>Kessel <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
   <label>Flush <input type="text" inputmode="decimal" placeholder="s" bind:value={neuFlush} /></label>
   <label>Gruppe <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
-  <Einzelauswahl optionen={HERKUNFT_OPTIONEN} wert={neuHerkunft} onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])} />
+  <div class="herkunft-feld">
+    <span class="feld-label">Herkunft</span>
+    <AuswahlListe optionen={HERKUNFT_OPTIONEN} wert={neuHerkunft} onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])} />
+  </div>
   <button type="button" class="hinzufuegen" onclick={zeileHinzufuegen} disabled={neuKt === '' || neuGruppe === ''}>Zeile hinzufügen</button>
 </div>
-
-{#if speicherFehler}
-  <p class="fehler">Nicht gespeichert: {speicherFehler} — nochmal versuchen.</p>
-{/if}
 
 <style>
   h3 {
@@ -193,6 +184,16 @@
     min-height: 40px;
     text-align: right;
   }
+  .herkunft-feld {
+    display: flex;
+    flex-direction: column;
+    gap: var(--r1);
+    align-items: stretch;
+  }
+  .feld-label {
+    font-size: var(--fs-meta);
+    color: var(--satz);
+  }
   .hinzufuegen {
     min-height: var(--treffer);
     background: var(--feld);
@@ -205,10 +206,5 @@
   .hinzufuegen:disabled {
     opacity: 0.5;
     cursor: default;
-  }
-  .fehler {
-    color: var(--kritisch);
-    font-size: var(--fs-satz);
-    margin-top: var(--r3);
   }
 </style>

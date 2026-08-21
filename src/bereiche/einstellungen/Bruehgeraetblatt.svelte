@@ -15,23 +15,30 @@
   //    auf einmal"). Bei Espresso wird mengen jetzt aus dem Sieb abgeleitet
   //    (einzel -> [1], doppel -> [1,2], K8) statt separat abgefragt — die
   //    drei 1x/2x/3x-Schalter bleiben nur noch fuer Moka/Pour Over/Cold Brew.
-  //  - Temperaturtabelle zieht hierher, nur sichtbar wenn PID an ist.
+  //  - Temperaturtabelle zieht auf einen eigenen Bildschirm
+  //    (TempReferenzScreen.svelte, offene-punkte-ux.md Punkt 3), erreichbar
+  //    ueber eine Zeile sobald PID an ist — auch bei einem noch nicht
+  //    gespeicherten Geraet. Der Entwurf lebt dafuer nicht mehr lokal,
+  //    sondern in bruehgeraetEntwurf.svelte.ts, damit er den
+  //    Bildschirmwechsel uebersteht.
 
   import { untrack } from 'svelte';
   import { bestand, schreiben, loeschen } from '../bestand.svelte';
+  import { bruehgeraetEntwurf } from './bruehgeraetEntwurf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import TempReferenz from './TempReferenz.svelte';
   import type { Bruehgeraet } from '../../daten/schema';
 
   let {
     bruehgeraetId,
     onZurueck,
+    onOeffnenTempReferenz,
     onGeloescht,
   }: {
     bruehgeraetId?: string;
     onZurueck: () => void;
+    onOeffnenTempReferenz: () => void;
     onGeloescht: () => void;
   } = $props();
 
@@ -52,11 +59,20 @@
     };
   }
 
-  // $state.snapshot() statt structuredClone(): bestehend ist ein Svelte-
-  // reaktives Objekt — structuredClone scheitert an den Array-Feldern
-  // (mengen, tempReferenz) mit "could not be cloned" (gefunden beim
-  // Kaffee-Bearbeiten-Formular, dasselbe Muster).
-  let entwurf = $state<Bruehgeraet>(untrack(() => (bestehend ? $state.snapshot(bestehend) : leererEntwurf())));
+  // Ein laufender Entwurf in bruehgeraetEntwurf ist entweder ein frischer
+  // Start oder die Rueckkehr vom Temperatur-Bildschirm — Rahmen.svelte
+  // verwirft ihn bei jedem anderen Ausstieg (onZurueck/onGeloescht), sonst
+  // gaebe es hier nichts mehr zu unterscheiden. $state.snapshot() statt
+  // structuredClone(): bestehend ist ein Svelte-reaktives Objekt —
+  // structuredClone scheitert an den Array-Feldern (mengen, tempReferenz)
+  // mit "could not be cloned" (gefunden beim Kaffee-Bearbeiten-Formular,
+  // dasselbe Muster).
+  untrack(() => {
+    if (!bruehgeraetEntwurf.aktuell) {
+      bruehgeraetEntwurf.setzen(bestehend ? $state.snapshot(bestehend) : leererEntwurf());
+    }
+  });
+  const entwurf = bruehgeraetEntwurf.aktuell!;
   let fehler = $state<string | undefined>(undefined);
 
   /** K8: einzel -> [1], doppel -> [1,2] — ersetzt die separate Mengen-Abfrage bei Espresso. */
@@ -174,6 +190,13 @@
 </div>
 <p class="erklaerung">Kesseltemperatur direkt einstellbar — ohne PID hast du nur den Cooling Flush als Hebel.</p>
 
+{#if entwurf.ktEinstellbar}
+  <button type="button" class="unterseite" onclick={onOeffnenTempReferenz}>
+    <span>Kesseltemperatur-Tabelle pflegen</span>
+    <span class="nebeninfo">{entwurf.tempReferenz.length} {entwurf.tempReferenz.length === 1 ? 'Zeile' : 'Zeilen'} ›</span>
+  </button>
+{/if}
+
 {#if entwurf.typ !== 'moka'}
   <div class="feld-zeile">
     <span class="label">Führungswert</span>
@@ -218,14 +241,6 @@
   {bestehend ? 'speichern' : 'anlegen'}
 </button>
 
-{#if entwurf.ktEinstellbar}
-  {#if bestehend}
-    <TempReferenz bruehgeraetId={bestehend.id} />
-  {:else}
-    <p class="erklaerung">Die Temperaturtabelle kannst du pflegen, sobald das Gerät angelegt ist.</p>
-  {/if}
-{/if}
-
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler}</p>
 {/if}
@@ -254,6 +269,27 @@
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r2);
+  }
+  .unterseite {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: var(--treffer);
+    padding: 0;
+    margin-bottom: var(--r2);
+    border: none;
+    border-bottom: 1px solid var(--linie-zart);
+    background: transparent;
+    color: var(--tinte);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    text-align: left;
+    cursor: pointer;
+  }
+  .unterseite .nebeninfo {
+    color: var(--gedaempft);
+    font-size: var(--fs-meta);
   }
   .text-eingabe {
     font-family: var(--schrift);

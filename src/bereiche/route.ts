@@ -30,6 +30,7 @@ export type Route =
   | { name: 'bruehgeraet'; id: string }
   | { name: 'bruehgeraetNeu' }
   | { name: 'bruehgeraetBearbeiten'; id: string }
+  | { name: 'tempReferenz' }
   | { name: 'setup'; id: string }
   | { name: 'setupNeu' }
   | { name: 'setupBearbeiten'; id: string };
@@ -80,6 +81,8 @@ export function zuPfad(route: Route): string {
       return '/einstellungen/geraete/setup/neu';
     case 'setupBearbeiten':
       return `/einstellungen/geraete/setup/${route.id}/bearbeiten`;
+    case 'tempReferenz':
+      return '/einstellungen/geraete/bruehgeraet/temperatur';
   }
 }
 
@@ -108,6 +111,9 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 1) return { name: 'einstellungen' };
     if (t.length === 2 && t[1] === 'musterblatt') return { name: 'musterblatt' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
+    if (t.length === 4 && t[1] === 'geraete' && t[2] === 'bruehgeraet' && t[3] === 'temperatur') {
+      return { name: 'tempReferenz' };
+    }
     if (t.length === 4 && t[1] === 'geraete') {
       const typ = t[2];
       if (t[3] === 'neu') {
@@ -168,6 +174,13 @@ export function elternVon(route: Route): Route | undefined {
       return { name: 'bruehgeraet', id: route.id };
     case 'setupBearbeiten':
       return { name: 'setup', id: route.id };
+    case 'tempReferenz':
+      // Traegt keine id (siehe route.ts-Kopfkommentar zur Route) — dieser
+      // Fall greift nur, wenn navigation.zurueck() ohne eigene
+      // Verlaufstiefe auskommen muss (z. B. Direktlink auf diese Route).
+      // Der normale Weg (ueber die Zeile im Formular) laeuft ueber
+      // history.back() und landet unabhaengig davon richtig.
+      return { name: 'geraete' };
   }
 }
 
@@ -198,6 +211,7 @@ export function tabVon(route: Route): Bereich {
     case 'setup':
     case 'setupNeu':
     case 'setupBearbeiten':
+    case 'tempReferenz':
       return 'einstellungen';
   }
 }
