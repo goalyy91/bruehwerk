@@ -44,7 +44,11 @@
     };
   }
 
-  let entwurf = $state<Bruehgeraet>(untrack(() => (bestehend ? structuredClone(bestehend) : leererEntwurf())));
+  // $state.snapshot() statt structuredClone(): bestehend ist ein Svelte-
+  // reaktives Objekt — structuredClone scheitert an den Array-Feldern
+  // (mengen, tempReferenz) mit "could not be cloned" (gefunden beim
+  // Kaffee-Bearbeiten-Formular, dasselbe Muster).
+  let entwurf = $state<Bruehgeraet>(untrack(() => (bestehend ? $state.snapshot(bestehend) : leererEntwurf())));
   let fehler = $state<string | undefined>(undefined);
 
   /** K8: einzel -> [1], doppel -> [1,2] — ersetzt die separate Mengen-Abfrage bei Espresso. */

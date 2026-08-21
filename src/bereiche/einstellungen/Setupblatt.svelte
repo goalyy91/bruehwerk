@@ -29,7 +29,11 @@
     };
   }
 
-  let entwurf = $state<Setup>(untrack(() => (bestehend ? structuredClone(bestehend) : leererEntwurf())));
+  // $state.snapshot() statt structuredClone(): bestehend ist ein Svelte-
+  // reaktives Objekt — structuredClone scheitert am Array-Feld
+  // (zubehoerIds) mit "could not be cloned" (gefunden beim
+  // Kaffee-Bearbeiten-Formular, dasselbe Muster).
+  let entwurf = $state<Setup>(untrack(() => (bestehend ? $state.snapshot(bestehend) : leererEntwurf())));
   let fehler = $state<string | undefined>(undefined);
 
   async function speichern() {

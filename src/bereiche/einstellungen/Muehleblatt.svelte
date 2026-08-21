@@ -24,7 +24,11 @@
 
   // bestehend liefert nur die Startbelegung (Bearbeiten-Fall); danach lebt
   // der Entwurf lokal. untrack() macht das Nur-einmal-lesen explizit.
-  let entwurf = $state<Muehle>(untrack(() => (bestehend ? structuredClone(bestehend) : leererEntwurf())));
+  // $state.snapshot() statt structuredClone(): bestehend ist ein Svelte-
+  // reaktives Objekt (bestand.muehlen ist $state) — structuredClone
+  // scheitert daran, sobald ein Array-Feld drin ist, mit "could not be
+  // cloned" (gefunden beim Kaffee-Bearbeiten-Formular, dasselbe Muster).
+  let entwurf = $state<Muehle>(untrack(() => (bestehend ? $state.snapshot(bestehend) : leererEntwurf())));
   let fehler = $state<string | undefined>(undefined);
 
   async function speichern() {

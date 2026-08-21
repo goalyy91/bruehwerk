@@ -20,7 +20,12 @@
 
   const bestehend = $derived(bestand.kaffees.find((k) => k.id === kaffeeId));
 
-  let entwurf = $state<Kaffee | undefined>(untrack(() => (bestehend ? structuredClone(bestehend) : undefined)));
+  // $state.snapshot() statt structuredClone(): bestehend ist ein Svelte-
+  // reaktives Objekt (bestand.kaffees ist $state) — structuredClone
+  // scheitert daran, sobald ein Array-Feld drin ist (hier z. B. herkunft),
+  // mit "could not be cloned". snapshot() ist Sveltes eigene Antwort genau
+  // darauf: ein echter, flacher Klon aus reinen Werten, sicher fuer diesen Zweck.
+  let entwurf = $state<Kaffee | undefined>(untrack(() => (bestehend ? $state.snapshot(bestehend) : undefined)));
   let fehler = $state<string | undefined>(undefined);
 
   function herkunftAendern(text: string) {
