@@ -20,13 +20,24 @@
     messreihe?: { min: number; max: number };
   };
 
-  let { titel, zeilen }: { titel: string; zeilen: Zeile[] } = $props();
+  let {
+    titel,
+    zeilen,
+    onAenderung,
+  }: { titel: string; zeilen: Zeile[]; onAenderung?: (werte: readonly number[]) => void } = $props();
 
   // zeilen liefert nur die Startbelegung (K3: Ist mit dem Ziel vorbelegt);
   // danach lebt der Zustand in der Komponente. untrack() macht das
   // Nur-einmal-lesen explizit.
   const ist = $state<number[]>(untrack(() => zeilen.map((z) => z.ziel)));
   const beruehrt = $state<boolean[]>(untrack(() => zeilen.map(() => false)));
+
+  // Optionaler Auswaertsweg fuer echte Bildschirme (Shot-Erfassung, Paket
+  // 03): die Musterblatt-Demo braucht ihn nicht, deshalb bleibt er ein Prop
+  // statt eines Pflichtfelds.
+  $effect(() => {
+    onAenderung?.(ist);
+  });
 
   function aendern(i: number, wert: string) {
     const zahl = Number(wert.replace(',', '.'));

@@ -7,9 +7,13 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import DoppelteEinheit from '../../muster/DoppelteEinheit.svelte';
+  import GussplanEditor from './GussplanEditor.svelte';
+  import ShotErfassung from '../shot/ShotErfassung.svelte';
   import type { Profil } from '../../daten/schema';
 
   let { profilId, onZurueck }: { profilId: string; onZurueck: () => void } = $props();
+
+  let shotErfassungOffen = $state(false);
 
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
@@ -56,11 +60,17 @@
   }
 </script>
 
-<button type="button" class="zurueck" onclick={onZurueck}>‹ zurück</button>
+<button type="button" class="zurueck" onclick={() => (shotErfassungOffen ? (shotErfassungOffen = false) : onZurueck())}>
+  ‹ zurück
+</button>
 
 {#if !profil}
   <p class="hinweis">Profil nicht gefunden.</p>
+{:else if shotErfassungOffen}
+  <ShotErfassung {profilId} onFertig={() => (shotErfassungOffen = false)} />
 {:else}
+  <button type="button" class="shot-loggen" onclick={() => (shotErfassungOffen = true)}>Shot loggen</button>
+
   <h1>{profil.name}</h1>
   <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
 
@@ -137,7 +147,7 @@
   </section>
 
   {#if bruehgeraet?.typ === 'pourover'}
-    <p class="hinweis">Gussplan-Editor kommt in Paket 03 Etappe C.</p>
+    <GussplanEditor {profilId} />
   {/if}
 
   {#if speicherFehler}
@@ -156,6 +166,18 @@
     padding: 0;
     cursor: pointer;
     display: block;
+  }
+  .shot-loggen {
+    display: block;
+    min-height: var(--treffer);
+    padding: 0 var(--r4);
+    margin-bottom: var(--r4);
+    background: var(--akzent);
+    color: var(--h-papier);
+    border: none;
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    cursor: pointer;
   }
   h1 {
     font-size: var(--fs-titel);
