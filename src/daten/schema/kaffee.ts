@@ -13,6 +13,7 @@ export const Aufbereitung = z.enum([
   'wet-hulled',
   'sonstige',
 ]);
+export type Aufbereitung = z.infer<typeof Aufbereitung>;
 
 export const Entkoffeinierung = z.enum(['swiss-water', 'co2', 'ea', 'mc', 'unbekannt']);
 

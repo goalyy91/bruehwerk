@@ -2,12 +2,20 @@
   // Das Kaffeeblatt — K51, K61. Eigenschaften stehen direkt unter dem
   // Titel, der Untertitel traegt nur den Roester. Die Charge wird am
   // selben Blatt angelegt, nicht in einem eigenen Bereich.
+  //
+  // Korrekturrunde (Teil B): alle strukturierten Eigenschaften aus dem
+  // Datenmodell sind jetzt eingebbar, nicht nur anzeigbar — CLAUDE.md
+  // sagt ausdruecklich "Das Kaffeeblatt (Paket 03, K51) traegt sie nach",
+  // weil die Migration sie nicht liefert. Auswahlfelder ueber
+  // Einzelauswahl/Schalter statt nativer Elemente (Teil E).
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
-  import type { Kaffee, Charge, Profil } from '../../daten/schema';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
+  import type { Kaffee, Charge, Profil, Aufbereitung } from '../../daten/schema';
 
   let {
     kaffeeId,
@@ -18,6 +26,61 @@
   const kaffee = $derived(bestand.kaffees.find((k) => k.id === kaffeeId));
   const chargen = $derived(bestand.chargenVon(kaffeeId));
   const profile = $derived(bestand.profileVon(kaffeeId));
+
+  let speicherFehler = $state<string | undefined>(undefined);
+  let neueChargeNummer = $state('');
+  let vorherigeLeer = $state(true);
+
+  async function feldSpeichern<K extends keyof Kaffee>(feld: K, wert: Kaffee[K]) {
+    if (!kaffee) return;
+    speicherFehler = undefined;
+    try {
+      await schreiben('kaffee', { ...kaffee, [feld]: wert });
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  function herkunftAendern(text: string) {
+    const laender = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    void feldSpeichern('herkunft', laender);
+  }
+
+  async function botanikAendern(feld: 'arabicaProzent' | 'robustaProzent', wert: number) {
+    if (!kaffee) return;
+    const basis = kaffee.botanik ?? { arabicaProzent: 100, robustaProzent: 0 };
+    await feldSpeichern('botanik', { ...basis, [feld]: wert });
+  }
+
+  async function chargeAnlegen() {
+    if (!kaffee || neueChargeNummer.trim() === '') return;
+    speicherFehler = undefined;
+    const neue: Charge = {
+      id: crypto.randomUUID(),
+      kaffeeId,
+      nummer: neueChargeNummer.trim(),
+      roestdatum: Date.now(),
+      leer: false,
+    };
+    try {
+      await schreiben('charge', neue);
+      if (vorherigeLeer && kaffee.aktuelleChargeId) {
+        const vorherige = bestand.chargen.find((c) => c.id === kaffee.aktuelleChargeId);
+        if (vorherige) await schreiben('charge', { ...vorherige, leer: true });
+      }
+      await schreiben('kaffee', {
+        ...kaffee,
+        chargeIds: [...kaffee.chargeIds, neue.id],
+        aktuelleChargeId: neue.id,
+      });
+      neueChargeNummer = '';
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
 
   let neuesProfilOffen = $state(false);
   let neuerProfilName = $state('');
@@ -49,48 +112,14 @@
     }
   }
 
-  const FORMAT_HOEHE = new Intl.NumberFormat('de-DE');
-
-  let speicherFehler = $state<string | undefined>(undefined);
-  let neueChargeNummer = $state('');
-  let vorherigeLeer = $state(true);
-
-  async function feldSpeichern<K extends keyof Kaffee>(feld: K, wert: Kaffee[K]) {
-    if (!kaffee) return;
-    speicherFehler = undefined;
-    try {
-      await schreiben('kaffee', { ...kaffee, [feld]: wert });
-    } catch (fehler) {
-      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
-  }
-
-  async function chargeAnlegen() {
-    if (!kaffee || neueChargeNummer.trim() === '') return;
-    speicherFehler = undefined;
-    const neue: Charge = {
-      id: crypto.randomUUID(),
-      kaffeeId,
-      nummer: neueChargeNummer.trim(),
-      roestdatum: Date.now(),
-      leer: false,
-    };
-    try {
-      await schreiben('charge', neue);
-      if (vorherigeLeer && kaffee.aktuelleChargeId) {
-        const vorherige = bestand.chargen.find((c) => c.id === kaffee.aktuelleChargeId);
-        if (vorherige) await schreiben('charge', { ...vorherige, leer: true });
-      }
-      await schreiben('kaffee', {
-        ...kaffee,
-        chargeIds: [...kaffee.chargeIds, neue.id],
-        aktuelleChargeId: neue.id,
-      });
-      neueChargeNummer = '';
-    } catch (fehler) {
-      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
-  }
+  const AUFBEREITUNG_OPTIONEN: { wert: Aufbereitung; label: string }[] = [
+    { wert: 'washed', label: 'Washed' },
+    { wert: 'honey', label: 'Honey' },
+    { wert: 'natural', label: 'Natural' },
+    { wert: 'anaerob', label: 'Anaerob' },
+    { wert: 'wet-hulled', label: 'Wet-hulled' },
+    { wert: 'sonstige', label: 'Sonstige' },
+  ];
 </script>
 
 <button type="button" class="zurueck" onclick={onZurueck}>‹ Kaffees</button>
@@ -102,47 +131,80 @@
   <p class="roester">{kaffee.roester}</p>
 
   <section class="eigenschaften">
-    <div class="zeile"><span class="label">Röstgrad</span><Bohnen stufe={kaffee.roestgrad} /></div>
-    <div class="zeile"><span class="label">Bewertung</span><Sterne wert={kaffee.bewertung} /></div>
+    <div class="zeile">
+      <span class="label">Röstgrad</span>
+      <Bohnen stufe={kaffee.roestgrad} onWahl={(s) => feldSpeichern('roestgrad', s)} />
+    </div>
+    <div class="zeile">
+      <span class="label">Bewertung</span>
+      <Sterne wert={kaffee.bewertung} onWahl={(w) => feldSpeichern('bewertung', w)} />
+    </div>
     <div class="zeile">
       <span class="label">Art</span>
-      <span class="wert">{kaffee.art === 'blend' ? 'Blend' : 'Single Origin'}</span>
+      <Einzelauswahl
+        optionen={[
+          { wert: 'single', label: 'Single Origin' },
+          { wert: 'blend', label: 'Blend' },
+        ]}
+        wert={kaffee.art}
+        onWahl={(w) => feldSpeichern('art', w as Kaffee['art'])}
+      />
     </div>
     <div class="zeile">
       <span class="label">Herkunft</span>
-      <span class="wert">{kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—'}</span>
+      <input class="text-eingabe" type="text" placeholder="Land, Land …"
+        value={kaffee.herkunft.join(', ')} onchange={(e) => herkunftAendern((e.currentTarget as HTMLInputElement).value)} />
     </div>
-    {#if kaffee.varietaet}
-      <div class="zeile"><span class="label">Varietät</span><span class="wert">{kaffee.varietaet}</span></div>
-    {/if}
-    {#if kaffee.anbauhoehe}
-      <div class="zeile">
-        <span class="label">Anbauhöhe</span>
-        <span class="wert zahl">{FORMAT_HOEHE.format(kaffee.anbauhoehe)} m</span>
-      </div>
-    {/if}
-    {#if kaffee.aufbereitung}
-      <div class="zeile"><span class="label">Aufbereitung</span><span class="wert">{kaffee.aufbereitung}</span></div>
-    {/if}
     <div class="zeile">
-      <span class="label">Koffein</span>
-      <label class="schalter">
-        <input
-          type="checkbox"
-          checked={kaffee.entkoffeiniert}
-          onchange={(e) => feldSpeichern('entkoffeiniert', e.currentTarget.checked)}
-        />
-        entkoffeiniert
-      </label>
+      <span class="label">Varietät</span>
+      <input class="text-eingabe" type="text" value={kaffee.varietaet ?? ''}
+        onchange={(e) => feldSpeichern('varietaet', (e.currentTarget as HTMLInputElement).value || undefined)} />
+    </div>
+    <div class="zeile">
+      <span class="label">Anbauhöhe</span>
+      <input class="text-eingabe zahl" type="text" inputmode="numeric" value={kaffee.anbauhoehe ?? ''}
+        onchange={(e) => feldSpeichern('anbauhoehe', Number((e.currentTarget as HTMLInputElement).value) || undefined)} /> m
+    </div>
+    <div class="zeile">
+      <span class="label">Aufbereitung</span>
+      <Einzelauswahl
+        optionen={AUFBEREITUNG_OPTIONEN}
+        wert={kaffee.aufbereitung ?? ''}
+        onWahl={(w) => feldSpeichern('aufbereitung', w as Aufbereitung)}
+      />
+    </div>
+    <div class="zeile">
+      <span class="label">Botanik</span>
+      <div class="botanik">
+        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
+          value={kaffee.botanik?.arabicaProzent ?? ''}
+          onchange={(e) => botanikAendern('arabicaProzent', Number((e.currentTarget as HTMLInputElement).value))} />
+        % Arabica ·
+        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
+          value={kaffee.botanik?.robustaProzent ?? ''}
+          onchange={(e) => botanikAendern('robustaProzent', Number((e.currentTarget as HTMLInputElement).value))} />
+        % Robusta
+      </div>
+    </div>
+    <div class="zeile">
+      <span class="label">Röstgrad (Röster)</span>
+      <input class="text-eingabe" type="text" value={kaffee.roestgradRoester ?? ''}
+        onchange={(e) => feldSpeichern('roestgradRoester', (e.currentTarget as HTMLInputElement).value || undefined)} />
+    </div>
+    <div class="zeile">
+      <Schalter label="entkoffeiniert" an={kaffee.entkoffeiniert} onWahl={(a) => feldSpeichern('entkoffeiniert', a)} />
     </div>
     <div class="zeile">
       <span class="label">Status</span>
-      <select value={kaffee.status ?? ''} onchange={(e) => feldSpeichern('status', e.currentTarget.value as Kaffee['status'])}>
-        <option value="">—</option>
-        <option value="offen">offen</option>
-        <option value="angebrochen">angebrochen</option>
-        <option value="leer">leer</option>
-      </select>
+      <Einzelauswahl
+        optionen={[
+          { wert: 'offen', label: 'offen' },
+          { wert: 'angebrochen', label: 'angebrochen' },
+          { wert: 'leer', label: 'leer' },
+        ]}
+        wert={kaffee.status ?? ''}
+        onWahl={(w) => feldSpeichern('status', w as Kaffee['status'])}
+      />
     </div>
   </section>
 
@@ -164,10 +226,7 @@
 
     <div class="neue-charge">
       <input type="text" placeholder="Chargennummer" bind:value={neueChargeNummer} />
-      <label class="schalter">
-        <input type="checkbox" bind:checked={vorherigeLeer} />
-        vorherige als leer markieren
-      </label>
+      <Schalter label="vorherige als leer markieren" an={vorherigeLeer} onWahl={(a) => (vorherigeLeer = a)} />
       <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === ''}>anlegen</button>
     </div>
   </section>
@@ -192,12 +251,11 @@
     {#if neuesProfilOffen}
       <div class="neues-profil">
         <input type="text" placeholder="Profilname" bind:value={neuerProfilName} />
-        <select bind:value={neuesProfilSetupId}>
-          <option value="">Setup wählen …</option>
-          {#each bestand.setups as setup (setup.id)}
-            <option value={setup.id}>{setup.name}</option>
-          {/each}
-        </select>
+        <Einzelauswahl
+          optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
+          wert={neuesProfilSetupId}
+          onWahl={(w) => (neuesProfilSetupId = w)}
+        />
         <button type="button" onclick={profilAnlegen} disabled={neuerProfilName.trim() === '' || neuesProfilSetupId === ''}>
           anlegen
         </button>
@@ -252,6 +310,8 @@
     min-height: var(--treffer);
     border-bottom: 1px solid var(--linie);
     gap: var(--r3);
+    flex-wrap: wrap;
+    padding: var(--r1) 0;
   }
   .label {
     width: var(--eigenschaftslabel);
@@ -259,25 +319,32 @@
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
-  .wert {
-    font-size: var(--fs-satz);
-    color: var(--satz);
-    text-align: right;
-  }
-  .schalter {
-    display: flex;
-    align-items: center;
-    gap: var(--r1);
-    font-size: var(--fs-meta);
-    color: var(--satz);
-  }
-  select {
+  .text-eingabe {
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     background: var(--feld);
     border: 1px solid var(--feld-rahmen);
     color: var(--tinte);
     padding: var(--r1) var(--r2);
+    min-height: 40px;
+    flex: 1;
+    min-width: 100px;
+  }
+  .text-eingabe.zahl {
+    font-variant-numeric: var(--zahl-features);
+    text-align: right;
+    flex: 0 0 auto;
+    width: 80px;
+  }
+  .text-eingabe.schmal {
+    width: 48px;
+  }
+  .botanik {
+    display: flex;
+    align-items: center;
+    gap: var(--r1);
+    font-size: var(--fs-meta);
+    color: var(--satz);
   }
   .chargenliste {
     list-style: none;
@@ -374,8 +441,7 @@
     gap: var(--r3);
     margin-top: var(--r3);
   }
-  .neues-profil input[type='text'],
-  .neues-profil select {
+  .neues-profil input[type='text'] {
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     background: var(--feld);

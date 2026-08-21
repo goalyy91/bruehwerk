@@ -5,6 +5,7 @@
   // echte Messreihe da ist — als Herkunft übernommen, nicht geschätzt.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import type { Bruehgeraet, TempReferenzPunkt } from '../../daten/schema';
 
   const geraete = $derived(bestand.bruehgeraete.filter((b) => b.ktEinstellbar));
@@ -62,9 +63,11 @@
   <p class="hinweis">Kein Wärmetauscher-Gerät im Bestand.</p>
 {:else}
   {#if geraete.length > 1}
-    <select bind:value={ausgewaehlteId}>
-      {#each geraete as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
-    </select>
+    <Einzelauswahl
+      optionen={geraete.map((g) => ({ wert: g.id, label: g.name }))}
+      wert={ausgewaehlteId ?? ''}
+      onWahl={(w) => (ausgewaehlteId = w)}
+    />
   {/if}
 
   {#if reihe.length === 0}
@@ -94,11 +97,15 @@
     <input type="text" inputmode="decimal" placeholder="Kessel °C" bind:value={neuKt} />
     <input type="text" inputmode="decimal" placeholder="Flush s" bind:value={neuFlush} />
     <input type="text" inputmode="decimal" placeholder="Gruppe °C" bind:value={neuGruppe} />
-    <select bind:value={neuHerkunft}>
-      <option value="uebernommen">übernommen</option>
-      <option value="gemessen">gemessen</option>
-      <option value="geschaetzt">geschätzt</option>
-    </select>
+    <Einzelauswahl
+      optionen={[
+        { wert: 'uebernommen', label: 'übernommen' },
+        { wert: 'gemessen', label: 'gemessen' },
+        { wert: 'geschaetzt', label: 'geschätzt' },
+      ]}
+      wert={neuHerkunft}
+      onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])}
+    />
     <button type="button" onclick={zeileHinzufuegen} disabled={neuKt === '' || neuGruppe === ''}>hinzufügen</button>
   </div>
 
@@ -153,7 +160,6 @@
     font-size: var(--fs-meta);
     cursor: pointer;
   }
-  select,
   input {
     font-family: var(--schrift);
     font-size: var(--fs-satz);

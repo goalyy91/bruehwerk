@@ -7,6 +7,7 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import DoppelteEinheit from '../../muster/DoppelteEinheit.svelte';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import ShotErfassung from '../shot/ShotErfassung.svelte';
   import type { Profil } from '../../daten/schema';
@@ -58,6 +59,16 @@
   function zahl(e: Event): number {
     return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
   }
+
+  async function setupWechseln(neueSetupId: string) {
+    if (!profil) return;
+    speicherFehler = undefined;
+    try {
+      await schreiben('profil', { ...profil, setupId: neueSetupId });
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
 </script>
 
 <button type="button" class="zurueck" onclick={() => (shotErfassungOffen ? (shotErfassungOffen = false) : onZurueck())}>
@@ -73,6 +84,18 @@
 
   <h1>{profil.name}</h1>
   <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
+
+  <section class="setup-wahl">
+    <h2>Setup</h2>
+    <!-- Teil D der Korrekturrunde: die Migration muss bei "k6" zwischen
+         Moka-1 und Moka-3 raten (siehe migrieren.ts) — das muss hier
+         korrigierbar sein, ohne den Kaffee neu anzulegen. -->
+    <Einzelauswahl
+      optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
+      wert={profil.setupId}
+      onWahl={setupWechseln}
+    />
+  </section>
 
   <section class="ziel">
     <h2>Ziel</h2>

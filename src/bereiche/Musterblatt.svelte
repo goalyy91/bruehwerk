@@ -24,6 +24,11 @@
   import LesartUmschalter from '../muster/LesartUmschalter.svelte';
   import Bohnen from '../muster/Bohnen.svelte';
   import Sterne from '../muster/Sterne.svelte';
+  import Einzelauswahl from '../muster/Einzelauswahl.svelte';
+  import Schalter from '../muster/Schalter.svelte';
+
+  let einzelauswahlDemo = $state('b');
+  let schalterDemo = $state(true);
 
   const ZEICHEN_LEGENDE = [
     { klasse: 'gut', wort: 'gut' },
@@ -334,6 +339,24 @@
         <Bohnen stufe={undefined} />
         <Sterne wert={3.5} />
         <Sterne wert={undefined} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Einzelauswahl/Schalter — Ergaenzung fuer Verwaltungsformulare, kein natives select/checkbox -->
+  <section class="muster">
+    <h2>Einzelauswahl & Schalter · Formulare</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Einzelauswahl
+          optionen={[
+            { wert: 'a', label: 'Single' },
+            { wert: 'b', label: 'Blend' },
+          ]}
+          wert={einzelauswahlDemo}
+          onWahl={(w) => (einzelauswahlDemo = w)}
+        />
+        <Schalter label="entkoffeiniert" an={schalterDemo} onWahl={(a) => (schalterDemo = a)} />
       </div>
     {/each}
   </section>

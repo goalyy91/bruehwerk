@@ -13,6 +13,8 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
   import type { Gussplan, GussBaustein } from '../../daten/schema';
 
   let { profilId }: { profilId: string } = $props();
@@ -178,41 +180,52 @@
             {:else if baustein.typ === 'guss'}
               <label>Zielmenge <input type="text" inputmode="decimal" value={baustein.zielmenge}
                 onchange={(e) => bausteinAendern(i, { ...baustein, zielmenge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-              <label>Muster
-                <select value={baustein.muster ?? ''}
-                  onchange={(e) => bausteinAendern(i, { ...baustein, muster: ((e.currentTarget as HTMLSelectElement).value || undefined) as never })}>
-                  <option value="">—</option>
-                  <option value="zentrum">Zentrum</option>
-                  <option value="spirale">Spirale</option>
-                  <option value="aussen">außen halten</option>
-                </select>
-              </label>
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Muster</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'zentrum', label: 'Zentrum' },
+                    { wert: 'spirale', label: 'Spirale' },
+                    { wert: 'aussen', label: 'außen halten' },
+                  ]}
+                  wert={baustein.muster ?? ''}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, muster: w as never })}
+                />
+              </div>
             {:else if baustein.typ === 'agitation'}
-              <label>Art
-                <select value={baustein.art}
-                  onchange={(e) => bausteinAendern(i, { ...baustein, art: (e.currentTarget as HTMLSelectElement).value as never })}>
-                  <option value="schwenken">Schwenken</option>
-                  <option value="rao-spin">Rao Spin</option>
-                  <option value="ruehren">Rühren</option>
-                  <option value="klopfen">Klopfen</option>
-                </select>
-              </label>
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Art</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'schwenken', label: 'Schwenken' },
+                    { wert: 'rao-spin', label: 'Rao Spin' },
+                    { wert: 'ruehren', label: 'Rühren' },
+                    { wert: 'klopfen', label: 'Klopfen' },
+                  ]}
+                  wert={baustein.art}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, art: w as never })}
+                />
+              </div>
             {:else if baustein.typ === 'warten'}
-              <label>Modus
-                <select value={baustein.modus}
-                  onchange={(e) => bausteinAendern(i, { ...baustein, modus: (e.currentTarget as HTMLSelectElement).value as never })}>
-                  <option value="bis-durchgelaufen">bis durchgelaufen</option>
-                  <option value="feste-dauer">feste Dauer</option>
-                </select>
-              </label>
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Modus</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'bis-durchgelaufen', label: 'bis durchgelaufen' },
+                    { wert: 'feste-dauer', label: 'feste Dauer' },
+                  ]}
+                  wert={baustein.modus}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, modus: w as never })}
+                />
+              </div>
             {:else if baustein.typ === 'bypass'}
               <label>Menge <input type="text" inputmode="decimal" value={baustein.menge}
                 onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
             {:else if baustein.typ === 'vorbereiten'}
-              <label><input type="checkbox" checked={baustein.filterSpuelen}
-                onchange={(e) => bausteinAendern(i, { ...baustein, filterSpuelen: (e.currentTarget as HTMLInputElement).checked })} /> Filter spülen</label>
-              <label><input type="checkbox" checked={baustein.gefaessVorwaermen}
-                onchange={(e) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: (e.currentTarget as HTMLInputElement).checked })} /> Gefäß vorwärmen</label>
+              <Schalter label="Filter spülen" an={baustein.filterSpuelen}
+                onWahl={(a) => bausteinAendern(i, { ...baustein, filterSpuelen: a })} />
+              <Schalter label="Gefäß vorwärmen" an={baustein.gefaessVorwaermen}
+                onWahl={(a) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: a })} />
             {:else if baustein.typ === 'frei'}
               <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
             {/if}
@@ -328,8 +341,7 @@
     color: var(--satz);
     gap: var(--r2);
   }
-  .formular input[type='text'],
-  .formular select {
+  .formular input[type='text'] {
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     background: var(--feld);
@@ -340,6 +352,15 @@
   }
   .notiz input {
     flex: 1;
+  }
+  .auswahlzeile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--r1);
+  }
+  .auswahllabel {
+    font-size: var(--fs-meta);
+    color: var(--satz);
   }
   .werkzeuge {
     display: flex;
