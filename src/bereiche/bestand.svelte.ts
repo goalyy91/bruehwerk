@@ -8,7 +8,7 @@
  * schreiben() aktualisiert den Speicher direkt aus dem Rueckgabewert von
  * ablage.schreiben(), es folgt kein Neuladen der ganzen Sammlung.
  */
-import { alle, schreiben as ablageSchreiben, type SammlungWert } from '../daten/ablage';
+import { alle, schreiben as ablageSchreiben, loeschen as ablageLoeschen, type SammlungWert } from '../daten/ablage';
 import { seedFallsLeer } from '../daten/seed';
 import type { Sammlung } from '../daten/db';
 
@@ -96,6 +96,15 @@ export async function schreiben<S extends Sammlung>(sammlung: S, wert: SammlungW
   const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === (wert as { id: string }).id);
   if (index === -1) liste.push(wert as never);
   else liste[index] = wert as never;
+}
+
+/** Loescht einen Datensatz und haelt den Speicher synchron. Kein Kaskadenloeschen — wer abhaengige Datensaetze schuetzen will, prueft vorher selbst (siehe Geraete.svelte). */
+export async function loeschen(sammlung: Sammlung, id: string): Promise<void> {
+  await ablageLoeschen(sammlung, id);
+  const liste = listeFuer(sammlung);
+  if (!liste) return;
+  const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === id);
+  if (index !== -1) liste.splice(index, 1);
 }
 
 function listeFuer(sammlung: Sammlung): unknown[] | undefined {
