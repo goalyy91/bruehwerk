@@ -10,12 +10,17 @@
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
-  import ShotErfassung from '../shot/ShotErfassung.svelte';
   import type { Profil } from '../../daten/schema';
 
-  let { profilId, onZurueck }: { profilId: string; onZurueck: () => void } = $props();
-
-  let shotErfassungOffen = $state(false);
+  // Shot loggen ist seit dem Navigations-Umbau (UX-1) eine eigene Route
+  // (Rahmen.svelte rendert dort direkt ShotErfassung) statt eines lokal
+  // umgeschalteten Zustands hier — damit schliesst die Zurueck-Geste die
+  // Erfassung, statt die App zu verlassen.
+  let { profilId, onZurueck, onOeffnenShot }: {
+    profilId: string;
+    onZurueck: () => void;
+    onOeffnenShot: () => void;
+  } = $props();
 
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
@@ -75,12 +80,9 @@
 {#if !profil}
   <Kopfzeile titel="Profil" onZurueck={onZurueck} />
   <p class="hinweis">Profil nicht gefunden.</p>
-{:else if shotErfassungOffen}
-  <Kopfzeile titel="Shot loggen" onZurueck={() => (shotErfassungOffen = false)} />
-  <ShotErfassung {profilId} onFertig={() => (shotErfassungOffen = false)} />
 {:else}
   <Kopfzeile titel={profil.name} {onZurueck} />
-  <button type="button" class="shot-loggen" onclick={() => (shotErfassungOffen = true)}>Shot loggen</button>
+  <button type="button" class="shot-loggen" onclick={onOeffnenShot}>Shot loggen</button>
 
   <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
 

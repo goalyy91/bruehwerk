@@ -6,6 +6,7 @@
   // steht, mehr nicht.
 
   import { bestand } from '../bestand.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
 
   const letzterShot = $derived(
     bestand.shots.length === 0 ? undefined : [...bestand.shots].sort((a, b) => b.ts - a.ts)[0],
@@ -13,7 +14,7 @@
   const kaffeeName = $derived(bestand.kaffees.find((k) => k.id === letzterShot?.kaffeeId)?.name);
 </script>
 
-<h1>Bar</h1>
+<Kopfzeile titel="Bar" />
 
 {#if letzterShot && kaffeeName}
   <p class="quittung">{kaffeeName} · {letzterShot.urteil}</p>
@@ -24,11 +25,6 @@
 <p class="hinweis">Bestellung mit Durchgängen und Schnellpfad kommt in Paket 06/07.</p>
 
 <style>
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0 0 var(--r4);
-  }
   .quittung {
     font-size: var(--fs-satz);
     color: var(--satz);

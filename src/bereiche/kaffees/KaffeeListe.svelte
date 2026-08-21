@@ -3,18 +3,20 @@
   // TypeScript in domain/bestand.ts, getestet in bestand.test.ts. Diese
   // Komponente verdrahtet nur Eingabe -> Aufruf -> Anzeige.
   //
-  // "+ Kaffee" (Teil C der Korrekturrunde): Minimalformular, der Rest ist
-  // am Kaffeeblatt nachpflegbar (K64 — kein Vollformular-Zwang).
+  // "+ Kaffee" ist seit dem Navigations-Umbau (UX-1) eine eigene Route
+  // (KaffeeNeu.svelte) statt eines eingebetteten Formulars — ein halb
+  // ausgefuelltes Formular soll auf Zurueck schliessen, nicht die App
+  // verlassen.
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand } from '../bestand.svelte';
   import { filtereKaffees, sortiereKaffees, zaehlform, type KaffeeSortierung } from '../../domain/bestand';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import type { Kaffee } from '../../daten/schema';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
 
-  let { onOeffnen }: { onOeffnen: (kaffeeId: string) => void } = $props();
+  let { onOeffnen, onNeu }: { onOeffnen: (kaffeeId: string) => void; onNeu: () => void } = $props();
 
   let suchtext = $state('');
   let nurAktive = $state(true);
@@ -23,44 +25,9 @@
   const gefiltert = $derived(
     sortiereKaffees(filtereKaffees(bestand.kaffees, { suchtext, nurAktive }), sortierung),
   );
-
-  let neuOffen = $state(false);
-  let neuName = $state('');
-  let neuRoester = $state('');
-  let neuArt = $state<'single' | 'blend'>('single');
-  let neuEntkoffeiniert = $state(false);
-  let anlegenFehler = $state<string | undefined>(undefined);
-
-  async function kaffeeAnlegen() {
-    if (neuName.trim() === '' || neuRoester.trim() === '') return;
-    anlegenFehler = undefined;
-    const neu: Kaffee = {
-      id: crypto.randomUUID(),
-      name: neuName.trim(),
-      roester: neuRoester.trim(),
-      aktiv: true,
-      art: neuArt,
-      herkunft: [],
-      entkoffeiniert: neuEntkoffeiniert,
-      geeignetFuer: [],
-      chargeIds: [],
-      erkenntnisse: [],
-    };
-    try {
-      await schreiben('kaffee', neu);
-      neuOffen = false;
-      neuName = '';
-      neuRoester = '';
-      neuArt = 'single';
-      neuEntkoffeiniert = false;
-      onOeffnen(neu.id);
-    } catch (fehler) {
-      anlegenFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
-  }
 </script>
 
-<h1>Kaffees</h1>
+<Kopfzeile titel="Kaffees" />
 <p class="zaehlung">{zaehlform(gefiltert.length, bestand.kaffees.length, 'Kaffee')}</p>
 
 <div class="werkzeuge">
@@ -100,39 +67,9 @@
   </ul>
 {/if}
 
-{#if neuOffen}
-  <div class="neuer-kaffee">
-    <input type="text" placeholder="Name" bind:value={neuName} />
-    <input type="text" placeholder="Röster" bind:value={neuRoester} />
-    <Einzelauswahl
-      optionen={[
-        { wert: 'single', label: 'Single Origin' },
-        { wert: 'blend', label: 'Blend' },
-      ]}
-      wert={neuArt}
-      onWahl={(w) => (neuArt = w as 'single' | 'blend')}
-    />
-    <Schalter label="entkoffeiniert" an={neuEntkoffeiniert} onWahl={(a) => (neuEntkoffeiniert = a)} />
-    <div class="knopfreihe">
-      <button type="button" class="primaer" onclick={kaffeeAnlegen} disabled={neuName.trim() === '' || neuRoester.trim() === ''}>
-        anlegen
-      </button>
-      <button type="button" class="sekundaer" onclick={() => (neuOffen = false)}>abbrechen</button>
-    </div>
-    {#if anlegenFehler}
-      <p class="fehler">Nicht gespeichert: {anlegenFehler} — nochmal versuchen.</p>
-    {/if}
-  </div>
-{:else}
-  <button type="button" class="fusszeile" onclick={() => (neuOffen = true)}>+ Kaffee</button>
-{/if}
+<button type="button" class="schwebend" onclick={onNeu} aria-label="Kaffee hinzufügen">+</button>
 
 <style>
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0 0 var(--r2);
-  }
   .zaehlung {
     font-size: var(--fs-label);
     letter-spacing: var(--label-spacing);
@@ -197,67 +134,23 @@
     align-items: flex-end;
     gap: var(--r1);
   }
-  .fusszeile {
-    display: block;
-    width: 100%;
-    min-height: var(--fusszeile);
-    margin-top: var(--r3);
-    background: none;
+  /* Schwebender Rund-Button statt Link am Listenende — immer erreichbar,
+     ohne dass man dafuer runterscrollen muss (UX-1). Feste Position ueber
+     der unteren Leiste, gleiche Form ueberall, wo eine Sammlung eine
+     Anlege-Handlung braucht. */
+  .schwebend {
+    position: fixed;
+    right: var(--seitenrand);
+    bottom: calc(var(--fusszeile) + var(--safe-unten) + var(--r4));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     border: none;
-    border-top: 1px solid var(--linie);
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    text-align: left;
-    cursor: pointer;
-  }
-  .neuer-kaffee {
-    display: flex;
-    flex-direction: column;
-    gap: var(--r3);
-    margin-top: var(--r3);
-    padding-top: var(--r3);
-    border-top: 1px solid var(--linie);
-  }
-  .neuer-kaffee input[type='text'] {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r2);
-    min-height: var(--treffer);
-  }
-  .knopfreihe {
-    display: flex;
-    gap: var(--r3);
-  }
-  .knopfreihe button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-    border: 1px solid var(--linie);
-    background: var(--feld);
-    color: var(--tinte);
-  }
-  .knopfreihe .primaer {
     background: var(--akzent);
     color: var(--h-papier);
-    border: none;
-  }
-  .knopfreihe .primaer:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  .knopfreihe .sekundaer {
-    background: transparent;
-    color: var(--gedaempft);
-    border: none;
-  }
-  .fehler {
-    color: var(--kritisch);
-    font-size: var(--fs-satz);
+    font-size: 28px;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
   }
 </style>
