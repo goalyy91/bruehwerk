@@ -1,24 +1,35 @@
 <script lang="ts">
-  // Einstellungen — Geraetepark, Temperatur-Referenz (Etappe B), und der
-  // Weg zum Musterblatt, damit Bauteile weiter am Geraet geprueft werden
-  // koennen (Paket 01b bleibt erreichbar, nicht nur historisch).
+  // Einstellungen — Geraetepark (Teil G), Temperatur-Referenz, Migration
+  // (Teil A), Backup (Teil F), und der Weg zum Musterblatt.
 
   import Musterblatt from '../Musterblatt.svelte';
   import TempReferenz from './TempReferenz.svelte';
+  import Migration from './Migration.svelte';
+  import Backup from './Backup.svelte';
+  import Geraete from './Geraete.svelte';
 
-  let musterblattOffen = $state(false);
+  type Unterseite = 'start' | 'musterblatt' | 'geraete';
+  let seite = $state<Unterseite>('start');
 </script>
 
-{#if musterblattOffen}
-  <button type="button" class="zurueck" onclick={() => (musterblattOffen = false)}>‹ Einstellungen</button>
+{#if seite === 'musterblatt'}
+  <button type="button" class="zurueck" onclick={() => (seite = 'start')}>‹ Einstellungen</button>
   <Musterblatt />
+{:else if seite === 'geraete'}
+  <button type="button" class="zurueck" onclick={() => (seite = 'start')}>‹ Einstellungen</button>
+  <h1>Geräte</h1>
+  <Geraete />
 {:else}
   <h1>Einstellungen</h1>
-  <p class="hinweis">Geräte, Rüstzeiten, Personen und Backup folgen in späteren Paketen.</p>
+  <p class="hinweis">Rüstzeiten, Personen und Cloud-Backend folgen in späteren Paketen.</p>
 
+  <button type="button" class="link" onclick={() => (seite = 'geraete')}>Geräte verwalten</button>
+
+  <Migration />
   <TempReferenz />
+  <Backup />
 
-  <button type="button" class="link" onclick={() => (musterblattOffen = true)}>Musterblatt ansehen</button>
+  <button type="button" class="link" onclick={() => (seite = 'musterblatt')}>Musterblatt ansehen</button>
 {/if}
 
 <style>

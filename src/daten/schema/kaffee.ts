@@ -93,6 +93,7 @@ export const ZielWerte = z.object({
   pre: z.number().nonnegative().optional(),
   zeit: z.number().nonnegative(),
 });
+export type ZielWerte = z.infer<typeof ZielWerte>;
 
 /**
  * Deckungsgleich mit domain/spielraum.ts::Spielraum — importiert statt neu
