@@ -7,7 +7,6 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Migration from './Migration.svelte';
   import Backup from './Backup.svelte';
   import type { AppEinstellungen } from '../../daten/schema';
@@ -51,14 +50,12 @@
       <p class="erklaerung">Zeigt, worauf sich ein automatischer Bohnenvorschlag stützt.</p>
     </div>
     <div class="einstellung-zeile letzte">
-      <span class="einstellung-label">Milch schäumen</span>
-      <LesartUmschalter
-        optionA="pro Getränk"
-        optionB="gesammelt"
-        start={bestand.einstellungen.sammelSchaeumen === 'gesammelt' ? 'b' : 'a'}
-        onWahl={(l) => einstellungAendern('sammelSchaeumen', l === 'b' ? 'gesammelt' : 'einzeln')}
+      <Schalter
+        label="Milch gesammelt schäumen"
+        an={bestand.einstellungen.sammelSchaeumen === 'gesammelt'}
+        onWahl={(a) => einstellungAendern('sammelSchaeumen', a ? 'gesammelt' : 'einzeln')}
       />
-      <p class="erklaerung">Bei mehreren Milchgetränken im selben Durchgang — die App entscheidet das nicht selbst.</p>
+      <p class="erklaerung">Bei mehreren Milchgetränken im selben Durchgang — aus statt an heißt: pro Getränk einzeln.</p>
     </div>
   </section>
 {/if}
@@ -103,12 +100,6 @@
   }
   .einstellung-zeile.letzte {
     margin-bottom: 0;
-  }
-  .einstellung-label {
-    display: block;
-    font-size: var(--fs-satz);
-    color: var(--satz);
-    margin-bottom: var(--r1);
   }
   .erklaerung {
     font-size: var(--fs-meta);

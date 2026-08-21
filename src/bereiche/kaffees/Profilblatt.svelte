@@ -27,13 +27,6 @@
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
   const setup = $derived(profil ? bestand.setups.find((s) => s.id === profil.setupId) : undefined);
 
-  // ZielWerte kennt nur 'zeit', nicht getrennt 'durchlaufzeit' — beim
-  // Pour Over traegt dasselbe Feld die Durchlaufzeit, K7 nennt es nur
-  // anders. fuehrungsFeld bildet den Konzept-Namen auf das Schema-Feld ab.
-  const fuehrungsFeld = $derived<'output' | 'zeit' | null>(
-    bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'zeit' : (bruehgeraet?.fuehrungswert ?? null),
-  );
-
   const gruppenTemperatur = $derived(
     profil?.ziel.kt !== undefined && bruehgeraet
       ? kesselZuGruppe(bruehgeraet.tempReferenz, profil.ziel.kt)
@@ -101,60 +94,75 @@
   <section class="ziel">
     <h2>Ziel</h2>
 
-    <div class="zeile">
-      <span class="label">Input</span>
-      <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.ziel.input}
-        onchange={(e) => zielSpeichern('input', zahl(e))} /> g
-    </div>
-    <div class="zeile">
-      <span class="label">Mahlgrad</span>
-      <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.ziel.mg}
-        onchange={(e) => zielSpeichern('mg', zahl(e))} />
-      {muehle?.skala.typ === 'klicks' ? 'Klicks' : ''}
-    </div>
-    {#if muehle?.rpmEinstellbar}
-      <div class="zeile">
-        <span class="label">Drehzahl</span>
-        <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.ziel.rpm ?? ''}
-          onchange={(e) => zielSpeichern('rpm', zahl(e))} /> rpm
+    <!-- Punkt 6a/6b der Korrekturrunde: echtes CSS-Grid statt einzelner
+         Flex-Zeilen, damit Label/Wert/Einheit sauber spaltenweise
+         ausgerichtet sind — im selben visuellen Stil wie die geteilten
+         Muster (IstGegenZiel.svelte). Kein Herkunftszeichen (hier wird
+         nichts gemessen, nur das Rezept gepflegt) und keine
+         Führungswert-Emphase: das Rezept zeigt alle Werte gleich groß,
+         die Größenbetonung gehört ausschließlich in den Live-Kontext
+         (ShotErfassung.svelte, dort über IstGegenZiel bereits vorhanden). -->
+    <div class="ziel-grid">
+      <div class="zg-zeile">
+        <span class="zg-label">Input</span>
+        <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.input}
+          onchange={(e) => zielSpeichern('input', zahl(e))} />
+        <span class="zg-einheit">g</span>
       </div>
-    {/if}
-    {#if bruehgeraet?.ktEinstellbar}
-      <div class="zeile">
-        <span class="label">Kesseltemperatur</span>
-        <div class="doppel-halter">
-          <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.ziel.kt ?? ''}
-            onchange={(e) => zielSpeichern('kt', zahl(e))} />
-          {#if gruppenTemperatur?.bekannt}
-            <DoppelteEinheit
-              fuehrendWert={String(profil.ziel.kt)}
-              fuehrendEinheit="°C Kessel"
-              abgeleitetWert={gruppenTemperatur.herkunft === 'geschaetzt'
-                ? Math.round(gruppenTemperatur.wert).toString()
-                : gruppenTemperatur.wert.toFixed(1)}
-              abgeleitetEinheit="°C Gruppe"
-            />
-          {:else if profil.ziel.kt !== undefined}
-            <span class="hinweis-klein">außerhalb der Messreihe</span>
-          {/if}
+      <div class="zg-zeile">
+        <span class="zg-label">Mahlgrad</span>
+        <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.mg}
+          onchange={(e) => zielSpeichern('mg', zahl(e))} />
+        <span class="zg-einheit">{muehle?.skala.typ === 'klicks' ? 'Klicks' : ''}</span>
+      </div>
+      {#if muehle?.rpmEinstellbar}
+        <div class="zg-zeile">
+          <span class="zg-label">Drehzahl</span>
+          <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.rpm ?? ''}
+            onchange={(e) => zielSpeichern('rpm', zahl(e))} />
+          <span class="zg-einheit">rpm</span>
         </div>
-      </div>
-    {/if}
+      {/if}
+      {#if bruehgeraet?.ktEinstellbar}
+        <div class="zg-zeile">
+          <span class="zg-label">Kesseltemperatur</span>
+          <div class="zg-doppel">
+            <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.kt ?? ''}
+              onchange={(e) => zielSpeichern('kt', zahl(e))} />
+            {#if gruppenTemperatur?.bekannt}
+              <DoppelteEinheit
+                fuehrendWert={String(profil.ziel.kt)}
+                fuehrendEinheit="°C Kessel"
+                abgeleitetWert={gruppenTemperatur.herkunft === 'geschaetzt'
+                  ? Math.round(gruppenTemperatur.wert).toString()
+                  : gruppenTemperatur.wert.toFixed(1)}
+                abgeleitetEinheit="°C Gruppe"
+              />
+            {:else if profil.ziel.kt !== undefined}
+              <span class="zg-hinweis">außerhalb der Messreihe</span>
+            {/if}
+          </div>
+        </div>
+      {/if}
 
-    <div class="zeile" class:fuehrung={fuehrungsFeld === 'output'}>
-      <span class="label">Output</span>
-      <input class="wert-eingabe" class:gross={fuehrungsFeld === 'output'} type="text" inputmode="decimal"
-        value={profil.ziel.output} onchange={(e) => zielSpeichern('output', zahl(e))} /> g
-    </div>
-    <div class="zeile">
-      <span class="label">Preinfusion</span>
-      <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.ziel.pre ?? ''}
-        onchange={(e) => zielSpeichern('pre', zahl(e))} /> s
-    </div>
-    <div class="zeile" class:fuehrung={fuehrungsFeld === 'zeit'}>
-      <span class="label">{bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}</span>
-      <input class="wert-eingabe" class:gross={fuehrungsFeld === 'zeit'} type="text" inputmode="decimal"
-        value={profil.ziel.zeit} onchange={(e) => zielSpeichern('zeit', zahl(e))} /> s
+      <div class="zg-zeile">
+        <span class="zg-label">Output</span>
+        <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.output}
+          onchange={(e) => zielSpeichern('output', zahl(e))} />
+        <span class="zg-einheit">g</span>
+      </div>
+      <div class="zg-zeile">
+        <span class="zg-label">Preinfusion</span>
+        <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.pre ?? ''}
+          onchange={(e) => zielSpeichern('pre', zahl(e))} />
+        <span class="zg-einheit">s</span>
+      </div>
+      <div class="zg-zeile">
+        <span class="zg-label">{bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}</span>
+        <input class="zg-wert" type="text" inputmode="decimal" value={profil.ziel.zeit}
+          onchange={(e) => zielSpeichern('zeit', zahl(e))} />
+        <span class="zg-einheit">s</span>
+      </div>
     </div>
   </section>
 
@@ -212,9 +220,6 @@
     min-height: var(--treffer);
     border-bottom: 1px solid var(--linie);
   }
-  .zeile.fuehrung {
-    border-bottom-color: var(--akzent);
-  }
   .label {
     width: var(--eigenschaftslabel);
     flex-shrink: 0;
@@ -231,15 +236,51 @@
     color: var(--tinte);
     padding: var(--r1) var(--r2);
   }
-  .wert-eingabe.gross {
-    font-size: var(--fs-fuehrung);
-    font-weight: var(--gw-zahl);
-    width: 100px;
+  /* Ziel-Sektion (Punkt 6): echtes Grid statt Flex-Zeilen, alle Werte
+     gleich groß — kein Feld hier ist wichtiger als ein anderes, das
+     Rezept ist reine Eingabe, kein Live-Vergleich. */
+  .ziel-grid {
+    display: grid;
+    grid-template-columns: var(--eigenschaftslabel) 1fr auto;
+    align-items: center;
+    column-gap: var(--r2);
+    row-gap: var(--r3);
   }
-  .doppel-halter {
+  .zg-zeile {
+    display: contents;
+  }
+  .zg-label {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .zg-wert {
+    justify-self: end;
+    width: 80px;
+    font-family: var(--schrift);
+    font-variant-numeric: var(--zahl-features);
+    font-size: var(--fs-satz);
+    background: var(--feld);
+    border: 1px solid var(--feld-rahmen);
+    color: var(--tinte);
+    padding: var(--r1) var(--r2);
+  }
+  .zg-einheit {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .zg-doppel {
+    grid-column: 2 / 4;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: var(--r3);
+  }
+  .zg-doppel .zg-wert {
+    justify-self: unset;
+  }
+  .zg-hinweis {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
   }
   .hinweis,
   .hinweis-klein {
