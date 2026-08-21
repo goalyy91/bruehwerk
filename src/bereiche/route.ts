@@ -18,6 +18,7 @@ export type Route =
   | { name: 'kaffees' }
   | { name: 'kaffeeNeu' }
   | { name: 'kaffee'; kaffeeId: string }
+  | { name: 'kaffeeBearbeiten'; kaffeeId: string }
   | { name: 'profil'; kaffeeId: string; profilId: string }
   | { name: 'shot'; kaffeeId: string; profilId: string }
   | { name: 'einstellungen' }
@@ -43,6 +44,8 @@ export function zuPfad(route: Route): string {
       return '/kaffees/neu';
     case 'kaffee':
       return `/kaffees/${route.kaffeeId}`;
+    case 'kaffeeBearbeiten':
+      return `/kaffees/${route.kaffeeId}/bearbeiten`;
     case 'profil':
       return `/kaffees/${route.kaffeeId}/profil/${route.profilId}`;
     case 'shot':
@@ -76,6 +79,7 @@ export function ausPfad(pfad: string): Route {
     // Ab hier ist die jeweilige Laenge geprueft — die Indizes sind also
     // belegt, auch wenn TypeScript das bei Array-Zugriff nicht selbst sieht.
     if (t.length === 2) return { name: 'kaffee', kaffeeId: t[1]! };
+    if (t.length === 3 && t[2] === 'bearbeiten') return { name: 'kaffeeBearbeiten', kaffeeId: t[1]! };
     if (t.length === 4 && t[2] === 'profil') return { name: 'profil', kaffeeId: t[1]!, profilId: t[3]! };
     if (t.length === 5 && t[2] === 'profil' && t[4] === 'shot') {
       return { name: 'shot', kaffeeId: t[1]!, profilId: t[3]! };
@@ -107,8 +111,11 @@ export function elternVon(route: Route): Route | undefined {
     case 'einstellungen':
       return undefined;
     case 'kaffeeNeu':
+      return { name: 'kaffees' };
     case 'kaffee':
       return { name: 'kaffees' };
+    case 'kaffeeBearbeiten':
+      return { name: 'kaffee', kaffeeId: route.kaffeeId };
     case 'profil':
       return { name: 'kaffee', kaffeeId: route.kaffeeId };
     case 'shot':
@@ -134,6 +141,7 @@ export function tabVon(route: Route): Bereich {
     case 'kaffees':
     case 'kaffeeNeu':
     case 'kaffee':
+    case 'kaffeeBearbeiten':
     case 'profil':
     case 'shot':
       return 'kaffees';

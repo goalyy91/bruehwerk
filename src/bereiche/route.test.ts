@@ -8,6 +8,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'kaffees' },
   { name: 'kaffeeNeu' },
   { name: 'kaffee', kaffeeId: 'k1' },
+  { name: 'kaffeeBearbeiten', kaffeeId: 'k1' },
   { name: 'profil', kaffeeId: 'k1', profilId: 'p1' },
   { name: 'shot', kaffeeId: 'k1', profilId: 'p1' },
   { name: 'einstellungen' },
@@ -48,6 +49,10 @@ describe('route — elternVon', () => {
     expect(elternVon(kaffees!)).toBeUndefined();
   });
 
+  it('kaffeeBearbeiten -> kaffee', () => {
+    expect(elternVon({ name: 'kaffeeBearbeiten', kaffeeId: 'k1' })).toEqual({ name: 'kaffee', kaffeeId: 'k1' } satisfies Route);
+  });
+
   it('muehle -> geraete -> einstellungen -> Wurzel', () => {
     const muehle: Route = { name: 'muehle', id: 'm1' };
     const geraete = elternVon(muehle);
@@ -72,6 +77,7 @@ describe('route — tabVon', () => {
   it('Kaffees-Teilbaum gehoert komplett zu kaffees', () => {
     expect(tabVon({ name: 'kaffeeNeu' })).toBe('kaffees');
     expect(tabVon({ name: 'kaffee', kaffeeId: 'k1' })).toBe('kaffees');
+    expect(tabVon({ name: 'kaffeeBearbeiten', kaffeeId: 'k1' })).toBe('kaffees');
     expect(tabVon({ name: 'profil', kaffeeId: 'k1', profilId: 'p1' })).toBe('kaffees');
     expect(tabVon({ name: 'shot', kaffeeId: 'k1', profilId: 'p1' })).toBe('kaffees');
   });

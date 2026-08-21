@@ -3,6 +3,12 @@
   // Bildschirmdetail: 13 x 17 px, gefuellt/leer, Luecke 4 px, Wort daneben.
   // Feste Stufenzahl, keine schlichtere Ersatzform im Leer- oder
   // Fehlerzustand — deshalb ein eigenes Bauteil statt Inline-Markup.
+  //
+  // UX-2: Die Form war ein reines CSS-Oval ohne die Mittelrille, die eine
+  // Kaffeebohne erst als Bohne erkennbar macht ("sieht aus wie Punkte" —
+  // Rueckmeldung zum Kaffees-Redesign). Jetzt ein eingebettetes SVG:
+  // Aussenkontur plus die charakteristische S-Rille. Prop-Schnittstelle und
+  // Massangabe bleiben unveraendert, nur die Zeichnung ist neu.
 
   const STUFEN = 5;
   const WOERTER = ['sehr hell', 'hell', 'mittel', 'dunkel', 'sehr dunkel'] as const;
@@ -22,14 +28,26 @@
   const wort = $derived(stufe ? WOERTER[stufe - 1] : 'unbekannt');
 </script>
 
+{#snippet bohne(gefuellt: boolean)}
+  <svg class="bohne" class:gefuellt viewBox="0 0 13 17" aria-hidden="true">
+    <path
+      class="kontur"
+      d="M6.5 1C3.2 2.4 1 5.4 1 8.5S3.2 14.6 6.5 16c3.3-1.4 5.5-4.4 5.5-7.5S9.8 2.4 6.5 1Z"
+    />
+    <path class="rille" d="M6.5 2.6c-1.6 1.9-1 3.8.1 5.9s1.7 4 .1 5.9" />
+  </svg>
+{/snippet}
+
 <div class="bohnen">
   <span class="reihe" role="img" aria-label={`Röstgrad ${stufe ?? 'unbekannt'} von ${STUFEN}`}>
     {#each Array(STUFEN) as _, i (i)}
+      {@const gefuellt = stufe !== undefined && i < stufe}
       {#if onWahl}
-        <button type="button" class="bohne tippbar" class:gefuellt={stufe !== undefined && i < stufe}
-          onclick={() => onWahl(i + 1)} aria-label={`Röstgrad ${i + 1}`}></button>
+        <button type="button" class="knopf" onclick={() => onWahl(i + 1)} aria-label={`Röstgrad ${i + 1}`}>
+          {@render bohne(gefuellt)}
+        </button>
       {:else}
-        <span class="bohne" class:gefuellt={stufe !== undefined && i < stufe}></span>
+        {@render bohne(gefuellt)}
       {/if}
     {/each}
   </span>
@@ -46,25 +64,38 @@
     display: flex;
     gap: 4px;
   }
-  .bohne {
-    width: 13px;
-    height: 17px;
-    border: 1px solid var(--spur);
-    border-radius: 60% 60% 60% 60% / 50% 50% 50% 50%;
-  }
-  .bohne.gefuellt {
-    background: var(--tinte);
-    border-color: var(--tinte);
-  }
-  .bohne.tippbar {
+  .knopf {
     padding: 0;
+    border: none;
     background: transparent;
     cursor: pointer;
     /* Sichtbare Flaeche bleibt 13x17 (K79), Trefferflaeche wird ueber
        Padding im umgebenden Formularkontext sichergestellt. */
   }
-  .bohne.tippbar.gefuellt {
-    background: var(--tinte);
+  .bohne {
+    width: 13px;
+    height: 17px;
+    display: block;
+  }
+  .bohne .kontur {
+    fill: none;
+    stroke: var(--spur);
+    stroke-width: 1;
+  }
+  .bohne .rille {
+    fill: none;
+    stroke: var(--spur);
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+  .bohne.gefuellt .kontur {
+    fill: var(--tinte);
+    stroke: var(--tinte);
+  }
+  .bohne.gefuellt .rille {
+    /* Kontrast gegen die Fuellfarbe (--tinte) statt einer fest hellen Farbe —
+       muss in beiden Themes sichtbar bleiben, --tinte kippt in Dunkel hell. */
+    stroke: var(--grund);
   }
   .wort {
     font-size: var(--fs-meta);

@@ -24,6 +24,7 @@
   import KaffeeListe from './kaffees/KaffeeListe.svelte';
   import KaffeeNeu from './kaffees/KaffeeNeu.svelte';
   import Kaffeeblatt from './kaffees/Kaffeeblatt.svelte';
+  import KaffeeBearbeiten from './kaffees/KaffeeBearbeiten.svelte';
   import Profilblatt from './kaffees/Profilblatt.svelte';
   import ShotErfassung from './shot/ShotErfassung.svelte';
   import Einstellungen from './einstellungen/Einstellungen.svelte';
@@ -76,8 +77,11 @@
       <Kaffeeblatt
         kaffeeId={route.kaffeeId}
         onZurueck={() => navigation.zurueck()}
+        onBearbeiten={() => navigation.gehe({ name: 'kaffeeBearbeiten', kaffeeId: route.kaffeeId })}
         onOeffnenProfil={(profilId) => navigation.gehe({ name: 'profil', kaffeeId: route.kaffeeId, profilId })}
       />
+    {:else if route.name === 'kaffeeBearbeiten'}
+      <KaffeeBearbeiten kaffeeId={route.kaffeeId} onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'profil'}
       <Profilblatt
         profilId={route.profilId}

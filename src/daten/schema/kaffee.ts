@@ -64,7 +64,10 @@ export const Kaffee = z.object({
   chargeIds: z.array(Id).default([]),
   aktuelleChargeId: Id.optional(),
   bewertung: z.number().min(0).max(5).optional(),
-  status: z.enum(['offen', 'angebrochen', 'leer']).optional(),
+  // UX-2: kein eigener Kaffee-Status mehr (offen/angebrochen/leer) — doppelt
+  // gefuehrt neben Charge.leer und in der Praxis nie zwei offene Chargen
+  // gleichzeitig. Eine neue Charge markiert die vorherige automatisch als
+  // leer (Kaffeeblatt.svelte), das reicht.
   erkenntnisse: z.array(Erkenntnis).default([]),
 });
 export type Kaffee = z.infer<typeof Kaffee>;

@@ -11,12 +11,19 @@
   // durch dieses Bauteil allein. Trotzdem: eine Kopfzeile, ein Zurueckweg,
   // konsequent dieselbe Form ueberall (K78).
 
+  // UX-2: optionaler Aktions-Platz rechts (z. B. das Stift-Symbol zum
+  // Bearbeiten) — additiv, jeder bestehende Aufruf ohne `aktion` bleibt
+  // unveraendert.
+  import type { Snippet } from 'svelte';
+
   let {
     titel,
     onZurueck,
+    aktion,
   }: {
     titel: string;
     onZurueck?: () => void;
+    aktion?: Snippet;
   } = $props();
 </script>
 
@@ -25,6 +32,7 @@
     <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
   {/if}
   <h1>{titel}</h1>
+  {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
 </header>
 
 <style>
@@ -49,8 +57,13 @@
     cursor: pointer;
   }
   h1 {
+    flex: 1;
     font-size: var(--fs-titel);
     font-weight: var(--gw-titel);
     margin: 0;
+  }
+  .aktion {
+    flex-shrink: 0;
+    display: flex;
   }
 </style>

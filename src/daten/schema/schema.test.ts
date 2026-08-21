@@ -33,6 +33,12 @@ describe('Kaffee — Grenzfaelle', () => {
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 40 } }).success).toBe(false);
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 30 } }).success).toBe(true);
   });
+
+  it('ein altes status-Feld (offen/angebrochen/leer) laesst sich weiterhin lesen — es faellt dabei weg (UX-2)', () => {
+    const ergebnis = Kaffee.safeParse({ ...KAFFEE_BASIS, status: 'angebrochen' });
+    expect(ergebnis.success).toBe(true);
+    if (ergebnis.success) expect(ergebnis.data).not.toHaveProperty('status');
+  });
 });
 
 describe('Bruehgeraet — K7 (Moka fuehrt nichts)', () => {

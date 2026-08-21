@@ -1,60 +1,49 @@
 <script lang="ts">
-  // Das Kaffeeblatt — K51, K61. Eigenschaften stehen direkt unter dem
-  // Titel, der Untertitel traegt nur den Roester. Die Charge wird am
-  // selben Blatt angelegt, nicht in einem eigenen Bereich.
+  // Das Kaffeeblatt — seit UX-2 die reine Leseansicht (K51, K61). Bearbeiten
+  // ist eine eigene Route (KaffeeBearbeiten.svelte) hinter dem Stift-Symbol
+  // in der Kopfzeile — vorher war jedes Feld hier direkt tippbar mit
+  // Autosave, das liess sich nicht ansehen, ohne es auch zu aendern.
   //
-  // Korrekturrunde (Teil B): alle strukturierten Eigenschaften aus dem
-  // Datenmodell sind jetzt eingebbar, nicht nur anzeigbar — CLAUDE.md
-  // sagt ausdruecklich "Das Kaffeeblatt (Paket 03, K51) traegt sie nach",
-  // weil die Migration sie nicht liefert. Auswahlfelder ueber
-  // Einzelauswahl/Schalter statt nativer Elemente (Teil E).
+  // Chargen bleiben hier: eine neue Charge anzulegen ist eine eigene
+  // Handlung (ein neuer Datensatz), keine Aenderung an den Kaffee-Feldern —
+  // die vorherige Charge wird dabei automatisch als leer markiert, ohne
+  // Rueckfrage (immer genau eine offene Packung).
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
-  import Schalter from '../../muster/Schalter.svelte';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
-  import type { Kaffee, Charge, Profil, Aufbereitung } from '../../daten/schema';
+  import type { Charge, Profil, Aufbereitung } from '../../daten/schema';
 
   let {
     kaffeeId,
     onZurueck,
+    onBearbeiten,
     onOeffnenProfil,
-  }: { kaffeeId: string; onZurueck: () => void; onOeffnenProfil: (profilId: string) => void } = $props();
+  }: {
+    kaffeeId: string;
+    onZurueck: () => void;
+    onBearbeiten: () => void;
+    onOeffnenProfil: (profilId: string) => void;
+  } = $props();
 
   const kaffee = $derived(bestand.kaffees.find((k) => k.id === kaffeeId));
   const chargen = $derived(bestand.chargenVon(kaffeeId));
   const profile = $derived(bestand.profileVon(kaffeeId));
 
+  const AUFBEREITUNG_LABEL: Record<Aufbereitung, string> = {
+    washed: 'Washed',
+    honey: 'Honey',
+    natural: 'Natural',
+    anaerob: 'Anaerob',
+    'wet-hulled': 'Wet-hulled',
+    sonstige: 'Sonstige',
+  };
+
   let speicherFehler = $state<string | undefined>(undefined);
   let neueChargeNummer = $state('');
-  let vorherigeLeer = $state(true);
-
-  async function feldSpeichern<K extends keyof Kaffee>(feld: K, wert: Kaffee[K]) {
-    if (!kaffee) return;
-    speicherFehler = undefined;
-    try {
-      await schreiben('kaffee', { ...kaffee, [feld]: wert });
-    } catch (fehler) {
-      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
-    }
-  }
-
-  function herkunftAendern(text: string) {
-    const laender = text
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-    void feldSpeichern('herkunft', laender);
-  }
-
-  async function botanikAendern(feld: 'arabicaProzent' | 'robustaProzent', wert: number) {
-    if (!kaffee) return;
-    const basis = kaffee.botanik ?? { arabicaProzent: 100, robustaProzent: 0 };
-    await feldSpeichern('botanik', { ...basis, [feld]: wert });
-  }
 
   async function chargeAnlegen() {
     if (!kaffee || neueChargeNummer.trim() === '') return;
@@ -68,7 +57,7 @@
     };
     try {
       await schreiben('charge', neue);
-      if (vorherigeLeer && kaffee.aktuelleChargeId) {
+      if (kaffee.aktuelleChargeId) {
         const vorherige = bestand.chargen.find((c) => c.id === kaffee.aktuelleChargeId);
         if (vorherige) await schreiben('charge', { ...vorherige, leer: true });
       }
@@ -112,103 +101,73 @@
       speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
     }
   }
-
-  const AUFBEREITUNG_OPTIONEN: { wert: Aufbereitung; label: string }[] = [
-    { wert: 'washed', label: 'Washed' },
-    { wert: 'honey', label: 'Honey' },
-    { wert: 'natural', label: 'Natural' },
-    { wert: 'anaerob', label: 'Anaerob' },
-    { wert: 'wet-hulled', label: 'Wet-hulled' },
-    { wert: 'sonstige', label: 'Sonstige' },
-  ];
 </script>
 
 {#if !kaffee}
   <Kopfzeile titel="Kaffees" onZurueck={onZurueck} />
   <p class="hinweis">Kaffee nicht gefunden.</p>
 {:else}
-  <Kopfzeile titel={kaffee.name} onZurueck={onZurueck} />
+  <Kopfzeile titel={kaffee.name} onZurueck={onZurueck}>
+    {#snippet aktion()}
+      <button type="button" class="stift" onclick={onBearbeiten} aria-label="Kaffee bearbeiten">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z" /></svg>
+      </button>
+    {/snippet}
+  </Kopfzeile>
   <p class="roester">{kaffee.roester}</p>
 
-  <section class="eigenschaften">
-    <div class="zeile">
+  <section class="blick">
+    <div class="blick-eintrag">
       <span class="label">Röstgrad</span>
-      <Bohnen stufe={kaffee.roestgrad} onWahl={(s) => feldSpeichern('roestgrad', s)} />
+      <Bohnen stufe={kaffee.roestgrad} />
     </div>
-    <div class="zeile">
+    <div class="blick-eintrag">
       <span class="label">Bewertung</span>
-      <Sterne wert={kaffee.bewertung} onWahl={(w) => feldSpeichern('bewertung', w)} />
-    </div>
-    <div class="zeile">
-      <span class="label">Art</span>
-      <Einzelauswahl
-        optionen={[
-          { wert: 'single', label: 'Single Origin' },
-          { wert: 'blend', label: 'Blend' },
-        ]}
-        wert={kaffee.art}
-        onWahl={(w) => feldSpeichern('art', w as Kaffee['art'])}
-      />
-    </div>
-    <div class="zeile">
-      <span class="label">Herkunft</span>
-      <input class="text-eingabe" type="text" placeholder="Land, Land …"
-        value={kaffee.herkunft.join(', ')} onchange={(e) => herkunftAendern((e.currentTarget as HTMLInputElement).value)} />
-    </div>
-    <div class="zeile">
-      <span class="label">Varietät</span>
-      <input class="text-eingabe" type="text" value={kaffee.varietaet ?? ''}
-        onchange={(e) => feldSpeichern('varietaet', (e.currentTarget as HTMLInputElement).value || undefined)} />
-    </div>
-    <div class="zeile">
-      <span class="label">Anbauhöhe</span>
-      <input class="text-eingabe zahl" type="text" inputmode="numeric" value={kaffee.anbauhoehe ?? ''}
-        onchange={(e) => feldSpeichern('anbauhoehe', Number((e.currentTarget as HTMLInputElement).value) || undefined)} /> m
-    </div>
-    <div class="zeile">
-      <span class="label">Aufbereitung</span>
-      <Einzelauswahl
-        optionen={AUFBEREITUNG_OPTIONEN}
-        wert={kaffee.aufbereitung ?? ''}
-        onWahl={(w) => feldSpeichern('aufbereitung', w as Aufbereitung)}
-      />
-    </div>
-    <div class="zeile">
-      <span class="label">Botanik</span>
-      <div class="botanik">
-        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
-          value={kaffee.botanik?.arabicaProzent ?? ''}
-          onchange={(e) => botanikAendern('arabicaProzent', Number((e.currentTarget as HTMLInputElement).value))} />
-        % Arabica ·
-        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
-          value={kaffee.botanik?.robustaProzent ?? ''}
-          onchange={(e) => botanikAendern('robustaProzent', Number((e.currentTarget as HTMLInputElement).value))} />
-        % Robusta
-      </div>
-    </div>
-    <div class="zeile">
-      <span class="label">Röstgrad (Röster)</span>
-      <input class="text-eingabe" type="text" value={kaffee.roestgradRoester ?? ''}
-        onchange={(e) => feldSpeichern('roestgradRoester', (e.currentTarget as HTMLInputElement).value || undefined)} />
-    </div>
-    <div class="zeile">
-      <Schalter label="entkoffeiniert" an={kaffee.entkoffeiniert} onWahl={(a) => feldSpeichern('entkoffeiniert', a)} />
-    </div>
-    <div class="zeile">
-      <span class="label">Status</span>
-      <Einzelauswahl
-        optionen={[
-          { wert: 'offen', label: 'offen' },
-          { wert: 'angebrochen', label: 'angebrochen' },
-          { wert: 'leer', label: 'leer' },
-        ]}
-        wert={kaffee.status ?? ''}
-        onWahl={(w) => feldSpeichern('status', w as Kaffee['status'])}
-      />
+      <Sterne wert={kaffee.bewertung} />
     </div>
   </section>
 
-  <section class="chargen">
+  <section class="gruppe">
+    <h2>Bohne</h2>
+    <div class="wertzeile">
+      <span class="label">Art</span>
+      <span class="wert">{kaffee.art === 'blend' ? 'Blend' : 'Single Origin'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Herkunft</span>
+      <span class="wert">{kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Varietät</span>
+      <span class="wert">{kaffee.varietaet ?? '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Anbauhöhe</span>
+      <span class="wert">{kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Aufbereitung</span>
+      <span class="wert">{kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Botanik</span>
+      <span class="wert">{kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">Röstgrad (Röster)</span>
+      <span class="wert">{kaffee.roestgradRoester ?? '—'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">entkoffeiniert</span>
+      <span class="wert">{kaffee.entkoffeiniert ? 'Ja' : 'Nein'}</span>
+    </div>
+    <div class="wertzeile">
+      <span class="label">aktiv</span>
+      <span class="wert">{kaffee.aktiv ? 'Ja' : 'Nein'}</span>
+    </div>
+  </section>
+
+  <section class="gruppe">
     <h2>Chargen</h2>
     {#if chargen.length === 0}
       <p class="hinweis">keine</p>
@@ -226,12 +185,11 @@
 
     <div class="neue-charge">
       <input type="text" placeholder="Chargennummer" bind:value={neueChargeNummer} />
-      <Schalter label="vorherige als leer markieren" an={vorherigeLeer} onWahl={(a) => (vorherigeLeer = a)} />
       <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === ''}>anlegen</button>
     </div>
   </section>
 
-  <section class="profile">
+  <section class="gruppe">
     <h2>Profile</h2>
     {#if profile.length === 0}
       <p class="hinweis">keine</p>
@@ -251,7 +209,7 @@
     {#if neuesProfilOffen}
       <div class="neues-profil">
         <input type="text" placeholder="Profilname" bind:value={neuerProfilName} />
-        <Einzelauswahl
+        <AuswahlListe
           optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
           wert={neuesProfilSetupId}
           onWahl={(w) => (neuesProfilSetupId = w)}
@@ -271,6 +229,19 @@
 {/if}
 
 <style>
+  .stift {
+    width: var(--treffer);
+    height: var(--treffer);
+    margin-right: calc(var(--r2) * -1);
+    border: none;
+    background: none;
+    color: var(--akzent);
+    cursor: pointer;
+  }
+  .stift svg {
+    width: 22px;
+    height: 22px;
+  }
   .roester {
     font-size: var(--fs-satz);
     color: var(--gedaempft);
@@ -282,54 +253,46 @@
     text-transform: uppercase;
     color: var(--gedaempft);
     font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
+    margin: 0 0 var(--r2);
   }
-  .eigenschaften {
+  .blick {
+    display: flex;
+    gap: var(--r6);
+    padding: var(--r3) 0 var(--r4);
+    margin-bottom: var(--r4);
+    border-bottom: 1px solid var(--linie);
+  }
+  .blick-eintrag {
     display: flex;
     flex-direction: column;
+    gap: var(--r1);
   }
-  .zeile {
+  .blick-eintrag .label {
+    font-size: var(--fs-label);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .gruppe {
+    margin-bottom: var(--r5);
+  }
+  .wertzeile {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie);
     gap: var(--r3);
-    flex-wrap: wrap;
+    min-height: 40px;
+    border-bottom: 1px solid var(--linie-zart);
     padding: var(--r1) 0;
   }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
+  .wertzeile .label {
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
-  .text-eingabe {
-    font-family: var(--schrift);
+  .wertzeile .wert {
     font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: 40px;
-    flex: 1;
-    min-width: 100px;
-  }
-  .text-eingabe.zahl {
-    font-variant-numeric: var(--zahl-features);
-    text-align: right;
-    flex: 0 0 auto;
-    width: 80px;
-  }
-  .text-eingabe.schmal {
-    width: 48px;
-  }
-  .botanik {
-    display: flex;
-    align-items: center;
-    gap: var(--r1);
-    font-size: var(--fs-meta);
     color: var(--satz);
+    text-align: right;
   }
   .chargenliste {
     list-style: none;
@@ -421,8 +384,7 @@
   }
   .neues-profil {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     gap: var(--r3);
     margin-top: var(--r3);
   }

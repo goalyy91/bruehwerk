@@ -12,7 +12,7 @@
   import { filtereKaffees, sortiereKaffees, zaehlform, type KaffeeSortierung } from '../../domain/bestand';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
 
@@ -28,20 +28,22 @@
 </script>
 
 <Kopfzeile titel="Kaffees" />
-<p class="zaehlung">{zaehlform(gefiltert.length, bestand.kaffees.length, 'Kaffee')}</p>
 
-<div class="werkzeuge">
-  <input class="suche" type="text" placeholder="Suchen …" bind:value={suchtext} />
+<input class="suche" type="text" placeholder="Suchen …" bind:value={suchtext} />
+
+<Segment
+  optionen={[
+    { wert: 'name', label: 'Name' },
+    { wert: 'bewertung', label: 'Bewertung' },
+    { wert: 'roestgrad', label: 'Röstgrad' },
+  ]}
+  wert={sortierung}
+  onWahl={(w) => (sortierung = w as KaffeeSortierung)}
+/>
+
+<div class="metazeile">
+  <p class="zaehlung">{zaehlform(gefiltert.length, bestand.kaffees.length, 'Kaffee')}</p>
   <Schalter label="nur aktive" an={nurAktive} onWahl={(a) => (nurAktive = a)} />
-  <Einzelauswahl
-    optionen={[
-      { wert: 'name', label: 'Name' },
-      { wert: 'bewertung', label: 'Bewertung' },
-      { wert: 'roestgrad', label: 'Röstgrad' },
-    ]}
-    wert={sortierung}
-    onWahl={(w) => (sortierung = w as KaffeeSortierung)}
-  />
 </div>
 
 {#if !bestand.geladen}
@@ -70,20 +72,10 @@
 <button type="button" class="schwebend" onclick={onNeu} aria-label="Kaffee hinzufügen">+</button>
 
 <style>
-  .zaehlung {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    color: var(--gedaempft);
-    margin: 0 0 var(--r4);
-  }
-  .werkzeuge {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--r3);
-    align-items: center;
-    margin-bottom: var(--r4);
-  }
   .suche {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     background: var(--feld);
@@ -91,6 +83,25 @@
     color: var(--tinte);
     padding: var(--r2);
     min-height: var(--treffer);
+    margin-bottom: var(--r3);
+  }
+  .metazeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--r3);
+    margin: var(--r3) 0 var(--r4);
+  }
+  .zaehlung {
+    font-size: var(--fs-label);
+    letter-spacing: var(--label-spacing);
+    color: var(--gedaempft);
+    margin: 0;
+  }
+  /* Schalter.svelte ist als volle-Breite-Zeile gebaut — hier steht er neben
+     der Zaehlform, deshalb die Breite auf den eigenen Inhalt zurueckstutzen. */
+  .metazeile :global(.schalter-zeile) {
+    width: auto;
   }
   .hinweis {
     color: var(--gedaempft);
