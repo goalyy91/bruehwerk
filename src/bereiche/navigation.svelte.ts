@@ -52,8 +52,12 @@ class Navigation {
     return () => window.removeEventListener('popstate', horcher);
   }
 
-  /** Eine Ebene tiefer — neuer Verlaufseintrag. */
+  /** Eine Ebene tiefer — neuer Verlaufseintrag. Kein zweiter Eintrag, wenn
+   *  das Ziel dem aktuellen Pfad entspricht (Doppel-Tap auf einen
+   *  Navigations-Button hat sonst zwei Eintraege zur selben Seite zur
+   *  Folge — man sieht keine Aenderung, muss aber doppelt so oft zurueck). */
   gehe(route: Route): void {
+    if (zuPfad(route) === zuPfad(this.aktuell)) return;
     this.#merkeScroll();
     this.#tiefe += 1;
     history.pushState({ tiefe: this.#tiefe } satisfies VerlaufsZustand, '', `#${zuPfad(route)}`);
