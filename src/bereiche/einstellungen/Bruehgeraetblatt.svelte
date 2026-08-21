@@ -53,7 +53,7 @@
       dampflanze: false,
       ktEinstellbar: false,
       fuehrungswert: 'output',
-      sieb: { art: 'doppel', portionen: 2 },
+      sieb: { art: 'doppel' },
       mengen: [1, 2],
       tempReferenz: [],
     };
@@ -86,7 +86,7 @@
     else if (entwurf.fuehrungswert === null) entwurf.fuehrungswert = 'output';
 
     if (typ === 'espresso') {
-      if (!entwurf.sieb) entwurf.sieb = { art: 'doppel', portionen: 2 };
+      if (!entwurf.sieb) entwurf.sieb = { art: 'doppel' };
       entwurf.mengen = mengenAusSieb(entwurf.sieb);
     } else {
       entwurf.sieb = undefined;
@@ -217,10 +217,8 @@
     <Einzelauswahl
       optionen={[{ wert: 'einzel', label: 'einzel' }, { wert: 'doppel', label: 'doppel' }]}
       wert={entwurf.sieb?.art ?? 'doppel'}
-      onWahl={(w) => siebAendern({ art: w as 'einzel' | 'doppel', portionen: entwurf.sieb?.portionen ?? 2 })}
+      onWahl={(w) => siebAendern({ art: w as 'einzel' | 'doppel' })}
     />
-    <input class="text-eingabe zahl schmal" type="text" inputmode="numeric" value={entwurf.sieb?.portionen ?? 2}
-      onchange={(e) => siebAendern({ art: entwurf.sieb?.art ?? 'doppel', portionen: Math.max(1, Math.round(zahl(e))) })} />
   </div>
   <p class="erklaerung">
     Art des Siebträger-Einsatzes und wie viele Shots er fasst (doppel → 2). Wie viele

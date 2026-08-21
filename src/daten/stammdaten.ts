@@ -35,7 +35,7 @@ export const BRUEHGERAET_MOZZAFIATO: Bruehgeraet = {
   gruppen: 1,
   dampflanze: true,
   ktEinstellbar: true,
-  sieb: { art: 'doppel', portionen: 2 },
+  sieb: { art: 'doppel' },
   fuehrungswert: 'output',
   mengen: [1, 2],
   flushDauer: 3,

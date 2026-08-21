@@ -41,7 +41,6 @@ export type TempReferenzPunkt = z.infer<typeof TempReferenzPunkt>;
 
 export const Sieb = z.object({
   art: z.enum(['einzel', 'doppel']),
-  portionen: z.number().int().positive(),
 });
 
 /**

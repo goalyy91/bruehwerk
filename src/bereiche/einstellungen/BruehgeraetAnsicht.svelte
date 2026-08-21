@@ -69,7 +69,7 @@
       {#if geraet.sieb}
         <div class="wertzeile">
           <span class="label">Sieb</span>
-          <span class="wert">{geraet.sieb.art === 'doppel' ? 'doppel' : 'einzel'} · {geraet.sieb.portionen}</span>
+          <span class="wert">{geraet.sieb.art === 'doppel' ? 'doppel' : 'einzel'}</span>
         </div>
       {/if}
     </section>
