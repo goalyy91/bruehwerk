@@ -24,7 +24,6 @@
 </script>
 
 <Kopfzeile titel="Einstellungen" />
-<p class="hinweis">Rüstzeiten, Personen und Cloud-Backend folgen in späteren Paketen.</p>
 
 <button type="button" class="link" onclick={onOeffnenGeraete}>Geräte verwalten</button>
 
@@ -72,11 +71,6 @@
     color: var(--gedaempft);
     font-weight: var(--gw-text);
     margin: var(--r5) 0 var(--r2);
-  }
-  .hinweis {
-    color: var(--gedaempft);
-    font-size: var(--fs-satz);
-    margin-bottom: var(--r4);
   }
   .link {
     background: none;

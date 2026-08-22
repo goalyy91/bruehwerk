@@ -18,17 +18,22 @@
   // genommen nur Bausteine dafuer sind.
 
   import { bestand } from '../bestand.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
 
   let {
+    onZurueck,
     onOeffnenMuehle,
     onOeffnenBruehgeraet,
     onOeffnenSetup,
   }: {
+    onZurueck: () => void;
     onOeffnenMuehle: (id?: string) => void;
     onOeffnenBruehgeraet: (id?: string) => void;
     onOeffnenSetup: (id?: string) => void;
   } = $props();
 </script>
+
+<Kopfzeile titel="Geräte" {onZurueck} />
 
 <h2>Setups</h2>
 <ul class="liste">

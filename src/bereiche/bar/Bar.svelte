@@ -22,8 +22,6 @@
   <p class="hinweis">Noch kein Shot geloggt. Loggen geht ab einem Kaffee mit Profil — unter „Kaffees".</p>
 {/if}
 
-<p class="hinweis">Bestellung mit Durchgängen und Schnellpfad kommt in Paket 06/07.</p>
-
 <style>
   .quittung {
     font-size: var(--fs-satz);

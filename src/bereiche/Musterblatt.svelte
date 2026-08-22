@@ -30,6 +30,12 @@
   import Knopf from '../muster/Knopf.svelte';
   import Kontextmenue from '../muster/Kontextmenue.svelte';
 
+  // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jetzt jeder Bildschirm
+  // selbst, statt dass Rahmen.svelte sie fuer manche Routen von aussen
+  // aufsetzt — zwei Konventionen fuer dieselbe Sache war die Konstellation,
+  // aus der der fruehere doppelte "‹"-Bug entstand (siehe Kopfzeile.svelte).
+  let { onZurueck }: { onZurueck: () => void } = $props();
+
   let einzelauswahlDemo = $state('b');
   let schalterDemo = $state(true);
 
@@ -43,10 +49,8 @@
 </script>
 
 <div class="musterblatt">
-  <header class="kopf">
-    <h1>Musterblatt</h1>
-    <p>Paket 01b · die vierzehn gebauten Muster, hell und dunkel untereinander.</p>
-  </header>
+  <Kopfzeile titel="Musterblatt" {onZurueck} />
+  <p class="unterschrift">Paket 01b · die vierzehn gebauten Muster, hell und dunkel untereinander.</p>
 
   <section class="tokenbeleg" aria-label="Tokenbeleg">
     {#each ['hell', 'dunkel'] as const as theme (theme)}
@@ -415,13 +419,8 @@
     max-width: 100%;
     padding: var(--seitenrand) var(--seitenrand) calc(var(--r7) + var(--safe-unten));
   }
-  .kopf h1 {
-    margin: 0 0 var(--r2);
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-  }
-  .kopf p {
-    margin: 0;
+  .unterschrift {
+    margin: calc(var(--r4) * -1) 0 0;
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }

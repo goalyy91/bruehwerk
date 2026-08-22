@@ -103,8 +103,7 @@
         onOeffnenShot={() => navigation.gehe({ name: 'shot', kaffeeId: route.kaffeeId, profilId: route.profilId })}
       />
     {:else if route.name === 'shot'}
-      <Kopfzeile titel="Shot loggen" onZurueck={() => navigation.zurueck()} />
-      <ShotErfassung profilId={route.profilId} onFertig={() => navigation.zurueck()} />
+      <ShotErfassung profilId={route.profilId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'historie'}
       <Kopfzeile titel="Historie" />
       <p class="offen">Historie · kommt in Paket 05</p>
@@ -117,15 +116,14 @@
         onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
       />
     {:else if route.name === 'geraete'}
-      <Kopfzeile titel="Geräte" onZurueck={() => navigation.zurueck()} />
       <Geraete
+        onZurueck={() => navigation.zurueck()}
         onOeffnenMuehle={(id) => navigation.gehe(id ? { name: 'muehle', id } : { name: 'muehleNeu' })}
         onOeffnenBruehgeraet={(id) => navigation.gehe(id ? { name: 'bruehgeraet', id } : { name: 'bruehgeraetNeu' })}
         onOeffnenSetup={(id) => navigation.gehe(id ? { name: 'setup', id } : { name: 'setupNeu' })}
       />
     {:else if route.name === 'musterblatt'}
-      <Kopfzeile titel="Musterblatt" onZurueck={() => navigation.zurueck()} />
-      <Musterblatt />
+      <Musterblatt onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'muehle'}
       <MuehleAnsicht
         muehleId={route.id}

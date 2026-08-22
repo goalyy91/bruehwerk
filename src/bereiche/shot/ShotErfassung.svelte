@@ -15,9 +15,12 @@
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import type { Shot, Urteil as UrteilTyp } from '../../daten/schema';
 
-  let { profilId, onFertig }: { profilId: string; onFertig: () => void } = $props();
+  // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jeder Bildschirm selbst
+  // statt Rahmen.svelte sie von aussen aufsetzt (siehe Musterblatt.svelte).
+  let { profilId, onZurueck, onFertig }: { profilId: string; onZurueck: () => void; onFertig: () => void } = $props();
 
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
   const kaffee = $derived(profil ? bestand.kaffees.find((k) => k.id === profil.kaffeeId) : undefined);
@@ -152,6 +155,8 @@
     onFertig();
   }
 </script>
+
+<Kopfzeile titel="Shot loggen" {onZurueck} />
 
 {#if !profil || !kaffee}
   <p class="hinweis">Profil nicht gefunden.</p>
