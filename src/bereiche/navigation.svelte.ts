@@ -22,6 +22,15 @@ function aktuellerPfad(): string {
 class Navigation {
   aktuell = $state<Route>(START);
 
+  // Fuer den Ebenenwechsel-Uebergang (Punkt 7 der Korrekturrunde): woher
+  // kam der letzte Bildschirmwechsel. gehe() ist immer "vor", zurueck() und
+  // ein echtes history.back() (Geste/System-Knopf/Pfeil) sind immer
+  // "zurueck" — pushState loest nie ein popstate aus, ausschliesslich
+  // history.back()/forward() tun das, und diese App ruft nie forward() auf.
+  // Der Vergleich der Verlaufstiefe im popstate-Horcher ist trotzdem die
+  // robustere Quelle als das blind anzunehmen.
+  richtung = $state<'vor' | 'zurueck'>('vor');
+
   /** Vom Rahmen gesetzt (bind:this auf den Scroll-Container .inhalt). */
   scrollContainer: HTMLElement | undefined;
 
@@ -42,7 +51,9 @@ class Navigation {
     }
 
     const horcher = () => {
+      const vorherigeTiefe = this.#tiefe;
       this.#tiefe = this.#tiefeAusZustand();
+      this.richtung = this.#tiefe < vorherigeTiefe ? 'zurueck' : 'vor';
       // Nie history.state blind uebernehmen — der Pfad wird immer neu
       // geparst, auch wenn state() beschaedigt oder fremd ist.
       this.aktuell = location.hash ? ausPfad(aktuellerPfad()) : START;
@@ -58,6 +69,7 @@ class Navigation {
    *  Folge — man sieht keine Aenderung, muss aber doppelt so oft zurueck). */
   gehe(route: Route): void {
     if (zuPfad(route) === zuPfad(this.aktuell)) return;
+    this.richtung = 'vor';
     this.#merkeScroll();
     this.#tiefe += 1;
     history.pushState({ tiefe: this.#tiefe } satisfies VerlaufsZustand, '', `#${zuPfad(route)}`);
@@ -74,6 +86,7 @@ class Navigation {
 
   /** Eine Ebene zurueck — Geste, System-Knopf und Pfeil rufen alle das hier auf. */
   zurueck(): void {
+    this.richtung = 'zurueck';
     this.#merkeScroll();
     if (this.#tiefe > 0) {
       history.back();

@@ -18,7 +18,7 @@
   import { onMount } from 'svelte';
   import { bestand } from './bestand.svelte';
   import { navigation } from './navigation.svelte';
-  import { tabVon, type Bereich } from './route';
+  import { tabVon, zuPfad, type Bereich } from './route';
   import Kopfzeile from '../muster/Kopfzeile.svelte';
   import Bar from './bar/Bar.svelte';
   import KaffeeListe from './kaffees/KaffeeListe.svelte';
@@ -64,9 +64,18 @@
 
 <div class="rahmen">
   <main class="inhalt" bind:this={inhaltElement}>
-    {#if bestand.ladeFehler}
-      <p class="fehler">Bestand konnte nicht geladen werden: {bestand.ladeFehler.message}</p>
-    {:else if route.name === 'bar'}
+    <!-- Punkt 7 der Korrekturrunde: Ebenenwechsel leicht versetzt
+         eingeblendet, Richtung aus navigation.richtung. {#key} erzwingt
+         einen echten Neuaufbau je Pfad, damit die CSS-Animation bei jedem
+         Bildschirmwechsel neu anspringt — auch zwischen zwei Routen mit
+         demselben Komponententyp (z. B. Kaffee A -> Kaffee B). Rein
+         optisch, kein Zustand haengt daran; prefers-reduced-motion greift
+         automatisch ueber den globalen Block in tokens.css. -->
+    {#key zuPfad(route)}
+      <div class="ebene" class:vor={navigation.richtung === 'vor'} class:zurueck={navigation.richtung === 'zurueck'}>
+        {#if bestand.ladeFehler}
+          <p class="fehler">Bestand konnte nicht geladen werden: {bestand.ladeFehler.message}</p>
+        {:else if route.name === 'bar'}
       <Bar />
     {:else if route.name === 'kaffees'}
       <KaffeeListe
@@ -158,7 +167,9 @@
       <Setupblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
     {:else if route.name === 'setupBearbeiten'}
       <Setupblatt setupId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
-    {/if}
+        {/if}
+      </div>
+    {/key}
   </main>
 
   <nav class="leiste" aria-label="Bereiche">
@@ -200,6 +211,33 @@
     min-height: 0;
     overflow-y: auto;
     padding: var(--r4) var(--seitenrand);
+  }
+  /* Punkt 7 der Korrekturrunde: Ebenenwechsel-Uebergang. Reine
+     CSS-Animation statt Sveltes JS-Transitions — nur so greift der
+     bestehende globale prefers-reduced-motion-Block (tokens.css), der
+     animation-duration auf 1ms erzwingt. */
+  .ebene {
+    animation-duration: var(--t-ebene);
+    animation-timing-function: var(--e-rein);
+    animation-fill-mode: both;
+  }
+  .ebene.vor {
+    animation-name: ebene-vor-ein;
+  }
+  .ebene.zurueck {
+    animation-name: ebene-zurueck-ein;
+  }
+  @keyframes ebene-vor-ein {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+  }
+  @keyframes ebene-zurueck-ein {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
   }
   .offen {
     color: var(--gedaempft);
