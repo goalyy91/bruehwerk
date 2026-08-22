@@ -18,6 +18,11 @@
   // Herkunft-Auswahl ist jetzt eine AuswahlListe statt Einzelauswahl-Chips
   // — dieselbe Form wie die Aufbereitungsart beim Kaffee, nur mit den
   // Herkunftszeichen (K54) neben dem Text.
+  //
+  // UX-Korrekturrunde: der Erfassungsblock stand vorher dauerhaft offen,
+  // auch beim reinen Ansehen einer bestehenden Tabelle (Regel 2/8) — jetzt
+  // hinter "+ Messpunkt". Bleibt nach dem Hinzufuegen offen, weil eine
+  // Messreihe meist aus mehreren Zeilen hintereinander besteht.
 
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import type { TempReferenzPunkt } from '../../daten/schema';
@@ -26,6 +31,7 @@
 
   const reihe = $derived([...werte].sort((a, b) => a.kt - b.kt));
 
+  let formularOffen = $state(false);
   let neuKt = $state('');
   let neuGruppe = $state('');
   let neuHerkunft = $state<TempReferenzPunkt['herkunft']>('uebernommen');
@@ -74,15 +80,19 @@
   </ul>
 {/if}
 
-<div class="neue-zeile">
-  <label>Kessel <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
-  <label>Gruppe <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
-  <div class="herkunft-feld">
-    <span class="feld-label">Herkunft</span>
-    <AuswahlListe optionen={HERKUNFT_OPTIONEN} wert={neuHerkunft} onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])} />
+{#if formularOffen}
+  <div class="neue-zeile">
+    <label>Kessel <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
+    <label>Gruppe <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
+    <div class="herkunft-feld">
+      <span class="feld-label">Herkunft</span>
+      <AuswahlListe optionen={HERKUNFT_OPTIONEN} wert={neuHerkunft} onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])} />
+    </div>
+    <button type="button" class="hinzufuegen" onclick={zeileHinzufuegen} disabled={neuKt === '' || neuGruppe === ''}>Zeile hinzufügen</button>
   </div>
-  <button type="button" class="hinzufuegen" onclick={zeileHinzufuegen} disabled={neuKt === '' || neuGruppe === ''}>Zeile hinzufügen</button>
-</div>
+{:else}
+  <button type="button" class="messpunkt-oeffnen" onclick={() => (formularOffen = true)}>+ Messpunkt</button>
+{/if}
 
 <style>
   h3 {
@@ -146,11 +156,28 @@
   }
   .entfernen {
     flex: none;
+    min-height: var(--treffer);
+    padding: 0 var(--r2);
     background: none;
     border: none;
     color: var(--gedaempft);
     font-family: var(--schrift);
     font-size: var(--fs-meta);
+    cursor: pointer;
+  }
+  .messpunkt-oeffnen {
+    display: block;
+    width: 100%;
+    min-height: var(--treffer);
+    margin-top: var(--r3);
+    padding-top: var(--r3);
+    border: none;
+    border-top: 1px solid var(--linie);
+    background: transparent;
+    color: var(--akzent);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    text-align: left;
     cursor: pointer;
   }
   .neue-zeile {

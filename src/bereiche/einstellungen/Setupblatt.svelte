@@ -6,22 +6,28 @@
   // parallelSchaeumen/sammelSchaeumen/Begruendungsschalter sind hier raus —
   // "Setup" meinte an diesen Konzeptstellen allgemeine Einstellungen, nicht
   // diese Geraete-Kombination. Stehen jetzt global in Einstellungen.svelte.
+  //
+  // UX-Korrekturrunde: Loeschen ist raus (jetzt in SetupAnsicht.svelte, ueber
+  // Kontextmenue) — "speichern" ist damit die einzige Aktion auf diesem
+  // Blatt (Regel 3). Mühle/Brühgerät laufen jetzt über AuswahlListe statt
+  // Einzelauswahl — freie Geräte-Namen, keine feste kurze Optionsmenge
+  // (Regel 5, AuswahlListe.svelte nennt "Setup-Auswahl mit freien Namen"
+  // wörtlich als ihren Fall).
 
   import { untrack } from 'svelte';
-  import { bestand, schreiben, loeschen } from '../bestand.svelte';
+  import { bestand, schreiben } from '../bestand.svelte';
   import { ABLAUF_LEER } from '../../daten/stammdaten';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Setup } from '../../daten/schema';
 
   let {
     setupId,
     onZurueck,
-    onGeloescht,
   }: {
     setupId?: string;
     onZurueck: () => void;
-    onGeloescht: () => void;
   } = $props();
 
   const bestehend = $derived(setupId ? bestand.setups.find((s) => s.id === setupId) : undefined);
@@ -53,21 +59,6 @@
       fehler = e instanceof Error ? e.message : String(e);
     }
   }
-
-  // Kein stilles Kaskadenloeschen (offene-punkte-ux.md Punkt 1): ein Setup,
-  // das noch in einem Profil steckt, wuerde dort eine kaputte Referenz
-  // hinterlassen.
-  async function setupLoeschen() {
-    if (!bestehend) return;
-    const anzahl = bestand.profile.filter((p) => p.setupId === bestehend.id).length;
-    if (anzahl > 0) {
-      alert(`„${bestehend.name}“ wird noch von ${anzahl} Profil${anzahl === 1 ? '' : 'en'} benutzt und kann nicht gelöscht werden.`);
-      return;
-    }
-    if (!confirm(`„${bestehend.name}“ wirklich löschen?`)) return;
-    await loeschen('setup', bestehend.id);
-    onGeloescht();
-  }
 </script>
 
 <Kopfzeile titel={bestehend ? 'Setup bearbeiten' : 'Neues Setup'} {onZurueck} />
@@ -79,34 +70,32 @@
     <span class="label">Name</span>
     <input class="text-eingabe" type="text" bind:value={entwurf.name} />
   </div>
-  <div class="feld-zeile">
+  <div class="feld-zeile spalte">
     <span class="label">Mühle</span>
-    <Einzelauswahl
+    <AuswahlListe
       optionen={bestand.muehlen.map((m) => ({ wert: m.id, label: m.name }))}
       wert={entwurf.muehleId}
       onWahl={(w) => (entwurf.muehleId = w)}
     />
   </div>
-  <div class="feld-zeile">
+  <div class="feld-zeile spalte">
     <span class="label">Brühgerät</span>
-    <Einzelauswahl
+    <AuswahlListe
       optionen={bestand.bruehgeraete.map((b) => ({ wert: b.id, label: b.name }))}
       wert={entwurf.bruehgeraetId}
       onWahl={(w) => (entwurf.bruehgeraetId = w)}
     />
   </div>
 
-  <button type="button" class="primaer" onclick={speichern} disabled={entwurf.name.trim() === ''}>
-    {bestehend ? 'speichern' : 'anlegen'}
-  </button>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === ''}>
+      {bestehend ? 'speichern' : 'anlegen'}
+    </Knopf>
+  </div>
 {/if}
 
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler}</p>
-{/if}
-
-{#if bestehend}
-  <button type="button" class="loeschen" onclick={setupLoeschen}>Setup löschen</button>
 {/if}
 
 <style>
@@ -123,11 +112,19 @@
     border-bottom: 1px solid var(--linie);
     padding: var(--r1) 0;
   }
+  .feld-zeile.spalte {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--r1);
+  }
   .label {
     width: var(--eigenschaftslabel);
     flex-shrink: 0;
     font-size: var(--fs-meta);
     color: var(--gedaempft);
+  }
+  .feld-zeile.spalte .label {
+    width: auto;
   }
   .text-eingabe {
     font-family: var(--schrift);
@@ -140,36 +137,12 @@
     flex: 1;
     min-width: var(--feld-min);
   }
-  .primaer {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
+  .knopfreihe {
     margin-top: var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  .primaer:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
   .fehler {
     color: var(--kritisch);
     font-size: var(--fs-satz);
     margin-top: var(--r3);
-  }
-  .loeschen {
-    display: block;
-    min-height: var(--treffer);
-    margin-top: var(--r5);
-    padding: 0 var(--r4);
-    background: none;
-    border: 1px solid var(--kritisch);
-    color: var(--kritisch);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
   }
 </style>

@@ -1,18 +1,26 @@
 <script lang="ts">
   // SetupAnsicht — reine Leseansicht (offene-punkte-ux.md Punkt 2), analog
   // zu Kaffeeblatt.svelte. Formular bleibt Setupblatt.svelte.
+  //
+  // UX-Korrekturrunde: Loeschen sitzt jetzt hier statt im Formular (Regel 3)
+  // und laeuft ueber Kontextmenue.svelte statt native alert()/confirm()
+  // (Regel 6). Referenzpruefung inhaltlich unveraendert.
 
-  import { bestand } from '../bestand.svelte';
+  import { bestand, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import Werteliste from '../../muster/Werteliste.svelte';
 
   let {
     setupId,
     onZurueck,
     onBearbeiten,
+    onGeloescht,
   }: {
     setupId: string;
     onZurueck: () => void;
     onBearbeiten: () => void;
+    onGeloescht: () => void;
   } = $props();
 
   const setup = $derived(bestand.setups.find((s) => s.id === setupId));
@@ -21,6 +29,20 @@
   const zubehoer = $derived(
     setup ? setup.zubehoerIds.map((id) => bestand.zubehoer.find((z) => z.id === id)?.name ?? '?') : [],
   );
+
+  let fehler = $state<string | undefined>(undefined);
+
+  async function versuchLoeschen() {
+    if (!setup) return;
+    fehler = undefined;
+    const anzahl = bestand.profile.filter((p) => p.setupId === setup.id).length;
+    if (anzahl > 0) {
+      fehler = `wird noch von ${anzahl} Profil${anzahl === 1 ? '' : 'en'} benutzt und kann nicht gelöscht werden`;
+      return;
+    }
+    await loeschen('setup', setup.id);
+    onGeloescht();
+  }
 </script>
 
 {#if !setup}
@@ -29,45 +51,32 @@
 {:else}
   <Kopfzeile titel={setup.name} {onZurueck}>
     {#snippet aktion()}
-      <button type="button" class="stift" onclick={onBearbeiten} aria-label="Setup bearbeiten">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z" /></svg>
-      </button>
+      <Kontextmenue
+        eintraege={[
+          { text: 'bearbeiten', onWahl: onBearbeiten },
+          { text: 'löschen', kritisch: true, onWahl: versuchLoeschen },
+        ]}
+      />
     {/snippet}
   </Kopfzeile>
 
+  {#if fehler}
+    <p class="fehler">Nicht gelöscht: {fehler}.</p>
+  {/if}
+
   <section class="gruppe">
     <h2>Geräte</h2>
-    <div class="wertzeile">
-      <span class="label">Mühle</span>
-      <span class="wert">{muehle?.name ?? '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Brühgerät</span>
-      <span class="wert">{bruehgeraet?.name ?? '—'}</span>
-    </div>
-    {#if zubehoer.length > 0}
-      <div class="wertzeile">
-        <span class="label">Zubehör</span>
-        <span class="wert">{zubehoer.join(', ')}</span>
-      </div>
-    {/if}
+    <Werteliste
+      zeilen={[
+        { label: 'Mühle', wert: muehle?.name ?? '—' },
+        { label: 'Brühgerät', wert: bruehgeraet?.name ?? '—' },
+        ...(zubehoer.length > 0 ? [{ label: 'Zubehör', wert: zubehoer.join(', ') }] : []),
+      ]}
+    />
   </section>
 {/if}
 
 <style>
-  .stift {
-    width: var(--treffer);
-    height: var(--treffer);
-    margin-right: calc(var(--r2) * -1);
-    border: none;
-    background: none;
-    color: var(--akzent);
-    cursor: pointer;
-  }
-  .stift svg {
-    width: 22px;
-    height: 22px;
-  }
   h2 {
     font-size: var(--fs-label);
     letter-spacing: var(--label-spacing);
@@ -79,26 +88,13 @@
   .gruppe {
     margin-bottom: var(--r5);
   }
-  .wertzeile {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--r3);
-    min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie-zart);
-    padding: var(--r1) 0;
-  }
-  .wertzeile .label {
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .wertzeile .wert {
-    font-size: var(--fs-satz);
-    color: var(--satz);
-    text-align: right;
-  }
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
+  }
+  .fehler {
+    color: var(--kritisch);
+    font-size: var(--fs-satz);
+    margin: 0 0 var(--r4);
   }
 </style>

@@ -7,10 +7,15 @@
   // den gesamten Geraete-Teilbaum, so wie Kaffees.svelte es fuer
   // Kaffee/Profil bereits richtig macht.
   //
-  // Loeschen steht nicht hier (offene-punkte-ux.md Punkt 2): eine Zeile in
-  // dieser Liste antippen fuehrt jetzt auf eine Leseansicht (MuehleAnsicht
-  // & Co.), Loeschen sitzt im Bearbeiten-Formular dahinter — Loeschen ist
-  // eine Aenderung, und Aenderungen leben im Formular, nicht in der Liste.
+  // Loeschen steht nicht hier: eine Zeile in dieser Liste antippen fuehrt
+  // auf eine Leseansicht (MuehleAnsicht & Co.), Loeschen sitzt dort im
+  // Kontextmenue (UX-Korrekturrunde) — Loeschen ist eine Aenderung, und
+  // Aenderungen leben nicht in der Liste.
+  //
+  // Setups stehen zuerst (Regel 3): sie sind die eigentliche
+  // Alltagseinheit — ein Setup bindet Muehle+Bruehgeraet zusammen und wird
+  // spaeter am Getraenk ausgewaehlt, waehrend Muehle/Bruehgeraet fuer sich
+  // genommen nur Bausteine dafuer sind.
 
   import { bestand } from '../bestand.svelte';
 
@@ -24,6 +29,14 @@
     onOeffnenSetup: (id?: string) => void;
   } = $props();
 </script>
+
+<h2>Setups</h2>
+<ul class="liste">
+  {#each bestand.setups as s (s.id)}
+    <li><button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>{s.name}</button></li>
+  {/each}
+</ul>
+<button type="button" class="fusszeile betont" onclick={() => onOeffnenSetup()}>+ Setup</button>
 
 <h2>Mühlen</h2>
 <ul class="liste">
@@ -40,14 +53,6 @@
   {/each}
 </ul>
 <button type="button" class="fusszeile" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
-
-<h2>Setups</h2>
-<ul class="liste">
-  {#each bestand.setups as s (s.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>{s.name}</button></li>
-  {/each}
-</ul>
-<button type="button" class="fusszeile" onclick={() => onOeffnenSetup()}>+ Setup</button>
 
 <style>
   h2 {
@@ -93,5 +98,13 @@
     font-size: var(--fs-meta);
     text-align: left;
     cursor: pointer;
+  }
+  /* Setups sind die eigentliche Alltagseinheit (siehe Kopfkommentar) — eine
+     einzige, etwas staerker gesetzte Anlege-Zeile statt drei gleichrangiger
+     "+ X" (Regel 3). Immer noch kein gefuellter Akzentknopf (Regel 6). */
+  .fusszeile.betont {
+    color: var(--tinte);
+    font-size: var(--fs-satz);
+    font-weight: var(--gw-titel);
   }
 </style>

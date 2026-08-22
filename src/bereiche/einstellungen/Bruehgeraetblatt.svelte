@@ -21,25 +21,32 @@
   //    gespeicherten Geraet. Der Entwurf lebt dafuer nicht mehr lokal,
   //    sondern in bruehgeraetEntwurf.svelte.ts, damit er den
   //    Bildschirmwechsel uebersteht.
+  //
+  // UX-Korrekturrunde: Loeschen ist raus (jetzt in BruehgeraetAnsicht.svelte,
+  // ueber Kontextmenue) — "speichern" ist damit die einzige Aktion auf
+  // diesem Blatt (Regel 3). Typ (vier Optionen) laeuft jetzt ueber
+  // AuswahlListe statt Einzelauswahl, echte Zwei-Zustands-Felder (Sieb,
+  // Fuehrungswert) ueber Segment (Regel 5).
 
   import { untrack } from 'svelte';
-  import { bestand, schreiben, loeschen } from '../bestand.svelte';
+  import { bestand, schreiben } from '../bestand.svelte';
   import { bruehgeraetEntwurf } from './bruehgeraetEntwurf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Werteliste from '../../muster/Werteliste.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Bruehgeraet } from '../../daten/schema';
 
   let {
     bruehgeraetId,
     onZurueck,
     onOeffnenTempReferenz,
-    onGeloescht,
   }: {
     bruehgeraetId?: string;
     onZurueck: () => void;
     onOeffnenTempReferenz: () => void;
-    onGeloescht: () => void;
   } = $props();
 
   const bestehend = $derived(bruehgeraetId ? bestand.bruehgeraete.find((b) => b.id === bruehgeraetId) : undefined);
@@ -61,12 +68,11 @@
 
   // Ein laufender Entwurf in bruehgeraetEntwurf ist entweder ein frischer
   // Start oder die Rueckkehr vom Temperatur-Bildschirm — Rahmen.svelte
-  // verwirft ihn bei jedem anderen Ausstieg (onZurueck/onGeloescht), sonst
-  // gaebe es hier nichts mehr zu unterscheiden. $state.snapshot() statt
-  // structuredClone(): bestehend ist ein Svelte-reaktives Objekt —
-  // structuredClone scheitert an den Array-Feldern (mengen, tempReferenz)
-  // mit "could not be cloned" (gefunden beim Kaffee-Bearbeiten-Formular,
-  // dasselbe Muster).
+  // verwirft ihn bei jedem anderen Ausstieg (onZurueck), sonst gaebe es hier
+  // nichts mehr zu unterscheiden. $state.snapshot() statt structuredClone():
+  // bestehend ist ein Svelte-reaktives Objekt — structuredClone scheitert an
+  // den Array-Feldern (mengen, tempReferenz) mit "could not be cloned"
+  // (gefunden beim Kaffee-Bearbeiten-Formular, dasselbe Muster).
   untrack(() => {
     if (!bruehgeraetEntwurf.aktuell) {
       bruehgeraetEntwurf.setzen(bestehend ? $state.snapshot(bestehend) : leererEntwurf());
@@ -74,6 +80,19 @@
   });
   const entwurf = bruehgeraetEntwurf.aktuell!;
   let fehler = $state<string | undefined>(undefined);
+
+  // "zurueck" verwirft sonst den kompletten Entwurf inkl. Temperaturzeilen
+  // ohne Rueckfrage. Kein OS-confirm() (Regel 6) — stattdessen eine Zeile im
+  // Fluss, die einen zweiten Tap verlangt, dieselbe Mechanik wie
+  // Kontextmenue.svelte fuer kritische Aktionen.
+  let verwerfenBestaetigen = $state(false);
+  function versuchZurueck() {
+    if (!bruehgeraetEntwurf.istVeraendert() || verwerfenBestaetigen) {
+      onZurueck();
+      return;
+    }
+    verwerfenBestaetigen = true;
+  }
 
   /** K8: einzel -> [1], doppel -> [1,2] — ersetzt die separate Mengen-Abfrage bei Espresso. */
   function mengenAusSieb(sieb: NonNullable<Bruehgeraet['sieb']>): number[] {
@@ -123,50 +142,32 @@
     }
   }
 
-  function zahl(e: Event): number {
-    return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
-  }
-
-  // Kein stilles Kaskadenloeschen (offene-punkte-ux.md Punkt 1): ein
-  // Bruehgeraet, das noch in einem Setup steckt, wuerde
-  // bestand.bruehgeraetVon() sonst ploetzlich undefined liefern.
-  async function geraetLoeschen() {
-    if (!bestehend) return;
-    const anzahl = bestand.setups.filter((s) => s.bruehgeraetId === bestehend.id).length;
-    if (anzahl > 0) {
-      alert(`„${bestehend.name}“ wird noch von ${anzahl} Setup${anzahl === 1 ? '' : 's'} benutzt und kann nicht gelöscht werden.`);
-      return;
-    }
-    if (!confirm(`„${bestehend.name}“ wirklich löschen?`)) return;
-    await loeschen('bruehgeraet', bestehend.id);
-    onGeloescht();
-  }
+  const TYP_OPTIONEN = [
+    { wert: 'espresso', label: 'Espresso' },
+    { wert: 'moka', label: 'Moka' },
+    { wert: 'pourover', label: 'Pour Over' },
+    { wert: 'coldbrew', label: 'Cold Brew' },
+  ];
 </script>
 
-<Kopfzeile titel={bestehend ? 'Brühgerät bearbeiten' : 'Neues Brühgerät'} {onZurueck} />
+<Kopfzeile titel={bestehend ? 'Brühgerät bearbeiten' : 'Neues Brühgerät'} onZurueck={versuchZurueck} />
+
+{#if verwerfenBestaetigen}
+  <p class="verwerfen-hinweis">
+    Ungespeicherte Änderungen. <button type="button" class="verwerfen-link" onclick={versuchZurueck}>Wirklich verwerfen</button> ·
+    <button type="button" class="verwerfen-link" onclick={() => (verwerfenBestaetigen = false)}>weiter bearbeiten</button>
+  </p>
+{/if}
 
 <div class="feld-zeile">
   <span class="label">Name</span>
   <input class="text-eingabe" type="text" bind:value={entwurf.name} />
 </div>
-<div class="feld-zeile">
+<div class="feld-zeile spalte">
   <span class="label">Typ</span>
-  <Einzelauswahl
-    optionen={[
-      { wert: 'espresso', label: 'Espresso' },
-      { wert: 'moka', label: 'Moka' },
-      { wert: 'pourover', label: 'Pour Over' },
-      { wert: 'coldbrew', label: 'Cold Brew' },
-    ]}
-    wert={entwurf.typ}
-    onWahl={typWechseln}
-  />
+  <AuswahlListe optionen={TYP_OPTIONEN} wert={entwurf.typ} onWahl={typWechseln} />
 </div>
-<div class="feld-zeile">
-  <span class="label">Gruppen</span>
-  <input class="text-eingabe zahl schmal" type="text" inputmode="numeric" value={entwurf.gruppen}
-    onchange={(e) => (entwurf.gruppen = Math.max(1, Math.round(zahl(e))))} />
-</div>
+<Werteliste zeilen={[{ label: 'Gruppen', wert: entwurf.gruppen, onAendern: (w) => (entwurf.gruppen = Math.max(1, Math.round(w))) }]} />
 <p class="erklaerung">Anzahl Brühgruppen am Gerät — bei dir 1.</p>
 
 {#if entwurf.typ === 'espresso'}
@@ -177,11 +178,7 @@
     <Schalter label="Cooling Flush" an={entwurf.flushDauer !== undefined} onWahl={flushUmschalten} />
   </div>
   {#if entwurf.flushDauer !== undefined}
-    <div class="feld-zeile">
-      <span class="label">Flush-Dauer</span>
-      <input class="text-eingabe zahl schmal" type="text" inputmode="decimal" value={entwurf.flushDauer}
-        onchange={(e) => (entwurf.flushDauer = zahl(e))} /> s
-    </div>
+    <Werteliste zeilen={[{ label: 'Flush-Dauer', wert: entwurf.flushDauer, einheit: 's', onAendern: (w) => (entwurf.flushDauer = w) }]} />
   {/if}
 {/if}
 
@@ -198,13 +195,10 @@
 {/if}
 
 {#if entwurf.typ !== 'moka'}
-  <div class="feld-zeile">
+  <div class="feld-zeile spalte">
     <span class="label">Führungswert</span>
-    <Einzelauswahl
-      optionen={[
-        { wert: 'output', label: 'Output' },
-        { wert: 'durchlaufzeit', label: 'Durchlaufzeit' },
-      ]}
+    <Segment
+      optionen={[{ wert: 'output', label: 'Output' }, { wert: 'durchlaufzeit', label: 'Durchlaufzeit' }]}
       wert={entwurf.fuehrungswert ?? ''}
       onWahl={(w) => (entwurf.fuehrungswert = w as Bruehgeraet['fuehrungswert'])}
     />
@@ -212,9 +206,9 @@
 {/if}
 
 {#if entwurf.typ === 'espresso'}
-  <div class="feld-zeile">
+  <div class="feld-zeile spalte">
     <span class="label">Sieb</span>
-    <Einzelauswahl
+    <Segment
       optionen={[{ wert: 'einzel', label: 'einzel' }, { wert: 'doppel', label: 'doppel' }]}
       wert={entwurf.sieb?.art ?? 'doppel'}
       onWahl={(w) => siebAendern({ art: w as 'einzel' | 'doppel' })}
@@ -228,23 +222,27 @@
 {:else}
   <div class="feld-zeile">
     <span class="label">Mengen</span>
+  </div>
+  <div class="feld-zeile">
     <Schalter label="1×" an={entwurf.mengen.includes(1)} onWahl={(a) => mengeUmschalten(1, a)} />
+  </div>
+  <div class="feld-zeile">
     <Schalter label="2×" an={entwurf.mengen.includes(2)} onWahl={(a) => mengeUmschalten(2, a)} />
+  </div>
+  <div class="feld-zeile">
     <Schalter label="3×" an={entwurf.mengen.includes(3)} onWahl={(a) => mengeUmschalten(3, a)} />
   </div>
   <p class="erklaerung">Wie viele Portionen gleichzeitig angeboten werden.</p>
 {/if}
 
-<button type="button" class="primaer" onclick={speichern} disabled={entwurf.name.trim() === ''}>
-  {bestehend ? 'speichern' : 'anlegen'}
-</button>
+<div class="knopfreihe">
+  <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === ''}>
+    {bestehend ? 'speichern' : 'anlegen'}
+  </Knopf>
+</div>
 
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler}</p>
-{/if}
-
-{#if bestehend}
-  <button type="button" class="loeschen" onclick={geraetLoeschen}>Brühgerät löschen</button>
 {/if}
 
 <style>
@@ -257,11 +255,19 @@
     border-bottom: 1px solid var(--linie);
     padding: var(--r1) 0;
   }
+  .feld-zeile.spalte {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--r1);
+  }
   .label {
     width: var(--eigenschaftslabel);
     flex-shrink: 0;
     font-size: var(--fs-meta);
     color: var(--gedaempft);
+  }
+  .feld-zeile.spalte .label {
+    width: auto;
   }
   .erklaerung {
     font-size: var(--fs-meta);
@@ -300,44 +306,27 @@
     flex: 1;
     min-width: var(--feld-min);
   }
-  .text-eingabe.zahl {
-    font-variant-numeric: var(--zahl-features);
-    text-align: right;
-    flex: 0 0 auto;
-  }
-  .text-eingabe.schmal {
-    width: var(--feld-schmal);
-  }
-  .primaer {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
+  .knopfreihe {
     margin-top: var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  .primaer:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
   .fehler {
     color: var(--kritisch);
     font-size: var(--fs-satz);
     margin-top: var(--r3);
   }
-  .loeschen {
-    display: block;
-    min-height: var(--treffer);
-    margin-top: var(--r5);
-    padding: 0 var(--r4);
-    background: none;
-    border: 1px solid var(--kritisch);
+  .verwerfen-hinweis {
     color: var(--kritisch);
+    font-size: var(--fs-meta);
+    margin: 0 0 var(--r4);
+  }
+  .verwerfen-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: inherit;
+    text-decoration: underline;
     cursor: pointer;
   }
 </style>

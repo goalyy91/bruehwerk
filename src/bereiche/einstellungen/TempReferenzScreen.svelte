@@ -9,6 +9,7 @@
 
   import { bruehgeraetEntwurf } from './bruehgeraetEntwurf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import TempReferenz from './TempReferenz.svelte';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
@@ -22,7 +23,9 @@
   <p class="hinweis">Kein Brühgerät-Formular offen — von dort aus über „Kesseltemperatur-Tabelle pflegen" öffnen.</p>
 {:else}
   <TempReferenz werte={entwurf.tempReferenz} onAendern={(werte) => (entwurf.tempReferenz = werte)} />
-  <button type="button" class="fertig" onclick={onZurueck}>fertig</button>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={onZurueck}>fertig</Knopf>
+  </div>
 {/if}
 
 <style>
@@ -30,16 +33,7 @@
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }
-  .fertig {
-    display: block;
-    width: 100%;
-    min-height: var(--treffer);
+  .knopfreihe {
     margin-top: var(--r5);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
   }
 </style>

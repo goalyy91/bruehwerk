@@ -11,6 +11,7 @@
   // vollstaendig, sobald mindestens ein migrierter Kaffee im Bestand ist.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import { migriereSeiten } from '../../daten/migration/migrieren';
   import seedDatei from '../../../daten/seed/notion-2026-08-20.json';
   import type { SeedSeite } from '../../daten/migration/pruefung';
@@ -59,9 +60,11 @@
     <strong>nicht geraten</strong>, sondern unten im Bericht aufgeführt. Chargen sind Platzhalter,
     weil Notion nie Röstdaten strukturiert geführt hat.
   </p>
-  <button type="button" class="primaer" onclick={importAusfuehren} disabled={laeuft}>
-    {laeuft ? 'läuft …' : 'Import ausführen'}
-  </button>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={importAusfuehren} deaktiviert={laeuft}>
+      {laeuft ? 'läuft …' : 'Import ausführen'}
+    </Knopf>
+  </div>
 
   {#if fehler}
     <p class="fehler">Nicht gespeichert: {fehler} — nochmal versuchen.</p>
@@ -99,19 +102,8 @@
     font-size: var(--fs-satz);
     margin: 0 0 var(--r3);
   }
-  .primaer {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  .primaer:disabled {
-    opacity: 0.6;
-    cursor: default;
+  .knopfreihe {
+    margin-top: var(--r2);
   }
   .link {
     display: block;

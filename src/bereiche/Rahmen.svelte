@@ -131,29 +131,29 @@
         muehleId={route.id}
         onZurueck={() => navigation.zurueck()}
         onBearbeiten={() => navigation.gehe({ name: 'muehleBearbeiten', id: route.id })}
+        onGeloescht={() => navigation.ersetze({ name: 'geraete' })}
       />
     {:else if route.name === 'muehleNeu'}
-      <Muehleblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Muehleblatt onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'muehleBearbeiten'}
-      <Muehleblatt muehleId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Muehleblatt muehleId={route.id} onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'bruehgeraet'}
       <BruehgeraetAnsicht
         bruehgeraetId={route.id}
         onZurueck={() => navigation.zurueck()}
         onBearbeiten={() => navigation.gehe({ name: 'bruehgeraetBearbeiten', id: route.id })}
+        onGeloescht={() => navigation.ersetze({ name: 'geraete' })}
       />
     {:else if route.name === 'bruehgeraetNeu'}
       <Bruehgeraetblatt
         onZurueck={() => { bruehgeraetEntwurf.verwerfen(); navigation.zurueck(); }}
         onOeffnenTempReferenz={() => navigation.gehe({ name: 'tempReferenz' })}
-        onGeloescht={() => { bruehgeraetEntwurf.verwerfen(); navigation.ersetze({ name: 'geraete' }); }}
       />
     {:else if route.name === 'bruehgeraetBearbeiten'}
       <Bruehgeraetblatt
         bruehgeraetId={route.id}
         onZurueck={() => { bruehgeraetEntwurf.verwerfen(); navigation.zurueck(); }}
         onOeffnenTempReferenz={() => navigation.gehe({ name: 'tempReferenz' })}
-        onGeloescht={() => { bruehgeraetEntwurf.verwerfen(); navigation.ersetze({ name: 'geraete' }); }}
       />
     {:else if route.name === 'tempReferenz'}
       <TempReferenzScreen onZurueck={() => navigation.zurueck()} />
@@ -162,11 +162,12 @@
         setupId={route.id}
         onZurueck={() => navigation.zurueck()}
         onBearbeiten={() => navigation.gehe({ name: 'setupBearbeiten', id: route.id })}
+        onGeloescht={() => navigation.ersetze({ name: 'geraete' })}
       />
     {:else if route.name === 'setupNeu'}
-      <Setupblatt onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Setupblatt onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'setupBearbeiten'}
-      <Setupblatt setupId={route.id} onZurueck={() => navigation.zurueck()} onGeloescht={() => navigation.ersetze({ name: 'geraete' })} />
+      <Setupblatt setupId={route.id} onZurueck={() => navigation.zurueck()} />
         {/if}
       </div>
     {/key}
