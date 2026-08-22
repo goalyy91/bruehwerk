@@ -295,6 +295,23 @@ werden aufgelöst (`groesse`, `fuehrungswert`), in Strings und Kommentaren nicht
 
 ---
 
+## Gestaltung
+
+Wie UI-Entscheidungen getroffen werden, steht in `docs/ux-regeln.md` — das regelt
+**wie** gestaltet wird, nicht **was** gebaut wird (das bleibt `docs/konzept.md`).
+
+Drei Dinge daraus, auch ohne Nachschlagen wichtig:
+
+- Vor jedem neuen Bildschirm oder jeder neuen Informationshierarchie: erst UX
+  betrachten, dann Brühwerk-Design, erst danach implementieren — als drei
+  Abschnitte im Plan, nicht als Subagenten.
+- Der **Zwei-Tap-Alltagspfad** (App auf → Getränk antippen → „Wie war er?"
+  antippen) darf durch nichts Neues länger werden.
+- Kein neues Muster, solange eines der 22 vorhandenen (`src/muster/`) die
+  Aufgabe mit kleiner Anpassung lösen kann.
+
+---
+
 ## Zwei Türen, die offen bleiben
 
 Kosten heute fast nichts, wären später teuer. **Beides ist eine Liste von

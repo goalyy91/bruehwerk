@@ -27,6 +27,8 @@
   import Einzelauswahl from '../muster/Einzelauswahl.svelte';
   import Schalter from '../muster/Schalter.svelte';
   import Kopfzeile from '../muster/Kopfzeile.svelte';
+  import Knopf from '../muster/Knopf.svelte';
+  import Kontextmenue from '../muster/Kontextmenue.svelte';
 
   let einzelauswahlDemo = $state('b');
   let schalterDemo = $state(true);
@@ -367,6 +369,39 @@
     {#each ['hell', 'dunkel'] as const as theme (theme)}
       <div class="thema" data-theme={theme}>
         <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Knopf — UX-Korrekturrunde, Regel 3/6: eine Hierarchie statt gefuellter Akzentknoepfe -->
+  <section class="muster">
+    <h2>Knopf · Hierarchie</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <Knopf stufe="primaer"><span>speichern</span></Knopf>
+        <Knopf stufe="sekundaer"><span>abbrechen</span></Knopf>
+        <Knopf stufe="still"><span>verwerfen</span></Knopf>
+        <Knopf stufe="kritisch"><span>löschen</span></Knopf>
+        <Knopf stufe="primaer" deaktiviert><span>speichern</span></Knopf>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kontextmenue — UX-Korrekturrunde, Regel 4: ab zwei Sekundaeraktionen -->
+  <section class="muster">
+    <h2>Kontextmenü · Sekundäraktionen</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <Kopfzeile titel="Timemore Sculptor" onZurueck={() => {}}>
+          {#snippet aktion()}
+            <Kontextmenue
+              eintraege={[
+                { text: 'bearbeiten', onWahl: () => {} },
+                { text: 'löschen', kritisch: true, onWahl: () => {} },
+              ]}
+            />
+          {/snippet}
+        </Kopfzeile>
       </div>
     {/each}
   </section>
