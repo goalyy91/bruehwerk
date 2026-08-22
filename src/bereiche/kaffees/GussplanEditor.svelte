@@ -348,7 +348,7 @@
     border: 1px solid var(--feld-rahmen);
     color: var(--tinte);
     padding: var(--r1) var(--r2);
-    min-height: 36px;
+    min-height: var(--treffer);
   }
   .notiz input {
     flex: 1;

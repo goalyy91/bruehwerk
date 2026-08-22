@@ -82,7 +82,7 @@
   .wert {
     width: 80px;
     font-family: var(--schrift);
-    background: var(--h-papier);
+    background: var(--feld-blatt);
     border: 1px solid var(--feld-rahmen);
     padding: var(--r1) var(--r2);
   }

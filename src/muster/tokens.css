@@ -99,6 +99,11 @@
   --rangzahl: 34px;
   --rangname: 136px;
   --tastatur: 368px; /* Systemtastatur inkl. Safe Area */
+  --symbol-tab: 22px; /* Icon-Groesse in der unteren Tab-Leiste */
+  --spalt-mikro: 2px; /* Icon-zu-Label-Abstand, unterhalb der r-Skala (min. 4px) */
+  --feld-schmal: 64px; /* schmale Zahlenfelder, z. B. Min/Max/Schritt */
+  --feld-min: 100px; /* Mindestbreite frei fliessender Textfelder in einer Zeile */
+  --max-liste: 320px; /* Deckelhoehe scrollbarer Listen/Berichte, z. B. Migrationsbericht */
 
   /* ---- Zustandszeichen ---- */
   --zeichen: 10px;

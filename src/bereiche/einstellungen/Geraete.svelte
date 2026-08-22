@@ -76,11 +76,15 @@
     color: var(--tinte);
     text-align: left;
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
+  }
+  .zeile:active {
+    background: var(--feld);
   }
   .fusszeile {
     display: block;
     width: 100%;
-    min-height: 40px;
+    min-height: var(--treffer);
     margin-top: var(--r2);
     background: none;
     border: none;

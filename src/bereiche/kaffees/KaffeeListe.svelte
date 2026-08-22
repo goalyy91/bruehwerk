@@ -145,23 +145,23 @@
     align-items: flex-end;
     gap: var(--r1);
   }
-  /* Schwebender Rund-Button statt Link am Listenende — immer erreichbar,
-     ohne dass man dafuer runterscrollen muss (UX-1). Feste Position ueber
-     der unteren Leiste, gleiche Form ueberall, wo eine Sammlung eine
-     Anlege-Handlung braucht. */
+  /* Schwebender Button statt Link am Listenende — immer erreichbar, ohne
+     dass man dafuer runterscrollen muss (UX-1). Feste Position ueber der
+     unteren Leiste. Flaechenhierarchie ueber Farbe statt Schatten (Regel 6),
+     eckige Kante statt Kreis (--radius-feld: 0, K79) — gleiche Sprache wie
+     Knopf.svelte "primaer" (--tinte-Flaeche, --grund-Text als Themen-Gegenpaar). */
   .schwebend {
     position: fixed;
     right: var(--seitenrand);
     bottom: calc(var(--fusszeile) + var(--safe-unten) + var(--r4));
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    width: var(--fusszeile);
+    height: var(--fusszeile);
+    border-radius: var(--radius-feld);
     border: none;
-    background: var(--akzent);
-    color: var(--h-papier);
-    font-size: 28px;
+    background: var(--tinte);
+    color: var(--grund);
+    font-size: var(--fs-titel);
     line-height: 1;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     cursor: pointer;
   }
 </style>

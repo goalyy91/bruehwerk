@@ -128,7 +128,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: var(--r3);
-    min-height: 40px;
+    min-height: var(--treffer);
     border-bottom: 1px solid var(--linie-zart);
     padding: var(--r1) 0;
   }

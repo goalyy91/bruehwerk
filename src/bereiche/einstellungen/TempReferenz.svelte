@@ -170,7 +170,7 @@
     color: var(--satz);
   }
   .neue-zeile input {
-    width: 100px;
+    width: var(--feld-min);
     font-family: var(--schrift);
     font-variant-numeric: var(--zahl-features);
     font-size: var(--fs-satz);
@@ -178,7 +178,7 @@
     border: 1px solid var(--feld-rahmen);
     color: var(--tinte);
     padding: var(--r1) var(--r2);
-    min-height: 40px;
+    min-height: var(--treffer);
     text-align: right;
   }
   .herkunft-feld {

@@ -236,7 +236,7 @@
     border: 1px solid var(--feld-rahmen);
     color: var(--tinte);
     padding: var(--r1) var(--r2);
-    min-height: 40px;
+    min-height: var(--treffer);
     flex: 1;
     min-width: 100px;
   }

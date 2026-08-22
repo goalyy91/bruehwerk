@@ -250,9 +250,10 @@
   .leiste {
     display: flex;
     flex-shrink: 0;
+    /* Flaechenhierarchie ueber Farbe statt Schatten (Regel 6) — die
+       border-top-Linie plus --ruhig grenzen die Leiste bereits ab. */
     border-top: 1px solid var(--linie);
     background: var(--ruhig);
-    box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.06);
     padding-bottom: var(--safe-unten);
   }
   .eintrag {
@@ -261,7 +262,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: var(--spalt-mikro);
     min-height: var(--fusszeile);
     border: none;
     background: transparent;
@@ -271,8 +272,8 @@
     cursor: pointer;
   }
   .symbol {
-    width: 22px;
-    height: 22px;
+    width: var(--symbol-tab);
+    height: var(--symbol-tab);
     display: block;
   }
   .symbol svg {
