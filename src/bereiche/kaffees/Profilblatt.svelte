@@ -6,9 +6,10 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import type { Profil } from '../../daten/schema';
 
@@ -69,9 +70,7 @@
     }
   }
 
-  function zahl(e: Event): number {
-    return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
-  }
+  let setupWahlOffen = $state(false);
 
   async function setupWechseln(neueSetupId: string) {
     if (!profil) return;
@@ -121,6 +120,25 @@
     );
     return zeilen;
   });
+
+  const GROESSE_LABEL: Record<GemesseneGroesse, string> = {
+    zeit: 'Zeit ±',
+    output: 'Output ±',
+    durchlaufzeit: 'Durchlaufzeit ±',
+  };
+
+  // Regel 6/12: zweite Werteliste statt eigenem Grid-CSS (wie schon fuer
+  // "Ziel" oben) — und ausgeschriebene Labels statt der rohen Enum-Schluessel
+  // ("zeit", "durchlaufzeit").
+  const spielraumZeilen = $derived.by((): WertelisteZeile[] => {
+    if (!profil) return [];
+    return (['zeit', 'output', 'durchlaufzeit'] as const).map((groesse) => ({
+      label: GROESSE_LABEL[groesse],
+      wert: profil.spielraum[groesse],
+      einheit: EINHEIT[groesse],
+      onAendern: (w: number) => spielraumSpeichern(groesse, w),
+    }));
+  });
 </script>
 
 {#if !profil}
@@ -128,21 +146,11 @@
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else}
   <Kopfzeile titel={profil.name} {onZurueck} />
-  <button type="button" class="shot-loggen" onclick={onOeffnenShot}>Shot loggen</button>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={onOeffnenShot}>Shot loggen</Knopf>
+  </div>
 
   <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
-
-  <section class="setup-wahl">
-    <h2>Setup</h2>
-    <!-- Teil D der Korrekturrunde: die Migration muss bei "k6" zwischen
-         Moka-1 und Moka-3 raten (siehe migrieren.ts) — das muss hier
-         korrigierbar sein, ohne den Kaffee neu anzulegen. -->
-    <Einzelauswahl
-      optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
-      wert={profil.setupId}
-      onWahl={setupWechseln}
-    />
-  </section>
 
   <section class="ziel">
     <h2>Ziel</h2>
@@ -158,18 +166,28 @@
   <section class="spielraum">
     <h2>Spielraum</h2>
     <p class="hinweis-klein">Input und Mahlgrad haben keinen — dort ist jede Änderung Absicht.</p>
-    {#each ['zeit', 'output', 'durchlaufzeit'] as const as groesse (groesse)}
-      <div class="zeile">
-        <span class="label">± {groesse}</span>
-        <input class="wert-eingabe" type="text" inputmode="decimal" value={profil.spielraum[groesse]}
-          onchange={(e) => spielraumSpeichern(groesse, zahl(e))} /> {EINHEIT[groesse]}
-      </div>
-    {/each}
+    <Werteliste zeilen={spielraumZeilen} />
   </section>
 
   {#if bruehgeraet?.typ === 'pourover'}
     <GussplanEditor {profilId} />
   {/if}
+
+  <!-- Tiefer gelegt (Regel 2/4): reine Korrekturfunktion fuer eine falsch
+       zugeordnete Migration (Teil D), keine Alltagsaktion. -->
+  <section class="setup-wahl">
+    <button type="button" class="aufklappbar" aria-expanded={setupWahlOffen} onclick={() => (setupWahlOffen = !setupWahlOffen)}>
+      <span>Setup ändern</span>
+      <span class="pfeil" class:offen={setupWahlOffen} aria-hidden="true">▾</span>
+    </button>
+    {#if setupWahlOffen}
+      <AuswahlListe
+        optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
+        wert={profil.setupId}
+        onWahl={setupWechseln}
+      />
+    {/if}
+  </section>
 
   {#if speicherFehler}
     <p class="fehler">Nicht gespeichert: {speicherFehler} — nochmal versuchen.</p>
@@ -177,17 +195,8 @@
 {/if}
 
 <style>
-  .shot-loggen {
-    display: block;
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
+  .knopfreihe {
     margin-bottom: var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
   }
   .setup {
     font-size: var(--fs-meta);
@@ -202,28 +211,29 @@
     font-weight: var(--gw-text);
     margin: var(--r5) 0 var(--r2);
   }
-  .zeile {
+  .setup-wahl {
+    margin-top: var(--r5);
+  }
+  .aufklappbar {
     display: flex;
     align-items: center;
-    gap: var(--r2);
+    justify-content: space-between;
+    width: 100%;
     min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie);
-  }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
-    font-size: var(--fs-meta);
+    padding: 0;
+    border: none;
+    background: transparent;
     color: var(--gedaempft);
-  }
-  .wert-eingabe {
-    width: 80px;
     font-family: var(--schrift);
-    font-variant-numeric: var(--zahl-features);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
+    font-size: var(--fs-meta);
+    text-align: left;
+    cursor: pointer;
+  }
+  .aufklappbar .pfeil {
+    transition: transform var(--t-auswahl) var(--e-rein);
+  }
+  .aufklappbar .pfeil.offen {
+    transform: rotate(180deg);
   }
   .hinweis,
   .hinweis-klein {

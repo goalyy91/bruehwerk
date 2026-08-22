@@ -13,7 +13,10 @@
   import { untrack } from 'svelte';
 
   type Zeile = {
-    label: 'Output' | 'Preinfusion' | 'Zeit';
+    // 'Durchlaufzeit' ergaenzt fuer Pour-Over-Geraete mit Fuehrungswert
+    // 'durchlaufzeit' (K7) — ShotErfassung.svelte beschriftet die dritte
+    // Zeile je nach Bruehgeraet, dieselbe Logik wie Profilblatt.svelte.
+    label: 'Output' | 'Preinfusion' | 'Zeit' | 'Durchlaufzeit';
     einheit: string;
     ziel: number;
     spielraum: number;

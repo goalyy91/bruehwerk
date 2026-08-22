@@ -8,6 +8,15 @@
   // Handlung (ein neuer Datensatz), keine Aenderung an den Kaffee-Feldern —
   // die vorherige Charge wird dabei automatisch als leer markiert, ohne
   // Rueckfrage (immer genau eine offene Packung).
+  //
+  // UX-Korrekturrunde (Regel 2/7/8, docs/ux-regeln.md): Profile — der
+  // einzige Weg zum Shot loggen, also der Alltagspfad — stehen jetzt direkt
+  // unter dem Kopf statt hinter neun Stammdaten-Zeilen. Die Bohnen-
+  // Stammdaten liegen hinter einem Aufklapp-Block; entkoffeiniert/aktiv sind
+  // reine Verwaltungsflags und erscheinen nur, wenn sie vom Normalfall
+  // (koffeinhaltig, aktiv) abweichen. Wertzeilen laufen jetzt ueber
+  // Werteliste.svelte statt handgebautem CSS. "Charge anlegen" folgt jetzt
+  // demselben Anlege-Muster wie "Profil anlegen" (hinter "+ …", Regel 12).
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
@@ -15,6 +24,8 @@
   import Sterne from '../../muster/Sterne.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Werteliste from '../../muster/Werteliste.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Charge, Profil, Aufbereitung } from '../../daten/schema';
 
   let {
@@ -42,7 +53,10 @@
     sonstige: 'Sonstige',
   };
 
+  let bohneDetailsOffen = $state(false);
   let speicherFehler = $state<string | undefined>(undefined);
+
+  let neueChargeOffen = $state(false);
   let neueChargeNummer = $state('');
   // Default: heute, im Format, das <input type="date"> erwartet (YYYY-MM-DD).
   let neuesRoestdatum = $state(new Date().toISOString().slice(0, 10));
@@ -70,6 +84,7 @@
         chargeIds: [...kaffee.chargeIds, neue.id],
         aktuelleChargeId: neue.id,
       });
+      neueChargeOffen = false;
       neueChargeNummer = '';
       neuesRoestdatum = new Date().toISOString().slice(0, 10);
     } catch (fehler) {
@@ -119,7 +134,11 @@
       </button>
     {/snippet}
   </Kopfzeile>
-  <p class="roester">{kaffee.roester}</p>
+  <p class="roester">
+    {kaffee.roester}
+    {#if kaffee.entkoffeiniert}<span class="flagge">· entkoffeiniert</span>{/if}
+    {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
+  </p>
 
   <section class="blick">
     <div class="blick-eintrag">
@@ -129,69 +148,6 @@
     <div class="blick-eintrag">
       <span class="label">Bewertung</span>
       <Sterne wert={kaffee.bewertung} />
-    </div>
-  </section>
-
-  <section class="gruppe">
-    <h2>Bohne</h2>
-    <div class="wertzeile">
-      <span class="label">Art</span>
-      <span class="wert">{kaffee.art === 'blend' ? 'Blend' : 'Single Origin'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Herkunft</span>
-      <span class="wert">{kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Varietät</span>
-      <span class="wert">{kaffee.varietaet ?? '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Anbauhöhe</span>
-      <span class="wert">{kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Aufbereitung</span>
-      <span class="wert">{kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Botanik</span>
-      <span class="wert">{kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">Röstgrad (Röster)</span>
-      <span class="wert">{kaffee.roestgradRoester ?? '—'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">entkoffeiniert</span>
-      <span class="wert">{kaffee.entkoffeiniert ? 'Ja' : 'Nein'}</span>
-    </div>
-    <div class="wertzeile">
-      <span class="label">aktiv</span>
-      <span class="wert">{kaffee.aktiv ? 'Ja' : 'Nein'}</span>
-    </div>
-  </section>
-
-  <section class="gruppe">
-    <h2>Chargen</h2>
-    {#if chargen.length === 0}
-      <p class="hinweis">keine</p>
-    {:else}
-      <ul class="chargenliste">
-        {#each chargen as charge (charge.id)}
-          <li class:aktuelle={charge.id === kaffee.aktuelleChargeId} class:leer={charge.leer}>
-            <span class="nummer">{charge.nummer}</span>
-            <span class="datum">{new Date(charge.roestdatum).toLocaleDateString('de-DE')}</span>
-            {#if charge.leer}<span class="markiert">leer</span>{/if}
-          </li>
-        {/each}
-      </ul>
-    {/if}
-
-    <div class="neue-charge">
-      <input type="text" placeholder="Chargennummer" bind:value={neueChargeNummer} />
-      <input type="date" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
-      <button type="button" onclick={chargeAnlegen} disabled={neueChargeNummer.trim() === '' || neuesRoestdatum === ''}>anlegen</button>
     </div>
   </section>
 
@@ -220,12 +176,69 @@
           wert={neuesProfilSetupId}
           onWahl={(w) => (neuesProfilSetupId = w)}
         />
-        <button type="button" onclick={profilAnlegen} disabled={neuerProfilName.trim() === '' || neuesProfilSetupId === ''}>
+        <Knopf stufe="primaer" onKlick={profilAnlegen} deaktiviert={neuerProfilName.trim() === '' || neuesProfilSetupId === ''}>
           anlegen
-        </button>
+        </Knopf>
       </div>
     {:else}
       <button type="button" class="link" onclick={() => (neuesProfilOffen = true)}>+ Profil</button>
+    {/if}
+  </section>
+
+  <section class="gruppe">
+    <button
+      type="button"
+      class="aufklappbar"
+      aria-expanded={bohneDetailsOffen}
+      onclick={() => (bohneDetailsOffen = !bohneDetailsOffen)}
+    >
+      <span>Bohne</span>
+      <span class="pfeil" class:offen={bohneDetailsOffen} aria-hidden="true">▾</span>
+    </button>
+    {#if bohneDetailsOffen}
+      <Werteliste
+        zeilen={[
+          { label: 'Art', wert: kaffee.art === 'blend' ? 'Blend' : 'Single Origin' },
+          { label: 'Herkunft', wert: kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—' },
+          { label: 'Varietät', wert: kaffee.varietaet ?? '—' },
+          { label: 'Anbauhöhe', wert: kaffee.anbauhoehe !== undefined ? kaffee.anbauhoehe : '—', einheit: kaffee.anbauhoehe !== undefined ? 'm' : undefined },
+          { label: 'Aufbereitung', wert: kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—' },
+          {
+            label: 'Botanik',
+            wert: kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—',
+          },
+          { label: 'Röstgrad (Röster)', wert: kaffee.roestgradRoester ?? '—' },
+        ]}
+      />
+    {/if}
+  </section>
+
+  <section class="gruppe">
+    <h2>Chargen</h2>
+    {#if chargen.length === 0}
+      <p class="hinweis">keine</p>
+    {:else}
+      <ul class="chargenliste">
+        {#each chargen as charge (charge.id)}
+          <li class:aktuelle={charge.id === kaffee.aktuelleChargeId} class:leer={charge.leer}>
+            <span class="nummer">{charge.nummer}</span>
+            <span class="datum">{new Date(charge.roestdatum).toLocaleDateString('de-DE')}</span>
+            {#if charge.leer}<span class="markiert">leer</span>{/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if neueChargeOffen}
+      <div class="neue-charge">
+        <input type="text" placeholder="Chargennummer" bind:value={neueChargeNummer} />
+        <input type="date" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
+        <Knopf stufe="primaer" onKlick={chargeAnlegen} deaktiviert={neueChargeNummer.trim() === '' || neuesRoestdatum === ''}>
+          anlegen
+        </Knopf>
+      </div>
+    {:else}
+      <button type="button" class="link" onclick={() => (neueChargeOffen = true)}>+ Charge</button>
     {/if}
   </section>
 
@@ -245,13 +258,16 @@
     cursor: pointer;
   }
   .stift svg {
-    width: 22px;
-    height: 22px;
+    width: var(--symbol-tab);
+    height: var(--symbol-tab);
   }
   .roester {
     font-size: var(--fs-satz);
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
+  }
+  .flagge {
+    color: var(--gedaempft);
   }
   h2 {
     font-size: var(--fs-label);
@@ -282,23 +298,29 @@
   .gruppe {
     margin-bottom: var(--r5);
   }
-  .wertzeile {
+  .aufklappbar {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    gap: var(--r3);
+    width: 100%;
     min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie-zart);
-    padding: var(--r1) 0;
-  }
-  .wertzeile .label {
-    font-size: var(--fs-meta);
+    padding: 0;
+    margin-bottom: var(--r2);
+    border: none;
+    background: transparent;
     color: var(--gedaempft);
+    font-family: var(--schrift);
+    font-size: var(--fs-label);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
   }
-  .wertzeile .wert {
-    font-size: var(--fs-satz);
-    color: var(--satz);
-    text-align: right;
+  .aufklappbar .pfeil {
+    transition: transform var(--t-auswahl) var(--e-rein);
+  }
+  .aufklappbar .pfeil.offen {
+    transform: rotate(180deg);
   }
   .chargenliste {
     list-style: none;
@@ -346,20 +368,6 @@
     padding: var(--r2);
     min-height: var(--treffer);
     flex: 1;
-  }
-  button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  button:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
   .hinweis {
     color: var(--gedaempft);

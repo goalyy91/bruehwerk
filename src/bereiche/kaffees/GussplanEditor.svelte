@@ -14,6 +14,7 @@
   import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import type { Gussplan, GussBaustein } from '../../daten/schema';
 
@@ -24,6 +25,27 @@
 
   let speicherFehler = $state<string | undefined>(undefined);
   let offeneZeile = $state<number | undefined>(undefined);
+  let loeschenBestaetigen = $state<number | undefined>(undefined);
+  let neuOffen = $state(false);
+
+  // Regel 8/Sprache: lesbare Labels statt der rohen Enum-Werte im Zeilenkopf.
+  const TYP_LABEL: Record<GussBaustein['typ'], string> = {
+    vorbereiten: 'Vorbereiten',
+    bloom: 'Bloom',
+    guss: 'Guss',
+    agitation: 'Agitation',
+    warten: 'Warten',
+    bypass: 'Bypass',
+    frei: 'Frei (Migration)',
+  };
+
+  const NEU_OPTIONEN: { wert: GussBaustein['typ']; label: string }[] = [
+    { wert: 'bloom', label: 'Bloom' },
+    { wert: 'guss', label: 'Guss' },
+    { wert: 'agitation', label: 'Agitation' },
+    { wert: 'warten', label: 'Warten' },
+    { wert: 'bypass', label: 'Bypass' },
+  ];
 
   const summe = $derived(
     gussplan ? gesamtwasser(alsDomainBausteine(gussplan.bausteine), gussplan.lesart) : 0,
@@ -88,6 +110,7 @@
 
   function bausteinHinzufuegen(typ: GussBaustein['typ']) {
     if (!gussplan) return;
+    neuOffen = false;
     const neu: GussBaustein =
       typ === 'vorbereiten'
         ? { typ, filterSpuelen: true, gefaessVorwaermen: false }
@@ -111,10 +134,17 @@
     void planSpeichern(bausteine);
   }
 
+  // Zweiter Tap bestaetigt (dieselbe Mechanik wie Kontextmenue.svelte fuer
+  // kritische Aktionen) — kein OS-confirm(), kein stilles Sofort-Loeschen.
   function bausteinLoeschen(index: number) {
+    if (loeschenBestaetigen !== index) {
+      loeschenBestaetigen = index;
+      return;
+    }
     if (!gussplan) return;
     void planSpeichern(gussplan.bausteine.filter((_, i) => i !== index));
     offeneZeile = undefined;
+    loeschenBestaetigen = undefined;
   }
 
   function bausteinVerschieben(index: number, richtung: -1 | 1) {
@@ -167,7 +197,7 @@
     {#each gussplan.bausteine as baustein, i (i)}
       <li>
         <button type="button" class="zeile" onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}>
-          <span class="typ">{baustein.typ}</span>
+          <span class="typ">{TYP_LABEL[baustein.typ]}</span>
           <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
         </button>
         {#if offeneZeile === i}
@@ -237,7 +267,9 @@
             <div class="werkzeuge">
               <button type="button" onclick={() => bausteinVerschieben(i, -1)} disabled={i === 0}>↑</button>
               <button type="button" onclick={() => bausteinVerschieben(i, 1)} disabled={i === gussplan.bausteine.length - 1}>↓</button>
-              <button type="button" class="loeschen" onclick={() => bausteinLoeschen(i)}>löschen</button>
+              <button type="button" class="loeschen" onclick={() => bausteinLoeschen(i)}>
+                {loeschenBestaetigen === i ? 'wirklich?' : 'löschen'}
+              </button>
             </div>
           </div>
         {/if}
@@ -245,12 +277,14 @@
     {/each}
   </ul>
 
+  <!-- Regel 3/5: eine Auswahl statt eines Knopfteppichs aus fuenf
+       gleichrangigen "+ Typ"-Aktionen. -->
   <div class="hinzufuegen">
-    <button type="button" onclick={() => bausteinHinzufuegen('bloom')}>+ Bloom</button>
-    <button type="button" onclick={() => bausteinHinzufuegen('guss')}>+ Guss</button>
-    <button type="button" onclick={() => bausteinHinzufuegen('agitation')}>+ Agitation</button>
-    <button type="button" onclick={() => bausteinHinzufuegen('warten')}>+ Warten</button>
-    <button type="button" onclick={() => bausteinHinzufuegen('bypass')}>+ Bypass</button>
+    {#if neuOffen}
+      <AuswahlListe optionen={NEU_OPTIONEN} wert="" onWahl={(w) => bausteinHinzufuegen(w as GussBaustein['typ'])} platzhalter="Baustein wählen …" />
+    {:else}
+      <button type="button" class="neu-oeffnen" onclick={() => (neuOffen = true)}>+ Baustein</button>
+    {/if}
   </div>
 
   {#if speicherFehler}
@@ -384,19 +418,19 @@
     color: var(--kritisch);
   }
   .hinzufuegen {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--r2);
     margin-top: var(--r3);
   }
-  .hinzufuegen button {
+  .neu-oeffnen {
+    display: block;
+    width: 100%;
     min-height: var(--treffer);
     padding: 0 var(--r3);
     background: transparent;
     border: 1px solid var(--linie);
     color: var(--satz);
     font-family: var(--schrift);
-    font-size: var(--fs-meta);
+    font-size: var(--fs-satz);
+    text-align: left;
     cursor: pointer;
   }
   .fehler {

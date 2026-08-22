@@ -14,6 +14,7 @@
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Shot, Urteil as UrteilTyp } from '../../daten/schema';
 
   let { profilId, onFertig }: { profilId: string; onFertig: () => void } = $props();
@@ -158,17 +159,22 @@
   <p class="fehler-titel">Nicht gespeichert</p>
   <p class="hinweis">{schreibFehlerText}</p>
   <div class="knopfreihe">
-    <button type="button" class="primaer" onclick={nochmalSpeichern}>nochmal speichern</button>
-    <button type="button" class="sekundaer" onclick={shotVerwerfen}>Shot verwerfen</button>
+    <Knopf stufe="primaer" onKlick={nochmalSpeichern}>nochmal speichern</Knopf>
+    <Knopf stufe="still" onKlick={shotVerwerfen}>Shot verwerfen</Knopf>
   </div>
 {:else if phase === 'alltagskorrektur' && mgAbweichung}
   <p class="frage-titel">
     {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war {entwurf?.urteil === 'referenz' ? 'Referenz' : 'sehr gut'}.
   </p>
   <p class="frage">Als neuen Ausgangswert übernehmen?</p>
+  <!-- K12: eine Rezepturaenderung wird nie vorbelegt — deshalb kein
+       VorbelegteFrage.svelte (deren "anteil" echte Ranking-Fenster-Bedeutung
+       hat, die es fuer diese Einzelentscheidung nicht gibt), sondern zwei
+       gleichwertig anklickbare Knoepfe, nur mit Knopf-Hierarchie (Regel 3),
+       ohne Default-Auswahl. -->
   <div class="knopfreihe">
-    <button type="button" onclick={() => alltagskorrekturAntwort(true)}>Ja</button>
-    <button type="button" onclick={() => alltagskorrekturAntwort(false)}>Nein</button>
+    <Knopf stufe="primaer" onKlick={() => alltagskorrekturAntwort(true)}>Ja</Knopf>
+    <Knopf stufe="still" onKlick={() => alltagskorrekturAntwort(false)}>Nein</Knopf>
   </div>
 {:else}
   <h1>{kaffee.name}</h1>
@@ -178,12 +184,25 @@
     <Werteliste zeilen={einstellwerte} />
   </div>
 
+  <!-- Spielraum-Zuordnung Zeit/Durchlaufzeit gefolgt der Profilblatt-Logik
+       (Profilblatt.svelte zielZeilen): welches Spielraum-Feld gilt, haengt
+       am Fuehrungswert des Bruehgeraets (K7), nicht am Wortlaut "Zeit" allein
+       — vorher waren Preinfusion und Zeit vertauscht (Preinfusion bekam
+       spielraum.zeit, was als Naeherung passt, weil es keinen eigenen
+       Preinfusion-Spielraum gibt; Zeit bekam faelschlich spielraum.durchlaufzeit,
+       auch bei Espresso-Geraeten ohne Durchlaufzeit-Fuehrungswert). -->
   <IstGegenZiel
     titel="Ziel"
     zeilen={[
       { label: 'Output', einheit: 'g', ziel: profil.ziel.output, spielraum: profil.spielraum.output, messreihe: messreiheOutput },
       { label: 'Preinfusion', einheit: 's', ziel: profil.ziel.pre ?? 0, spielraum: profil.spielraum.zeit },
-      { label: 'Zeit', einheit: 's', ziel: profil.ziel.zeit, spielraum: profil.spielraum.durchlaufzeit, messreihe: messreiheZeit },
+      {
+        label: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit',
+        einheit: 's',
+        ziel: profil.ziel.zeit,
+        spielraum: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? profil.spielraum.durchlaufzeit : profil.spielraum.zeit,
+        messreihe: messreiheZeit,
+      },
     ]}
     onAenderung={(werte) => (istWerte = werte)}
   />
@@ -234,25 +253,5 @@
     display: flex;
     gap: var(--r3);
     margin-top: var(--r4);
-  }
-  .knopfreihe button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-    border: 1px solid var(--linie);
-    background: var(--feld);
-    color: var(--tinte);
-  }
-  .knopfreihe .primaer {
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-  }
-  .knopfreihe .sekundaer {
-    background: transparent;
-    color: var(--gedaempft);
-    border: none;
   }
 </style>

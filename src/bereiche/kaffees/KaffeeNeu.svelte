@@ -8,9 +8,10 @@
   // Vollformular-Zwang).
 
   import { schreiben } from '../bestand.svelte';
-  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Kaffee } from '../../daten/schema';
 
   let { onZurueck, onAngelegt }: { onZurueck: () => void; onAngelegt: (kaffeeId: string) => void } = $props();
@@ -50,7 +51,7 @@
 <div class="formular">
   <input class="text-eingabe" type="text" placeholder="Name" bind:value={name} />
   <input class="text-eingabe" type="text" placeholder="Röster" bind:value={roester} />
-  <Einzelauswahl
+  <Segment
     optionen={[
       { wert: 'single', label: 'Single Origin' },
       { wert: 'blend', label: 'Blend' },
@@ -61,9 +62,7 @@
   <Schalter label="entkoffeiniert" an={entkoffeiniert} onWahl={(a) => (entkoffeiniert = a)} />
 </div>
 
-<button type="button" class="primaer" onclick={anlegen} disabled={name.trim() === '' || roester.trim() === ''}>
-  anlegen
-</button>
+<Knopf stufe="primaer" onKlick={anlegen} deaktiviert={name.trim() === '' || roester.trim() === ''}>anlegen</Knopf>
 
 {#if fehler}
   <p class="fehler">Nicht gespeichert: {fehler} — nochmal versuchen.</p>
@@ -84,20 +83,6 @@
     color: var(--tinte);
     padding: var(--r2);
     min-height: var(--treffer);
-  }
-  .primaer {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  .primaer:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
   .fehler {
     color: var(--kritisch);

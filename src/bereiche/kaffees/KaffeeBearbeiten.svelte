@@ -14,6 +14,7 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { Kaffee, Aufbereitung } from '../../daten/schema';
 
   let { kaffeeId, onZurueck }: { kaffeeId: string; onZurueck: () => void } = $props();
@@ -162,10 +163,10 @@
   </section>
 
   <div class="knopfreihe">
-    <button type="button" class="primaer" onclick={speichern} disabled={entwurf.name.trim() === '' || entwurf.roester.trim() === ''}>
+    <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === '' || entwurf.roester.trim() === ''}>
       speichern
-    </button>
-    <button type="button" class="sekundaer" onclick={onZurueck}>abbrechen</button>
+    </Knopf>
+    <Knopf stufe="still" onKlick={onZurueck}>abbrechen</Knopf>
   </div>
 
   {#if fehler}
@@ -260,30 +261,6 @@
     display: flex;
     gap: var(--r3);
     margin-top: var(--r4);
-  }
-  .knopfreihe button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-    border: 1px solid var(--linie);
-    background: var(--feld);
-    color: var(--tinte);
-  }
-  .knopfreihe .primaer {
-    background: var(--akzent);
-    color: var(--h-papier);
-    border: none;
-  }
-  .knopfreihe .primaer:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  .knopfreihe .sekundaer {
-    background: transparent;
-    color: var(--gedaempft);
-    border: none;
   }
   .hinweis {
     color: var(--gedaempft);
