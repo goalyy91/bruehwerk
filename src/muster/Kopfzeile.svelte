@@ -17,30 +17,48 @@
   //
   // Visueller Redesign-Reset (Handoff 3.8/5): Rückweg als runder 38-px-
   // Knopf auf Blattfläche, Zeichen im Akzent, statt reinem Text-Chevron.
-  // Die zweite Titelgröße für Objektseiten (30-32/600 zweizeilig, z. B.
-  // Kaffeeblatt) ist bewusst noch nicht Teil dieser Komponente — sie kommt
-  // mit dem Screen, der sie zuerst braucht (Paket 2), statt hier auf
-  // Vorrat eine Prop-Form zu erfinden, die noch keinen Aufrufer hat.
+  //
+  // Paket 2 (Kaffeeblatt der erste Aufrufer): zweite Titelgröße für
+  // Objektseiten (Handoff-Komponenten-Mapping "Titel Serif 26/600, bei
+  // Objektseiten 30-32 zweizeilig" — beides über dieselbe "Titelquelle"-
+  // Kopfzeile, nicht zwei Bauteile). `gross` ist additiv: Icon-Reihe
+  // (Rückweg + Aktion) rückt in eine eigene Zeile, der Titel steht als
+  // eigener 32/600-Block darunter statt inline daneben. Jeder bestehende
+  // Aufruf ohne `gross` bleibt exakt wie zuvor.
   import type { Snippet } from 'svelte';
 
   let {
     titel,
     onZurueck,
     aktion,
+    gross = false,
   }: {
     titel: string;
     onZurueck?: () => void;
     aktion?: Snippet;
+    gross?: boolean;
   } = $props();
 </script>
 
-<header class="kopfzeile">
-  {#if onZurueck}
-    <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
-  {/if}
-  <h1>{titel}</h1>
-  {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
-</header>
+{#if gross}
+  <header class="kopfzeile-gross">
+    <div class="iconreihe">
+      {#if onZurueck}
+        <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
+      {/if}
+      {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
+    </div>
+    <h1 class="titel-gross">{titel}</h1>
+  </header>
+{:else}
+  <header class="kopfzeile">
+    {#if onZurueck}
+      <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
+    {/if}
+    <h1>{titel}</h1>
+    {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
+  </header>
+{/if}
 
 <style>
   .kopfzeile {
@@ -49,6 +67,24 @@
     gap: var(--r2);
     min-height: var(--treffer);
     margin-bottom: var(--r4);
+  }
+  .kopfzeile-gross {
+    display: flex;
+    flex-direction: column;
+    gap: var(--seitenrand);
+    margin-bottom: var(--seitenrand);
+  }
+  .iconreihe {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .titel-gross {
+    font-size: var(--fs-blattitel);
+    font-weight: var(--gw-titel);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin: 0;
   }
   .zurueck {
     flex-shrink: 0;

@@ -144,6 +144,7 @@
 
   /* ---- Bauteilmaße (Handoff 3.8) ---- */
   --suchfeld-hoehe: 60px;
+  --kartenpolster-quer: 20px; /* Kartenpolster 18/20 (Handoff 3.3) — 18 deckt --r4 bereits ab */
   --primaeraktion-hoehe: 50px;
   --segment-feld-hoehe: 42px;
   --segment-bahn-polster: 3px;

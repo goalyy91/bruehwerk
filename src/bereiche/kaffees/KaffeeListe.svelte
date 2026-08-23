@@ -7,15 +7,21 @@
   // (KaffeeNeu.svelte) statt eines eingebetteten Formulars — ein halb
   // ausgefuelltes Formular soll auf Zurueck schliessen, nicht die App
   // verlassen.
+  //
+  // Visueller Redesign-Reset, Paket 2 (Handoff Abschnitt 6 "Kaffeeliste"):
+  // Kaffeekarte statt Zeile mit Haarlinie — gleiche Daten, gleiche
+  // Reihenfolge, gleiche Bedienung (onclick bleibt onOeffnen), nur die
+  // Trägerform wechselt. Der schwebende Anlege-Knopf wird rund und
+  // fuellflaechig statt der bisherigen eckigen Tinte-Flaeche (Handoff
+  // verbietet schwarze/weisse Vollflaechen als Knopf).
 
   import { bestand } from '../bestand.svelte';
   import { filtereKaffees, sortiereKaffees, zaehlform, type KaffeeSortierung } from '../../domain/bestand';
-  import Bohnen from '../../muster/Bohnen.svelte';
-  import Sterne from '../../muster/Sterne.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Suchfeld from '../../muster/Suchfeld.svelte';
+  import Kaffeekarte from '../../muster/Kaffeekarte.svelte';
 
   let { onOeffnen, onNeu }: { onOeffnen: (kaffeeId: string) => void; onNeu: () => void } = $props();
 
@@ -57,16 +63,13 @@
   <ul class="liste">
     {#each gefiltert as kaffee (kaffee.id)}
       <li>
-        <button type="button" class="zeile" onclick={() => onOeffnen(kaffee.id)}>
-          <span class="kopf">
-            <span class="name">{kaffee.name}</span>
-            <span class="roester">{kaffee.roester}</span>
-          </span>
-          <span class="meta">
-            <Bohnen stufe={kaffee.roestgrad} mitWort={false} />
-            <Sterne wert={kaffee.bewertung} />
-          </span>
-        </button>
+        <Kaffeekarte
+          name={kaffee.name}
+          roester={kaffee.roester}
+          roestgrad={kaffee.roestgrad}
+          bewertung={kaffee.bewertung}
+          onOeffnen={() => onOeffnen(kaffee.id)}
+        />
       </li>
     {/each}
   </ul>
@@ -100,59 +103,32 @@
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }
+  /* Kartenrichtung (Handoff Abschnitt 6): Abstand zwischen den Karten ist
+     groesser als das Polster darin, damit kein Stapel entsteht
+     (Designprinzip 5) — deshalb Gap auf der Liste, nicht auf der Karte. */
   .liste {
     list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--r-kartenabstand);
     margin: 0;
     padding: 0;
   }
-  .zeile {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--r3);
-    min-height: var(--treffer);
-    padding: var(--r3) 0;
-    border: none;
-    border-bottom: 1px solid var(--linie);
-    background: transparent;
-    font-family: var(--schrift);
-    text-align: left;
-    cursor: pointer;
-  }
-  .kopf {
-    display: flex;
-    flex-direction: column;
-  }
-  .name {
-    font-size: var(--fs-urteil);
-    color: var(--tinte);
-  }
-  .roester {
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: var(--r1);
-  }
   /* Schwebender Button statt Link am Listenende — immer erreichbar, ohne
      dass man dafuer runterscrollen muss (UX-1). Feste Position ueber der
-     unteren Leiste. Flaechenhierarchie ueber Farbe statt Schatten (Regel 6),
-     eckige Kante statt Kreis (--radius-feld: 0, K79) — gleiche Sprache wie
-     Knopf.svelte "primaer" (--tinte-Flaeche, --grund-Text als Themen-Gegenpaar). */
+     unteren Leiste. Rund und fuellflaechig statt der frueheren eckigen
+     Tinte-Flaeche (Handoff: keine schwarzen/weissen Vollflaechen als
+     Knopf, Radius 999 fuer Bedienelemente). */
   .schwebend {
     position: fixed;
     right: var(--seitenrand);
     bottom: calc(var(--fusszeile) + var(--safe-unten) + var(--r4));
     width: var(--fusszeile);
     height: var(--fusszeile);
-    border-radius: var(--radius-feld);
+    border-radius: 50%;
     border: none;
-    background: var(--tinte);
-    color: var(--grund);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
     font-size: var(--fs-titel);
     line-height: 1;
     cursor: pointer;
