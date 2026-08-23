@@ -1,6 +1,6 @@
 # Offene Punkte — Visueller Redesign-Reset
 
-Stand: 2026-08-23, nach Abschluss Paket 2 (Kaffeeliste und Kaffeeblatt) auf
+Stand: 2026-08-23, nach Abschluss Paket 3 (Profil und Shot-Logging) auf
 Branch `design/redesign-v1`.
 
 **`docs/design/redesign-v1-handoff.md` bleibt die Quelle für alles Visuelle,
@@ -29,15 +29,15 @@ im Handoff nicht mehr gibt:
 --linie-zart   → var(--linie)
 ```
 
-**Zweck:** Screens, die in Paket 3–4 erst noch umgebaut werden, sollten schon
+**Zweck:** Screens, die in Paket 4 erst noch umgebaut werden, sollten schon
 jetzt die neue Farbwelt zeigen, ohne dass ihre Struktur vorzeitig angefasst
-wird. Nach Paket 2 vollständig umgestellt (keine Alias-Nutzung mehr):
-`KaffeeListe.svelte`, `Kaffeeblatt.svelte`. Noch offen: `Einstellungen.svelte`,
-`KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`, `Profilblatt.svelte`,
-`ShotErfassung.svelte`, `GussplanEditor.svelte`, `Geraete.svelte`,
-`Bruehgeraetblatt.svelte`, `Muehleblatt.svelte`, `Setupblatt.svelte`,
-`*Ansicht.svelte`, `TempReferenz(Screen).svelte`, `Migration.svelte`,
-`Bar.svelte`.
+wird. Nach Paket 3 vollständig umgestellt (keine Alias-Nutzung mehr):
+`KaffeeListe.svelte`, `Kaffeeblatt.svelte`, `Profilblatt.svelte`,
+`ShotErfassung.svelte`. Noch offen (alle Paket 4): `Einstellungen.svelte`,
+`KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`, `GussplanEditor.svelte`,
+`Geraete.svelte`, `Bruehgeraetblatt.svelte`, `Muehleblatt.svelte`,
+`Setupblatt.svelte`, `*Ansicht.svelte`, `TempReferenz(Screen).svelte`,
+`Migration.svelte`, `Bar.svelte`.
 
 **Wenn ein dieser Screens umgebaut ist:** dort direkt `--blatt`/`--vertiefung`/
 `--linie` referenzieren statt der Alt-Namen. Wenn **kein** Verbraucher eines
@@ -136,6 +136,45 @@ stillschweigend zu kopieren.
 
 ---
 
+## 9. Setup-Kette zeigt nur Setup-Name + Modus, nicht Mühle/Brühgerät — offene Designfrage
+
+Die Referenz zeigt für die Setup-Kette unter dem Profilnamen ein vierteiliges
+Beispiel: „Espresso · Sculptor · Mozzafiato · Dial-in" (Profiltyp · Mühle ·
+Brühgerät · Modus). Der tatsächliche Code zeigt weiterhin nur zwei Teile:
+„Setup-Name · Modus" (Profilblatt.svelte, ShotErfassung.svelte) — das war
+schon vor Paket 3 so und ist unverändert geblieben. Mühle/Brühgerät sind über
+`bestand.muehleVon`/`bestand.bruehgeraetVon` im Code bereits verfügbar, eine
+Erweiterung wäre also technisch klein. **Ich habe das bewusst nicht
+geändert**, weil das eine Entscheidung über gezeigten Inhalt ist, keine rein
+visuelle — genau die Grenze, die dieser Redesign-Auftrag ausdrücklich nicht
+überschreiten sollte. Julian müsste entscheiden, ob die Setup-Kette erweitert
+wird.
+
+## 10. „Fertig"-Knopf nicht als Pille am Fuß der Ansicht gepinnt — offene Designfrage
+
+Handoff-Text (Screen-Mapping "Shot-Logging") und die dunkle Referenz-Ansicht
+(C4) zeigen „fertig" als Pille, die am unteren Bildschirmrand über der
+Tab-Leiste klebt (`flex:1`-Spacer + Pille). Die tatsächlichen `Knopf`-Aufrufe
+in `ShotErfassung.svelte` (Diagnose-Phase, Drift-Phase) stehen dagegen im
+normalen Textfluss direkt nach ihrem Inhalt — wie vor dem Redesign. **Bewusst
+nicht angepasst**, weil eine echte Fuß-Fixierung eine Änderung an der
+Scroll-Container-Struktur des gesamten Rahmens (`Rahmen.svelte` `.inhalt`)
+verlangen würde, nicht nur an diesem einen Screen — das wäre über den
+Auftragsumfang "Profil + Shot" hinausgegangen und hätte die gemeinsame
+Navigations-Hülle angefasst. Wenn das gewünscht ist, gehört es in einen
+eigenen, gezielten Auftrag.
+
+## 11. Hinweis-Kachel (Kessel außerhalb der Messreihe) nutzt dieselbe Blattfläche wie normale Kacheln
+
+Die Referenz zeigt für diese eine Kachel einen minimal abweichenden
+Hintergrundton (`#f6f0e7` statt `#fcfaf6` bei den übrigen Kacheln — ein Unter-
+schied von wenigen Promille Helligkeit). Ich habe dafür **keinen neuen Token**
+eingeführt und stattdessen dieselbe `--blatt`-Fläche wie alle anderen Kacheln
+verwendet, weil (a) der Unterschied im Bild kaum wahrnehmbar ist und (b) ein
+Farbwert ohne benannte Rolle im Handoff-Text eine eigene, nicht abgesicherte
+Designentscheidung gewesen wäre. Das Halbzeichen (Achtung-Kreis) und der
+eigene Text unterscheiden die Kachel bereits ausreichend von den Wertkacheln.
+
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
 
 - Paket 1 vollständig: Tokens, Knopf, Segment, Chips, Urteil, Einzelauswahl,
@@ -147,7 +186,16 @@ stillschweigend zu kopieren.
   (Kopfzeile-`gross`-Modus, Röstgrad/Bewertung-Blattzeile mit senkrechter
   Haarlinie, Profile/Bohne-Falte/Chargen als Blattpanel), `Kopfzeile.svelte`
   um additiven `gross`-Prop erweitert.
+- Paket 3 vollständig: `Parameterkachel.svelte` neu (sieben feste Symbole:
+  Input/Mahlgrad/Drehzahl/Kessel/Output/Preinfusion/Zeit), neue globale
+  Utility `.parameter-raster` in `tokens.css`. `Profilblatt.svelte` (Ziel als
+  Kachel-Raster, Kessel-Hinweiskachel, Spielraum-Werteliste präzisiert,
+  Reihenfolge Titel→Setup-Kette→Primäraktion, Label „Kessel" statt
+  „Kesseltemperatur"). `ShotErfassung.svelte` (Parameter als Kachel-Raster,
+  Kaffeename/„Wie war er?" auf Objektname-Größe 20/400). `Werteliste.svelte`
+  und `IstGegenZiel.svelte` um fehlendes Sans-Register bei Gruppenkopf/
+  Einheit ergänzt (galt vorher versehentlich als Serif).
 - Source Sans 3 als Apparatschrift installiert und eingebunden
   (`@fontsource-variable/source-sans-3`).
 - `npm test` (vitest inkl. `tokens.test.ts`/`schichten.test.ts`, svelte-check,
-  vite build) grün nach Paket 1 und Paket 2 (358 Tests, 0 svelte-check-Fehler).
+  vite build) grün nach Paket 1, 2 und 3 (359 Tests, 0 svelte-check-Fehler).
