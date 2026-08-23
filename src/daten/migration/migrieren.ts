@@ -231,8 +231,23 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
 
     // Shots — Zuordnung zum Profil ueber die Gruppen-Ueberschrift, sonst
     // (bei genau einem migrierten Profil) auf dieses. Sonst: melden, nicht raten.
-    const gueltigeShots = entwurf.shots.filter((s: ShotEntwurf) => erkenneMuehle(s.parameter['MG']) !== null);
-    let laufindex = 0;
+    //
+    // Zweistufig, weil sich erst NACH allen drei Pruefungen (Muehle, Ziel-
+    // Parameter, Profil-Zuordnung) zeigt, ob ein ShotEntwurf ueberhaupt
+    // geschrieben wird. Fruehere Fassung zaehlte "gueltige" Shots nur ueber
+    // die Muehle-Pruefung vor und teilte spaetere Ausfaelle (z. B. fehlende
+    // Zeit) nicht mehr mit — die Zeitstempel-Spreizung passte dann nicht
+    // mehr zur tatsaechlichen Anzahl geschriebener Shots (Verlaufskurve
+    // zeigte die letzten Shots zu dicht gedraengt statt gleichmaessig ueber
+    // die Minutenfolge verteilt).
+    type ShotBereit = {
+      shi: number;
+      profilId: string;
+      setupId: string;
+      ziel: ZielWerte;
+      freitext: string | undefined;
+    };
+    const bereiteShots: ShotBereit[] = [];
     entwurf.shots.forEach((s: ShotEntwurf, shi: number) => {
       const muehle = erkenneMuehle(s.parameter['MG']);
       if (muehle === null) {
@@ -265,30 +280,33 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
         return;
       }
       const setupId = muehle === 'sculptor' ? SETUP_ESPRESSO.id : SETUP_MOKA_1.id;
-
-      // Synthetische, aufsteigende Zeitstempel — Notion hat keine echten
-      // Datumsangaben je Shot gefuehrt (nur gelegentlich in Freitext). Sie
-      // erhalten die Reihenfolge, sind aber KEINE echten Zeitpunkte.
-      const ts = gezogenAmMs - (gueltigeShots.length - 1 - laufindex) * EINE_MINUTE_MS;
-      laufindex++;
-
       const freitext = [s.aenderung, s.ergebnis].filter((t) => t && t !== '–').join(' · ') || undefined;
 
+      bereiteShots.push({ shi, profilId, setupId, ziel, freitext });
+    });
+
+    // Synthetische, aufsteigende Zeitstempel — Notion hat keine echten
+    // Datumsangaben je Shot gefuehrt (nur gelegentlich in Freitext). Sie
+    // erhalten die Reihenfolge, sind aber KEINE echten Zeitpunkte. Erst hier,
+    // ueber bereiteShots.length, damit die Spreizung zur tatsaechlichen
+    // Anzahl passt.
+    bereiteShots.forEach((s, laufindex) => {
+      const ts = gezogenAmMs - (bereiteShots.length - 1 - laufindex) * EINE_MINUTE_MS;
       shots.push({
-        id: `${kaffeeId}-shot-${shi}`,
+        id: `${kaffeeId}-shot-${s.shi}`,
         ts,
         kaffeeId,
         chargeId,
-        profilId,
-        setupId,
-        ist: ziel,
+        profilId: s.profilId,
+        setupId: s.setupId,
+        ist: s.ziel,
         istHerkunft: {},
         portionen: 1,
         // Notion kennt keine Urteil-Stufen — bewusst neutral, nachtraeglich
         // in der Historie (Paket 05) korrigierbar.
         urteil: 'okay',
         befunde: [],
-        freitext,
+        freitext: s.freitext,
       });
     });
   }

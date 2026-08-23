@@ -44,8 +44,8 @@ export const SYMPTOME: readonly SymptomKatalogEintrag[] = [
   { id: 'brandig', label: 'brandig', gruppe: 'geschmack' },
   { id: 'salzig', label: 'salzig', gruppe: 'geschmack' },
   { id: 'stark', label: 'zu stark', gruppe: 'geschmack' },
-  { id: 'schnell', label: 'lief zu schnell', gruppe: 'lauf' },
-  { id: 'langsam', label: 'lief zu langsam', gruppe: 'lauf' },
+  { id: 'schnell', label: 'zu schnell', gruppe: 'lauf' },
+  { id: 'langsam', label: 'zu langsam', gruppe: 'lauf' },
   { id: 'ungleichmaessig', label: 'ungleichmäßig', gruppe: 'lauf' },
 ];
 

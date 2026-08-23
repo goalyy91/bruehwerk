@@ -82,6 +82,17 @@
       return ag - bg;
     });
   }
+
+  // Anpassung: "etwas anderes …" brauchte bisher zwei Tipps (einen zum
+  // Einblenden des Felds, einen zweiten hinein, um die Tastatur zu oeffnen).
+  // Das Feld erscheint jetzt zwar weiterhin erst nach dem ersten Tipp (kein
+  // Eingabefeld ohne erkennbaren Anlass), fokussiert sich dabei aber sofort
+  // selbst — ein Tipp reicht. node.focus() laeuft synchron innerhalb des
+  // Klick-Handlers, das zaehlt auf Android/Chrome (Referenzgeraet) noch als
+  // Nutzergeste und oeffnet die Tastatur direkt mit.
+  function fokussieren(node: HTMLInputElement) {
+    node.focus();
+  }
 </script>
 
 <div class="chips">
@@ -127,6 +138,7 @@
           placeholder="etwas anderes …"
           bind:value={freitextWert}
           oninput={() => onFreitext?.(freitextWert)}
+          use:fokussieren
         />
       {:else}
         <button type="button" class="ventil" onclick={() => (freitextOffen = true)}>etwas anderes …</button>

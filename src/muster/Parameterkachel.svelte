@@ -1,5 +1,13 @@
 <script module lang="ts">
-  export type ParameterSymbol = 'input' | 'mahlgrad' | 'drehzahl' | 'kessel' | 'output' | 'preinfusion' | 'zeit';
+  export type ParameterSymbol =
+    | 'input'
+    | 'mahlgrad'
+    | 'drehzahl'
+    | 'kessel'
+    | 'bruehgruppe'
+    | 'output'
+    | 'preinfusion'
+    | 'zeit';
 </script>
 
 <script lang="ts">
@@ -16,12 +24,18 @@
   // Bei editierbaren Feldern bleibt das Feld dabei ausdrücklich antippbar
   // und beschreibbar — "—" ist hier ein Platzhaltertext, keine Sperre.
   //
-  // Sieben feste Symbole statt eines generischen Icon-Slots: die Parameter
+  // Acht feste Symbole statt eines generischen Icon-Slots: die Parameter
   // sind ein geschlossenes, aus dem Konzept bekanntes Set (Input, Mahlgrad,
-  // Drehzahl, Kessel, Output, Preinfusion, Zeit) und beide Aufrufer
-  // (Profilblatt, ShotErfassung) brauchen exakt dieselben Zeichnungen —
-  // ein Icon-Prop pro Aufrufer hätte dieselbe SVG-Pfadliste zweimal
-  // dupliziert (ux-regeln.md Regel 6/12).
+  // Drehzahl, Kessel, Brühgruppe, Output, Preinfusion, Zeit) und beide
+  // Aufrufer (Profilblatt, ShotErfassung) brauchen exakt dieselben
+  // Zeichnungen — ein Icon-Prop pro Aufrufer hätte dieselbe SVG-Pfadliste
+  // zweimal dupliziert (ux-regeln.md Regel 6/12).
+  //
+  // "bruehgruppe" ist die umgerechnete Brühgruppentemperatur (K54,
+  // domain/temperatur.ts kesselZuGruppe) — eigenes Symbol, eigene
+  // Überschrift, getrennt von "kessel" (der eingestellte Maschinenwert).
+  // "output" bekam ein eigenes Tassen-Icon statt des mit "preinfusion"
+  // geteilten Tropfens (Rückmeldung nach Paket 3).
 
   let {
     symbol,
@@ -54,7 +68,11 @@
     <circle cx="10" cy="10" r="6.2" /><path d="M10 10l3.4-2.4" />
   {:else if symbol === 'kessel'}
     <path d="M10 3.5v8.2" /><circle cx="10" cy="14" r="2.6" />
-  {:else if symbol === 'output' || symbol === 'preinfusion'}
+  {:else if symbol === 'bruehgruppe'}
+    <path d="M5 9a5 5 0 0 1 10 0" /><path d="M5 9v4M15 9v4" /><path d="M8 16h4" />
+  {:else if symbol === 'output'}
+    <path d="M5 8h8v5a2.5 2.5 0 0 1-2.5 2.5h-3A2.5 2.5 0 0 1 5 13z" /><path d="M13 9.3h1.6a1.6 1.6 0 0 1 0 3.2H13" /><path d="M4.5 17h9" />
+  {:else if symbol === 'preinfusion'}
     <path d="M10 3.5c2.6 3.4 4.2 5.6 4.2 7.6a4.2 4.2 0 0 1-8.4 0c0-2 1.6-4.2 4.2-7.6z" />
   {:else if symbol === 'zeit'}
     <circle cx="10" cy="10" r="6.2" /><path d="M10 6v4l2.6 1.7" />

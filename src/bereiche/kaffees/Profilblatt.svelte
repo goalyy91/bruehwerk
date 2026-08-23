@@ -121,19 +121,23 @@
       : undefined,
   );
 
-  // Kesseltemperatur-Hinweis als fertiger Text statt DoppelteEinheit: die
-  // Komponente zeigt ihren "fuehrendWert" selbst nochmal gross an — neben
-  // einem Eingabefeld fuer denselben Wert waere das derselbe Wert doppelt
-  // auf dem Bildschirm (gefundener Bug, offene-punkte-ux.md Nachzug).
-  const ktHinweis = $derived.by(() => {
-    if (gruppenTemperatur?.bekannt) {
-      const wert = gruppenTemperatur.herkunft === 'geschaetzt'
-        ? Math.round(gruppenTemperatur.wert).toString()
-        : gruppenTemperatur.wert.toFixed(1);
-      return `≈ ${wert} °C Gruppe`;
-    }
-    return profil?.ziel.kt !== undefined ? 'außerhalb der Messreihe' : undefined;
+  // Brühgruppe-Kachel (Anpassung nach Paket 3): eigene Kachel mit eigenem
+  // Symbol statt Text-Hinweis unter "Kessel" — die Komponente zeigt ihren
+  // "fuehrendWert" selbst nochmal gross an, neben einem Eingabefeld fuer
+  // denselben Wert waere das derselbe Wert doppelt auf dem Bildschirm
+  // (gefundener Bug, offene-punkte-ux.md Nachzug). Zwei Zustaende: bekannt
+  // -> echte Werte-Kachel; kt gesetzt, aber ausserhalb der Messreihe -> Satz
+  // mit Halbzeichen statt Wert (K67/K75, kein Vorschlag ohne Beleg).
+  const bruehgruppeWert = $derived.by(() => {
+    if (!gruppenTemperatur?.bekannt) return undefined;
+    const wert = gruppenTemperatur.herkunft === 'geschaetzt'
+      ? Math.round(gruppenTemperatur.wert).toString()
+      : gruppenTemperatur.wert.toFixed(1);
+    return `≈${wert}`;
   });
+  const bruehgruppeAusserhalbMessreihe = $derived(
+    profil?.ziel.kt !== undefined && !gruppenTemperatur?.bekannt,
+  );
 
   let speicherFehler = $state<string | undefined>(undefined);
 
@@ -208,10 +212,12 @@
          Herkunftszeichen (hier wird nichts gemessen, nur das Rezept
          gepflegt) und keine Führungswert-Emphase: das Rezept zeigt alle
          Werte gleich groß, die Größenbetonung gehört ausschließlich in den
-         Live-Kontext (ShotErfassung.svelte, dort über IstGegenZiel). Der
-         Kessel-Hinweis (≈ Gruppe / außerhalb der Messreihe) steht als
-         eigene, ruhige Kachel mit Halbzeichen statt als Text unter der
-         Kessel-Kachel selbst (Handoff-Referenz C2). -->
+         Live-Kontext (ShotErfassung.svelte, dort über IstGegenZiel).
+         Anordnung nach Rückmeldung: Preinfusion/Brühgruppe/Output/Zeit als
+         eigener 2×2-Block nach Input/Mahlgrad/[Drehzahl]/[Kessel]. Die
+         Brühgruppe (umgerechnete Temperatur, K54) ist jetzt eine eigene
+         Kachel mit eigenem Symbol statt eines Text-Hinweises unter "Kessel"
+         — "Kessel" bezeichnet nur noch den eingestellten Maschinenwert. -->
     <div class="parameter-raster">
       <Parameterkachel symbol="input" label="Input" wert={profil.ziel.input} einheit="g" onAendern={(w) => zielSpeichern('input', w)} />
       <Parameterkachel
@@ -227,8 +233,16 @@
       {#if bruehgeraet?.ktEinstellbar}
         <Parameterkachel symbol="kessel" label="Kessel" wert={profil.ziel.kt ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('kt', w)} />
       {/if}
-      <Parameterkachel symbol="output" label="Output" wert={profil.ziel.output} einheit="g" onAendern={(w) => zielSpeichern('output', w)} />
       <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />
+      {#if bruehgruppeWert}
+        <Parameterkachel symbol="bruehgruppe" label="Brühgruppe" wert={bruehgruppeWert} einheit="°C" />
+      {:else if bruehgruppeAusserhalbMessreihe}
+        <div class="hinweis-kachel">
+          <span class="halbzeichen" aria-hidden="true"></span>
+          <span class="hinweis-text">Brühgruppe außerhalb der Messreihe</span>
+        </div>
+      {/if}
+      <Parameterkachel symbol="output" label="Output" wert={profil.ziel.output} einheit="g" onAendern={(w) => zielSpeichern('output', w)} />
       <Parameterkachel
         symbol="zeit"
         label={bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}
@@ -236,12 +250,6 @@
         einheit="s"
         onAendern={(w) => zielSpeichern('zeit', w)}
       />
-      {#if ktHinweis}
-        <div class="hinweis-kachel">
-          <span class="halbzeichen" aria-hidden="true"></span>
-          <span class="hinweis-text">Kessel {ktHinweis}</span>
-        </div>
-      {/if}
     </div>
   </section>
 
