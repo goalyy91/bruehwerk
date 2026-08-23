@@ -113,6 +113,7 @@
   }
   .gruppenkopf {
     grid-column: 1 / -1;
+    font-family: var(--schrift-sans);
     font-size: var(--fs-label);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
@@ -142,6 +143,7 @@
   .einheit {
     justify-self: end;
     line-height: 1;
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }

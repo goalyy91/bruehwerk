@@ -261,6 +261,15 @@ button,
   letter-spacing: -0.01em;
 }
 
+/* Parameterkachel-Raster (Handoff 3.8: "Raster 2 Spalten, Abstand 10") —
+   von Profilblatt.svelte UND ShotErfassung.svelte identisch gebraucht,
+   deshalb hier einmal statt zweimal lokal (ux-regeln.md Regel 6/12). */
+.parameter-raster {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--r-kachelabstand);
+}
+
 /* Fokus sichtbar für Tastatur/Screenreader, ohne neues Token — und
    ausdrücklich eine andere Form als jede Auswahlmarkierung (Handoff 3.7). */
 :focus-visible {

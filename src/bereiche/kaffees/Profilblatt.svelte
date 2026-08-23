@@ -2,6 +2,16 @@
   // Profilblatt — K7 (Fuehrungswert je Geraet), Setup-Bindung (Befund 2:
   // "MG 65" ist nur mit Muehle eindeutig), K54 (Kessel/Gruppe als doppelte
   // Einheit), Spielraum je Groesse. Gussplan-Editor folgt in Etappe C.
+  //
+  // Visueller Redesign-Reset, Paket 3 (Handoff Abschnitt 6 "Profil/
+  // Espresso-Setup"): "Ziel" steht jetzt als Parameterkachel-Raster statt
+  // Werteliste-Zeilen — gleiche Felder, gleiche Reihenfolge, gleiche
+  // Einheiten, gleiches onAendern-Verhalten (zielSpeichern). Kein Wert wird
+  // groesser dargestellt als ein anderer — der Fuehrungswert (K7) hat hier
+  // wie ueberall sonst im Rezept keine visuelle Sonderrolle (das war schon
+  // vor dem Redesign so, siehe Kommentar an der alten Werteliste unten).
+  // Werteliste.svelte bleibt fuer "Spielraum" zustaendig (echte Zeilenliste,
+  // kein Kachel-Raster laut Handoff).
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { kesselZuGruppe } from '../../domain/temperatur';
@@ -10,6 +20,7 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
+  import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
@@ -158,45 +169,6 @@
     }
   }
 
-  // Punkt 6 der Korrekturrunde: Werteliste statt handgebautem Grid — alle
-  // Werte gleich gross, kein Herkunftszeichen (hier wird nichts gemessen,
-  // nur das Rezept gepflegt).
-  const zielZeilen = $derived.by((): WertelisteZeile[] => {
-    if (!profil) return [];
-    const zeilen: WertelisteZeile[] = [
-      { label: 'Input', wert: profil.ziel.input, einheit: 'g', onAendern: (w) => zielSpeichern('input', w) },
-      {
-        label: 'Mahlgrad',
-        wert: profil.ziel.mg,
-        einheit: muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined,
-        onAendern: (w) => zielSpeichern('mg', w),
-      },
-    ];
-    if (muehle?.rpmEinstellbar) {
-      zeilen.push({ label: 'Drehzahl', wert: profil.ziel.rpm ?? '', einheit: 'rpm', onAendern: (w) => zielSpeichern('rpm', w) });
-    }
-    if (bruehgeraet?.ktEinstellbar) {
-      zeilen.push({
-        label: 'Kesseltemperatur',
-        wert: profil.ziel.kt ?? '',
-        einheit: '°C',
-        onAendern: (w) => zielSpeichern('kt', w),
-        hinweis: ktHinweis,
-      });
-    }
-    zeilen.push(
-      { label: 'Output', wert: profil.ziel.output, einheit: 'g', onAendern: (w) => zielSpeichern('output', w) },
-      { label: 'Preinfusion', wert: profil.ziel.pre ?? '', einheit: 's', onAendern: (w) => zielSpeichern('pre', w) },
-      {
-        label: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit',
-        wert: profil.ziel.zeit,
-        einheit: 's',
-        onAendern: (w) => zielSpeichern('zeit', w),
-      },
-    );
-    return zeilen;
-  });
-
   const GROESSE_LABEL: Record<GemesseneGroesse, string> = {
     zeit: 'Zeit ±',
     output: 'Output ±',
@@ -222,21 +194,55 @@
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else}
   <Kopfzeile titel={profil.name} {onZurueck} />
+  <!-- Reihenfolge Titel -> Setup-Kette -> Primäraktion laut Handoff-
+       Screen-Mapping ("Profil/Espresso-Setup"): vorher stand die Pille vor
+       der Setup-Kette. -->
+  <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
   <div class="knopfreihe">
     <Knopf stufe="primaer" onKlick={onOeffnenShot}>Shot loggen</Knopf>
   </div>
 
-  <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
-
   <section class="ziel">
     <h2>Ziel</h2>
-    <!-- Punkt 6 der Korrekturrunde: geteiltes Muster statt handgebautem
-         Grid (muster/Werteliste.svelte) — kein Herkunftszeichen (hier wird
-         nichts gemessen, nur das Rezept gepflegt) und keine
-         Führungswert-Emphase: das Rezept zeigt alle Werte gleich groß, die
-         Größenbetonung gehört ausschließlich in den Live-Kontext
-         (ShotErfassung.svelte, dort über IstGegenZiel bereits vorhanden). -->
-    <Werteliste zeilen={zielZeilen} />
+    <!-- Parameterkachel-Raster statt Werteliste (Handoff Abschnitt 6) — kein
+         Herkunftszeichen (hier wird nichts gemessen, nur das Rezept
+         gepflegt) und keine Führungswert-Emphase: das Rezept zeigt alle
+         Werte gleich groß, die Größenbetonung gehört ausschließlich in den
+         Live-Kontext (ShotErfassung.svelte, dort über IstGegenZiel). Der
+         Kessel-Hinweis (≈ Gruppe / außerhalb der Messreihe) steht als
+         eigene, ruhige Kachel mit Halbzeichen statt als Text unter der
+         Kessel-Kachel selbst (Handoff-Referenz C2). -->
+    <div class="parameter-raster">
+      <Parameterkachel symbol="input" label="Input" wert={profil.ziel.input} einheit="g" onAendern={(w) => zielSpeichern('input', w)} />
+      <Parameterkachel
+        symbol="mahlgrad"
+        label="Mahlgrad"
+        wert={profil.ziel.mg}
+        einheit={muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined}
+        onAendern={(w) => zielSpeichern('mg', w)}
+      />
+      {#if muehle?.rpmEinstellbar}
+        <Parameterkachel symbol="drehzahl" label="Drehzahl" wert={profil.ziel.rpm ?? ''} einheit="rpm" onAendern={(w) => zielSpeichern('rpm', w)} />
+      {/if}
+      {#if bruehgeraet?.ktEinstellbar}
+        <Parameterkachel symbol="kessel" label="Kessel" wert={profil.ziel.kt ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('kt', w)} />
+      {/if}
+      <Parameterkachel symbol="output" label="Output" wert={profil.ziel.output} einheit="g" onAendern={(w) => zielSpeichern('output', w)} />
+      <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />
+      <Parameterkachel
+        symbol="zeit"
+        label={bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}
+        wert={profil.ziel.zeit}
+        einheit="s"
+        onAendern={(w) => zielSpeichern('zeit', w)}
+      />
+      {#if ktHinweis}
+        <div class="hinweis-kachel">
+          <span class="halbzeichen" aria-hidden="true"></span>
+          <span class="hinweis-text">Kessel {ktHinweis}</span>
+        </div>
+      {/if}
+    </div>
   </section>
 
   <section class="spielraum">
@@ -285,17 +291,41 @@
     margin-bottom: var(--r4);
   }
   .setup {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
   }
   h2 {
-    font-size: var(--fs-label);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
     color: var(--gedaempft);
     font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
+    margin: var(--r5) 0 var(--r-kachelabstand);
+  }
+  .hinweis-kachel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blatt);
+    border-radius: var(--r-kachel);
+    padding: 13px 15px;
+  }
+  .halbzeichen {
+    flex: none;
+    width: var(--zeichen-fuehrung);
+    height: var(--zeichen-fuehrung);
+    border-radius: 50%;
+    border: 1.5px solid var(--achtung);
+    background: linear-gradient(90deg, var(--achtung) 50%, transparent 50%);
+  }
+  .hinweis-text {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    line-height: 1.4;
+    color: var(--gedaempft);
   }
   .verlauf {
     margin-top: var(--r5);
@@ -324,10 +354,17 @@
   .aufklappbar .pfeil.offen {
     transform: rotate(180deg);
   }
-  .hinweis,
-  .hinweis-klein {
+  .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-meta);
+  }
+  /* Erklaersatz unter der Spielraum-Ueberschrift ist Inhalt, keine Meta-
+     Zeile (Handoff-Referenz C2: Serif, Satzfarbe, ~15px) — deshalb eigene
+     Regel statt gemeinsam mit .hinweis. */
+  .hinweis-klein {
+    color: var(--satz);
+    font-size: var(--fs-satz);
+    line-height: 1.55;
   }
   .fehler {
     color: var(--kritisch);
