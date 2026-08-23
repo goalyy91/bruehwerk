@@ -11,6 +11,7 @@ export const Befund = z.object({
   symptomId: Id,
   staerke: Staerke,
 });
+export type Befund = z.infer<typeof Befund>;
 
 /**
  * herkunft ist optional und deckt nur die Felder ab, die die Migration oder

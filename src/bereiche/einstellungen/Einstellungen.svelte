@@ -12,9 +12,10 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenMusterblatt }: {
+  let { onOeffnenGeraete, onOeffnenMusterblatt, onOeffnenBeobachtungen }: {
     onOeffnenGeraete: () => void;
     onOeffnenMusterblatt: () => void;
+    onOeffnenBeobachtungen: () => void;
   } = $props();
 
   async function einstellungAendern<K extends keyof AppEinstellungen>(feld: K, wert: AppEinstellungen[K]) {
@@ -58,6 +59,8 @@
     </div>
   </section>
 {/if}
+
+<button type="button" class="link" onclick={onOeffnenBeobachtungen}>Offene Beobachtungen</button>
 
 <Backup />
 

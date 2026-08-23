@@ -38,6 +38,7 @@
   import SetupAnsicht from './einstellungen/SetupAnsicht.svelte';
   import Setupblatt from './einstellungen/Setupblatt.svelte';
   import Musterblatt from './Musterblatt.svelte';
+  import Beobachtungen from './einstellungen/Beobachtungen.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
@@ -114,7 +115,10 @@
       <Einstellungen
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
         onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
+        onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
       />
+    {:else if route.name === 'beobachtungen'}
+      <Beobachtungen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}

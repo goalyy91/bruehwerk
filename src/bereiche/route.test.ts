@@ -14,6 +14,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'einstellungen' },
   { name: 'geraete' },
   { name: 'musterblatt' },
+  { name: 'beobachtungen' },
   { name: 'muehle', id: 'm1' },
   { name: 'muehleNeu' },
   { name: 'muehleBearbeiten', id: 'm1' },

@@ -19,6 +19,7 @@ class Bestand {
   gusslpaene = $state<SammlungWert['gussplan'][]>([]);
   shots = $state<SammlungWert['shot'][]>([]);
   symptome = $state<SammlungWert['symptom'][]>([]);
+  beobachtungen = $state<SammlungWert['beobachtung'][]>([]);
   muehlen = $state<SammlungWert['muehle'][]>([]);
   bruehgeraete = $state<SammlungWert['bruehgeraet'][]>([]);
   zubehoer = $state<SammlungWert['zubehoer'][]>([]);
@@ -35,7 +36,7 @@ class Bestand {
       // Beim allerersten Start ist die DB leer — dann traegt seedFallsLeer
       // den Geraetepark aus stammdaten.ts ein, bevor gelesen wird.
       await seedFallsLeer();
-      const [kaffees, chargen, profile, gusslpaene, shots, symptome, muehlen, bruehgeraete, zubehoer, setups, einstellungen] =
+      const [kaffees, chargen, profile, gusslpaene, shots, symptome, beobachtungen, muehlen, bruehgeraete, zubehoer, setups, einstellungen] =
         await Promise.all([
           alle('kaffee'),
           alle('charge'),
@@ -43,6 +44,7 @@ class Bestand {
           alle('gussplan'),
           alle('shot'),
           alle('symptom'),
+          alle('beobachtung'),
           alle('muehle'),
           alle('bruehgeraet'),
           alle('zubehoer'),
@@ -55,6 +57,7 @@ class Bestand {
       this.gusslpaene = gusslpaene;
       this.shots = shots;
       this.symptome = symptome;
+      this.beobachtungen = beobachtungen;
       this.muehlen = muehlen;
       this.bruehgeraete = bruehgeraete;
       this.zubehoer = zubehoer;
@@ -124,6 +127,8 @@ function listeFuer(sammlung: Sammlung): unknown[] | undefined {
       return bestand.shots;
     case 'symptom':
       return bestand.symptome;
+    case 'beobachtung':
+      return bestand.beobachtungen;
     case 'muehle':
       return bestand.muehlen;
     case 'bruehgeraet':

@@ -175,6 +175,39 @@ export function kehrtZurueck(vorherigeRegelId: string | undefined, aktuelleRegel
   return vorherigeRegelId !== undefined && vorherigeRegelId === aktuelleRegelId;
 }
 
+export interface EigenerChip {
+  readonly id: string;
+  readonly label: string;
+  readonly regel?: { readonly parameter: RegelParameter; readonly richtung: Richtung; readonly schritte: number };
+}
+
+/**
+ * Weg b, konzept.md:482-484 — "ein Chip wird nuetzlich, wenn ein Vorschlag
+ * daran haengt". Anders als das System-Regelwerk braucht ein eigener Chip
+ * keine Kombination: er triggert allein, sobald er gewaehlt ist, mit der
+ * fest hinterlegten Regel (Parameter/Richtung/Schritte, keine
+ * Staerke-Skalierung — das waere ein viertes Feld im Editor, das das
+ * Konzept ausdruecklich nicht will).
+ *
+ * Bewusst getrennt von diagnostiziere(): das System-Regelwerk bleibt so
+ * lesbar wie die Konzepttabelle, statt mit einer dynamischen Chip-Liste
+ * vermischt zu werden. Der erste Treffer gewinnt.
+ */
+export function diagnostiziereEigen(befunde: readonly Befund[], chips: readonly EigenerChip[]): Diagnose | undefined {
+  for (const befund of befunde) {
+    const chip = chips.find((c) => c.id === befund.symptomId);
+    if (chip?.regel) {
+      return {
+        regelId: `eigen-${chip.id}`,
+        diagnose: chip.label,
+        empfehlungstext: `${chip.regel.parameter} ${chip.regel.richtung}, ${chip.regel.schritte} Schritte`,
+        aenderung: chip.regel,
+      };
+    }
+  }
+  return undefined;
+}
+
 /**
  * "Mahlgrad 3,75 -> 3,65 · zwei Schritte feiner" (konzept.md:441) — der neue
  * Wert aus einer Aenderung. Bei mg zaehlt "Schritte" in Muehle-Schritten

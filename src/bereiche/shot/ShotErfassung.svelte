@@ -13,7 +13,7 @@
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
-  import { diagnostiziere, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
+  import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
@@ -116,7 +116,12 @@
     })),
   );
 
-  const diagnoseErgebnis = $derived(diagnostiziere(diagnoseBefunde));
+  // Erst das System-Regelwerk, dann eigene Chips mit Regel (Weg b) —
+  // ein eigener Chip triggert allein, das System-Regelwerk braucht eine
+  // Kombination und ist damit die spezifischere Aussage.
+  const diagnoseErgebnis = $derived(
+    diagnostiziere(diagnoseBefunde) ?? diagnostiziereEigen(diagnoseBefunde, bestand.symptome),
+  );
 
   // K76 — ein bereits diagnostizierter, nicht uebernommener Befund legt sich
   // nicht bei jedem folgenden Shot erneut vor. Er kehrt erst zurueck, wenn
