@@ -60,8 +60,17 @@
     if (!spanne || spanne.bis === spanne.von) return 0.5;
     return (ts - spanne.von) / (spanne.bis - spanne.von);
   }
+  // Auf die Muehlen-Schrittweite runden, statt den rohen Mittelwert zu
+  // zeigen: die Beschriftung soll ein Wert sein, den man an der Muehle
+  // tatsaechlich einstellen kann (K6, "MG 65" nur mit Muehle eindeutig).
   function formatMg(mg: number): string {
-    return muehle?.skala.typ === 'klicks' ? String(Math.round(mg)) : mg.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
+    const schritt = muehle?.skala.schritt ?? 1;
+    const gerundet = Math.round(mg / schritt) * schritt;
+    if (muehle?.skala.typ === 'klicks') return String(Math.round(gerundet));
+    // Nachkommastellen aus der Schrittgroesse ableiten (0,05 -> 2 Stellen) —
+    // damit steht dieselbe Genauigkeit da, mit der auch eingestellt wird.
+    const nachkommastellen = Math.max(0, Math.round(-Math.log10(schritt)));
+    return gerundet.toFixed(nachkommastellen);
   }
 
   const verlaufPunkte = $derived(

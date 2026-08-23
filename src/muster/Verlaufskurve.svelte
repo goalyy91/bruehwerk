@@ -47,58 +47,68 @@
 {#if punkte.length === 0}
   <div class="kein-punkt">kein Punkt</div>
 {:else}
-  <div class="kurve">
-    <svg viewBox={`0 0 ${BREITE} ${HOEHE}`} preserveAspectRatio="none" role="img" aria-label="Verlaufskurve">
-      <defs>
-        <pattern id="schraffur" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-          <rect width="2" height="4" class="schraffur-strich" />
-        </pattern>
-      </defs>
-      {#each totzonen as zone (zone.wort)}
-        <rect
-          x="0"
-          y={HOEHE - zone.bisY * HOEHE}
-          width={BREITE}
-          height={(zone.bisY - zone.vonY) * HOEHE}
-          class="totzone"
-          fill="url(#schraffur)"
-        />
-      {/each}
-      {#each ereignisse as x (x)}
-        <line x1={x * BREITE} y1="0" x2={x * BREITE} y2={HOEHE} class="ereignis" />
-      {/each}
-      {#if pfad}
-        <path d={pfad} class="linie" fill="none" />
-      {/if}
-    </svg>
-    <div class="totzone-woerter">
-      {#each totzonen as zone (zone.wort)}
-        <div class="totzone-wort">
-          <span class="totzone-muster" aria-hidden="true"></span>
-          {zone.wort}
-        </div>
+  <div class="kurve-zeile">
+    <!-- Marken stehen an der senkrechten Achse (y = Mahlgrad, K40-Kommentar
+         oben) — deshalb als Spalte links, hoechster Wert oben, nicht als
+         Zeile unter der Kurve (das laese sich wie eine x-Achse). -->
+    <div class="achse">
+      {#each [...achsMarken].reverse() as marke (marke)}
+        <span class="marke">{marke}</span>
       {/each}
     </div>
-    {#each punkte as p (p.x)}
-      <span
-        class="punkt"
-        class:achtung={p.zustand === 'achtung'}
-        class:kritisch={p.zustand === 'kritisch'}
-        style:left={`${p.x * 100}%`}
-        style:top={`${(1 - p.y) * 100}%`}
-      ></span>
-    {/each}
-  </div>
-  <div class="achse">
-    {#each achsMarken as marke (marke)}
-      <span class="marke">{marke}</span>
-    {/each}
+    <div class="kurve">
+      <svg viewBox={`0 0 ${BREITE} ${HOEHE}`} preserveAspectRatio="none" role="img" aria-label="Verlaufskurve">
+        <defs>
+          <pattern id="schraffur" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <rect width="2" height="4" class="schraffur-strich" />
+          </pattern>
+        </defs>
+        {#each totzonen as zone (zone.wort)}
+          <rect
+            x="0"
+            y={HOEHE - zone.bisY * HOEHE}
+            width={BREITE}
+            height={(zone.bisY - zone.vonY) * HOEHE}
+            class="totzone"
+            fill="url(#schraffur)"
+          />
+        {/each}
+        {#each ereignisse as x (x)}
+          <line x1={x * BREITE} y1="0" x2={x * BREITE} y2={HOEHE} class="ereignis" />
+        {/each}
+        {#if pfad}
+          <path d={pfad} class="linie" fill="none" />
+        {/if}
+      </svg>
+      <div class="totzone-woerter">
+        {#each totzonen as zone (zone.wort)}
+          <div class="totzone-wort">
+            <span class="totzone-muster" aria-hidden="true"></span>
+            {zone.wort}
+          </div>
+        {/each}
+      </div>
+      {#each punkte as p (p.x)}
+        <span
+          class="punkt"
+          class:achtung={p.zustand === 'achtung'}
+          class:kritisch={p.zustand === 'kritisch'}
+          style:left={`${p.x * 100}%`}
+          style:top={`${(1 - p.y) * 100}%`}
+        ></span>
+      {/each}
+    </div>
   </div>
 {/if}
 
 <style>
+  .kurve-zeile {
+    display: flex;
+    gap: var(--r2);
+  }
   .kurve {
     position: relative;
+    flex: 1;
     height: 180px;
   }
   svg {
@@ -163,8 +173,11 @@
   }
   .achse {
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    padding-top: 4px;
+    align-items: flex-end;
+    flex: none;
+    height: 180px;
   }
   .achse .marke {
     font-size: var(--fs-label);
