@@ -15,6 +15,7 @@
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Suchfeld from '../../muster/Suchfeld.svelte';
 
   let { onOeffnen, onNeu }: { onOeffnen: (kaffeeId: string) => void; onNeu: () => void } = $props();
 
@@ -29,7 +30,9 @@
 
 <Kopfzeile titel="Kaffees" />
 
-<input class="suche" type="text" placeholder="Suchen …" bind:value={suchtext} />
+<div class="suchzeile">
+  <Suchfeld wert={suchtext} onWert={(w) => (suchtext = w)} />
+</div>
 
 <Segment
   optionen={[
@@ -72,17 +75,7 @@
 <button type="button" class="schwebend" onclick={onNeu} aria-label="Kaffee hinzufügen">+</button>
 
 <style>
-  .suche {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r2);
-    min-height: var(--treffer);
+  .suchzeile {
     margin-bottom: var(--r3);
   }
   .metazeile {

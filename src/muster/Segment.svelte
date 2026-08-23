@@ -4,6 +4,11 @@
   // Zeile aus ungleich breiten Chips unruhig wirkt (Rueckmeldung zum
   // Kaffees-Redesign) — fuer laengere oder unterschiedlich lange Optionen
   // bleibt AuswahlListe.svelte die richtige Form.
+  //
+  // Visueller Redesign-Reset (Handoff Abschnitt 3.8 "Segment"): Bahn in
+  // Vertiefung, Radius 999, Innenpolster 3, gewähltes Feld = Füllfläche.
+  // Der frühere Akzentstrich (Einzelauswahl u.a.) entfällt hier komplett zu-
+  // gunsten der einen gefüllten Fläche des Themes.
 
   let {
     optionen,
@@ -33,28 +38,26 @@
 <style>
   .segment {
     display: flex;
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    overflow: hidden;
+    gap: 2px;
+    background: var(--vertiefung);
+    border-radius: var(--r-pille);
+    padding: var(--segment-bahn-polster);
   }
   .feld {
     flex: 1;
-    min-height: var(--treffer);
+    min-height: var(--segment-feld-hoehe);
     padding: 0 var(--r2);
     border: none;
-    border-left: 1px solid var(--feld-rahmen);
-    background: var(--feld);
-    color: var(--gedaempft);
+    border-radius: var(--r-pille);
+    background: transparent;
+    color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
-  }
-  .feld:first-child {
-    border-left: none;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .feld.gewaehlt {
-    background: var(--akzent);
-    color: var(--h-papier);
-    font-weight: var(--gw-titel);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
 </style>

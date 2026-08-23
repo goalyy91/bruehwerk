@@ -1,9 +1,12 @@
 <script lang="ts">
   // Muster 15 · Lesart-Umschalter (Übergabe, Abschnitt 2 · K39 K73).
-  // Zwei gleich große Felder, zwei Wörter, Auswahl als Gewicht +
-  // Akzentstrich. Wechselt die Sprache derselben Daten, nicht ihren
-  // Umfang — nicht zulässig für Umfangsfilter („meine · alle“), dafür
-  // gibt es die Filter-Kopfzeile.
+  // Zwei gleich große Felder, zwei Wörter. Wechselt die Sprache derselben
+  // Daten, nicht ihren Umfang — nicht zulässig für Umfangsfilter
+  // („meine · alle“), dafür gibt es die Filter-Kopfzeile.
+  //
+  // Visueller Redesign-Reset (Handoff Komponenten-Mapping: „wie Segment“) —
+  // dieselbe Pillen-Bahn wie Segment.svelte: Vertiefung, Radius 999, ge-
+  // wähltes Feld = Füllfläche statt Fettschrift + Akzentstrich.
 
   import { untrack } from 'svelte';
 
@@ -39,22 +42,25 @@
 <style>
   .umschalter {
     display: flex;
-    gap: var(--r2);
+    gap: 2px;
+    background: var(--vertiefung);
+    border-radius: var(--r-pille);
+    padding: var(--segment-bahn-polster);
   }
   .feld {
     flex: 1;
-    min-height: 56px;
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    min-height: var(--segment-feld-hoehe);
+    border: none;
+    border-radius: var(--r-pille);
+    background: transparent;
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-urteil);
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .feld.gewaehlt {
-    color: var(--tinte);
-    font-weight: var(--gw-titel);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
 </style>

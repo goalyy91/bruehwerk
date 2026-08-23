@@ -253,10 +253,10 @@
   .leiste {
     display: flex;
     flex-shrink: 0;
-    /* Flaechenhierarchie ueber Farbe statt Schatten (Regel 6) — die
-       border-top-Linie plus --ruhig grenzen die Leiste bereits ab. */
-    border-top: 1px solid var(--linie);
-    background: var(--ruhig);
+    /* Visueller Redesign-Reset (Handoff 3.8 "Tab-Leiste"): kein Rand nach
+       oben mehr — die Fläche grenzt sich allein über Helligkeit ab
+       (--blatt gegen --grund, drei Flächenebenen statt Linie + Schatten). */
+    background: var(--blatt);
     padding-bottom: var(--safe-unten);
   }
   .eintrag {

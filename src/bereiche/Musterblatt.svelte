@@ -59,8 +59,8 @@
           <div class="label">{theme.toUpperCase()} · FLÄCHEN, TINTEN, ZEICHEN</div>
           <div class="flaechen">
             <span class="swatch" style:background="var(--grund)">--grund</span>
-            <span class="swatch" style:background="var(--ruhig)">--ruhig</span>
-            <span class="swatch" style:background="var(--feld)">--feld</span>
+            <span class="swatch" style:background="var(--blatt)">--blatt</span>
+            <span class="swatch" style:background="var(--vertiefung)">--vertiefung</span>
             <span class="swatch" style:background="var(--spur)">--spur</span>
             <span class="swatch akzent" style:background="var(--akzent)">--akzent</span>
           </div>
@@ -73,8 +73,8 @@
             {/each}
           </div>
           <div class="skala">
-            <span class="zahl" style:font-size="var(--fs-fuehrung)">38,4 g</span>
-            <span class="zahl" style:font-size="var(--fs-urteil)" style:color="var(--gedaempft)">≈ 6:10 min</span>
+            <span class="zahl" style:font-size="var(--fs-wert)">38,4 g</span>
+            <span class="zahl" style:font-size="var(--fs-wert)" style:color="var(--gedaempft)">≈ 6:10 min</span>
           </div>
         </div>
       </div>
@@ -487,7 +487,7 @@
     border: 1px solid var(--linie);
   }
   .swatch.akzent {
-    color: var(--h-papier);
+    color: var(--auf-fuellung);
   }
   .zeichenreihe {
     display: flex;
@@ -508,7 +508,7 @@
     border-radius: 50%;
   }
   .zeichen.gut {
-    background: var(--marke-gut);
+    background: var(--tinte);
   }
   .zeichen.achtung {
     border: 1px solid var(--achtung);

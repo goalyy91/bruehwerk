@@ -23,6 +23,9 @@
   // `hinweis` ist bewusst ein fertiger Text, keine Domain-Logik hier: die
   // Rechnung (z. B. Kessel -> Gruppentemperatur) gehoert in den Aufrufer,
   // dieses Muster zeigt nur an.
+  //
+  // Visueller Redesign-Reset (Handoff 3.8 "Eingabefeld Wert"): Panel jetzt
+  // Blattfläche, Wertfeld Vertiefung mit Radius 4 statt eckigem Vollrahmen.
 
   let { zeilen }: { zeilen: WertelisteZeile[] } = $props();
 
@@ -62,29 +65,32 @@
     column-gap: var(--r2);
     row-gap: var(--r3);
     padding: var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--blatt);
+    border-radius: var(--r-karte);
   }
   .zeile {
     display: contents;
   }
   .label {
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--satz);
   }
   .wert,
   .wert-text {
     justify-self: end;
     font-variant-numeric: var(--zahl-features);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-wert);
+    font-weight: var(--gw-zahl);
     color: var(--tinte);
   }
   .wert {
     width: 80px;
     font-family: var(--schrift);
-    background: var(--feld-blatt);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--vertiefung);
+    border: none;
+    border-radius: var(--r-wertfeld);
     padding: var(--r1) var(--r2);
+    text-align: right;
   }
   .einheit {
     font-size: var(--fs-meta);

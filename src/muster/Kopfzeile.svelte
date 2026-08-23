@@ -14,6 +14,13 @@
   // UX-2: optionaler Aktions-Platz rechts (z. B. das Stift-Symbol zum
   // Bearbeiten) — additiv, jeder bestehende Aufruf ohne `aktion` bleibt
   // unveraendert.
+  //
+  // Visueller Redesign-Reset (Handoff 3.8/5): Rückweg als runder 38-px-
+  // Knopf auf Blattfläche, Zeichen im Akzent, statt reinem Text-Chevron.
+  // Die zweite Titelgröße für Objektseiten (30-32/600 zweizeilig, z. B.
+  // Kaffeeblatt) ist bewusst noch nicht Teil dieser Komponente — sie kommt
+  // mit dem Screen, der sie zuerst braucht (Paket 2), statt hier auf
+  // Vorrat eine Prop-Form zu erfinden, die noch keinen Aufrufer hat.
   import type { Snippet } from 'svelte';
 
   let {
@@ -45,14 +52,17 @@
   }
   .zurueck {
     flex-shrink: 0;
-    width: var(--treffer);
-    height: var(--treffer);
-    margin-left: calc(var(--r2) * -1);
-    background: none;
+    width: var(--r-knopf-rund);
+    height: var(--r-knopf-rund);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--blatt);
     border: none;
+    border-radius: 50%;
     color: var(--akzent);
     font-family: var(--schrift);
-    font-size: 24px;
+    font-size: 20px;
     line-height: 1;
     cursor: pointer;
   }

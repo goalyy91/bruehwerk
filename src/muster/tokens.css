@@ -1,97 +1,126 @@
 /*
- * Tokens. Wörtlich aus der Design-Quelle übernommen
- * (Sitzung 6 - Übergabe.dc.html, Abschnitt 1 · K74 gültige Musterquelle).
+ * Tokens. Wörtlich aus dem visuellen Redesign-Handoff übernommen
+ * (docs/design/redesign-v1-handoff.md, Abschnitt 3 · Fassung „Sitzung 8 ·
+ * Finalisierung", freigegeben) — Handoff ist Source of Truth für alles
+ * Visuelle, docs/konzept.md und docs/ux-regeln.md bleiben unberührt.
  *
  * Zweistufig, K73: erst alle Rohfarben beider Themes im :root — sie
  * existieren also immer, egal was das System meldet. Danach werden nur
  * noch Zuordnungen umgeschaltet. Kein Media-Block enthält einen Farbwert,
  * nur Verweise. [data-theme] gewinnt gegen die Systemeinstellung, weil
  * :root:not([data-theme]) im Media-Block steht.
+ *
+ * Drei Flächenebenen, nie vier: Grund → Blatt → Vertiefung (Handoff 3.5).
+ * Eine Füllfläche je Theme für Auswahl UND Primäraktion (Handoff 3.1/3.6) —
+ * deshalb kein „--marke-gut" mehr: „gewählt" ist ab jetzt ausschließlich
+ * die Füllfläche, nie ein zusätzliches Zeichen obendrauf.
  */
 
 @import '@fontsource-variable/source-serif-4';
+@import '@fontsource-variable/source-sans-3';
 
 :root {
-  /* ---- Rohfarben HELL · immer definiert ---- */
-  --h-papier: #f3f0ea;
-  --h-ruhig: #eeeae2;
-  --h-feld: #e9e4da;
-  --h-feld-blatt: #f3f0ea;
-  --h-linie: #d6cfc3;
-  --h-linie-zart: #e2dbcf;
-  --h-spur: #c3bbac;
-  --h-tinte: #1b1916;
-  --h-satz: #3f3a31;
-  --h-gedaempft: #6b6459;
-  --h-akzent: #96603f;
+  /* ---- Rohfarben HELL · immer definiert (Handoff 3.1) ---- */
+  --h-grund: #f1ebe1;
+  --h-blatt: #fcfaf6;
+  --h-vertiefung: #e8dfd1;
+  --h-linie: #f0e8db;
+  --h-spur: #cfc4b2;
+  --h-tinte: #1e1a16;
+  --h-satz: #4a423a;
+  --h-gedaempft: #8a8175;
+  --h-akzent: #a2643b;
+  --h-fuellung: #83553a;
+  --h-auf-fuellung: #f7efe4;
+  --h-badge: #f4ece1;
   --h-achtung: #7d6415;
   --h-kritisch: #93332a;
-  --h-marke-gut: #6b6459;
-  --h-feld-rahmen: transparent;
 
-  /* ---- Rohfarben DUNKEL (Set T2) · immer definiert ---- */
-  --d-papier: #201e1a;
-  --d-ruhig: #1a1815;
-  --d-feld: #221f1a;
-  --d-feld-blatt: #2a2620;
-  --d-linie: #3d382f;
-  --d-linie-zart: #322e28;
-  --d-spur: #494540;
-  --d-tinte: #ece9e3;
-  --d-satz: #cdc9c2;
-  --d-gedaempft: #9f9c95;
-  --d-akzent: #cf9a68;
+  /* ---- Rohfarben DUNKEL · immer definiert (Handoff 3.1/7) ---- */
+  --d-grund: #17140f;
+  --d-blatt: #211d18;
+  --d-vertiefung: #2b2620;
+  --d-linie: #2f2922;
+  --d-spur: #5f584e;
+  --d-tinte: #f1ece4;
+  --d-satz: #cfc8be;
+  --d-gedaempft: #948c81;
+  --d-akzent: #d29a66;
+  --d-fuellung: #e0ae79;
+  --d-auf-fuellung: #221d18;
+  --d-badge: #2b2620;
   --d-achtung: #c9a15a;
   --d-kritisch: #cd7a63;
-  --d-marke-gut: #9f9c95;
-  --d-feld-rahmen: #3d382f;
 
   /* ---- Zuordnung · HELL ist Standard ---- */
-  --grund: var(--h-papier);
-  --ruhig: var(--h-ruhig);
-  --feld: var(--h-feld);
-  --feld-blatt: var(--h-feld-blatt);
-  --feld-rahmen: var(--h-feld-rahmen);
+  --grund: var(--h-grund);
+  --blatt: var(--h-blatt);
+  --vertiefung: var(--h-vertiefung);
   --linie: var(--h-linie);
-  --linie-zart: var(--h-linie-zart);
   --spur: var(--h-spur);
   --tinte: var(--h-tinte);
   --satz: var(--h-satz);
   --gedaempft: var(--h-gedaempft);
   --akzent: var(--h-akzent);
+  --fuellung: var(--h-fuellung);
+  --auf-fuellung: var(--h-auf-fuellung);
+  --badge: var(--h-badge);
   --achtung: var(--h-achtung);
   --kritisch: var(--h-kritisch);
-  --marke-gut: var(--h-marke-gut);
 
-  /* ---- Schrift ---- */
-  --schrift: 'Source Serif 4 Variable', Georgia, serif;
-  --fs-fuehrung: 44px;
-  --fs-titel: 26px;
-  --fs-urteil: 19px;
-  --fs-satz: 15px;
-  --fs-meta: 13px;
-  --fs-label: 11px;
+  /* ---- Rückwärtskompatible Rollen-Aliase ----
+     Übergangs-Tokens für Screens, die erst in Paket 2-4 auf die neuen
+     Rollen umgestellt werden (K74-Nachfolge-Prinzip: Migration über
+     Tokens, nicht durch gleichzeitiges Anfassen aller Dateien). Neuer
+     Code referenziert direkt --blatt/--vertiefung/--linie — diese Aliase
+     bestehen nur, damit noch nicht migrierte Screens sofort die neue
+     Farbwelt bekommen, ohne dass hier schon ihre Struktur angefasst wird. */
+  --ruhig: var(--blatt);
+  --feld: var(--vertiefung);
+  --feld-blatt: var(--blatt);
+  --feld-rahmen: transparent; /* Handoff 3.5: Blätter haben keinen Rand — in keinem Theme */
+  --linie-zart: var(--linie); /* Handoff 3.5: eine Linienrolle, keine zwei Abstufungen mehr */
+
+  /* ---- Schrift (Handoff 3.2) ---- */
+  --schrift: 'Source Serif 4 Variable', Georgia, serif; /* trägt allen Inhalt */
+  --schrift-sans: 'Source Sans 3 Variable', system-ui, sans-serif; /* trägt nur den Apparat */
+
+  --fs-blattitel: 32px; /* Blattitel, Screentitel groß, 600, 1.12, -.02em */
+  --fs-titel: 26px; /* Screentitel mit Rückweg, 600, 1.2, -.02em */
+  --fs-objekt: 20px; /* Objektname/Frage ("Wie war er?"), 400, 1.25, -.01em */
+  --fs-bedienwort: 17px; /* Listenname, Bedienwort, Zeile, 400, 1.3 */
+  --fs-satz: 15px; /* Satz, Beschreibung, 400, 1.55 */
+  --fs-wert: 19px; /* Wert/Zahl, 500, tabular-nums lining-nums, -.01em */
+  --fs-urteil: var(--fs-bedienwort); /* Alias: Urteilskachel-/Chip-Text folgt Bedienwort-Größe */
+
+  --fs-gruppenkopf: 10.5px; /* Sans, Versalien, .14em */
+  --fs-kachel-label: 10.5px; /* Sans, Versalien, .12em */
+  --fs-meta: 12px; /* Sans, Meta/Einheit/Zählform/Datum, gedämpft */
+  --fs-label: 11px; /* Sans, Tab-Label */
+
   --gw-text: 400;
   --gw-zahl: 500;
-  --gw-titel: 600;
-  --zahl-features: tabular-nums lining-nums; /* + letter-spacing:-0.01em, siehe .zahl */
-  --label-spacing: 0.1em; /* 11px Versalien als Gruppenkopf */
+  --gw-titel: 600; /* nur auf Füllfläche, im aktiven Tab-Label, in großen Titeln (Handoff 3.2) */
 
-  /* ---- Raum, Maße ---- */
+  --zahl-features: tabular-nums lining-nums; /* + letter-spacing:-0.01em, siehe .zahl */
+  --label-spacing: 0.14em; /* Gruppenkopf-Versalien */
+  --label-spacing-kachel: 0.12em; /* Kachel-Label-Versalien, etwas enger */
+
+  /* ---- Raum (Handoff 3.3: 4 · 8 · 10 · 12 · 14 · 18 · 20 · 22 · 24) ---- */
   --r1: 4px;
   --r2: 8px;
+  --r-kachelabstand: 10px; /* Kachelabstand */
   --r3: 12px;
-  --r4: 16px;
-  --r5: 24px;
+  --r-kartenabstand: 14px; /* Kartenabstand */
+  --r4: 18px; /* Blattpolster/Kartenpolster */
+  --r5: 24px; /* Gruppenabstand, obere Spanne */
   --r6: 32px;
   --r7: 48px;
-  --seitenrand: 20px;
+  --seitenrand: 22px;
   --safe-unten: env(safe-area-inset-bottom, 22px);
-  --treffer: 48px;
-  --fusszeile: 56px;
+  --treffer: 48px; /* Trefferfläche ≥ 48, nicht verhandelbar */
+  --fusszeile: 64px; /* Tab-Leiste (Handoff 3.8) */
   --angebot-duenn: 48px;
-  --radius-feld: 0;
-  --radius-chip: 2px;
   --typspalte: 98px;
   --eigenschaftslabel: 104px;
   --datumspalte: 64px;
@@ -99,13 +128,31 @@
   --rangzahl: 34px;
   --rangname: 136px;
   --tastatur: 368px; /* Systemtastatur inkl. Safe Area */
-  --symbol-tab: 22px; /* Icon-Groesse in der unteren Tab-Leiste */
-  --spalt-mikro: 2px; /* Icon-zu-Label-Abstand, unterhalb der r-Skala (min. 4px) */
+  --symbol-tab: 24px; /* Icon-Größe in der unteren Tab-Leiste (Handoff 3.8) */
+  --spalt-mikro: 5px; /* Abstand Tab-Icon zu Tab-Label (Handoff 3.8) */
   --feld-schmal: 64px; /* schmale Zahlenfelder, z. B. Min/Max/Schritt */
   --feld-min: 100px; /* Mindestbreite frei fliessender Textfelder in einer Zeile */
   --max-liste: 320px; /* Deckelhoehe scrollbarer Listen/Berichte, z. B. Migrationsbericht */
 
-  /* ---- Zustandszeichen ---- */
+  /* ---- Radien (Handoff 3.4) ---- */
+  --r-blatt: 20px;
+  --r-karte: 18px;
+  --r-kachel: 16px; /* auch Urteilskachel */
+  --r-pille: 999px; /* Bedienelement/Pille/Suchfeld/Segment/Chip */
+  --r-wertfeld: 4px; /* einziger eckiger Kern im System */
+  --r-knopf-rund: 38px; /* Kopfzeilen-Knopf, rundes Zeichen-Badge (voll rund) */
+
+  /* ---- Bauteilmaße (Handoff 3.8) ---- */
+  --suchfeld-hoehe: 60px;
+  --primaeraktion-hoehe: 50px;
+  --segment-feld-hoehe: 42px;
+  --segment-bahn-polster: 3px;
+  --schalter-breite: 52px;
+  --schalter-hoehe: 32px;
+  --schalter-knopf: 26px;
+  --urteilskachel-hoehe: 58px;
+
+  /* ---- Zustandszeichen (Handoff 3.6, Form unverändert) ---- */
   --zeichen: 10px;
   --zeichen-fuehrung: 11px;
 
@@ -121,58 +168,55 @@
    Enthält nur Verweise — keine Farbwerte. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --grund: var(--d-papier);
-    --ruhig: var(--d-ruhig);
-    --feld: var(--d-feld);
-    --feld-blatt: var(--d-feld-blatt);
-    --feld-rahmen: var(--d-feld-rahmen);
+    --grund: var(--d-grund);
+    --blatt: var(--d-blatt);
+    --vertiefung: var(--d-vertiefung);
     --linie: var(--d-linie);
-    --linie-zart: var(--d-linie-zart);
     --spur: var(--d-spur);
     --tinte: var(--d-tinte);
     --satz: var(--d-satz);
     --gedaempft: var(--d-gedaempft);
     --akzent: var(--d-akzent);
+    --fuellung: var(--d-fuellung);
+    --auf-fuellung: var(--d-auf-fuellung);
+    --badge: var(--d-badge);
     --achtung: var(--d-achtung);
     --kritisch: var(--d-kritisch);
-    --marke-gut: var(--d-marke-gut);
   }
 }
 
 /* Ausdrückliche Wahl · gewinnt immer */
 [data-theme='dunkel'] {
-  --grund: var(--d-papier);
-  --ruhig: var(--d-ruhig);
-  --feld: var(--d-feld);
-  --feld-blatt: var(--d-feld-blatt);
-  --feld-rahmen: var(--d-feld-rahmen);
+  --grund: var(--d-grund);
+  --blatt: var(--d-blatt);
+  --vertiefung: var(--d-vertiefung);
   --linie: var(--d-linie);
-  --linie-zart: var(--d-linie-zart);
   --spur: var(--d-spur);
   --tinte: var(--d-tinte);
   --satz: var(--d-satz);
   --gedaempft: var(--d-gedaempft);
   --akzent: var(--d-akzent);
+  --fuellung: var(--d-fuellung);
+  --auf-fuellung: var(--d-auf-fuellung);
+  --badge: var(--d-badge);
   --achtung: var(--d-achtung);
   --kritisch: var(--d-kritisch);
-  --marke-gut: var(--d-marke-gut);
 }
 [data-theme='hell'] {
-  --grund: var(--h-papier);
-  --ruhig: var(--h-ruhig);
-  --feld: var(--h-feld);
-  --feld-blatt: var(--h-feld-blatt);
-  --feld-rahmen: var(--h-feld-rahmen);
+  --grund: var(--h-grund);
+  --blatt: var(--h-blatt);
+  --vertiefung: var(--h-vertiefung);
   --linie: var(--h-linie);
-  --linie-zart: var(--h-linie-zart);
   --spur: var(--h-spur);
   --tinte: var(--h-tinte);
   --satz: var(--h-satz);
   --gedaempft: var(--h-gedaempft);
   --akzent: var(--h-akzent);
+  --fuellung: var(--h-fuellung);
+  --auf-fuellung: var(--h-auf-fuellung);
+  --badge: var(--h-badge);
   --achtung: var(--h-achtung);
   --kritisch: var(--h-kritisch);
-  --marke-gut: var(--h-marke-gut);
 }
 
 /* ---- Grundlagen, die an jedem Bildschirm gelten ---- */
@@ -209,8 +253,7 @@ button,
   touch-action: manipulation;
 }
 
-/* Jede Zahl: tabular-nums, 500, -0.01em — die vergessene Regel aus
-   Abschnitt 3 der Übergabe. */
+/* Jede Zahl: tabular-nums, 500, -0.01em. */
 .zahl {
   font-variant-numeric: var(--zahl-features);
   font-weight: var(--gw-zahl);
@@ -218,7 +261,7 @@ button,
 }
 
 /* Fokus sichtbar für Tastatur/Screenreader, ohne neues Token — und
-   ausdrücklich eine andere Form als der Akzentstrich der Auswahl (K73). */
+   ausdrücklich eine andere Form als jede Auswahlmarkierung (Handoff 3.7). */
 :focus-visible {
   outline: 2px solid var(--akzent);
   outline-offset: 2px;

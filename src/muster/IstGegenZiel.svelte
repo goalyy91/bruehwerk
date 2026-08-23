@@ -1,10 +1,15 @@
 <script lang="ts">
   // Muster 5 · Ist gegen Ziel (Übergabe, Abschnitt 2 · K3 K5 K6).
   // Ziel im Gruppenkopf (11 px Versalien), Ist-Werte mit dem Ziel vorbelegt.
-  // Reihenfolge Output → Preinfusion → Zeit. Führungswert 44 px mit Einheit,
-  // weitere Werte 19 px rechtsbündig in fester Spalte — als CSS-Grid über
-  // alle Zeilen, damit die Spalte unabhängig von der Schriftgröße der
-  // Führungswert-Zeile bündig bleibt.
+  // Reihenfolge Output → Preinfusion → Zeit. Alle Werte 19 px rechtsbündig
+  // in fester Spalte — als CSS-Grid über alle Zeilen, damit die Spalte
+  // unabhängig von den einzelnen Zeileninhalten bündig bleibt.
+  //
+  // Visueller Redesign-Reset (Handoff 3.9, Fassung „Finalisierung"): der
+  // Führungswert bekommt keine Sonderauszeichnung mehr — kein 44-px-Sprung,
+  // kein gefüllter Kreis, kein Wort. Er steht als gewöhnlicher erster
+  // Zielwert da; fachlich bleibt er führend, visuell ist er es nicht mehr
+  // (Designprinzip 9 des Handoffs).
   //
   // Zustände je Zeile: vorbelegt (Ring) · überschrieben (gefüllter Punkt) ·
   // außerhalb des Spielraums (Abweichung als Satz) · außerhalb der
@@ -75,7 +80,6 @@
       <span class="label">{zeile.label}</span>
       <input
         class="wert zahl"
-        class:fuehrung={i === 0}
         type="text"
         inputmode="decimal"
         value={wert}
@@ -104,8 +108,8 @@
     column-gap: var(--r2);
     row-gap: var(--r2);
     padding: var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--blatt);
+    border-radius: var(--r-karte);
   }
   .gruppenkopf {
     grid-column: 1 / -1;
@@ -119,7 +123,7 @@
   }
   .label {
     line-height: 1;
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--satz);
   }
   .wert {
@@ -128,19 +132,17 @@
     line-height: 1;
     text-align: right;
     border: none;
-    background: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
+    padding: var(--r1) var(--r2);
     font-family: var(--schrift);
-    font-size: var(--fs-urteil);
+    font-size: var(--fs-wert);
     color: var(--tinte);
-  }
-  .wert.fuehrung {
-    width: 4ch;
-    font-size: var(--fs-fuehrung);
   }
   .einheit {
     justify-self: end;
     line-height: 1;
-    font-size: var(--fs-satz);
+    font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
   .satz {

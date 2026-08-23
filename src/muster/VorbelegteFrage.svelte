@@ -1,7 +1,11 @@
 <script lang="ts">
   // Muster 12 · Vorbelegte Frage (Übergabe, Abschnitt 2 · K12 K56).
-  // Ja und Nein gleich groß, Vorbelegung als Gewicht + Akzentstrich,
-  // Begründung als eigene Zeile mit gefülltem Zeichen.
+  // Ja und Nein gleich groß, Begründung als eigene Zeile mit gefülltem
+  // Zeichen.
+  //
+  // Visueller Redesign-Reset: Antwort-Felder als Pillen (Vertiefung/
+  // Füllfläche wie Segment/Chip), Vorbelegung bleibt zusätzlich als Gewicht
+  // 600 erkennbar — kein Akzentstrich mehr als Auswahlzeichen.
   //
   // Schwellen über die letzten 20 Positionen: ≥ 60 % vorbelegen ·
   // 40–60 % fragen ohne Vorbelegung · ≤ 40 % gar nicht fragen. Keine
@@ -84,17 +88,18 @@
   .feld {
     flex: 1;
     min-height: 56px;
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    border: none;
+    border-radius: var(--r-pille);
+    background: var(--vertiefung);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-urteil);
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .feld.gewaehlt {
-    color: var(--tinte);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .feld.vorbelegt {
     font-weight: var(--gw-titel);
