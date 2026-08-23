@@ -3,7 +3,7 @@
  * "Dial-in und Alltagskorrektur" und "Die Verkostung".
  */
 import { z } from 'zod';
-import { Id, Herkunft, Urteil, Staerke } from './common';
+import { Id, Herkunft, Urteil, Staerke, Zeitpunkt } from './common';
 import { ZielWerte } from './kaffee';
 
 /** staerke sitzt am Befund, nicht am Shot — ein Shot kann gleichzeitig leicht sauer und deutlich duenn sein. */
@@ -19,6 +19,47 @@ export const Befund = z.object({
  */
 export const IstWerteHerkunft = z.record(z.string(), Herkunft).default({});
 
+/**
+ * Paket 04 — Regelparameter, den ein Vorschlag oder ein eigener Chip
+ * (Weg b, Etappe C) tatsaechlich anwenden kann. Deckungsgleich mit
+ * domain/diagnose.ts::RegelParameter — dort ist es die eine Quelle
+ * (domain/ darf nichts aus daten/ importieren, siehe CLAUDE.md
+ * "Architektur: die Schichten"; die Zuweisung unten haelt beide synchron,
+ * wie SpielraumSchema es fuer Spielraum tut).
+ */
+export const RegelParameter = z.enum(['mg', 'kt', 'output', 'input']);
+export type RegelParameter = z.infer<typeof RegelParameter>;
+function pruefeRegelParameterTyp(p: RegelParameter): import('../../domain/diagnose').RegelParameter {
+  return p;
+}
+void pruefeRegelParameterTyp;
+
+/**
+ * K68 — ein abgelehnter Vorschlag bleibt als gedaempfte Zeile mit Datum und
+ * Ring stehen, "doch uebernehmen" bleibt tippbar. Dafuer braucht der
+ * Vorschlag Zustand und Zeitpunkt, nicht nur einen Anzeigetext.
+ *
+ * Altbestand (vor Paket 04) hatte hier einen blanken String — ein
+ * preprocess wandelt ihn in die neue Form, kein migrierter oder importierter
+ * Shot wird dadurch ungueltig.
+ */
+export const Vorschlag = z.preprocess(
+  (wert) => (typeof wert === 'string' ? { diagnose: wert, zustand: 'offen' } : wert),
+  z.object({
+    /** Regel-Id aus domain/diagnose.ts, fuer K76 (Rueckkehr bei zwei aufeinanderfolgenden Shots). */
+    regelId: z.string().optional(),
+    diagnose: z.string().min(1),
+    empfehlungstext: z.string().min(1).optional(),
+    parameter: RegelParameter.optional(),
+    richtung: z.enum(['feiner', 'groeber', 'mehr', 'weniger']).optional(),
+    alt: z.number().optional(),
+    neu: z.number().optional(),
+    zustand: z.enum(['offen', 'uebernommen', 'abgelehnt']).default('offen'),
+    ts: Zeitpunkt.optional(),
+  }),
+);
+export type Vorschlag = z.infer<typeof Vorschlag>;
+
 export const Shot = z.object({
   id: Id,
   ts: z.number().int().nonnegative(),
@@ -33,15 +74,20 @@ export const Shot = z.object({
   urteil: Urteil,
   befunde: z.array(Befund).default([]),
   /** K10 — bleibt am Shot bis zum naechsten Shot, keine Vorbelegung (K12). */
-  vorschlag: z.string().optional(),
+  vorschlag: Vorschlag.optional(),
   freitext: z.string().optional(),
   tastingId: Id.optional(),
   durchgangId: Id.optional(),
 });
 export type Shot = z.infer<typeof Shot>;
 
+/**
+ * Der kleine Regeleditor (Weg b, Etappe C, konzept.md:482-484) — genau drei
+ * Felder, mehr nicht: "holzig + deutlich -> KT, runter, 2". Alles darueber
+ * hinaus waere eine Programmiersprache in einem Formular.
+ */
 const Regel = z.object({
-  parameter: z.string().min(1),
+  parameter: RegelParameter,
   richtung: z.enum(['feiner', 'groeber', 'mehr', 'weniger']),
   schritte: z.number(),
 });
@@ -49,6 +95,8 @@ const Regel = z.object({
 export const Symptom = z.object({
   id: Id,
   label: z.string().min(1),
+  /** Geschmack oder Lauf — dieselben zwei Gruppen wie im Chip-Bildschirm (konzept.md:427-437). */
+  gruppe: z.enum(['geschmack', 'lauf']).default('geschmack'),
   quelle: z.enum(['system', 'eigen']),
   regel: Regel.optional(),
 });

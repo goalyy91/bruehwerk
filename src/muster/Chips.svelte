@@ -15,17 +15,33 @@
   type Chip = { id: string; label: string };
   type ChipZustand = { phase: Phase; staerke?: Staerke };
 
+  // Paket 04: kontrollierte Fassung (ux-regeln R6, Anpassung statt neues
+  // Muster) — onAenderung meldet die gewaehlten Befunde nach aussen, damit
+  // ShotErfassung.svelte das Regelwerk (domain/diagnose.ts) danach fragen
+  // kann. Das Innenleben (Tap-Zyklus, Sortierung) bleibt unveraendert.
   let {
     gruppen,
     freitext = true,
+    onAenderung,
+    onFreitext,
   }: {
     gruppen: { titel: string; chips: Chip[] }[];
     freitext?: boolean;
+    onAenderung?: (befunde: { symptomId: string; staerke: Staerke }[]) => void;
+    onFreitext?: (text: string) => void;
   } = $props();
 
   const zustaende = $state<Record<string, ChipZustand>>({});
   let freitextOffen = $state(false);
   let freitextWert = $state('');
+
+  function befundeMelden() {
+    onAenderung?.(
+      Object.entries(zustaende)
+        .filter(([, z]) => z.phase === 'gewaehlt' && z.staerke)
+        .map(([symptomId, z]) => ({ symptomId, staerke: z.staerke! })),
+    );
+  }
 
   function zustandVon(id: string): ChipZustand {
     return zustaende[id] ?? { phase: 'aus' };
@@ -44,10 +60,12 @@
 
   function waehleStaerke(id: string, staerke: Staerke) {
     zustaende[id] = { phase: 'gewaehlt', staerke };
+    befundeMelden();
   }
 
   function entfernen(id: string) {
     zustaende[id] = { phase: 'aus' };
+    befundeMelden();
   }
 
   function label(chip: Chip, z: ChipZustand): string {
@@ -105,6 +123,7 @@
           class="feld"
           placeholder="etwas anderes …"
           bind:value={freitextWert}
+          oninput={() => onFreitext?.(freitextWert)}
         />
       {:else}
         <button type="button" class="ventil" onclick={() => (freitextOffen = true)}>etwas anderes …</button>

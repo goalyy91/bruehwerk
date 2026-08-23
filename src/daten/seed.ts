@@ -9,7 +9,7 @@
  * vorheriger Start bereits geschrieben — dann wird nichts ueberschrieben.
  */
 import { alle, lesen, schreiben } from './ablage';
-import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER } from './stammdaten';
+import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM } from './stammdaten';
 import { EINSTELLUNGEN_ID } from './schema';
 
 export async function seedFallsLeer(): Promise<void> {
@@ -20,6 +20,13 @@ export async function seedFallsLeer(): Promise<void> {
     for (const bruehgeraet of BRUEHGERAETE) await schreiben('bruehgeraet', bruehgeraet);
     for (const zubehoer of ZUBEHOER) await schreiben('zubehoer', zubehoer);
     for (const setup of SETUPS) await schreiben('setup', setup);
+  }
+
+  // Eigenes Gate: der Symptom-Store bleibt leer, solange nur Geraete gesetzt
+  // wurden (z. B. teilweise migrierte DB) — er wird unabhaengig geprueft.
+  const symptomeVorhanden = await alle('symptom');
+  if (symptomeVorhanden.length === 0) {
+    for (const symptom of SYMPTOME_STAMM) await schreiben('symptom', symptom);
   }
 
   // Eigenes Gate, unabhaengig vom Geraetepark oben — sonst wuerde der

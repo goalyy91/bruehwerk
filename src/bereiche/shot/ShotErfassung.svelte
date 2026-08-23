@@ -5,17 +5,22 @@
   // K12 (Alltagskorrektur ohne Vorbelegung), K66 (Schreibfehler haelt die
   // Werte im Feld).
   //
-  // "Wie war er?" schreibt den Shot sofort (ein Tap, K4). Diagnose bei
-  // "daneben" ist Paket 04 und wird hier nicht gebaut — das Urteil wird
-  // geloggt, mehr nicht.
+  // "Wie war er?" schreibt den Shot sofort (ein Tap, K4). Bei "daneben"
+  // folgt die Diagnose (Paket 04, Etappe A): Chips -> Regelwerk
+  // (domain/diagnose.ts) -> Vorschlag mit Uebernehmen. Der Shot ist zu dem
+  // Zeitpunkt schon geschrieben; Chips/Vorschlag aktualisieren ihn per
+  // zweitem schreiben('shot', ...).
 
   import { bestand, schreiben } from '../bestand.svelte';
-  import { bildeMessreihe } from '../../domain/messreihe';
+  import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
+  import { diagnostiziere, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Chips from '../../muster/Chips.svelte';
+  import Vorschlag from '../../muster/Vorschlag.svelte';
   import type { Shot, Urteil as UrteilTyp } from '../../daten/schema';
 
   // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jeder Bildschirm selbst
@@ -74,11 +79,115 @@
     return zeilen;
   });
 
-  type Phase = 'eingabe' | 'schreibfehler' | 'alltagskorrektur' | 'fertig';
+  type Phase = 'eingabe' | 'schreibfehler' | 'diagnose' | 'alltagskorrektur' | 'fertig';
   let phase = $state<Phase>('eingabe');
   let schreibFehlerText = $state('');
   let entwurf = $state<Shot | undefined>(undefined);
   let mgAbweichung = $state<{ alt: number; neu: number } | undefined>(undefined);
+
+  // Diagnose-Schritt (nur bei "daneben") — Chips melden ihre Auswahl per
+  // onAenderung/onFreitext (Chips.svelte, kontrollierte Fassung).
+  let diagnoseBefunde = $state<Befund[]>([]);
+  let diagnoseFreitext = $state('');
+
+  const CHIP_GRUPPEN: { titel: string; gruppe: 'geschmack' | 'lauf' }[] = [
+    { titel: 'Geschmack', gruppe: 'geschmack' },
+    { titel: 'Lauf', gruppe: 'lauf' },
+  ];
+  const chipGruppen = $derived(
+    CHIP_GRUPPEN.map((g) => ({
+      titel: g.titel,
+      chips: bestand.symptome.filter((s) => s.gruppe === g.gruppe).map((s) => ({ id: s.id, label: s.label })),
+    })),
+  );
+
+  const diagnoseErgebnis = $derived(diagnostiziere(diagnoseBefunde));
+
+  // K76 — ein bereits diagnostizierter, nicht uebernommener Befund legt sich
+  // nicht bei jedem folgenden Shot erneut vor. Er kehrt erst zurueck, wenn
+  // der UNMITTELBAR vorherige Shot auf diesem Profil dieselbe Regel zeigte
+  // (kehrtZurueck) — sonst bleibt er unterdrueckt, auch wenn er bei einem
+  // noch frueheren Shot schon einmal auftauchte.
+  const vorherigeProfilShots = $derived(
+    bestand.shots.filter((s) => s.profilId === profilId && s.id !== entwurf?.id).sort((a, b) => b.ts - a.ts),
+  );
+  const vorherigeRegelId = $derived.by(() => {
+    const v = vorherigeProfilShots[0]?.vorschlag;
+    return v && v.zustand !== 'uebernommen' ? v.regelId : undefined;
+  });
+  const wurdeBereitsGezeigt = $derived(
+    diagnoseErgebnis ? vorherigeProfilShots.some((s) => s.vorschlag?.regelId === diagnoseErgebnis.regelId && s.vorschlag?.zustand !== 'uebernommen') : false,
+  );
+  const diagnoseUnterdrueckt = $derived(
+    diagnoseErgebnis
+      ? wurdeBereitsGezeigt && !kehrtZurueck(vorherigeRegelId, diagnoseErgebnis.regelId)
+      : false,
+  );
+
+  // K67/K75 — liegt der Ist-Wert des betroffenen Parameters ausserhalb der
+  // bisherigen Messreihe dieses Profils, entfaellt der Vorschlag mit
+  // Begruendung statt eine Diagnose zu erzwingen.
+  const messreiheAenderung = $derived.by(() => {
+    const aenderung = diagnoseErgebnis?.aenderung;
+    if (!aenderung) return undefined;
+    const werte = bestand.shots
+      .filter((s) => s.profilId === profilId && s.id !== entwurf?.id)
+      .map((s) => s.ist[aenderung.parameter])
+      .filter((w): w is number => w !== undefined);
+    return bildeMessreihe(werte);
+  });
+  const EINHEIT_PARAMETER: Record<RegelParameter, string> = { mg: '', kt: '°C', output: 'g', input: 'g' };
+  const ausserhalbMessreihe = $derived.by(() => {
+    const aenderung = diagnoseErgebnis?.aenderung;
+    const reihe = messreiheAenderung;
+    if (!aenderung || !reihe || !entwurf) return undefined;
+    const istWert = entwurf.ist[aenderung.parameter];
+    if (istWert === undefined) return undefined;
+    if (istWert >= reihe.min && istWert <= reihe.max) return undefined;
+    const einheit = aenderung.parameter === 'mg' && muehle?.skala.typ === 'klicks' ? 'Klicks' : EINHEIT_PARAMETER[aenderung.parameter];
+    return `${messreiheSatz(reihe, einheit)} bisher · Vorschlag entfällt`;
+  });
+
+  async function diagnoseAbschliessen(uebernommen: boolean) {
+    if (!entwurf || !profil) return;
+    let aktualisiert: Shot = { ...entwurf, befunde: diagnoseBefunde, freitext: diagnoseFreitext.trim() || undefined };
+    const ergebnis = diagnoseErgebnis;
+    if (ergebnis && !ausserhalbMessreihe) {
+      aktualisiert = {
+        ...aktualisiert,
+        vorschlag: {
+          regelId: ergebnis.regelId,
+          diagnose: ergebnis.diagnose,
+          empfehlungstext: ergebnis.empfehlungstext,
+          parameter: ergebnis.aenderung?.parameter,
+          richtung: ergebnis.aenderung?.richtung,
+          alt: ergebnis.aenderung ? profil.ziel[ergebnis.aenderung.parameter] : undefined,
+          neu:
+            ergebnis.aenderung && uebernommen
+              ? berechneNeuenWert(ergebnis.aenderung, profil.ziel[ergebnis.aenderung.parameter] ?? 0, mgSchrittgroesse(ergebnis.aenderung.parameter))
+              : undefined,
+          zustand: uebernommen ? 'uebernommen' : 'offen',
+          ts: Date.now(),
+        },
+      };
+    }
+    try {
+      await schreiben('shot', aktualisiert);
+      if (uebernommen && ergebnis?.aenderung && aktualisiert.vorschlag?.neu !== undefined) {
+        await schreiben('profil', { ...profil, ziel: { ...profil.ziel, [ergebnis.aenderung.parameter]: aktualisiert.vorschlag.neu } });
+      }
+    } catch (fehler) {
+      schreibFehlerText = fehler instanceof Error ? fehler.message : String(fehler);
+      phase = 'schreibfehler';
+      return;
+    }
+    phase = 'fertig';
+    onFertig();
+  }
+
+  function mgSchrittgroesse(parameter: RegelParameter): number {
+    return parameter === 'mg' && muehle ? muehle.skala.schritt : 1;
+  }
 
   async function urteilGewaehlt(stufe: 'daneben' | 'okay' | 'sehr gut' | 'Referenz') {
     if (!profil || !kaffee) return;
@@ -117,9 +226,12 @@
   async function schreibversuch(shot: Shot) {
     try {
       await schreiben('shot', shot);
-      // K12 — Alltagskorrektur nur bei sehr gut/Referenz UND abweichendem
-      // Mahlgrad, und ausdruecklich ohne Vorbelegung.
-      if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
+      if (shot.urteil === 'daneben') {
+        // Paket 04, Etappe A — Diagnose statt direktem Abschluss.
+        phase = 'diagnose';
+      } else if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
+        // K12 — Alltagskorrektur nur bei sehr gut/Referenz UND abweichendem
+        // Mahlgrad, und ausdruecklich ohne Vorbelegung.
         mgAbweichung = { alt: profil.ziel.mg, neu: mg };
         phase = 'alltagskorrektur';
       } else {
@@ -167,6 +279,34 @@
     <Knopf stufe="primaer" onKlick={nochmalSpeichern}>nochmal speichern</Knopf>
     <Knopf stufe="still" onKlick={shotVerwerfen}>Shot verwerfen</Knopf>
   </div>
+{:else if phase === 'diagnose'}
+  <p class="frage-titel">Was stört?</p>
+  <p class="hinweis">Bleibt am Shot stehen, auch ohne Auswahl — „fertig" reicht.</p>
+
+  <Chips
+    gruppen={chipGruppen}
+    onAenderung={(befunde) => (diagnoseBefunde = befunde)}
+    onFreitext={(text) => (diagnoseFreitext = text)}
+  />
+
+  {#if diagnoseErgebnis && !diagnoseUnterdrueckt}
+    <div class="diagnose-vorschlag">
+      <Vorschlag
+        diagnose={diagnoseErgebnis.diagnose}
+        empfehlung={diagnoseErgebnis.empfehlungstext}
+        start={ausserhalbMessreihe ? 'fehlt' : 'offen'}
+        begruendungFehlt={ausserhalbMessreihe}
+        onUebernehmen={() => void diagnoseAbschliessen(true)}
+        onSpaeter={() => void diagnoseAbschliessen(false)}
+      />
+    </div>
+  {/if}
+
+  {#if !diagnoseErgebnis || diagnoseUnterdrueckt || ausserhalbMessreihe}
+    <div class="knopfreihe">
+      <Knopf stufe="primaer" onKlick={() => void diagnoseAbschliessen(false)}>fertig</Knopf>
+    </div>
+  {/if}
 {:else if phase === 'alltagskorrektur' && mgAbweichung}
   <p class="frage-titel">
     {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war {entwurf?.urteil === 'referenz' ? 'Referenz' : 'sehr gut'}.
@@ -233,6 +373,9 @@
     margin-bottom: var(--r4);
   }
   .urteil-block {
+    margin-top: var(--r5);
+  }
+  .diagnose-vorschlag {
     margin-top: var(--r5);
   }
   .frage {

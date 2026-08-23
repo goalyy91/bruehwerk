@@ -10,7 +10,8 @@
  * Ablauf dahinter ist bewusst leer (K48), die echten Ruestzeiten-Buendel
  * spezifiziert erst der Planer in Paket 06.
  */
-import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup } from './schema';
+import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom } from './schema';
+import { SYMPTOME } from '../domain/diagnose';
 
 export const MUEHLE_SCULPTOR: Muehle = {
   id: 'muehle-sculptor',
@@ -188,6 +189,19 @@ export const SETUP_MOKA_3: Setup = {
   zubehoerIds: [],
   ablaufId: ABLAUF_LEER.id,
 };
+
+/**
+ * Die elf System-Chips (Paket 04) als Symptom-Datensaetze — domain/diagnose.ts
+ * traegt den Katalog, hier wird daraus nur der Store-Eintrag. Ids sind die
+ * Katalog-Ids selbst (stabil, menschenlesbar), keine UUIDs — das Regelwerk
+ * verweist per Id auf sie und darf sich beim Seeden nicht verschieben.
+ */
+export const SYMPTOME_STAMM: readonly Symptom[] = SYMPTOME.map((s) => ({
+  id: s.id,
+  label: s.label,
+  gruppe: s.gruppe,
+  quelle: 'system' as const,
+}));
 
 export const SETUPS: readonly Setup[] = [
   SETUP_ESPRESSO,

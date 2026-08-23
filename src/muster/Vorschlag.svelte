@@ -14,6 +14,11 @@
 
   type Zustand = 'offen' | 'uebernommen' | 'abgelehnt' | 'fehlt';
 
+  // Paket 04: kontrollierte Fassung (ux-regeln R6) — die drei Callbacks
+  // lassen einen Aufrufer tatsaechlich etwas tun (Profil-Ziel schreiben,
+  // Shot.vorschlag.zustand persistieren), statt dass der Klick nur die
+  // eigene Optik umschaltet. Der interne zustand bleibt fuer die sofortige
+  // visuelle Rueckmeldung bestehen, unabhaengig vom Speichern.
   let {
     form = 'voll',
     diagnose,
@@ -22,6 +27,9 @@
     start = 'offen',
     begruendungFehlt,
     datum,
+    onUebernehmen,
+    onSpaeter,
+    onDochUebernehmen,
   }: {
     form?: 'voll' | 'duenn';
     diagnose: string;
@@ -30,18 +38,24 @@
     start?: Zustand;
     begruendungFehlt?: string;
     datum?: string;
+    onUebernehmen?: () => void;
+    onSpaeter?: () => void;
+    onDochUebernehmen?: () => void;
   } = $props();
 
   let zustand = $state<Zustand>(untrack(() => start));
 
   function uebernehmen() {
     zustand = 'uebernommen';
+    onUebernehmen?.();
   }
   function spaeter() {
     // bleibt „offen“ — der Vorschlag bleibt am Shot stehen (K10)
+    onSpaeter?.();
   }
   function dochUebernehmen() {
     zustand = 'uebernommen';
+    onDochUebernehmen?.();
   }
 </script>
 
