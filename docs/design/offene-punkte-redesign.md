@@ -1,6 +1,6 @@
 # Offene Punkte — Visueller Redesign-Reset
 
-Stand: 2026-08-23, nach Abschluss Paket 1 (Fundament und globale Muster) auf
+Stand: 2026-08-23, nach Abschluss Paket 2 (Kaffeeliste und Kaffeeblatt) auf
 Branch `design/redesign-v1`.
 
 **`docs/design/redesign-v1-handoff.md` bleibt die Quelle für alles Visuelle,
@@ -29,15 +29,15 @@ im Handoff nicht mehr gibt:
 --linie-zart   → var(--linie)
 ```
 
-**Zweck:** Screens, die in Paket 2–4 erst noch umgebaut werden, sollten schon
+**Zweck:** Screens, die in Paket 3–4 erst noch umgebaut werden, sollten schon
 jetzt die neue Farbwelt zeigen, ohne dass ihre Struktur vorzeitig angefasst
-wird. Betroffen sind aktuell noch: `Einstellungen.svelte`, `KaffeeListe.svelte`
-(nur der schwebende „+“-Button, die Suchzeile ist bereits umgebaut),
-`Kaffeeblatt.svelte`, `KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`,
-`Profilblatt.svelte`, `ShotErfassung.svelte`, `GussplanEditor.svelte`,
-`Geraete.svelte`, `Bruehgeraetblatt.svelte`, `Muehleblatt.svelte`,
-`Setupblatt.svelte`, `*Ansicht.svelte`, `TempReferenz(Screen).svelte`,
-`Migration.svelte`, `Bar.svelte`.
+wird. Nach Paket 2 vollständig umgestellt (keine Alias-Nutzung mehr):
+`KaffeeListe.svelte`, `Kaffeeblatt.svelte`. Noch offen: `Einstellungen.svelte`,
+`KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`, `Profilblatt.svelte`,
+`ShotErfassung.svelte`, `GussplanEditor.svelte`, `Geraete.svelte`,
+`Bruehgeraetblatt.svelte`, `Muehleblatt.svelte`, `Setupblatt.svelte`,
+`*Ansicht.svelte`, `TempReferenz(Screen).svelte`, `Migration.svelte`,
+`Bar.svelte`.
 
 **Wenn ein dieser Screens umgebaut ist:** dort direkt `--blatt`/`--vertiefung`/
 `--linie` referenzieren statt der Alt-Namen. Wenn **kein** Verbraucher eines
@@ -46,12 +46,13 @@ Konsistenzprüfung) — er bleibt sonst als stille Falle stehen, die neuer Code
 aus Versehen wieder benutzt.
 
 Ebenfalls noch offen: `--radius-feld` (0) und `--radius-chip` (2px) existieren
-**nicht mehr** als Tokens (ersatzlos entfernt, nicht aliasiert). Nur zwei
-Fundstellen nutzen sie noch: `Einstellungen.svelte` (`.karte`) und
-`KaffeeListe.svelte` (`.schwebend`) — beide fallen unauffällig auf Radius 0
-zurück (der alte Wert von `--radius-feld`), bis sie in Paket 2/4 auf die neue
-Radius-Familie (`--r-blatt` 20 · `--r-karte` 18 · `--r-kachel` 16 ·
-`--r-pille` 999 · `--r-wertfeld` 4) umgestellt werden.
+**nicht mehr** als Tokens (ersatzlos entfernt, nicht aliasiert). Nur noch eine
+Fundstelle nutzt sie: `Einstellungen.svelte` (`.karte`) — fällt unauffällig
+auf Radius 0 zurück (der alte Wert von `--radius-feld`), bis sie in Paket 4
+auf die neue Radius-Familie (`--r-blatt` 20 · `--r-karte` 18 · `--r-kachel` 16
+· `--r-pille` 999 · `--r-wertfeld` 4) umgestellt wird. `KaffeeListe.svelte`
+ist seit Paket 2 erledigt (schwebender Knopf jetzt `border-radius: 50%` mit
+`--fuellung`).
 
 ## 2. Zwei Handoff-interne Maß-Konflikte — bewusst wörtlich umgesetzt
 
@@ -69,16 +70,15 @@ der 48-px-Regel — das ist keine eigene Designentscheidung, sondern ein
 Widerspruch im Handoff-Dokument selbst. Falls das korrigiert werden soll,
 gehört die Korrektur zuerst in den Handoff, danach in den Code.
 
-## 3. Kopfzeile: zweite Titelgröße noch nicht gebaut
+## 3. Kopfzeile: zweite Titelgröße — erledigt in Paket 2
 
-`Kopfzeile.svelte` hat aktuell nur die 26/600-Größe (Handoff: „Screentitel mit
-Rückweg“). Die zweite Größe (30–32/600, zweizeilig, für Objektseiten wie das
-Kaffeeblatt) wurde in Paket 1 **bewusst nicht** als Prop vorgebaut — ohne
-tatsächlichen Aufrufer wäre die API-Form geraten. Fällig, sobald ein Paket-2-
-Screen (voraussichtlich `Kaffeeblatt.svelte`) sie braucht. Offene
-Detailfrage dabei: Prop `variante` mit explizitem Wert, oder Ableitung aus der
-Titellänge/einem `<br>` im String? Noch nicht entschieden — nicht raten,
-sondern bei Bedarf klären.
+`Kopfzeile.svelte` hat jetzt einen additiven `gross`-Prop (boolean, Default
+`false`): Icon-Reihe (Rückweg + Aktion) in einer eigenen Zeile, Titel als
+32/600-Block darunter. Erster und bisher einziger Aufrufer:
+`Kaffeeblatt.svelte`. Jeder andere Aufruf ohne `gross` verhält sich exakt wie
+zuvor (verifiziert: `svelte-check` 0 Fehler, alle 358 Tests grün). Kein
+`<br>`-Parsing im Titelstring — mehrzeilige Titel entstehen durch natürlichen
+Zeilenumbruch bei 32px Schriftgröße, nicht durch eine erzwungene Trennstelle.
 
 ## 4. Sechs Muster ohne Produktions-Verwendung — zurückgestellt auf Paket 5
 
@@ -102,13 +102,10 @@ Paket 05) bekommt sonst dasselbe CSS ein zweites Mal von Hand. Einziger
 aktueller Aufrufer: `KaffeeListe.svelte`. Gehört ins Musterblatt, sobald
 Paket 5 ansteht (`ux-regeln.md` Regel 6/K74).
 
-## 6. Schwebender „+“-Knopf in `KaffeeListe.svelte` — Entscheidung getroffen, noch nicht umgesetzt
+## 6. Schwebender „+“-Knopf in `KaffeeListe.svelte` — erledigt in Paket 2
 
-Julian hat entschieden: rund (Radius 999) und mit der Füllfläche statt der
-bisherigen eckigen Tinte-Fläche. **Noch nicht umgesetzt**, weil das eine
-Strukturänderung an einem Paket-2-Screen ist, keine gemeinsame Komponente —
-Paket 1 hat ausdrücklich nur die Suchzeile in diesem Screen angefasst. Fällig
-mit Paket 2.
+Rund (Radius 999) und mit der Füllfläche (`--fuellung`/`--auf-fuellung`)
+statt der bisherigen eckigen Tinte-Fläche.
 
 ## 7. Musterblatt — vier Stellen minimal nachgezogen, Rest offen
 
@@ -120,6 +117,23 @@ Datei (14 Musterabschnitte, Tab-Leiste im Bild, etc.) ist unverändert und
 zeigt entsprechend noch die alte Optik der dort eingebundenen, noch nicht
 migrierten Muster (siehe Punkt 4).
 
+## 8. Neues Muster für „Blatt mit navigierbaren Zeilen“ — weiterhin offen, jetzt zweimal gebraucht
+
+Elf Screens bauen ihre Listenzeilen von Hand — `Kaffeeblatt.svelte` ist jetzt
+eines davon (Profile/Bohne-Falte/Chargen als lokales
+`.panel`/`.listenzeile`/`.chargenzeile`-CSS, siehe Kopfkommentar dort). Kein
+zentrales Muster dafür existiert. Ich habe **bewusst kein neues Muster
+gebaut** (das wäre eine Architekturentscheidung ohne Rückfrage gewesen),
+sondern lokal implementiert — faithful zur Designreferenz, aber eine echte
+Duplikationsstelle für Paket 4 (Geräte-Blätter brauchen exakt dasselbe Bild:
+Zeile, rundes Badge/kein Badge, Meta rechts, „›“). Spätestens dort lohnt sich
+die Frage neu: gemeinsames `Blattliste.svelte`-Muster einführen (nach
+`ux-regeln.md` Regel 6 erst nach Prüfung, ob eines der 22+2 vorhandenen
+Muster mit kleiner Anpassung reicht — tut es hier nicht, keins deckt "Zeile
+mit optionalem rundem Icon-Badge + Meta + Chevron" ab) oder weiter lokal
+duplizieren. Bitte vor Paket 4 entscheiden statt es ein drittes Mal
+stillschweigend zu kopieren.
+
 ---
 
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
@@ -128,7 +142,12 @@ migrierten Muster (siehe Punkt 4).
   Schalter, AuswahlListe, Werteliste, IstGegenZiel, Vorschlag,
   LesartUmschalter, VorbelegteFrage, Kopfzeile (Rückweg-Knopf), Herkunft
   (Schatten entfernt), Tab-Leiste (`Rahmen.svelte`), Suchfeld neu.
+- Paket 2 vollständig: `Kaffeekarte.svelte` neu, `KaffeeListe.svelte`
+  (Karten statt Zeilen, runder gefüllter Anlege-Knopf), `Kaffeeblatt.svelte`
+  (Kopfzeile-`gross`-Modus, Röstgrad/Bewertung-Blattzeile mit senkrechter
+  Haarlinie, Profile/Bohne-Falte/Chargen als Blattpanel), `Kopfzeile.svelte`
+  um additiven `gross`-Prop erweitert.
 - Source Sans 3 als Apparatschrift installiert und eingebunden
   (`@fontsource-variable/source-sans-3`).
 - `npm test` (vitest inkl. `tokens.test.ts`/`schichten.test.ts`, svelte-check,
-  vite build) grün nach Paket 1.
+  vite build) grün nach Paket 1 und Paket 2 (358 Tests, 0 svelte-check-Fehler).
