@@ -312,8 +312,8 @@
             { x: 0.95, y: 0.62 },
           ]}
           achsMarken={['3,60', '3,75', '3,90']}
-          totzone={{ vonY: 0.25, bisY: 0.4, wort: 'toter Bereich' }}
-          ereignisX={0.5}
+          totzonen={[{ vonY: 0.25, bisY: 0.4, wort: 'toter Bereich' }]}
+          ereignisse={[0.5]}
         />
         <Verlaufskurve punkte={[]} achsMarken={['3,60', '3,75', '3,90']} />
       </div>

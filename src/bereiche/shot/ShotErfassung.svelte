@@ -14,6 +14,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
   import { diagnostiziere, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
+  import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
@@ -79,11 +80,25 @@
     return zeilen;
   });
 
-  type Phase = 'eingabe' | 'schreibfehler' | 'diagnose' | 'alltagskorrektur' | 'fertig';
+  type Phase = 'eingabe' | 'schreibfehler' | 'diagnose' | 'alltagskorrektur' | 'drift' | 'fertig';
   let phase = $state<Phase>('eingabe');
   let schreibFehlerText = $state('');
   let entwurf = $state<Shot | undefined>(undefined);
   let mgAbweichung = $state<{ alt: number; neu: number } | undefined>(undefined);
+  let driftText = $state<string | undefined>(undefined);
+
+  // Chargenwechsel-Hinweis (konzept.md:528) — proaktiv VOR dem Bezug, wenn
+  // dieser Shot der erste auf der aktuellen Charge waere. Reine Anzeige,
+  // keine Aktion: die App warnt, sie greift nicht ein.
+  const profilShots = $derived(bestand.shots.filter((s) => s.profilId === profilId));
+  const isErsterShotAufCharge = $derived(
+    !!kaffee?.aktuelleChargeId && !profilShots.some((s) => s.chargeId === kaffee.aktuelleChargeId),
+  );
+  const chargenHinweisText = $derived.by(() => {
+    if (!isErsterShotAufCharge) return undefined;
+    const uebergaenge = ermittleUebergaenge(profilShots.map((s) => ({ chargeId: s.chargeId, ts: s.ts, zeit: s.ist.zeit })));
+    return chargenHinweis(uebergaenge);
+  });
 
   // Diagnose-Schritt (nur bei "daneben") — Chips melden ihre Auswahl per
   // onAenderung/onFreitext (Chips.svelte, kontrollierte Fassung).
@@ -229,11 +244,27 @@
       if (shot.urteil === 'daneben') {
         // Paket 04, Etappe A — Diagnose statt direktem Abschluss.
         phase = 'diagnose';
-      } else if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
+        return;
+      }
+
+      // Siebte Regelzeile (konzept.md:514) — feuert ohne Meldung, allein aus
+      // der Profil-Laufzeit. Bewusst VOR diesem Shot berechnet (die
+      // vorherigen Zeiten schliessen ihn nicht ein) — "schneller als die
+      // eigene Historie" darf sich nicht an sich selbst messen.
+      driftText = driftHinweis(
+        bestand.shots.filter((s) => s.profilId === profilId && s.id !== shot.id).map((s) => s.ist.zeit),
+        shot.ist.zeit,
+        true,
+      );
+
+      if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
         // K12 — Alltagskorrektur nur bei sehr gut/Referenz UND abweichendem
-        // Mahlgrad, und ausdruecklich ohne Vorbelegung.
+        // Mahlgrad, und ausdruecklich ohne Vorbelegung. Der Drift-Hinweis
+        // erscheint, falls vorhanden, im selben Zug als zusaetzliche Zeile.
         mgAbweichung = { alt: profil.ziel.mg, neu: mg };
         phase = 'alltagskorrektur';
+      } else if (driftText) {
+        phase = 'drift';
       } else {
         phase = 'fertig';
         onFertig();
@@ -251,6 +282,11 @@
   function shotVerwerfen() {
     entwurf = undefined;
     phase = 'eingabe';
+  }
+
+  function driftAbschliessen() {
+    phase = 'fertig';
+    onFertig();
   }
 
   async function alltagskorrekturAntwort(ja: boolean) {
@@ -321,9 +357,21 @@
     <Knopf stufe="primaer" onKlick={() => alltagskorrekturAntwort(true)}>Ja</Knopf>
     <Knopf stufe="still" onKlick={() => alltagskorrekturAntwort(false)}>Nein</Knopf>
   </div>
+  {#if driftText}
+    <p class="hinweis drift-zeile">{driftText}</p>
+  {/if}
+{:else if phase === 'drift' && driftText}
+  <p class="hinweis">{driftText}</p>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={driftAbschliessen}>fertig</Knopf>
+  </div>
 {:else}
   <h1>{kaffee.name}</h1>
   <p class="setup">{profil.name}</p>
+
+  {#if chargenHinweisText}
+    <p class="hinweis charge-hinweis">{chargenHinweisText}</p>
+  {/if}
 
   <div class="eingestellt">
     <Werteliste zeilen={einstellwerte} />
@@ -377,6 +425,12 @@
   }
   .diagnose-vorschlag {
     margin-top: var(--r5);
+  }
+  .charge-hinweis {
+    margin: 0 0 var(--r4);
+  }
+  .drift-zeile {
+    margin-top: var(--r4);
   }
   .frage {
     font-size: var(--fs-satz);

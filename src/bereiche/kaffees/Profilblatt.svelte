@@ -6,10 +6,12 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
+  import { findeTotzonen } from '../../domain/totzone';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import type { Profil } from '../../daten/schema';
 
@@ -27,6 +29,71 @@
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
   const setup = $derived(profil ? bestand.setups.find((s) => s.id === profil.setupId) : undefined);
+
+  // Verlauf — K40 (Totzonen als schraffierter Streifen in der Kurve, keine
+  // eigene Karte), Chargenwechsel als gestrichelte Senkrechte. Die Shots
+  // dieses Profils, chronologisch — x normalisiert ueber die Zeitspanne,
+  // y ueber die Mahlgrad-Spannweite. Bei einem einzigen Shot gibt es keine
+  // Zeitspanne zu normalisieren; er landet mittig.
+  const verlaufShots = $derived(
+    bestand.shots.filter((s) => s.profilId === profilId).sort((a, b) => a.ts - b.ts),
+  );
+  const mgSpanne = $derived.by(() => {
+    const werte = verlaufShots.map((s) => s.ist.mg);
+    if (werte.length === 0) return undefined;
+    const min = Math.min(...werte);
+    const max = Math.max(...werte);
+    return { min, max };
+  });
+  const zeitSpanne = $derived.by(() => {
+    if (verlaufShots.length === 0) return undefined;
+    return { von: verlaufShots[0]!.ts, bis: verlaufShots[verlaufShots.length - 1]!.ts };
+  });
+
+  function normiereMg(mg: number): number {
+    const spanne = mgSpanne;
+    if (!spanne || spanne.max === spanne.min) return 0.5;
+    return (mg - spanne.min) / (spanne.max - spanne.min);
+  }
+  function normiereZeit(ts: number): number {
+    const spanne = zeitSpanne;
+    if (!spanne || spanne.bis === spanne.von) return 0.5;
+    return (ts - spanne.von) / (spanne.bis - spanne.von);
+  }
+  function formatMg(mg: number): string {
+    return muehle?.skala.typ === 'klicks' ? String(Math.round(mg)) : mg.toFixed(2).replace(/0$/, '').replace(/\.$/, '');
+  }
+
+  const verlaufPunkte = $derived(
+    verlaufShots.map((s) => ({
+      x: normiereZeit(s.ts),
+      y: normiereMg(s.ist.mg),
+      zustand:
+        s.urteil === 'daneben' ? ('kritisch' as const) : s.urteil === 'okay' ? ('achtung' as const) : ('gut' as const),
+    })),
+  );
+  const verlaufAchsMarken = $derived.by((): [string, string, string] => {
+    const spanne = mgSpanne;
+    if (!spanne) return ['', '', ''];
+    return [formatMg(spanne.min), formatMg((spanne.min + spanne.max) / 2), formatMg(spanne.max)];
+  });
+  // Drei Muehle-Schritte als Cluster-Toleranz — grob genug, um "3,75/3,80/3,90"
+  // als ein Band zu erkennen, eng genug, um zwei echt getrennte Bereiche
+  // nicht zu verschmelzen.
+  const verlaufTotzonen = $derived.by(() => {
+    const spanne = mgSpanne;
+    if (!spanne || spanne.max === spanne.min) return [];
+    const toleranz = (muehle?.skala.schritt ?? (spanne.max - spanne.min) / 10) * 3;
+    return findeTotzonen(
+      verlaufShots.map((s) => ({ mg: s.ist.mg, daneben: s.urteil === 'daneben' })),
+      toleranz,
+    ).map((z) => ({ vonY: normiereMg(z.von), bisY: normiereMg(z.bis), wort: z.satz }));
+  });
+  const verlaufEreignisse = $derived(
+    verlaufShots
+      .filter((s, i) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
+      .map((s) => normiereZeit(s.ts)),
+  );
 
   const gruppenTemperatur = $derived(
     profil?.ziel.kt !== undefined && bruehgeraet
@@ -169,6 +236,16 @@
     <Werteliste zeilen={spielraumZeilen} />
   </section>
 
+  <section class="verlauf">
+    <h2>Verlauf</h2>
+    <Verlaufskurve
+      punkte={verlaufPunkte}
+      achsMarken={verlaufAchsMarken}
+      totzonen={verlaufTotzonen}
+      ereignisse={verlaufEreignisse}
+    />
+  </section>
+
   {#if bruehgeraet?.typ === 'pourover'}
     <GussplanEditor {profilId} />
   {/if}
@@ -210,6 +287,9 @@
     color: var(--gedaempft);
     font-weight: var(--gw-text);
     margin: var(--r5) 0 var(--r2);
+  }
+  .verlauf {
+    margin-top: var(--r5);
   }
   .setup-wahl {
     margin-top: var(--r5);

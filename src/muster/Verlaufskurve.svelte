@@ -11,20 +11,25 @@
   // dem SVG — nicht als <circle> darin. Das SVG wird in x und y
   // unterschiedlich skaliert (freie Breite, feste Höhe), ein <circle>
   // würde darin zur Ellipse verzerrt.
+  //
+  // Paket 04: totzone/ereignisX wurden zu totzonen[]/ereignisse[] — ein
+  // Kaffee sammelt über Monate mehr als einen Chargenwechsel und ggf. mehr
+  // als einen toten Bereich (K40). Rendering und Maße bleiben unveraendert.
 
   type Zustand = 'gut' | 'achtung' | 'kritisch';
   type Punkt = { x: number; y: number; zustand?: Zustand };
+  type TotzoneBand = { vonY: number; bisY: number; wort: string };
 
   let {
     punkte,
     achsMarken,
-    totzone,
-    ereignisX,
+    totzonen = [],
+    ereignisse = [],
   }: {
     punkte: Punkt[];
     achsMarken: readonly [string, string, string];
-    totzone?: { vonY: number; bisY: number; wort: string };
-    ereignisX?: number;
+    totzonen?: TotzoneBand[];
+    ereignisse?: number[];
   } = $props();
 
   const HOEHE = 180;
@@ -49,29 +54,31 @@
           <rect width="2" height="4" class="schraffur-strich" />
         </pattern>
       </defs>
-      {#if totzone}
+      {#each totzonen as zone (zone.wort)}
         <rect
           x="0"
-          y={HOEHE - totzone.bisY * HOEHE}
+          y={HOEHE - zone.bisY * HOEHE}
           width={BREITE}
-          height={(totzone.bisY - totzone.vonY) * HOEHE}
+          height={(zone.bisY - zone.vonY) * HOEHE}
           class="totzone"
           fill="url(#schraffur)"
         />
-      {/if}
-      {#if ereignisX !== undefined}
-        <line x1={ereignisX * BREITE} y1="0" x2={ereignisX * BREITE} y2={HOEHE} class="ereignis" />
-      {/if}
+      {/each}
+      {#each ereignisse as x (x)}
+        <line x1={x * BREITE} y1="0" x2={x * BREITE} y2={HOEHE} class="ereignis" />
+      {/each}
       {#if pfad}
         <path d={pfad} class="linie" fill="none" />
       {/if}
     </svg>
-    {#if totzone}
-      <div class="totzone-wort">
-        <span class="totzone-muster" aria-hidden="true"></span>
-        {totzone.wort}
-      </div>
-    {/if}
+    <div class="totzone-woerter">
+      {#each totzonen as zone (zone.wort)}
+        <div class="totzone-wort">
+          <span class="totzone-muster" aria-hidden="true"></span>
+          {zone.wort}
+        </div>
+      {/each}
+    </div>
     {#each punkte as p (p.x)}
       <span
         class="punkt"
@@ -125,10 +132,16 @@
   .totzone {
     opacity: 0.5;
   }
-  .totzone-wort {
+  .totzone-woerter {
     position: absolute;
     top: var(--r2);
     right: var(--r2);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .totzone-wort {
     display: flex;
     align-items: center;
     gap: 4px;
