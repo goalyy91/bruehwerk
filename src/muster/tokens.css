@@ -68,19 +68,6 @@
   --achtung: var(--h-achtung);
   --kritisch: var(--h-kritisch);
 
-  /* ---- Rückwärtskompatible Rollen-Aliase ----
-     Übergangs-Tokens für Screens, die erst in Paket 2-4 auf die neuen
-     Rollen umgestellt werden (K74-Nachfolge-Prinzip: Migration über
-     Tokens, nicht durch gleichzeitiges Anfassen aller Dateien). Neuer
-     Code referenziert direkt --blatt/--vertiefung/--linie — diese Aliase
-     bestehen nur, damit noch nicht migrierte Screens sofort die neue
-     Farbwelt bekommen, ohne dass hier schon ihre Struktur angefasst wird. */
-  --ruhig: var(--blatt);
-  --feld: var(--vertiefung);
-  --feld-blatt: var(--blatt);
-  --feld-rahmen: transparent; /* Handoff 3.5: Blätter haben keinen Rand — in keinem Theme */
-  --linie-zart: var(--linie); /* Handoff 3.5: eine Linienrolle, keine zwei Abstufungen mehr */
-
   /* ---- Schrift (Handoff 3.2) ---- */
   --schrift: 'Source Serif 4 Variable', Georgia, serif; /* trägt allen Inhalt */
   --schrift-sans: 'Source Sans 3 Variable', system-ui, sans-serif; /* trägt nur den Apparat */

@@ -1,7 +1,9 @@
 # Offene Punkte — Visueller Redesign-Reset
 
-Stand: 2026-08-24, nach Abschluss Paket 4 (Einstellungen, Geräte,
-Geräteformulare, übrige produktive Screens) auf Branch `design/redesign-v1`.
+Stand: 2026-08-24, nach Abschluss Paket 5 (Musterblatt, Konsistenz-Audit,
+Token-Hygiene, Light/Dark-Strukturprüfung) auf Branch `design/redesign-v1`.
+Redesign-Umsetzung (Paket 1–5) damit inhaltlich abgeschlossen — offen bleiben
+nur die unten gelisteten, bewusst nicht selbst entschiedenen Punkte.
 
 **`docs/design/redesign-v1-handoff.md` bleibt die Quelle für alles Visuelle,
 `docs/konzept.md`/`docs/ux-regeln.md` für Produktlogik/UX.** Dieses Dokument
@@ -49,37 +51,24 @@ es zuerst als Entscheidung ins Konzept, dann als eigener (kleiner) Auftrag.
 
 ---
 
-## 1. Rückwärtskompatible Alias-Tokens — müssen mit Paket 2–4 abgebaut werden
+## 1. Rückwärtskompatible Alias-Tokens — erledigt in Paket 5
 
-`src/muster/tokens.css` definiert zur Übergangszeit fünf Alias-Rollen, die es
-im Handoff nicht mehr gibt:
+`src/muster/tokens.css` definierte zur Übergangszeit fünf Alias-Rollen
+(`--ruhig`, `--feld`, `--feld-blatt`, `--feld-rahmen`, `--linie-zart`), die es
+im Handoff nicht mehr gibt. Nach Paket 4 waren die einzigen verbleibenden
+Nutzer `Ablaufliste.svelte`, `BausteinListe.svelte`, `DrillDown.svelte`
+(ausschließlich über `Musterblatt.svelte` erreichbar). Paket 5 hat alle drei
+auf die echten Rollen umgestellt (Blattliste mit Haarlinien statt eckig
+umrandeter `--feld`-Zeilen, „gewählt"/„aktiv" jetzt Füllfläche statt
+`box-shadow: inset … var(--akzent)` — dieselbe Migration wie in Paket 1 für
+die produktiven Muster) und den kompletten Alias-Block **ersatzlos aus
+`tokens.css` entfernt**. Verifiziert per Grep über ganz `src/` (Stand
+2026-08-24): keine Treffer mehr für `--feld)`/`--feld-blatt`/
+`--feld-rahmen`/`--linie-zart`/`--ruhig)` außerhalb erklärender Kommentare in
+zwei Geräteformularen (die beschreiben dort nur noch, was früher da war).
 
-```
---ruhig        → var(--blatt)
---feld         → var(--vertiefung)
---feld-blatt   → var(--blatt)
---feld-rahmen  → transparent
---linie-zart   → var(--linie)
-```
-
-**Stand nach Paket 4: kein produktiver Screen nutzt die Aliase mehr.** Verifiziert
-per Grep über `src/bereiche` (Stand 2026-08-24) — null Treffer für
-`--feld)`/`--feld-blatt`/`--feld-rahmen`/`--linie-zart`/`--ruhig`/
-`radius-feld`/`radius-chip` in `src/bereiche/**/*.svelte`. Auch `Kontextmenue.
-svelte` (produktiv in mehreren Ansicht-Screens genutzt) ist jetzt umgestellt.
-
-**Einzige verbleibenden Nutzer der Aliase:** `Ablaufliste.svelte`,
-`BausteinListe.svelte`, `DrillDown.svelte` (siehe Punkt 4) — ausschließlich
-über `Musterblatt.svelte` erreichbar, das explizit Paket 5 ist. Die Aliase
-bleiben deshalb **bewusst in `tokens.css` stehen**, bis diese drei Muster in
-Paket 5 migriert sind — sie sonst schon jetzt zu entfernen, hätte
-`Musterblatt.svelte` (aktuell noch ein echter, erreichbarer Bildschirm)
-optisch kaputt gemacht, ohne dass diese Session an der Datei etwas geändert
-hätte. Danach: Aliase ersatzlos aus `tokens.css` streichen.
-
-`--radius-feld`/`--radius-chip` existieren **nicht mehr** als Tokens. Auch
-hier: kein produktiver Screen nutzt sie mehr (`Einstellungen.svelte`s `.karte`
-wurde in Paket 4 durch `.panel`/`--r-blatt` ersetzt).
+`--radius-feld`/`--radius-chip` existierten schon vor Paket 5 nicht mehr als
+Tokens (kein produktiver Screen nutzte sie zuletzt in Paket 4).
 
 ## 2. Zwei Handoff-interne Maß-Konflikte — bewusst wörtlich umgesetzt
 
@@ -107,18 +96,26 @@ zuvor (verifiziert: `svelte-check` 0 Fehler, alle 358 Tests grün). Kein
 `<br>`-Parsing im Titelstring — mehrzeilige Titel entstehen durch natürlichen
 Zeilenumbruch bei 32px Schriftgröße, nicht durch eine erzwungene Trennstelle.
 
-## 4. Sechs Muster ohne Produktions-Verwendung — zurückgestellt auf Paket 5
+## 4. Sechs Muster ohne Produktions-Verwendung — Token-Migration in Paket 5 erledigt
 
 `Ablaufliste.svelte`, `BausteinListe.svelte`, `DrillDown.svelte`,
-`Rangliste.svelte`, `DoppelteEinheit.svelte`, `Treppe.svelte` werden aktuell
+`Rangliste.svelte`, `DoppelteEinheit.svelte`, `Treppe.svelte` werden weiterhin
 **ausschließlich** von `Musterblatt.svelte` verwendet (verifiziert per Grep
-über `src/bereiche`, Stand 2026-08-23) — kein produktiver Screen bindet sie
-ein. Sie tragen deshalb noch alte Auswahlmuster (u. a. `box-shadow: inset …
-var(--akzent)` in `Ablaufliste.zeile.aktiv` und `BausteinListe.zeile.
-angehoben`) und wurden in Paket 1 nicht angefasst, weil das nur zusammen mit
-`Musterblatt.svelte` selbst sauber ginge (Paket 5: „Musterblatt-Ergänzung und
-Konsistenzprüfung“). Bei Bedarf vorher prüfen, ob sich das inzwischen
-geändert hat (`grep -rl "from '.*/muster/<Name>.svelte'" src/bereiche`).
+über `src/bereiche`, Stand 2026-08-24) — kein produktiver Screen bindet sie
+ein, das ändert Paket 5 nicht (kein Screen wurde dafür neu gebaut). Beim
+Nachlesen zeigte sich: `Rangliste.svelte`, `DoppelteEinheit.svelte` und
+`Treppe.svelte` liefen schon auf den neuen Tokens (keine Aliase, kein
+Schatten) — nur `Ablaufliste.svelte`, `BausteinListe.svelte` und
+`DrillDown.svelte` trugen noch alte Auswahlmuster (`box-shadow: inset …
+var(--akzent)`, `--feld`/`--feld-rahmen`/`--ruhig`). Diese drei sind jetzt
+migriert (siehe Punkt 1). `BausteinListe.svelte`s „angehoben"-Zustand
+(während des Ziehens, keine Auswahl) bekam bewusst **keine** Füllfläche wie
+die übrigen Auswahlstrich-Migrationen, sondern einen linken Akzentstreifen
+auf Vertiefungsfläche — Füllfläche hätte hier wie eine Auswahl statt wie ein
+Zwischenzustand gewirkt.
+
+Bei Bedarf vorher prüfen, ob sich die Nichtverwendung inzwischen geändert hat
+(`grep -rl "from '.*/muster/<Name>.svelte'" src/bereiche`).
 
 ## 5. Neuer Baustein: `Suchfeld.svelte`
 
@@ -134,15 +131,26 @@ Paket 5 ansteht (`ux-regeln.md` Regel 6/K74).
 Rund (Radius 999) und mit der Füllfläche (`--fuellung`/`--auf-fuellung`)
 statt der bisherigen eckigen Tinte-Fläche.
 
-## 7. Musterblatt — vier Stellen minimal nachgezogen, Rest offen
+## 7. Musterblatt — vollständig auf finalen Redesign-Stand gebracht (Paket 5)
 
-`Musterblatt.svelte` ist Paket 5, wurde aber an vier Stellen doch angefasst,
-weil sie sonst auf inzwischen nicht mehr existierende Tokens gezeigt hätten
-(`--ruhig`/`--feld`-Swatches, `--fs-fuehrung`-Demo, `--h-papier`,
-`--marke-gut`) — reine Token-Umbenennung, keine Strukturänderung. Der Rest der
-Datei (14 Musterabschnitte, Tab-Leiste im Bild, etc.) ist unverändert und
-zeigt entsprechend noch die alte Optik der dort eingebundenen, noch nicht
-migrierten Muster (siehe Punkt 4).
+`Musterblatt.svelte` zeigt jetzt zusätzlich zu den ursprünglichen 15
+Musterabschnitten: `Segment`, `AuswahlListe`, `Suchfeld`, `Kaffeekarte`,
+`Parameterkachel`, `Werteliste`, die globale Formularzeile-/
+Eingabefeld-Text-Utility (inkl. `disabled`-Zustand), `Kopfzeile` im
+`gross`-Modus (mit und ohne Rückweg) sowie einen Fokuszustand-Hinweis — alles
+Muster, die produktiv verwendet werden, aber im Musterblatt bisher fehlten
+(verifiziert per Grep: Aufrufer in `src/bereiche` vorhanden, kein Eintrag im
+alten Musterblatt-Import). Kein neues Muster wurde dafür erfunden — jede
+Ergänzung bindet eine bestehende `src/muster/*.svelte`-Komponente oder
+`tokens.css`-Utility genau so ein, wie ein produktiver Screen sie auch nutzt.
+
+**Bewusst nicht ins Musterblatt übernommen:** die Tab-Leiste (`Rahmen.
+svelte`). Sie ist kein eigenständiges `src/muster`-Muster, sondern
+App-Chrome mit eigenem SVG-Icon-Satz — eine zweite Kopie im Musterblatt wäre
+genau die Art Duplikation, die Paket 5 abbauen soll, keine, die es anlegen
+sollte. Stattdessen direkt in `Rahmen.svelte` geprüft (Konsistenz-Audit,
+siehe unten): nutzt bereits durchgehend die neuen Tokens, kein Alt-Rest
+gefunden.
 
 ## 8. Neues Muster für „Blatt mit navigierbaren Zeilen“ — weiterhin offen, jetzt an neun Stellen dupliziert
 
@@ -230,6 +238,34 @@ die Icon-Reihe einfach weg. `KaffeeListe.svelte`, `Einstellungen.svelte`,
 Punkt 9 bleibt unverändert offen — in Paket 4 nicht nochmal angefasst, da
 außerhalb dieses Pakets Scope (betrifft Profilblatt/ShotErfassung, Paket 3).
 
+## 14. Lokale `.link`-Textzeile — kleine Restduplikation, bewusst nicht vereinheitlicht
+
+`Beobachtungen.svelte`, `GussplanEditor.svelte` und `Migration.svelte` bauen
+je eine eigene `.link`-Klasse für akzentfarbene Textzeilen-Aktionen
+(„+ Beobachtung“, Gussplan-Werkzeuge, „Migration erneut prüfen“) — identisches
+Grundmuster (`color: var(--akzent); background: none; border: none;`), aber
+mit **unterschiedlicher Schriftgröße** (`--fs-meta` 12 / `--fs-satz` 15 /
+`--fs-bedienwort` 17). Kleiner als in Paket 4 vermutet: `Einstellungen.svelte`
+und `Kaffeeblatt.svelte` nutzen diese Klasse inzwischen nicht mehr (dort schon
+durch `.blattzeile`-Zeilen ersetzt) — nur noch drei Fundstellen, nicht fünf.
+
+**Bewusst nicht vereinheitlicht:** die unterschiedlichen Größen könnten
+Absicht sein (unterschiedliches Gewicht der drei Aktionen im jeweiligen
+Kontext) oder schlicht Zufall — das lässt sich ohne Rückfrage nicht
+unterscheiden, und eine falsch geratene „richtige“ Größe wäre eine sichtbare
+Änderung an drei produktiven Screens. Kein Blocker, kleinste der offenen
+Konsistenzfragen dieses Redesigns.
+
+## 15. Konsistenz-Audit Paket 5 — Befund
+
+Durchsucht: alte Rollen-Tokens (`--feld`/`--ruhig`/`--linie-zart`/…), rohe
+Hex-Werte außerhalb `tokens.css`, `box-shadow`-Nutzung, `--radius-feld`/
+`--radius-chip`. Ergebnis: außer den drei in Punkt 1/4 behobenen Stellen
+**keine weiteren Treffer** in `src/muster` oder `src/bereiche`. Tab-Leiste
+(`Rahmen.svelte`), Kontextmenü, alle Geräteformulare: durchgehend neue
+Tokens, keine Schatten, keine alten Radien. Einzige verbliebene Kleinigkeit:
+Punkt 14.
+
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
 
 - Paket 1 vollständig: Tokens, Knopf, Segment, Chips, Urteil, Einzelauswahl,
@@ -265,10 +301,19 @@ außerhalb dieses Pakets Scope (betrifft Profilblatt/ShotErfassung, Paket 3).
   `KaffeeBearbeiten.svelte`s Röstgrad/Bewertung-Zeile jetzt wie in der
   Leseansicht (Kaffeeblatt) eine Blattzeile mit senkrechter Haarlinie statt
   einer randlosen Zeile.
-- **Nach Paket 4 ist kein produktiver Screen mehr unmigriert.** Einzig
-  `Musterblatt.svelte` (explizit Paket 5) zeigt noch die alte Formsprache,
-  begrenzt auf die sechs dort exklusiv genutzten Muster aus Punkt 4.
+- **Nach Paket 4 war kein produktiver Screen mehr unmigriert.** Einzig
+  `Musterblatt.svelte` zeigte noch die alte Formsprache, begrenzt auf die
+  sechs dort exklusiv genutzten Muster aus Punkt 4.
 - Source Sans 3 als Apparatschrift installiert und eingebunden
   (`@fontsource-variable/source-sans-3`).
+- Paket 5 vollständig: `Ablaufliste.svelte`/`BausteinListe.svelte`/
+  `DrillDown.svelte` auf neue Tokens migriert (Punkt 1/4); alle fünf
+  Alias-Tokens ersatzlos aus `tokens.css` entfernt (Punkt 1); Musterblatt um
+  acht fehlende, aber produktiv verwendete Muster/Utilities ergänzt (Punkt 7);
+  Konsistenz-Audit über `src/muster`+`src/bereiche` durchgeführt, ein
+  kleiner Restbefund dokumentiert (Punkt 14/15); Light/Dark strukturell
+  geprüft (eine Rollenzuordnung, keine Sonderfälle je Theme); Responsive
+  per CSS-Review geprüft (kein `chromium-cli` auf dieser Maschine — siehe
+  Abschlussbericht).
 - `npm test` (vitest inkl. `tokens.test.ts`/`schichten.test.ts`, svelte-check,
-  vite build) grün nach Paket 1–4 (359 Tests, 0 svelte-check-Fehler).
+  vite build) grün nach Paket 1–5 (359 Tests, 0 svelte-check-Fehler).

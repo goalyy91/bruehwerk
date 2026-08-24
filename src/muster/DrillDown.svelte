@@ -3,6 +3,12 @@
   // Stapeln statt springen: Tap setzt und öffnet zugleich, der Pfad bleibt
   // sichtbar, eine Zurück-Zeile führt aus dem Muster heraus, Gewähltes
   // sammelt sich in der Leiste am Fuß mit Zählung und „+ N“ ab der Grenze.
+  //
+  // Visueller Redesign-Reset, Paket 5: Blattliste mit Haarlinien statt
+  // eckig umrandeter --feld-Zeilen; "gewählt" jetzt Füllfläche statt
+  // Akzentstrich — dieselbe Optik wie AuswahlListe.svelte fuer eine
+  // gewaehlte Zeile, weil dieses Muster strukturell dasselbe ist (eine
+  // Liste antippbarer Optionen).
 
   type Knoten = { id: string; label: string; kinder?: Knoten[] };
 
@@ -70,7 +76,8 @@
     min-height: 48px;
     padding: 0 var(--r3);
     border: none;
-    background: var(--ruhig);
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
     color: var(--tinte);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
@@ -85,23 +92,28 @@
   .ebene {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    border-radius: var(--r-blatt);
+    overflow: hidden;
   }
   .eintrag {
     min-height: var(--treffer);
     padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld);
+    border: none;
+    border-top: 1px solid var(--linie);
+    background: var(--blatt);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;
   }
+  .eintrag:first-child {
+    border-top: none;
+  }
   .eintrag.gewaehlt {
-    color: var(--tinte);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
     font-weight: var(--gw-titel);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
   }
   .leiste {
     display: flex;
@@ -119,7 +131,8 @@
   }
   .marke {
     padding: 4px var(--r2);
-    background: var(--ruhig);
+    border-radius: var(--r-pille);
+    background: var(--vertiefung);
     color: var(--satz);
     font-size: var(--fs-meta);
   }

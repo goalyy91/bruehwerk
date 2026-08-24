@@ -5,6 +5,11 @@
   // rechts) · erledigt (in der Falte, Zählung im Kopf) · aktiv (volle
   // Fläche, Fastway-Form — hier vereinfacht als Hervorhebung) · leer
   // (Erststart-Kette: drei Zeilen, keine Zählung, kein Fortschritt).
+  //
+  // Visueller Redesign-Reset, Paket 5: Blattliste mit Haarlinien statt
+  // eckig umrandeter --feld-Zeilen, "aktiv" jetzt Füllfläche statt
+  // Akzentstrich (Auswahlstrich-zu-Füllung-Migration wie überall sonst im
+  // System, siehe docs/design/offene-punkte-redesign.md Punkt 4).
 
   import { untrack } from 'svelte';
 
@@ -76,7 +81,8 @@
   .liste {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    border-radius: var(--r-blatt);
+    overflow: hidden;
   }
   .zeile {
     display: flex;
@@ -84,15 +90,18 @@
     justify-content: space-between;
     min-height: 64px;
     padding: 0 var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--blatt);
+    border-top: 1px solid var(--linie);
+  }
+  .zeile:first-child {
+    border-top: none;
   }
   .zeile.aktiv {
-    background: var(--feld);
-    box-shadow: inset 2px 0 0 0 var(--akzent);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .zeile.erledigt {
-    background: var(--ruhig);
+    background: var(--vertiefung);
     color: var(--gedaempft);
     cursor: pointer;
   }
@@ -114,22 +123,27 @@
     display: inline-block;
     width: var(--zeichen);
     height: var(--zeichen);
-    border: 1px solid var(--gedaempft);
+    border: 1px solid currentColor;
     border-radius: 50%;
+    opacity: 0.7;
   }
   .haken {
-    color: var(--akzent);
+    color: inherit;
   }
   .falte {
     min-height: 48px;
     padding: 0 var(--r4);
     border: none;
-    background: var(--ruhig);
+    border-top: 1px solid var(--linie);
+    background: var(--vertiefung);
     color: var(--gedaempft);
     font-family: var(--schrift);
     font-size: var(--fs-meta);
     text-align: left;
     cursor: pointer;
+  }
+  .falte:first-child {
+    border-top: none;
   }
   .leer {
     padding: var(--r4);
@@ -140,7 +154,8 @@
   .erststart {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    border-radius: var(--r-blatt);
+    overflow: hidden;
   }
   .erststart-zeile {
     display: flex;
@@ -148,6 +163,10 @@
     justify-content: space-between;
     height: 64px;
     padding: 0 var(--r4);
-    background: var(--feld);
+    background: var(--blatt);
+    border-top: 1px solid var(--linie);
+  }
+  .erststart-zeile:first-child {
+    border-top: none;
   }
 </style>
