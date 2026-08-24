@@ -185,9 +185,16 @@
       >
         <span class="symbol" aria-hidden="true">
           {#if bereich.id === 'bar'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z" /><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17" /><path d="M8 3.5c0 1-1 1-1 2s1 1 1 2M12 3.5c0 1-1 1-1 2s1 1 1 2" /></svg>
+            <!-- Rueckmeldung 2026-08-24: dieselbe Tasse wie Parameterkachel.svelte
+                 (Symbol "output") statt der bisherigen Milchkaenchen-Silhouette —
+                 auf 24er-Raster skaliert (Quelle war 20er), gleiche Linienstaerke
+                 wie die uebrigen Tab-Icons. -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9.6h9.6v6a3 3 0 0 1-3 3h-3.6A3 3 0 0 1 6 15.6z" /><path d="M15.6 11.16h1.92a1.92 1.92 0 0 1 0 3.84H15.6" /><path d="M5.4 20.4h10.8" /></svg>
           {:else if bereich.id === 'kaffees'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c-3 2-2 3-4 5s-2 4 0 6 5 1 6-1-1-3 1-5 1-4-3-5Z" /><path d="M12 12.5c-.6.6-.4 1.2 0 1.6" /></svg>
+            <!-- Rueckmeldung 2026-08-24: dieselbe Bohnenform wie Bohnen.svelte
+                 (Kontur + S-Rille), als Outline statt Fuellflaeche, damit sie zu
+                 den uebrigen Strich-Icons der Leiste passt. -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4.5C8.7 5.9 6.5 8.9 6.5 12S8.7 18.1 12 19.5c3.3-1.4 5.5-4.4 5.5-7.5S15.3 5.9 12 4.5Z" /><path d="M12 6.1c-1.6 1.9-1 3.8.1 5.9s1.7 4 .1 5.9" /></svg>
           {:else if bereich.id === 'historie'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12a8 8 0 1 1 2.6 5.9" /><path d="M4 6v6h6" /><path d="M12 8v4l3 2" /></svg>
           {:else if bereich.id === 'getraenke'}
@@ -278,6 +285,11 @@
     width: var(--symbol-tab);
     height: var(--symbol-tab);
     display: block;
+    border-radius: var(--r-pille);
+    transition:
+      background var(--t-auswahl) var(--e-rein),
+      width var(--t-auswahl) var(--e-rein),
+      height var(--t-auswahl) var(--e-rein);
   }
   .symbol svg {
     width: 100%;
@@ -289,5 +301,17 @@
   .eintrag.aktiv {
     color: var(--akzent);
     font-weight: var(--gw-titel);
+  }
+  /* Rueckmeldung 2026-08-24: "sieht klein und verloren aus" — Handoff 3.8
+     nennt 64/24/11 woertlich, das bleibt die Basis (siehe Kommentar oben).
+     Als erster Schritt bekommt nur das aktive Icon mehr Praesenz: eigene
+     Flaeche (--badge, dieselbe Rolle wie die runden Icon-Badges in
+     Kaffeeblatt.svelte) und ein paar Pixel mehr Groesse, per negativem
+     Rand ohne Verschiebung der Beschriftung darunter. */
+  .eintrag.aktiv .symbol {
+    width: calc(var(--symbol-tab) + 8px);
+    height: calc(var(--symbol-tab) + 8px);
+    margin: -4px;
+    background: var(--badge);
   }
 </style>

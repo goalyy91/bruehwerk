@@ -255,7 +255,6 @@
 
   <section class="spielraum">
     <h2>Spielraum</h2>
-    <p class="hinweis-klein">Input und Mahlgrad haben keinen — dort ist jede Änderung Absicht.</p>
     <Werteliste zeilen={spielraumZeilen} />
   </section>
 
@@ -365,14 +364,6 @@
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-meta);
-  }
-  /* Erklaersatz unter der Spielraum-Ueberschrift ist Inhalt, keine Meta-
-     Zeile (Handoff-Referenz C2: Serif, Satzfarbe, ~15px) — deshalb eigene
-     Regel statt gemeinsam mit .hinweis. */
-  .hinweis-klein {
-    color: var(--satz);
-    font-size: var(--fs-satz);
-    line-height: 1.55;
   }
   .fehler {
     color: var(--kritisch);

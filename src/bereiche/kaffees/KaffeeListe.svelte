@@ -47,8 +47,8 @@
 <Segment
   optionen={[
     { wert: 'name', label: 'Name' },
+    { wert: 'roester', label: 'Rösterei' },
     { wert: 'bewertung', label: 'Bewertung' },
-    { wert: 'roestgrad', label: 'Röstgrad' },
   ]}
   wert={sortierung}
   onWahl={(w) => (sortierung = w as KaffeeSortierung)}

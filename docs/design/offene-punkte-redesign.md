@@ -1,9 +1,11 @@
 # Offene Punkte — Visueller Redesign-Reset
 
-Stand: 2026-08-24, nach Abschluss Paket 5 (Musterblatt, Konsistenz-Audit,
-Token-Hygiene, Light/Dark-Strukturprüfung) auf Branch `design/redesign-v1`.
-Redesign-Umsetzung (Paket 1–5) damit inhaltlich abgeschlossen — offen bleiben
-nur die unten gelisteten, bewusst nicht selbst entschiedenen Punkte.
+Stand: 2026-08-24, nach Paket 5 (Musterblatt, Konsistenz-Audit, Token-
+Hygiene, Light/Dark-Strukturprüfung) **und** einer anschließenden freien
+Rückmeldungsrunde (Einstellungen, Geräte/Brühgerät-Formulare, Kaffeeblatt,
+Homebar) auf Branch `design/redesign-v1`. Redesign-Umsetzung inhaltlich
+abgeschlossen — offen bleiben nur die unten gelisteten, bewusst nicht selbst
+entschiedenen Punkte.
 
 **`docs/design/redesign-v1-handoff.md` bleibt die Quelle für alles Visuelle,
 `docs/konzept.md`/`docs/ux-regeln.md` für Produktlogik/UX.** Dieses Dokument
@@ -256,7 +258,81 @@ unterscheiden, und eine falsch geratene „richtige“ Größe wäre eine sichtb
 Änderung an drei produktiven Screens. Kein Blocker, kleinste der offenen
 Konsistenzfragen dieses Redesigns.
 
-## 15. Konsistenz-Audit Paket 5 — Befund
+## 15. Chargennummer — Rückmeldung 2026-08-24, keine Funktions-/Datenmodelländerung in dieser Runde
+
+Julian: „Mir reicht das Röstdatum als Charge, benötige keine separate
+Nummer oder so." Das ist eine **Funktions-/Datenmodellfrage** (`Charge.
+nummer` müsste aus `daten/schema.ts` raus, `Kaffeeblatt.svelte`s Anlage-
+Formular verlangt aktuell noch beide Felder als Pflicht) — ausdrücklich
+**nicht** in dieser rein visuellen Rückmeldungsrunde umgesetzt. Sichtbar
+gemacht wurde nur die visuelle Teilkorrektur (Charge „aktuelle" nicht mehr
+fett, sondern Akzentfarbe). Wenn die Nummer wirklich wegfallen soll: eigener
+kleiner Auftrag, der `Charge.nummer` optional macht oder streicht und prüft,
+ob migrierte Altdaten (Notion-Import, siehe CLAUDE.md „Chargen sind
+Platzhalter") davon betroffen sind.
+
+## 16. "Übernehmen?"-Vorschlag bei Bewertung — nur für Mahlgrad, nicht für andere Parameter
+
+Julian fragte, ob eine Parameteränderung beim Bezug (Input, Kessel, Drehzahl,
+…) gefolgt von „sehr gut"/„Referenz" ebenfalls anbietet, sie als neuen
+Zielwert zu übernehmen. **Antwort: teilweise ja** — `ShotErfassung.svelte`
+prüft das (K12 „Alltagskorrektur") ausdrücklich nur für **Mahlgrad**
+(`mg !== profil.ziel.mg`), nicht für Input/Kessel/Drehzahl/Output/
+Preinfusion/Zeit. Das ist offenbar eine bewusste Entscheidung aus Paket 04
+(Mahlgrad ist der Parameter, den man laufend fein nachjustiert; die übrigen
+gelten eher als Setup-Fixwerte) — aber nicht mehr dokumentiert, warum genau
+diese Grenze gezogen wurde. **Nicht selbst erweitert**, weil das den
+Auslöser einer Rezeptur-Rückfrage ändern würde (K12: „Fragen, die eine
+Rezeptur ändern, [bekommen] nie [eine Vorbelegung]" — eine *neue* Frage
+einzuführen ist ein Funktionsschritt, kein visueller). Eine Ausweitung auf
+weitere Parameter ist eine **UX-Nachzug-Idee**, kein Bug.
+
+## 17. Verlaufskurve + Temperatur im selben Diagramm — Einschätzung, nichts umgesetzt
+
+Julian überlegt, die Brühgruppentemperatur in dieselbe Verlaufskurve wie den
+Mahlgrad zu integrieren. Ehrliche Einschätzung (keine Umsetzung, reine
+Analyse-Frage):
+
+- **Mahlgrad-Kurve allein:** zeigt, wie sich der Mahlgrad über die Zeit
+  bewegt hat (Drift, Totzonen, Chargenwechsel) — bereits gebaut, funktioniert
+  als Diagnosewerkzeug für „wo stehe ich gerade".
+- **Temperatur-Kurve allein:** hätte denselben Nutzen für Temperatur-Drift
+  — nur relevant, wenn PID an ist (siehe Punkt oben zu Gruppen/PID), bei den
+  meisten Setups vermutlich über lange Zeit eine flache Linie.
+- **Beide zusammen in einem Diagramm:** **eher kein Mehrwert, eher
+  Verwirrung.** Mahlgrad und Temperatur sind zwei unabhängige Achsen mit
+  unterschiedlichen Einheiten und unterschiedlicher Änderungsfrequenz (Mahlgrad
+  wird oft pro Shot leicht nachjustiert, Temperatur bleibt meist über Wochen
+  fix) — eine gemeinsame X-Achse (Zeit) mit zwei Y-Skalen liest sich nur dann
+  sinnvoll, wenn man explizit nach einer **Korrelation** sucht (ändert sich der
+  ideale Mahlgrad mit der Temperatur?). Dafür bräuchte es aber eher eine
+  **Streudiagramm-Ansicht** (Temperatur auf X, Mahlgrad auf Y, ein Punkt je
+  Shot) als zwei überlagerte Zeitverläufe — das beantwortet die eigentlich
+  interessante Frage direkter als zwei Linien übereinander.
+- **Empfehlung:** getrennt lassen, und falls die Korrelationsfrage wirklich
+  interessiert, ein eigenes, einfaches Streudiagramm dafür bauen statt die
+  bestehende Verlaufskurve zu überladen. Das ist eine **UX-Nachzug-Idee**
+  für später, keine jetzt zu entscheidende Sache.
+- **Der Diagrammfehler aus Punkt 0a besteht laut Julian weiterhin** („das
+  mit dem Diagramm passt ohnehin noch immer nicht … da ist ein Bug").
+  Weiterhin nicht reproduzierbar ohne mehr Kontext (siehe Punkt 0a) — bleibt
+  offen, jetzt erneut bestätigt statt neu untersucht.
+
+## 18. Getränke-Bereich in Einstellungen verschieben? — Einschätzung: nein, dort lassen
+
+Julian fragte, ob es Sinn macht, „Getränke" in die Einstellungen zu packen
+statt als eigenen Reiter zu lassen. Einschätzung: **nein, dort lassen wo es
+ist.** Die fünf Bereiche der Tab-Leiste (Bar, Kaffees, Historie, Getränke,
+Einstellungen, `docs/konzept.md`) sind als gleichrangige Hauptbereiche der
+App gedacht — Getränke ist eine Stammdaten-Verwaltung auf derselben Ebene
+wie Kaffees, nicht eine Einstellung *über* die App. In Einstellungen zu
+wandern würde sie hinter einem zusätzlichen Tap verstecken, ohne dass sich
+ihre Bedeutung geändert hätte. Aktuell zeigt sie nur einen Platzhalter
+(„kommt in Paket 06") — das ist vermutlich der eigentliche Grund, warum sie
+gerade wenig nach „eigenem Bereich" aussieht, nicht die Position in der
+Leiste.
+
+## 19. Konsistenz-Audit Paket 5 — Befund
 
 Durchsucht: alte Rollen-Tokens (`--feld`/`--ruhig`/`--linie-zart`/…), rohe
 Hex-Werte außerhalb `tokens.css`, `box-shadow`-Nutzung, `--radius-feld`/
@@ -265,6 +341,27 @@ Hex-Werte außerhalb `tokens.css`, `box-shadow`-Nutzung, `--radius-feld`/
 (`Rahmen.svelte`), Kontextmenü, alle Geräteformulare: durchgehend neue
 Tokens, keine Schatten, keine alten Radien. Einzige verbliebene Kleinigkeit:
 Punkt 14.
+
+## 20. Zwei Rückfragen aus der Rückmeldungsrunde 2026-08-24 — Antwort steht aus
+
+Zwei Punkte aus Julians Rückmeldung wurden **nicht** umgesetzt, weil eine
+falsch geratene Antwort entweder die zentrale "+"-Aktion der App sichtbar
+falsch gemacht hätte oder eine Formulierung erfunden hätte, die für Cold
+Brew (kein Tassen-Gerät) unpassend gewesen wäre:
+
+- **Schwebender „+"-Knopf in `KaffeeListe.svelte`:** Julians Beschreibung
+  („ist aktuell fix und ganz unten, es schwebt nicht und bleibt immer da")
+  ließ zwei Lesarten offen — Beschwerde über fehlende visuelle Elevation
+  (kein Schatten erlaubt, siehe `.schwebend` in `KaffeeListe.svelte`) oder
+  ein tatsächliches Positionierungsproblem. Rückfrage gestellt, Code
+  ungeändert (`position: fixed`, korrekt über der Tab-Leiste positioniert,
+  siehe Datei).
+- **„Mengen"/„angeboten"-Wortlaut in `Bruehgeraetblatt.svelte`:** Julian
+  wollte für Moka „Tassen" statt „angeboten". Ob dasselbe Wort auch für
+  Pour Over und Cold Brew passt (Cold Brew wird eher in Portionen/Batches als
+  in „Tassen" gedacht), ist offen — Rückfrage gestellt, Feld/Text bisher
+  unverändert bei „Mengen"/„Wie viele Portionen gleichzeitig angeboten
+  werden."
 
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
 
@@ -317,3 +414,22 @@ Punkt 14.
   Abschlussbericht).
 - `npm test` (vitest inkl. `tokens.test.ts`/`schichten.test.ts`, svelte-check,
   vite build) grün nach Paket 1–5 (359 Tests, 0 svelte-check-Fehler).
+- Rückmeldungsrunde 2026-08-24 (nach Paket 5): Einstellungen bekamen
+  durchgehend kleine Überschriften je Abschnitt (Geräte/Beobachtungen/
+  Werkzeuge neu, Backup jetzt als Blattzeilen-Panel statt freistehender
+  Knöpfe), Erklärtexte unter „Verhalten" sind jetzt vom Schalterzustand
+  abhängig; Setup zeigt nur noch Mühle/Brühgerät (Zubehör-Zeile entfernt,
+  Feld bleibt im Schema); Brühgerät-Formular: „Espresso"→„Siebträger",
+  Gruppen/PID/Cooling-Flush nur noch bei Siebträger sichtbar (vorher immer,
+  auch bei Moka/Pour Over/Cold Brew), einzelnes „Gruppen"-Feld von Werteliste
+  auf Formularzeile umgestellt; Kaffee-Sortierung jetzt Name/Rösterei/
+  Bewertung statt Name/Bewertung/Röstgrad (`domain/bestand.ts`); Kaffeeblatt:
+  lokale h2-Dopplung mit falschem font-family behoben, „aktuelle" Charge
+  nicht mehr fett (Akzentfarbe statt Schriftgewicht), Bohne-Details von
+  Werteliste (großer/fetter Wert) auf Detailzeilen im selben Panel wie die
+  Bohne-Falte umgestellt (Wert in Beschriftungsgröße); Profilblatt-Hinweis
+  „Input und Mahlgrad haben keinen …" entfernt; Homebar-Icons Kaffees→Bohne
+  (Bohnen.svelte-Form als Outline), Bar→Tasse (dieselbe wie Parameterkachel
+  „output"), aktiver Tab bekommt eine Badge-Fläche + etwas mehr Größe.
+  Zwei Rückfragen offen (Punkt 20). Drei Punkte bewusst nicht umgesetzt, weil
+  Funktion/Datenmodell bzw. reine UX-Nachzug-Ideen (Punkte 15–17).

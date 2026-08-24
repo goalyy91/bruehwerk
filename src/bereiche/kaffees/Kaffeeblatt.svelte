@@ -14,9 +14,12 @@
   // unter dem Kopf statt hinter neun Stammdaten-Zeilen. Die Bohnen-
   // Stammdaten liegen hinter einem Aufklapp-Block; entkoffeiniert/aktiv sind
   // reine Verwaltungsflags und erscheinen nur, wenn sie vom Normalfall
-  // (koffeinhaltig, aktiv) abweichen. Wertzeilen laufen jetzt ueber
-  // Werteliste.svelte statt handgebautem CSS. "Charge anlegen" folgt jetzt
-  // demselben Anlege-Muster wie "Profil anlegen" (hinter "+ …", Regel 12).
+  // (koffeinhaltig, aktiv) abweichen. "Charge anlegen" folgt jetzt demselben
+  // Anlege-Muster wie "Profil anlegen" (hinter "+ …", Regel 12). Bohne-
+  // Details liefen zwischenzeitlich ueber Werteliste.svelte, seit
+  // Rueckmeldung 2026-08-24 als eigene Detailzeilen im selben Panel wie die
+  // "Bohne"-Falte (siehe dort) — Werteliste betont Werte staerker als ihre
+  // Beschriftung, richtig fuer Messwerte, nicht fuer Textmerkmale.
   //
   // Visueller Redesign-Reset, Paket 2 (Handoff Abschnitt 6 "Kaffeeblatt"):
   // Kopfzeile im gross-Modus (30-32/600 zweizeilig), Röstgrad/Bewertung in
@@ -34,7 +37,6 @@
   import Sterne from '../../muster/Sterne.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
-  import Werteliste from '../../muster/Werteliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Charge, Profil, Aufbereitung } from '../../daten/schema';
 
@@ -65,6 +67,30 @@
 
   let bohneDetailsOffen = $state(false);
   let speicherFehler = $state<string | undefined>(undefined);
+
+  // Rueckmeldung 2026-08-24: Bohne-Details standen bisher als Werteliste da
+  // (Wert 19/500 — groesser/fetter als die Beschriftung, gedacht fuer
+  // gemessene Zahlen wie Spielraum/Gruppen). Hier sind es aber ueberwiegend
+  // Textmerkmale (Aufbereitung, Botanik, …), keine Messwerte — deshalb jetzt
+  // Zeilen im selben Panel wie die "Bohne"-Falte, Wert in derselben
+  // Schriftstaerke wie die Beschriftung, kein eigenes Kachel-Set (das haette
+  // fuer sieben ueberwiegend textuelle Merkmale eher aufgeblaeht als
+  // geklaert).
+  const bohneDetails = $derived.by(() => {
+    if (!kaffee) return [];
+    return [
+      { label: 'Art', wert: kaffee.art === 'blend' ? 'Blend' : 'Single Origin' },
+      { label: 'Herkunft', wert: kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—' },
+      { label: 'Varietät', wert: kaffee.varietaet ?? '—' },
+      { label: 'Anbauhöhe', wert: kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—' },
+      { label: 'Aufbereitung', wert: kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—' },
+      {
+        label: 'Botanik',
+        wert: kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—',
+      },
+      { label: 'Röstgrad (Röster)', wert: kaffee.roestgradRoester ?? '—' },
+    ];
+  });
 
   let neueChargeOffen = $state(false);
   let neueChargeNummer = $state('');
@@ -209,25 +235,15 @@
         <span class="falte-label">Bohne</span>
         <span class="pfeil" class:offen={bohneDetailsOffen} aria-hidden="true">▾</span>
       </button>
+      {#if bohneDetailsOffen}
+        {#each bohneDetails as feld (feld.label)}
+          <div class="detailzeile">
+            <span class="detail-label">{feld.label}</span>
+            <span class="detail-wert">{feld.wert}</span>
+          </div>
+        {/each}
+      {/if}
     </div>
-    {#if bohneDetailsOffen}
-      <div class="falte-inhalt">
-        <Werteliste
-          zeilen={[
-            { label: 'Art', wert: kaffee.art === 'blend' ? 'Blend' : 'Single Origin' },
-            { label: 'Herkunft', wert: kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—' },
-            { label: 'Varietät', wert: kaffee.varietaet ?? '—' },
-            { label: 'Anbauhöhe', wert: kaffee.anbauhoehe !== undefined ? kaffee.anbauhoehe : '—', einheit: kaffee.anbauhoehe !== undefined ? 'm' : undefined },
-            { label: 'Aufbereitung', wert: kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—' },
-            {
-              label: 'Botanik',
-              wert: kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—',
-            },
-            { label: 'Röstgrad (Röster)', wert: kaffee.roestgradRoester ?? '—' },
-          ]}
-        />
-      </div>
-    {/if}
   </section>
 
   <section class="gruppe">
@@ -292,12 +308,11 @@
   .flagge {
     color: var(--gedaempft);
   }
+  /* h2-Basistypografie kommt aus tokens.css (global) — hier nur der lokale
+     margin (Regel: lokale Ueberschreibung darf nur margin setzen). Bis
+     2026-08-24 dupliziert, dabei sogar mit falschem font-family (Serif
+     statt Sans) — Konsistenzfund im Zuge dieser Rueckmeldungsrunde. */
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
     margin: 0 0 var(--r-kachelabstand);
   }
   /* Roestgrad | Bewertung in einer Blattzeile mit senkrechter Haarlinie
@@ -432,8 +447,21 @@
   .falte .pfeil.offen {
     transform: rotate(180deg);
   }
-  .falte-inhalt {
-    margin-top: var(--r-kachelabstand);
+  .detailzeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--r3);
+    min-height: 52px;
+  }
+  .detail-label {
+    font-size: var(--fs-bedienwort);
+    color: var(--satz);
+  }
+  .detail-wert {
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+    text-align: right;
   }
   .chargenzeile {
     display: flex;
@@ -450,7 +478,9 @@
     flex: 1;
   }
   .chargenzeile.aktuelle .nummer {
-    font-weight: var(--gw-titel);
+    /* Rueckmeldung 2026-08-24: nicht mehr fett — "aktuelle" haebt sich ueber
+       die Akzentfarbe ab, nicht mehr ueber Schriftgewicht. */
+    color: var(--akzent);
   }
   .chargenzeile .datum {
     font-family: var(--schrift-sans);

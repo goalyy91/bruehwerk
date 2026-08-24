@@ -39,7 +39,6 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import Werteliste from '../../muster/Werteliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Bruehgeraet } from '../../daten/schema';
 
@@ -114,6 +113,8 @@
     } else {
       entwurf.sieb = undefined;
       entwurf.dampflanze = false; // nur Espresso hat eine
+      entwurf.ktEinstellbar = false; // Gruppen/PID nur bei Siebtraeger (Rueckmeldung 2026-08-24)
+      entwurf.flushDauer = undefined;
       if (entwurf.mengen.length === 0) entwurf.mengen = [1];
     }
   }
@@ -146,8 +147,11 @@
     }
   }
 
+  // "Siebträger" statt "Espresso" (Rueckmeldung 2026-08-24) — der
+  // gespeicherte Wert (Bruehgeraet['typ']) bleibt 'espresso', nur das Label
+  // aendert sich: "Espresso" ist das Getraenk, nicht das Geraet.
   const TYP_OPTIONEN = [
-    { wert: 'espresso', label: 'Espresso' },
+    { wert: 'espresso', label: 'Siebträger' },
     { wert: 'moka', label: 'Moka' },
     { wert: 'pourover', label: 'Pour Over' },
     { wert: 'coldbrew', label: 'Cold Brew' },
@@ -171,10 +175,19 @@
   <span class="formularzeile-label">Typ</span>
   <AuswahlListe optionen={TYP_OPTIONEN} wert={entwurf.typ} onWahl={typWechseln} />
 </div>
-<Werteliste zeilen={[{ label: 'Gruppen', wert: entwurf.gruppen, onAendern: (w) => (entwurf.gruppen = Math.max(1, Math.round(w))) }]} />
-<p class="erklaerung">Anzahl Brühgruppen am Gerät — bei dir 1.</p>
-
 {#if entwurf.typ === 'espresso'}
+  <div class="formularzeile">
+    <span class="formularzeile-label">Gruppen</span>
+    <input
+      class="eingabefeld-text zahl"
+      type="text"
+      inputmode="numeric"
+      value={entwurf.gruppen}
+      onchange={(e) => (entwurf.gruppen = Math.max(1, Math.round(Number(e.currentTarget.value.replace(',', '.')))))}
+    />
+  </div>
+  <p class="erklaerung">Anzahl Brühgruppen am Gerät — bei dir 1.</p>
+
   <div class="formularzeile">
     <Schalter label="Dampflanze" an={entwurf.dampflanze} onWahl={(a) => (entwurf.dampflanze = a)} />
   </div>
@@ -182,16 +195,26 @@
     <Schalter label="Cooling Flush" an={entwurf.flushDauer !== undefined} onWahl={flushUmschalten} />
   </div>
   {#if entwurf.flushDauer !== undefined}
-    <Werteliste zeilen={[{ label: 'Flush-Dauer', wert: entwurf.flushDauer, einheit: 's', onAendern: (w) => (entwurf.flushDauer = w) }]} />
+    <div class="formularzeile">
+      <span class="formularzeile-label">Flush-Dauer</span>
+      <input
+        class="eingabefeld-text zahl"
+        type="text"
+        inputmode="decimal"
+        value={entwurf.flushDauer}
+        onchange={(e) => (entwurf.flushDauer = Number(e.currentTarget.value.replace(',', '.')))}
+      />
+      <span class="einheit">s</span>
+    </div>
   {/if}
+
+  <div class="formularzeile">
+    <Schalter label="PID" an={entwurf.ktEinstellbar} onWahl={(a) => (entwurf.ktEinstellbar = a)} />
+  </div>
+  <p class="erklaerung">Kesseltemperatur direkt einstellbar — ohne PID hast du nur den Cooling Flush als Hebel.</p>
 {/if}
 
-<div class="formularzeile">
-  <Schalter label="PID" an={entwurf.ktEinstellbar} onWahl={(a) => (entwurf.ktEinstellbar = a)} />
-</div>
-<p class="erklaerung">Kesseltemperatur direkt einstellbar — ohne PID hast du nur den Cooling Flush als Hebel.</p>
-
-{#if entwurf.ktEinstellbar}
+{#if entwurf.typ === 'espresso' && entwurf.ktEinstellbar}
   <button type="button" class="unterseite" onclick={onOeffnenTempReferenz}>
     <span>Kesseltemperatur-Tabelle pflegen</span>
     <span class="nebeninfo">{entwurf.tempReferenz.length} {entwurf.tempReferenz.length === 1 ? 'Zeile' : 'Zeilen'} ›</span>
@@ -255,6 +278,11 @@
     font-size: 12.5px;
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r2);
+  }
+  .einheit {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
   }
   .unterseite {
     display: flex;
