@@ -136,7 +136,7 @@
   async function speichern() {
     fehler = undefined;
     if (entwurf.mengen.length === 0) {
-      fehler = 'mindestens eine Menge muss angeboten werden';
+      fehler = 'mindestens eine Portion muss ausgewählt sein';
       return;
     }
     try {
@@ -247,8 +247,12 @@
     separates Feld mehr.
   </p>
 {:else}
+  <!-- Rueckmeldung 2026-08-24: "Portionen" statt "Mengen"/"angeboten" fuer
+       alle drei Nicht-Siebtraeger-Typen (Julian: "lass uns ueberall von
+       Portionen sprechen") — nicht nur "Tassen" fuer Moka, weil das fuer
+       Cold Brew nicht gepasst haette. -->
   <div class="formularzeile">
-    <span class="formularzeile-label">Mengen</span>
+    <span class="formularzeile-label">Portionen</span>
   </div>
   <div class="formularzeile">
     <Schalter label="1×" an={entwurf.mengen.includes(1)} onWahl={(a) => mengeUmschalten(1, a)} />
@@ -259,7 +263,7 @@
   <div class="formularzeile">
     <Schalter label="3×" an={entwurf.mengen.includes(3)} onWahl={(a) => mengeUmschalten(3, a)} />
   </div>
-  <p class="erklaerung">Wie viele Portionen gleichzeitig angeboten werden.</p>
+  <p class="erklaerung">Wie viele Portionen sich gleichzeitig zubereiten lassen.</p>
 {/if}
 
 <div class="knopfreihe">

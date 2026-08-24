@@ -342,26 +342,28 @@ Hex-Werte außerhalb `tokens.css`, `box-shadow`-Nutzung, `--radius-feld`/
 Tokens, keine Schatten, keine alten Radien. Einzige verbliebene Kleinigkeit:
 Punkt 14.
 
-## 20. Zwei Rückfragen aus der Rückmeldungsrunde 2026-08-24 — Antwort steht aus
+## 20. Zwei Rückfragen aus der Rückmeldungsrunde 2026-08-24 — beantwortet und umgesetzt
 
-Zwei Punkte aus Julians Rückmeldung wurden **nicht** umgesetzt, weil eine
-falsch geratene Antwort entweder die zentrale "+"-Aktion der App sichtbar
-falsch gemacht hätte oder eine Formulierung erfunden hätte, die für Cold
-Brew (kein Tassen-Gerät) unpassend gewesen wäre:
-
-- **Schwebender „+"-Knopf in `KaffeeListe.svelte`:** Julians Beschreibung
-  („ist aktuell fix und ganz unten, es schwebt nicht und bleibt immer da")
-  ließ zwei Lesarten offen — Beschwerde über fehlende visuelle Elevation
-  (kein Schatten erlaubt, siehe `.schwebend` in `KaffeeListe.svelte`) oder
-  ein tatsächliches Positionierungsproblem. Rückfrage gestellt, Code
-  ungeändert (`position: fixed`, korrekt über der Tab-Leiste positioniert,
-  siehe Datei).
-- **„Mengen"/„angeboten"-Wortlaut in `Bruehgeraetblatt.svelte`:** Julian
-  wollte für Moka „Tassen" statt „angeboten". Ob dasselbe Wort auch für
-  Pour Over und Cold Brew passt (Cold Brew wird eher in Portionen/Batches als
-  in „Tassen" gedacht), ist offen — Rückfrage gestellt, Feld/Text bisher
-  unverändert bei „Mengen"/„Wie viele Portionen gleichzeitig angeboten
-  werden."
+- **Schwebender „+"-Knopf in `KaffeeListe.svelte`:** war ein echter Bug,
+  keine Wahrnehmungsfrage — Julians Antwort („er bewegt sich mit, wenn ich
+  die Kaffee-Kachel-Liste verschiebe") bestätigte ein Positionierungs-
+  problem. Ursache gefunden: `.ebene` in `Rahmen.svelte` trug
+  `animation-fill-mode: both` für den Bildschirmwechsel-Übergang — dadurch
+  behandelte Chrome dieses Element dauerhaft (auch nach Animationsende) als
+  Containing Block für `position: fixed`-Nachfahren, weil die `.vor`/
+  `.zurueck`-Klasse nie wieder entfernt wird ({#key} baut bei jedem
+  Bildschirmwechsel ein neues Element). `.schwebend` verhielt sich dadurch
+  wie `position: absolute` relativ zu `.ebene` statt zum Viewport. Fix:
+  `animation-fill-mode: both` entfernt — wirkungslos für die eigentliche
+  Optik (die einzige Keyframe hat kein „to", fällt beim Animationsende
+  ohnehin auf die normale, unanimierte Basisdarstellung zurück), behebt
+  aber die dauerhafte Containing-Block-Falle.
+- **„Mengen"/„angeboten"-Wortlaut in `Bruehgeraetblatt.svelte`:** Julian:
+  „lass uns überall von Portionen sprechen." Umgesetzt für alle drei
+  Nicht-Siebträger-Typen (Moka/Pour Over/Cold Brew) — Feldbeschriftung
+  „Mengen"→„Portionen", Erklärtext ohne „anbieten"-Framing („Wie viele
+  Portionen sich gleichzeitig zubereiten lassen."), dieselbe Wortwahl auch
+  in der Validierungsfehlermeldung beim Speichern.
 
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
 

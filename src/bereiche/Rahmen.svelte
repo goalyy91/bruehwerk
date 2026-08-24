@@ -225,11 +225,25 @@
   /* Punkt 7 der Korrekturrunde: Ebenenwechsel-Uebergang. Reine
      CSS-Animation statt Sveltes JS-Transitions — nur so greift der
      bestehende globale prefers-reduced-motion-Block (tokens.css), der
-     animation-duration auf 1ms erzwingt. */
+     animation-duration auf 1ms erzwingt.
+
+     Rueckmeldung 2026-08-24 — echter Bug gefunden: "animation-fill-mode:
+     both" liess Chrome dieses Element dauerhaft (auch nach Animationsende)
+     als Containing Block fuer "position: fixed"-Nachfahren behandeln, weil
+     ein CSS-Animation-Effekt mit Fill "both"/"forwards" wirksam bleibt,
+     bis die Klasse ".vor"/".zurueck" wieder entfernt wird — das passiert
+     hier nie, {#key} erzeugt bei jedem Bildschirmwechsel ein komplett
+     neues Element. Ergebnis: KaffeeListe.svelte's schwebender "+"-Knopf
+     (position: fixed) verhielt sich wie position: absolute relativ zu
+     .ebene und scrollte mit dem Inhalt statt fix im Bild zu bleiben. Fill
+     "both" war hier ohnehin wirkungslos, weil die einzig definierte
+     Keyframe ("from") beim Animationsende ohnehin in die normale,
+     unanimierte Basisdarstellung dieses Elements zurueckfaellt (kein
+     "to" definiert) — das passiert mit oder ohne Fill-Mode identisch,
+     nur ohne "both" endet die Animation danach auch wirklich. */
   .ebene {
     animation-duration: var(--t-ebene);
     animation-timing-function: var(--e-rein);
-    animation-fill-mode: both;
   }
   .ebene.vor {
     animation-name: ebene-vor-ein;
