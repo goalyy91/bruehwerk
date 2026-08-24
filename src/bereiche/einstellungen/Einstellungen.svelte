@@ -3,6 +3,11 @@
   // Startbildschirm des Bereichs. Geraete-Teilbaum und Musterblatt sind
   // eigene Routen, die Rahmen.svelte direkt rendert — hier bleiben nur
   // globale App-Einstellungen, Migration und Backup.
+  //
+  // Visueller Redesign-Reset, Paket 4 (Handoff Abschnitt 6 "Einstellungen"):
+  // Kopfzeile im gross-Modus (Root-Tab, kein Rueckweg). "Geraete verwalten"
+  // als Blattzeile im Akzent statt reinem Textlink. Gruppe "Verhalten" als
+  // Blatt mit Haarlinien statt eckig umrandeter Karte.
 
   import { bestand, schreiben } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -24,15 +29,20 @@
   }
 </script>
 
-<Kopfzeile titel="Einstellungen" />
+<Kopfzeile titel="Einstellungen" gross />
 
-<button type="button" class="link" onclick={onOeffnenGeraete}>Geräte verwalten</button>
+<div class="panel schmal">
+  <button type="button" class="blattzeile" onclick={onOeffnenGeraete}>
+    <span>Geräte verwalten</span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+</div>
 
 <Migration />
 
 <h2>Verhalten</h2>
 {#if bestand.einstellungen}
-  <section class="karte">
+  <div class="panel">
     <div class="einstellung-zeile">
       <Schalter
         label="Begründung: Koffein"
@@ -49,7 +59,7 @@
       />
       <p class="erklaerung">Zeigt, worauf sich ein automatischer Bohnenvorschlag stützt.</p>
     </div>
-    <div class="einstellung-zeile letzte">
+    <div class="einstellung-zeile">
       <Schalter
         label="Milch gesammelt schäumen"
         an={bestand.einstellungen.sammelSchaeumen === 'gesammelt'}
@@ -57,49 +67,68 @@
       />
       <p class="erklaerung">Bei mehreren Milchgetränken im selben Durchgang — aus statt an heißt: pro Getränk einzeln.</p>
     </div>
-  </section>
+  </div>
 {/if}
 
-<button type="button" class="link" onclick={onOeffnenBeobachtungen}>Offene Beobachtungen</button>
+<div class="panel schmal">
+  <button type="button" class="blattzeile" onclick={onOeffnenBeobachtungen}>
+    <span>Offene Beobachtungen</span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+</div>
 
 <Backup />
 
-<button type="button" class="link" onclick={onOeffnenMusterblatt}>Musterblatt ansehen</button>
+<div class="panel schmal">
+  <button type="button" class="blattzeile" onclick={onOeffnenMusterblatt}>
+    <span>Musterblatt ansehen</span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+</div>
 
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
+  /* Blatt mit Zeilen (Handoff Abschnitt 6 "Einstellungen") — "schmal" fuer
+     Panels mit nur einer Zeile (kein Innenpolster oben/unten ausser der
+     Zeilenhoehe selbst). Kein zentrales Muster fuer diese Form vorhanden
+     (siehe docs/design/offene-punkte-redesign.md, Punkt 8). */
+  .panel {
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
+    padding: 0 var(--r4);
+    margin-bottom: var(--r-kachelabstand);
+    display: flex;
+    flex-direction: column;
   }
-  .link {
-    background: none;
+  .panel.schmal {
+    margin-bottom: var(--r5);
+  }
+  .blattzeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 56px;
     border: none;
+    background: transparent;
     color: var(--akzent);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    min-height: var(--treffer);
-    padding: 0;
+    font-size: var(--fs-bedienwort);
+    text-align: left;
     cursor: pointer;
-    display: block;
   }
-  .karte {
-    background: var(--feld-blatt);
-    border: 1px solid var(--linie);
-    border-radius: var(--radius-feld);
-    padding: var(--r4);
+  .chevron {
+    color: var(--spur);
+    font-size: var(--fs-bedienwort);
   }
   .einstellung-zeile {
-    margin-bottom: var(--r3);
+    padding: var(--r3) 0;
   }
-  .einstellung-zeile.letzte {
-    margin-bottom: 0;
+  .einstellung-zeile + .einstellung-zeile {
+    border-top: 1px solid var(--linie);
   }
   .erklaerung {
-    font-size: var(--fs-meta);
+    font-family: var(--schrift-sans);
+    font-size: 14.5px;
     color: var(--gedaempft);
     margin: var(--r1) 0 0;
   }

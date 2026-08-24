@@ -14,6 +14,10 @@
   // Trägerform wechselt. Der schwebende Anlege-Knopf wird rund und
   // fuellflaechig statt der bisherigen eckigen Tinte-Flaeche (Handoff
   // verbietet schwarze/weisse Vollflaechen als Knopf).
+  //
+  // Paket 4: Kopfzeile im gross-Modus (Handoff nennt fuer Root-Tab-Screens
+  // ohne Rueckweg explizit "Titel 32/600", nicht die 26-px-Groesse fuer
+  // Screens mit Rueckweg).
 
   import { bestand } from '../bestand.svelte';
   import { filtereKaffees, sortiereKaffees, zaehlform, type KaffeeSortierung } from '../../domain/bestand';
@@ -34,7 +38,7 @@
   );
 </script>
 
-<Kopfzeile titel="Kaffees" />
+<Kopfzeile titel="Kaffees" gross />
 
 <div class="suchzeile">
   <Suchfeld wert={suchtext} onWert={(w) => (suchtext = w)} />

@@ -25,6 +25,11 @@
   // (Rückweg + Aktion) rückt in eine eigene Zeile, der Titel steht als
   // eigener 32/600-Block darunter statt inline daneben. Jeder bestehende
   // Aufruf ohne `gross` bleibt exakt wie zuvor.
+  //
+  // Paket 4: `gross` traegt jetzt auch die Root-Tab-Screens (Kaffees,
+  // Einstellungen, Bar — Handoff nennt fuer sie explizit "Titel 32/600",
+  // ohne Rueckweg). Ohne onZurueck/aktion faellt die Icon-Reihe einfach
+  // weg, statt eine leere Zeile zu rendern.
   import type { Snippet } from 'svelte';
 
   let {
@@ -42,12 +47,14 @@
 
 {#if gross}
   <header class="kopfzeile-gross">
-    <div class="iconreihe">
-      {#if onZurueck}
-        <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
-      {/if}
-      {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
-    </div>
+    {#if onZurueck || aktion}
+      <div class="iconreihe">
+        {#if onZurueck}
+          <button type="button" class="zurueck" onclick={onZurueck} aria-label="zurück">‹</button>
+        {/if}
+        {#if aktion}<span class="aktion">{@render aktion()}</span>{/if}
+      </div>
+    {/if}
     <h1 class="titel-gross">{titel}</h1>
   </header>
 {:else}

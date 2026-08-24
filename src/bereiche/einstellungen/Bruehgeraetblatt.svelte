@@ -27,6 +27,10 @@
   // diesem Blatt (Regel 3). Typ (vier Optionen) laeuft jetzt ueber
   // AuswahlListe statt Einzelauswahl, echte Zwei-Zustands-Felder (Sieb,
   // Fuehrungswert) ueber Segment (Regel 5).
+  //
+  // Visueller Redesign-Reset, Paket 4: Formularzeilen/Textfeld ueber die
+  // globalen Utilities aus tokens.css (.formularzeile, .eingabefeld-text)
+  // statt lokal nachgebauter --feld/--feld-rahmen-Boxen.
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
@@ -159,22 +163,22 @@
   </p>
 {/if}
 
-<div class="feld-zeile">
-  <span class="label">Name</span>
-  <input class="text-eingabe" type="text" bind:value={entwurf.name} />
+<div class="formularzeile">
+  <span class="formularzeile-label">Name</span>
+  <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
 </div>
-<div class="feld-zeile spalte">
-  <span class="label">Typ</span>
+<div class="formularzeile spalte">
+  <span class="formularzeile-label">Typ</span>
   <AuswahlListe optionen={TYP_OPTIONEN} wert={entwurf.typ} onWahl={typWechseln} />
 </div>
 <Werteliste zeilen={[{ label: 'Gruppen', wert: entwurf.gruppen, onAendern: (w) => (entwurf.gruppen = Math.max(1, Math.round(w))) }]} />
 <p class="erklaerung">Anzahl Brühgruppen am Gerät — bei dir 1.</p>
 
 {#if entwurf.typ === 'espresso'}
-  <div class="feld-zeile">
+  <div class="formularzeile">
     <Schalter label="Dampflanze" an={entwurf.dampflanze} onWahl={(a) => (entwurf.dampflanze = a)} />
   </div>
-  <div class="feld-zeile">
+  <div class="formularzeile">
     <Schalter label="Cooling Flush" an={entwurf.flushDauer !== undefined} onWahl={flushUmschalten} />
   </div>
   {#if entwurf.flushDauer !== undefined}
@@ -182,7 +186,7 @@
   {/if}
 {/if}
 
-<div class="feld-zeile">
+<div class="formularzeile">
   <Schalter label="PID" an={entwurf.ktEinstellbar} onWahl={(a) => (entwurf.ktEinstellbar = a)} />
 </div>
 <p class="erklaerung">Kesseltemperatur direkt einstellbar — ohne PID hast du nur den Cooling Flush als Hebel.</p>
@@ -195,8 +199,8 @@
 {/if}
 
 {#if entwurf.typ !== 'moka'}
-  <div class="feld-zeile spalte">
-    <span class="label">Führungswert</span>
+  <div class="formularzeile spalte">
+    <span class="formularzeile-label">Führungswert</span>
     <Segment
       optionen={[{ wert: 'output', label: 'Output' }, { wert: 'durchlaufzeit', label: 'Durchlaufzeit' }]}
       wert={entwurf.fuehrungswert ?? ''}
@@ -206,8 +210,8 @@
 {/if}
 
 {#if entwurf.typ === 'espresso'}
-  <div class="feld-zeile spalte">
-    <span class="label">Sieb</span>
+  <div class="formularzeile spalte">
+    <span class="formularzeile-label">Sieb</span>
     <Segment
       optionen={[{ wert: 'einzel', label: 'einzel' }, { wert: 'doppel', label: 'doppel' }]}
       wert={entwurf.sieb?.art ?? 'doppel'}
@@ -220,16 +224,16 @@
     separates Feld mehr.
   </p>
 {:else}
-  <div class="feld-zeile">
-    <span class="label">Mengen</span>
+  <div class="formularzeile">
+    <span class="formularzeile-label">Mengen</span>
   </div>
-  <div class="feld-zeile">
+  <div class="formularzeile">
     <Schalter label="1×" an={entwurf.mengen.includes(1)} onWahl={(a) => mengeUmschalten(1, a)} />
   </div>
-  <div class="feld-zeile">
+  <div class="formularzeile">
     <Schalter label="2×" an={entwurf.mengen.includes(2)} onWahl={(a) => mengeUmschalten(2, a)} />
   </div>
-  <div class="feld-zeile">
+  <div class="formularzeile">
     <Schalter label="3×" an={entwurf.mengen.includes(3)} onWahl={(a) => mengeUmschalten(3, a)} />
   </div>
   <p class="erklaerung">Wie viele Portionen gleichzeitig angeboten werden.</p>
@@ -246,31 +250,9 @@
 {/if}
 
 <style>
-  .feld-zeile {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--r3);
-    min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie);
-    padding: var(--r1) 0;
-  }
-  .feld-zeile.spalte {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--r1);
-  }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .feld-zeile.spalte .label {
-    width: auto;
-  }
   .erklaerung {
-    font-size: var(--fs-meta);
+    font-family: var(--schrift-sans);
+    font-size: 12.5px;
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r2);
   }
@@ -283,28 +265,18 @@
     padding: 0;
     margin-bottom: var(--r2);
     border: none;
-    border-bottom: 1px solid var(--linie-zart);
+    border-bottom: 1px solid var(--linie);
     background: transparent;
     color: var(--tinte);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
   }
   .unterseite .nebeninfo {
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
-  }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
-    flex: 1;
-    min-width: var(--feld-min);
   }
   .knopfreihe {
     margin-top: var(--r4);

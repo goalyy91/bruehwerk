@@ -1,7 +1,7 @@
 # Offene Punkte — Visueller Redesign-Reset
 
-Stand: 2026-08-23, nach Abschluss Paket 3 (Profil und Shot-Logging) auf
-Branch `design/redesign-v1`.
+Stand: 2026-08-24, nach Abschluss Paket 4 (Einstellungen, Geräte,
+Geräteformulare, übrige produktive Screens) auf Branch `design/redesign-v1`.
 
 **`docs/design/redesign-v1-handoff.md` bleibt die Quelle für alles Visuelle,
 `docs/konzept.md`/`docs/ux-regeln.md` für Produktlogik/UX.** Dieses Dokument
@@ -13,6 +13,39 @@ Der Gesamtplan (Pakete 1–5, Screen-Zuordnung, Risiken) liegt als
 Plan-Datei unter `C:\Users\julia\.claude\plans\wir-implementieren-jetzt-den-steady-backus.md`
 — nicht im Repo, nur lokal bei Julian. Dieses Dokument hier fasst nur den
 Teil zusammen, der für die Weiterarbeit am Code wirklich relevant ist.
+
+---
+
+## 0. Zwei Punkte ohne Bezug zum visuellen Redesign — vorläufig hier notiert
+
+**a) Verlaufskurve zeigt bei mindestens einem Profil eine falsche Häufung.**
+Gemeldet für „Espresso Entcoffeiniert" (Café Langen), Profil „Espresso": alle
+Shots bis auf einen liegen sichtbar falsch im Diagramm. Ein echter Bug wurde
+bereits gefunden und behoben (`daten/migration/migrieren.ts`: die
+Zeitstempel-Spreizung migrierter Shots zählte `gueltigeShots.length` statt
+der tatsächlich geschriebenen Shot-Anzahl — behoben, siehe Commit
+„Anpassungen: Bruehgruppe-Kachel, Icons, Migrations-Zeitstempel-Fix,
+Labels"). Für den konkret gemeldeten Fall ließ sich die Häufung aus der
+eingecheckten Seed-Datei (`daten/seed/notion-2026-08-20.json`) mit dem
+damaligen Code **nicht reproduzieren** — Zeitstempel und Mahlgrad sind für
+dieses Profil bereits gleichmäßig verteilt. Zwei offene Erklärungen:
+entweder läuft die App noch mit älteren IndexedDB-Daten aus einem früheren
+Migrationslauf (dann hilft ein erneuter Migrationsdurchlauf), oder es handelt
+sich um einen echten, später selbst geloggten Shot mit einem abweichenden
+Wert. Braucht mehr Kontext von Julian (Datum/Uhrzeit der betroffenen Shots),
+bevor hier weiter gesucht werden kann. **Kein Redesign-Thema** — Korrektheit
+der Datenschicht, nur vorläufig hier abgelegt, weil noch kein passenderer
+Ort dafür existiert.
+
+**b) Urteilsstufe „Referenz" — offene Produktfrage, nicht entschieden.**
+Julian: „Referenz ist nicht notwendig, da ja jeder Shot auf Wunsch das neue
+Ziel verändern kann und somit auch eine neue Referenz gründet." Das ist eine
+**Produktlogik-Frage** (vierte Urteilsstufe ggf. entfernen: Schema
+`daten/schema/common.ts` `Urteil`-Enum, `Urteil.svelte`, K26/K32/K57 in
+`docs/konzept.md`, ggf. `domain/ranking.ts`/Historie-Planung) — ausdrücklich
+**nicht** im Rahmen der visuellen Redesign-Pakete umgesetzt oder entschieden,
+weil das Produktlogik verändern würde. Wenn das umgesetzt werden soll, gehört
+es zuerst als Entscheidung ins Konzept, dann als eigener (kleiner) Auftrag.
 
 ---
 
@@ -29,30 +62,24 @@ im Handoff nicht mehr gibt:
 --linie-zart   → var(--linie)
 ```
 
-**Zweck:** Screens, die in Paket 4 erst noch umgebaut werden, sollten schon
-jetzt die neue Farbwelt zeigen, ohne dass ihre Struktur vorzeitig angefasst
-wird. Nach Paket 3 vollständig umgestellt (keine Alias-Nutzung mehr):
-`KaffeeListe.svelte`, `Kaffeeblatt.svelte`, `Profilblatt.svelte`,
-`ShotErfassung.svelte`. Noch offen (alle Paket 4): `Einstellungen.svelte`,
-`KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`, `GussplanEditor.svelte`,
-`Geraete.svelte`, `Bruehgeraetblatt.svelte`, `Muehleblatt.svelte`,
-`Setupblatt.svelte`, `*Ansicht.svelte`, `TempReferenz(Screen).svelte`,
-`Migration.svelte`, `Bar.svelte`.
+**Stand nach Paket 4: kein produktiver Screen nutzt die Aliase mehr.** Verifiziert
+per Grep über `src/bereiche` (Stand 2026-08-24) — null Treffer für
+`--feld)`/`--feld-blatt`/`--feld-rahmen`/`--linie-zart`/`--ruhig`/
+`radius-feld`/`radius-chip` in `src/bereiche/**/*.svelte`. Auch `Kontextmenue.
+svelte` (produktiv in mehreren Ansicht-Screens genutzt) ist jetzt umgestellt.
 
-**Wenn ein dieser Screens umgebaut ist:** dort direkt `--blatt`/`--vertiefung`/
-`--linie` referenzieren statt der Alt-Namen. Wenn **kein** Verbraucher eines
-Alias mehr übrig ist, gehört der Alias aus `tokens.css` entfernt (Paket 5,
-Konsistenzprüfung) — er bleibt sonst als stille Falle stehen, die neuer Code
-aus Versehen wieder benutzt.
+**Einzige verbleibenden Nutzer der Aliase:** `Ablaufliste.svelte`,
+`BausteinListe.svelte`, `DrillDown.svelte` (siehe Punkt 4) — ausschließlich
+über `Musterblatt.svelte` erreichbar, das explizit Paket 5 ist. Die Aliase
+bleiben deshalb **bewusst in `tokens.css` stehen**, bis diese drei Muster in
+Paket 5 migriert sind — sie sonst schon jetzt zu entfernen, hätte
+`Musterblatt.svelte` (aktuell noch ein echter, erreichbarer Bildschirm)
+optisch kaputt gemacht, ohne dass diese Session an der Datei etwas geändert
+hätte. Danach: Aliase ersatzlos aus `tokens.css` streichen.
 
-Ebenfalls noch offen: `--radius-feld` (0) und `--radius-chip` (2px) existieren
-**nicht mehr** als Tokens (ersatzlos entfernt, nicht aliasiert). Nur noch eine
-Fundstelle nutzt sie: `Einstellungen.svelte` (`.karte`) — fällt unauffällig
-auf Radius 0 zurück (der alte Wert von `--radius-feld`), bis sie in Paket 4
-auf die neue Radius-Familie (`--r-blatt` 20 · `--r-karte` 18 · `--r-kachel` 16
-· `--r-pille` 999 · `--r-wertfeld` 4) umgestellt wird. `KaffeeListe.svelte`
-ist seit Paket 2 erledigt (schwebender Knopf jetzt `border-radius: 50%` mit
-`--fuellung`).
+`--radius-feld`/`--radius-chip` existieren **nicht mehr** als Tokens. Auch
+hier: kein produktiver Screen nutzt sie mehr (`Einstellungen.svelte`s `.karte`
+wurde in Paket 4 durch `.panel`/`--r-blatt` ersetzt).
 
 ## 2. Zwei Handoff-interne Maß-Konflikte — bewusst wörtlich umgesetzt
 
@@ -117,22 +144,32 @@ Datei (14 Musterabschnitte, Tab-Leiste im Bild, etc.) ist unverändert und
 zeigt entsprechend noch die alte Optik der dort eingebundenen, noch nicht
 migrierten Muster (siehe Punkt 4).
 
-## 8. Neues Muster für „Blatt mit navigierbaren Zeilen“ — weiterhin offen, jetzt zweimal gebraucht
+## 8. Neues Muster für „Blatt mit navigierbaren Zeilen“ — weiterhin offen, jetzt an neun Stellen dupliziert
 
-Elf Screens bauen ihre Listenzeilen von Hand — `Kaffeeblatt.svelte` ist jetzt
-eines davon (Profile/Bohne-Falte/Chargen als lokales
-`.panel`/`.listenzeile`/`.chargenzeile`-CSS, siehe Kopfkommentar dort). Kein
-zentrales Muster dafür existiert. Ich habe **bewusst kein neues Muster
-gebaut** (das wäre eine Architekturentscheidung ohne Rückfrage gewesen),
-sondern lokal implementiert — faithful zur Designreferenz, aber eine echte
-Duplikationsstelle für Paket 4 (Geräte-Blätter brauchen exakt dasselbe Bild:
-Zeile, rundes Badge/kein Badge, Meta rechts, „›“). Spätestens dort lohnt sich
-die Frage neu: gemeinsames `Blattliste.svelte`-Muster einführen (nach
-`ux-regeln.md` Regel 6 erst nach Prüfung, ob eines der 22+2 vorhandenen
-Muster mit kleiner Anpassung reicht — tut es hier nicht, keins deckt "Zeile
-mit optionalem rundem Icon-Badge + Meta + Chevron" ab) oder weiter lokal
-duplizieren. Bitte vor Paket 4 entscheiden statt es ein drittes Mal
-stillschweigend zu kopieren.
+War nach Paket 2 an zwei Stellen (Kaffeeblatt Profile/Chargen), ist nach
+Paket 4 an mindestens neun: zusätzlich `Geraete.svelte` (Setups/Mühlen/
+Brühgeräte-Listen), `Einstellungen.svelte` (Geräte verwalten/Beobachtungen/
+Musterblatt-Zeilen), `Beobachtungen.svelte` (Eintrag-Panels),
+`GussplanEditor.svelte` (Bausteinliste), `TempReferenz.svelte`
+(Messpunkt-Liste), `Migration.svelte` (Berichtliste) — jedes Mal derselbe
+lokale `.panel { background: var(--blatt); border-radius: var(--r-blatt);
+padding: 0 var(--r4); } .panel > :not(:first-child) { border-top: 1px solid
+var(--linie); }` plus eine passende Zeilen-Klasse. Ich habe **weiterhin
+bewusst kein neues Muster gebaut** (siehe Begründung unten), aber die
+Duplikation ist jetzt so groß, dass sich ein echtes `Blattliste.svelte`
+in Paket 5 kaum noch vermeiden lässt: gäbe es das Muster morgen, ließen sich
+alle neun Stellen darauf zurückführen, ohne dass sich am Verhalten irgendwo
+etwas ändert — genau der Fall, den `ux-regeln.md` Regel 6/12 für „gemeinsame
+Lösung statt lokaler Kopie“ meint. Bitte vor Paket 5 entscheiden, ob dieses
+Muster jetzt gebaut wird (dann zusammen mit Punkt 5, `Suchfeld.svelte`, ins
+Musterblatt aufnehmen) oder ob die Duplikation bewusst bleibt.
+
+**Warum ich es nicht selbst entschieden habe:** ein neues Muster ist eine
+Architekturentscheidung mit API-Fragen, die ohne Rückfrage falsch geraten
+werden können — welche Zeilen-Varianten es abdecken muss (mit/ohne rundes
+Icon-Badge, mit/ohne Chevron, mit/ohne Meta-Text, mit Sonderzuständen wie
+„aktuelle“/„leer“ bei Chargen), ist genau die Art Frage, die `ExitPlanMode`
+vor der Umsetzung klären sollte, nicht ich mitten in einem visuellen Paket.
 
 ---
 
@@ -175,6 +212,24 @@ Farbwert ohne benannte Rolle im Handoff-Text eine eigene, nicht abgesicherte
 Designentscheidung gewesen wäre. Das Halbzeichen (Achtung-Kreis) und der
 eigene Text unterscheiden die Kachel bereits ausreichend von den Wertkacheln.
 
+## 12. Kopfzeile `gross` jetzt auch für Root-Tab-Screens ohne Rückweg
+
+Handoff-Text nennt für Root-Tab-Screens (Kaffees, Einstellungen, Bar, Historie,
+Getränke) explizit „Titel 32/600“ — dieselbe Größe wie Objektseiten, nur ohne
+Rückweg-Zeile darüber. `Kopfzeile.svelte`s `gross`-Modus war das bisher nicht
+gewachsen (er rechnete mit mindestens `onZurueck` oder `aktion`, sonst hätte
+er eine leere Icon-Reihe gerendert). Jetzt additiv gefixt: ohne beides fällt
+die Icon-Reihe einfach weg. `KaffeeListe.svelte`, `Einstellungen.svelte`,
+`Bar.svelte` und die beiden Platzhalter-Kopfzeilen in `Rahmen.svelte`
+(Historie/Getränke) nutzen jetzt `gross`. **Das war vorher inkonsistent**
+(Kaffeeliste zeigte schon vorher fälschlich nur 26px, seit Paket 2) — hier
+über die Konsistenzprüfung in Paket 4 gefunden und korrigiert.
+
+## 13. Setup-Kette in `Profilblatt.svelte`/`ShotErfassung.svelte` — weiterhin unverändert (siehe Punkt 9)
+
+Punkt 9 bleibt unverändert offen — in Paket 4 nicht nochmal angefasst, da
+außerhalb dieses Pakets Scope (betrifft Profilblatt/ShotErfassung, Paket 3).
+
 ## Bereits erledigt, nicht mehr offen (zur Erinnerung)
 
 - Paket 1 vollständig: Tokens, Knopf, Segment, Chips, Urteil, Einzelauswahl,
@@ -195,7 +250,25 @@ eigene Text unterscheiden die Kachel bereits ausreichend von den Wertkacheln.
   Kaffeename/„Wie war er?" auf Objektname-Größe 20/400). `Werteliste.svelte`
   und `IstGegenZiel.svelte` um fehlendes Sans-Register bei Gruppenkopf/
   Einheit ergänzt (galt vorher versehentlich als Serif).
+- Paket 4 vollständig: alle verbleibenden produktiven Screens umgestellt —
+  `Einstellungen.svelte`, `Geraete.svelte`, `Bruehgeraetblatt.svelte`,
+  `Muehleblatt.svelte`, `Setupblatt.svelte`, `BruehgeraetAnsicht.svelte`,
+  `MuehleAnsicht.svelte`, `SetupAnsicht.svelte`, `TempReferenz.svelte`,
+  `Migration.svelte`, `Backup.svelte`, `Beobachtungen.svelte`,
+  `GussplanEditor.svelte`, `KaffeeBearbeiten.svelte`, `KaffeeNeu.svelte`,
+  `Bar.svelte`, `Rahmen.svelte` (Historie/Getränke-Platzhalter),
+  `Kontextmenue.svelte`, `Kopfzeile.svelte` (gross für Root-Tabs, Punkt 12).
+  Drei neue globale Utilities in `tokens.css`: `h2` (Gruppenkopf-Basis),
+  `.formularzeile`/`.formularzeile-label` (Label+Feld-Zeile),
+  `.eingabefeld-text` (Vertiefung/Radius-4-Textfeld) — lösen die Duplikation
+  aus elf Dateien ab (Handoff-Screen-Mapping „Geräte/Geräteformulare“).
+  `KaffeeBearbeiten.svelte`s Röstgrad/Bewertung-Zeile jetzt wie in der
+  Leseansicht (Kaffeeblatt) eine Blattzeile mit senkrechter Haarlinie statt
+  einer randlosen Zeile.
+- **Nach Paket 4 ist kein produktiver Screen mehr unmigriert.** Einzig
+  `Musterblatt.svelte` (explizit Paket 5) zeigt noch die alte Formsprache,
+  begrenzt auf die sechs dort exklusiv genutzten Muster aus Punkt 4.
 - Source Sans 3 als Apparatschrift installiert und eingebunden
   (`@fontsource-variable/source-sans-3`).
 - `npm test` (vitest inkl. `tokens.test.ts`/`schichten.test.ts`, svelte-check,
-  vite build) grün nach Paket 1, 2 und 3 (359 Tests, 0 svelte-check-Fehler).
+  vite build) grün nach Paket 1–4 (359 Tests, 0 svelte-check-Fehler).

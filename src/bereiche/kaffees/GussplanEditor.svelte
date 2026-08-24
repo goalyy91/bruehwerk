@@ -9,6 +9,10 @@
   // Punkt fuer "den ersten Bildschirm, der dieses Muster traegt". Bearbeiten
   // und Loeschen sitzen bewusst nicht hinter einer Wischgeste (K44):
   // ein Tap auf die Zeile oeffnet ihr Formular direkt darunter.
+  //
+  // Visueller Redesign-Reset, Paket 4: Bausteinliste als Blatt mit
+  // Haarlinien statt eckig umrandeter Zeilen, aufgeklapptes Formular in
+  // Vertiefung (offener Zustand), Textfelder ueber .eingabefeld-text.
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
@@ -193,89 +197,87 @@
     onWahl={lesartWechseln}
   />
 
-  <ul class="liste">
+  <div class="panel">
     {#each gussplan.bausteine as baustein, i (i)}
-      <li>
-        <button type="button" class="zeile" onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}>
-          <span class="typ">{TYP_LABEL[baustein.typ]}</span>
-          <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
-        </button>
-        {#if offeneZeile === i}
-          <div class="formular">
-            {#if baustein.typ === 'bloom'}
-              <label>Menge <input type="text" inputmode="decimal" value={baustein.menge}
-                onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-              <label>Dauer <input type="text" inputmode="decimal" value={baustein.dauer}
-                onchange={(e) => bausteinAendern(i, { ...baustein, dauer: Number((e.currentTarget as HTMLInputElement).value) })} /> s</label>
-            {:else if baustein.typ === 'guss'}
-              <label>Zielmenge <input type="text" inputmode="decimal" value={baustein.zielmenge}
-                onchange={(e) => bausteinAendern(i, { ...baustein, zielmenge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-              <div class="auswahlzeile">
-                <span class="auswahllabel">Muster</span>
-                <Einzelauswahl
-                  optionen={[
-                    { wert: 'zentrum', label: 'Zentrum' },
-                    { wert: 'spirale', label: 'Spirale' },
-                    { wert: 'aussen', label: 'außen halten' },
-                  ]}
-                  wert={baustein.muster ?? ''}
-                  onWahl={(w) => bausteinAendern(i, { ...baustein, muster: w as never })}
-                />
-              </div>
-            {:else if baustein.typ === 'agitation'}
-              <div class="auswahlzeile">
-                <span class="auswahllabel">Art</span>
-                <Einzelauswahl
-                  optionen={[
-                    { wert: 'schwenken', label: 'Schwenken' },
-                    { wert: 'rao-spin', label: 'Rao Spin' },
-                    { wert: 'ruehren', label: 'Rühren' },
-                    { wert: 'klopfen', label: 'Klopfen' },
-                  ]}
-                  wert={baustein.art}
-                  onWahl={(w) => bausteinAendern(i, { ...baustein, art: w as never })}
-                />
-              </div>
-            {:else if baustein.typ === 'warten'}
-              <div class="auswahlzeile">
-                <span class="auswahllabel">Modus</span>
-                <Einzelauswahl
-                  optionen={[
-                    { wert: 'bis-durchgelaufen', label: 'bis durchgelaufen' },
-                    { wert: 'feste-dauer', label: 'feste Dauer' },
-                  ]}
-                  wert={baustein.modus}
-                  onWahl={(w) => bausteinAendern(i, { ...baustein, modus: w as never })}
-                />
-              </div>
-            {:else if baustein.typ === 'bypass'}
-              <label>Menge <input type="text" inputmode="decimal" value={baustein.menge}
-                onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-            {:else if baustein.typ === 'vorbereiten'}
-              <Schalter label="Filter spülen" an={baustein.filterSpuelen}
-                onWahl={(a) => bausteinAendern(i, { ...baustein, filterSpuelen: a })} />
-              <Schalter label="Gefäß vorwärmen" an={baustein.gefaessVorwaermen}
-                onWahl={(a) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: a })} />
-            {:else if baustein.typ === 'frei'}
-              <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
-            {/if}
-            {#if baustein.typ !== 'frei'}
-              <label class="notiz">Notiz <input type="text" value={baustein.notiz ?? ''}
-                onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })} /></label>
-            {/if}
-
-            <div class="werkzeuge">
-              <button type="button" onclick={() => bausteinVerschieben(i, -1)} disabled={i === 0}>↑</button>
-              <button type="button" onclick={() => bausteinVerschieben(i, 1)} disabled={i === gussplan.bausteine.length - 1}>↓</button>
-              <button type="button" class="loeschen" onclick={() => bausteinLoeschen(i)}>
-                {loeschenBestaetigen === i ? 'wirklich?' : 'löschen'}
-              </button>
+      <button type="button" class="zeile" onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}>
+        <span class="typ">{TYP_LABEL[baustein.typ]}</span>
+        <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
+      </button>
+      {#if offeneZeile === i}
+        <div class="formular">
+          {#if baustein.typ === 'bloom'}
+            <label>Menge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.menge}
+              onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+            <label>Dauer <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.dauer}
+              onchange={(e) => bausteinAendern(i, { ...baustein, dauer: Number((e.currentTarget as HTMLInputElement).value) })} /> s</label>
+          {:else if baustein.typ === 'guss'}
+            <label>Zielmenge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.zielmenge}
+              onchange={(e) => bausteinAendern(i, { ...baustein, zielmenge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+            <div class="auswahlzeile">
+              <span class="auswahllabel">Muster</span>
+              <Einzelauswahl
+                optionen={[
+                  { wert: 'zentrum', label: 'Zentrum' },
+                  { wert: 'spirale', label: 'Spirale' },
+                  { wert: 'aussen', label: 'außen halten' },
+                ]}
+                wert={baustein.muster ?? ''}
+                onWahl={(w) => bausteinAendern(i, { ...baustein, muster: w as never })}
+              />
             </div>
+          {:else if baustein.typ === 'agitation'}
+            <div class="auswahlzeile">
+              <span class="auswahllabel">Art</span>
+              <Einzelauswahl
+                optionen={[
+                  { wert: 'schwenken', label: 'Schwenken' },
+                  { wert: 'rao-spin', label: 'Rao Spin' },
+                  { wert: 'ruehren', label: 'Rühren' },
+                  { wert: 'klopfen', label: 'Klopfen' },
+                ]}
+                wert={baustein.art}
+                onWahl={(w) => bausteinAendern(i, { ...baustein, art: w as never })}
+              />
+            </div>
+          {:else if baustein.typ === 'warten'}
+            <div class="auswahlzeile">
+              <span class="auswahllabel">Modus</span>
+              <Einzelauswahl
+                optionen={[
+                  { wert: 'bis-durchgelaufen', label: 'bis durchgelaufen' },
+                  { wert: 'feste-dauer', label: 'feste Dauer' },
+                ]}
+                wert={baustein.modus}
+                onWahl={(w) => bausteinAendern(i, { ...baustein, modus: w as never })}
+              />
+            </div>
+          {:else if baustein.typ === 'bypass'}
+            <label>Menge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.menge}
+              onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+          {:else if baustein.typ === 'vorbereiten'}
+            <Schalter label="Filter spülen" an={baustein.filterSpuelen}
+              onWahl={(a) => bausteinAendern(i, { ...baustein, filterSpuelen: a })} />
+            <Schalter label="Gefäß vorwärmen" an={baustein.gefaessVorwaermen}
+              onWahl={(a) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: a })} />
+          {:else if baustein.typ === 'frei'}
+            <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
+          {/if}
+          {#if baustein.typ !== 'frei'}
+            <label class="notiz">Notiz <input class="eingabefeld-text" type="text" value={baustein.notiz ?? ''}
+              onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })} /></label>
+          {/if}
+
+          <div class="werkzeuge">
+            <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, -1)} disabled={i === 0}>↑</button>
+            <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, 1)} disabled={i === gussplan.bausteine.length - 1}>↓</button>
+            <button type="button" class="werkzeug loeschen" onclick={() => bausteinLoeschen(i)}>
+              {loeschenBestaetigen === i ? 'wirklich?' : 'löschen'}
+            </button>
           </div>
-        {/if}
-      </li>
+        </div>
+      {/if}
     {/each}
-  </ul>
+  </div>
 
   <!-- Regel 3/5: eine Auswahl statt eines Knopfteppichs aus fuenf
        gleichrangigen "+ Typ"-Aktionen. -->
@@ -318,29 +320,38 @@
     margin: var(--r4) 0 var(--r2);
   }
   .titel {
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--tinte);
   }
   .summe {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
-  .liste {
-    list-style: none;
-    margin: var(--r3) 0 0;
-    padding: 0;
+  /* Blatt mit Zeilen (Bausteine) + aufgeklapptem Formular in Vertiefung
+     (offener Zustand) — kein zentrales Muster fuer diese Form vorhanden
+     (siehe docs/design/offene-punkte-redesign.md, Punkt 8). */
+  .panel {
+    margin-top: var(--r3);
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
+    padding: 0 var(--r4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel > :not(:first-child) {
+    border-top: 1px solid var(--linie);
   }
   .zeile {
     width: 100%;
     display: flex;
     justify-content: space-between;
     min-height: var(--treffer);
-    padding: 0 var(--r2);
     border: none;
-    border-bottom: 1px solid var(--linie-zart);
-    background: var(--feld);
+    background: transparent;
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--tinte);
     text-align: left;
     cursor: pointer;
@@ -348,6 +359,7 @@
   .zeile .typ {
     width: var(--typspalte);
     flex-shrink: 0;
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     display: flex;
@@ -363,28 +375,18 @@
     display: flex;
     flex-direction: column;
     gap: var(--r2);
-    padding: var(--r3) var(--r2);
-    background: var(--ruhig);
-    border-bottom: 1px solid var(--linie);
+    padding: var(--r3) 0 var(--r4);
   }
   .formular label {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
     gap: var(--r2);
   }
-  .formular input[type='text'] {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
-  }
-  .notiz input {
+  .notiz .eingabefeld-text {
     flex: 1;
   }
   .auswahlzeile {
@@ -393,6 +395,7 @@
     gap: var(--r1);
   }
   .auswahllabel {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
   }
@@ -401,21 +404,24 @@
     gap: var(--r2);
     justify-content: flex-end;
   }
-  .werkzeuge button {
+  .werkzeug {
     min-height: var(--treffer);
     min-width: var(--treffer);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
+    background: none;
+    border: none;
+    color: var(--satz);
     font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
     cursor: pointer;
   }
-  .werkzeuge button:disabled {
+  .werkzeug:disabled {
     opacity: 0.4;
     cursor: default;
   }
-  .werkzeuge .loeschen {
+  .werkzeug.loeschen {
     color: var(--kritisch);
+    font-size: var(--fs-meta);
+    font-family: var(--schrift-sans);
   }
   .hinzufuegen {
     margin-top: var(--r3);
@@ -424,12 +430,12 @@
     display: block;
     width: 100%;
     min-height: var(--treffer);
-    padding: 0 var(--r3);
+    padding: 0;
     background: transparent;
-    border: 1px solid var(--linie);
-    color: var(--satz);
+    border: none;
+    color: var(--akzent);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
   }

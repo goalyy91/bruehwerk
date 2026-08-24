@@ -13,6 +13,9 @@
   // Einzelauswahl — freie Geräte-Namen, keine feste kurze Optionsmenge
   // (Regel 5, AuswahlListe.svelte nennt "Setup-Auswahl mit freien Namen"
   // wörtlich als ihren Fall).
+  //
+  // Visueller Redesign-Reset, Paket 4: Formularzeilen/Textfeld ueber die
+  // globalen Utilities aus tokens.css (.formularzeile, .eingabefeld-text).
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
@@ -66,20 +69,20 @@
 {#if bestand.muehlen.length === 0 || bestand.bruehgeraete.length === 0}
   <p class="hinweis">Erst eine Mühle und ein Brühgerät anlegen.</p>
 {:else}
-  <div class="feld-zeile">
-    <span class="label">Name</span>
-    <input class="text-eingabe" type="text" bind:value={entwurf.name} />
+  <div class="formularzeile">
+    <span class="formularzeile-label">Name</span>
+    <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
   </div>
-  <div class="feld-zeile spalte">
-    <span class="label">Mühle</span>
+  <div class="formularzeile spalte">
+    <span class="formularzeile-label">Mühle</span>
     <AuswahlListe
       optionen={bestand.muehlen.map((m) => ({ wert: m.id, label: m.name }))}
       wert={entwurf.muehleId}
       onWahl={(w) => (entwurf.muehleId = w)}
     />
   </div>
-  <div class="feld-zeile spalte">
-    <span class="label">Brühgerät</span>
+  <div class="formularzeile spalte">
+    <span class="formularzeile-label">Brühgerät</span>
     <AuswahlListe
       optionen={bestand.bruehgeraete.map((b) => ({ wert: b.id, label: b.name }))}
       wert={entwurf.bruehgeraetId}
@@ -102,40 +105,6 @@
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
-  }
-  .feld-zeile {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--r3);
-    min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie);
-    padding: var(--r1) 0;
-  }
-  .feld-zeile.spalte {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--r1);
-  }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .feld-zeile.spalte .label {
-    width: auto;
-  }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
-    flex: 1;
-    min-width: var(--feld-min);
   }
   .knopfreihe {
     margin-top: var(--r4);

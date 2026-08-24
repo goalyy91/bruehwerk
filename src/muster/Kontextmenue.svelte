@@ -12,6 +12,9 @@
   // Ausfuehren im selben Fluss nach — kein natives confirm()/alert(), das
   // faellt aus dem Laborbuch-Look (K44-Nachbarregel: keine Wischgeste, hier:
   // kein OS-Dialog). Ein zweiter Tap auf denselben Eintrag bestaetigt.
+  //
+  // Visueller Redesign-Reset, Paket 4: aufgeklapptes Menue als Blatt mit
+  // Radius/Haarlinien statt eckig umrandeter Box.
 
   type Eintrag = {
     text: string;
@@ -88,18 +91,19 @@
     display: flex;
     flex-direction: column;
     min-width: 180px;
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld-blatt);
+    border-radius: var(--r-kachel);
+    overflow: hidden;
+    background: var(--blatt);
   }
   .zeile {
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: none;
-    border-top: 1px solid var(--linie-zart);
+    border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--satz);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
   }

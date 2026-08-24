@@ -10,6 +10,12 @@
   // UX-Korrekturrunde: Loeschen ist raus (jetzt in MuehleAnsicht.svelte,
   // ueber Kontextmenue) — "speichern" ist damit die einzige Aktion auf
   // diesem Blatt (Regel 3).
+  //
+  // Visueller Redesign-Reset, Paket 4: Formularzeilen/Textfeld jetzt ueber
+  // die globalen Utilities aus tokens.css (.formularzeile, .eingabefeld-
+  // text) statt lokal nachgebauter --feld/--feld-rahmen-Boxen — dieselbe
+  // Form wie Bruehgeraetblatt.svelte/Setupblatt.svelte (ux-regeln.md
+  // Regel 6/12).
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
@@ -57,12 +63,12 @@
 
 <Kopfzeile titel={bestehend ? 'Mühle bearbeiten' : 'Neue Mühle'} {onZurueck} />
 
-<div class="feld-zeile">
-  <span class="label">Name</span>
-  <input class="text-eingabe" type="text" bind:value={entwurf.name} />
+<div class="formularzeile">
+  <span class="formularzeile-label">Name</span>
+  <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
 </div>
-<div class="feld-zeile spalte">
-  <span class="label">Skala</span>
+<div class="formularzeile spalte">
+  <span class="formularzeile-label">Skala</span>
   <Segment
     optionen={[{ wert: 'numerisch', label: 'numerisch' }, { wert: 'klicks', label: 'Klicks' }]}
     wert={entwurf.skala.typ}
@@ -76,7 +82,7 @@
     { label: 'Schritt', wert: entwurf.skala.schritt, onAendern: (w) => (entwurf.skala = { ...entwurf.skala, schritt: w }) },
   ]}
 />
-<div class="feld-zeile">
+<div class="formularzeile">
   <Schalter label="Drehzahl einstellbar" an={entwurf.rpmEinstellbar} onWahl={(a) => (entwurf.rpmEinstellbar = a)} />
 </div>
 {#if entwurf.rpmEinstellbar}
@@ -112,40 +118,6 @@
 {/if}
 
 <style>
-  .feld-zeile {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--r2);
-    min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie);
-    padding: var(--r1) 0;
-  }
-  .feld-zeile.spalte {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--r1);
-  }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .feld-zeile.spalte .label {
-    width: auto;
-  }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
-    flex: 1;
-    min-width: var(--feld-min);
-  }
   .knopfreihe {
     margin-top: var(--r4);
   }

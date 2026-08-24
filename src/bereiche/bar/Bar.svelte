@@ -4,6 +4,9 @@
   // Der Zwei-Tap-Schnellpfad (Decay-Ranking) ist Paket 07, die Bestellung
   // Paket 06 — bis dahin ist die Bar der Ort, an dem die letzte Quittung
   // steht, mehr nicht.
+  //
+  // Paket 4: Kopfzeile im gross-Modus, wie alle Root-Tab-Screens ohne
+  // Rueckweg (Handoff: "Titel 32/600").
 
   import { bestand } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -14,7 +17,7 @@
   const kaffeeName = $derived(bestand.kaffees.find((k) => k.id === letzterShot?.kaffeeId)?.name);
 </script>
 
-<Kopfzeile titel="Bar" />
+<Kopfzeile titel="Bar" gross />
 
 {#if letzterShot && kaffeeName}
   <p class="quittung">{kaffeeName} · {letzterShot.urteil}</p>

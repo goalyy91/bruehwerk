@@ -5,6 +5,12 @@
   // Entwurf per untrack()+structuredClone, ein Knopf "speichern", ein
   // echtes "abbrechen" — kein Autosave je Tastenanschlag mehr wie vorher im
   // eingebetteten Kaffeeblatt-Formular.
+  //
+  // Visueller Redesign-Reset, Paket 4: Formularzeilen/Textfeld ueber die
+  // globalen Utilities aus tokens.css (.formularzeile, .eingabefeld-text),
+  // Roestgrad/Bewertung als Blattzeile mit senkrechter Haarlinie wie in
+  // der Leseansicht (Kaffeeblatt.svelte ".blick", Paket 2) statt der
+  // vorherigen randlosen Zeile.
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
@@ -76,16 +82,16 @@
 
   <section class="gruppe">
     <h2>Grunddaten</h2>
-    <div class="zeile">
-      <span class="label">Name</span>
-      <input class="text-eingabe" type="text" bind:value={entwurf.name} />
+    <div class="formularzeile">
+      <span class="formularzeile-label">Name</span>
+      <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
     </div>
-    <div class="zeile">
-      <span class="label">Röster</span>
-      <input class="text-eingabe" type="text" bind:value={entwurf.roester} />
+    <div class="formularzeile">
+      <span class="formularzeile-label">Röster</span>
+      <input class="eingabefeld-text" type="text" bind:value={entwurf.roester} />
     </div>
-    <div class="zeile spalte">
-      <span class="label">Art</span>
+    <div class="formularzeile spalte">
+      <span class="formularzeile-label">Art</span>
       <Segment
         optionen={[
           { wert: 'single', label: 'Single Origin' },
@@ -95,10 +101,10 @@
         onWahl={(w) => (entwurf!.art = w as Kaffee['art'])}
       />
     </div>
-    <div class="zeile">
+    <div class="formularzeile">
       <Schalter label="entkoffeiniert" an={entwurf.entkoffeiniert} onWahl={(a) => (entwurf!.entkoffeiniert = a)} />
     </div>
-    <div class="zeile">
+    <div class="formularzeile">
       <Schalter label="aktiv" an={entwurf.aktiv} onWahl={(a) => (entwurf!.aktiv = a)} />
     </div>
   </section>
@@ -107,54 +113,55 @@
     <h2>Röstung &amp; Bewertung</h2>
     <div class="blick-zeile">
       <div class="blick-eintrag">
-        <span class="label">Röstgrad</span>
+        <span class="blick-label">Röstgrad</span>
         <Bohnen stufe={entwurf.roestgrad} onWahl={(s) => (entwurf!.roestgrad = s)} />
       </div>
+      <div class="blick-trenner" aria-hidden="true"></div>
       <div class="blick-eintrag">
-        <span class="label">Bewertung</span>
+        <span class="blick-label">Bewertung</span>
         <Sterne wert={entwurf.bewertung} onWahl={(w) => (entwurf!.bewertung = w)} />
       </div>
     </div>
-    <div class="zeile">
-      <span class="label">Röstgrad (Röster)</span>
-      <input class="text-eingabe" type="text" value={entwurf.roestgradRoester ?? ''}
+    <div class="formularzeile">
+      <span class="formularzeile-label">Röstgrad (Röster)</span>
+      <input class="eingabefeld-text" type="text" value={entwurf.roestgradRoester ?? ''}
         onchange={(e) => (entwurf!.roestgradRoester = (e.currentTarget as HTMLInputElement).value || undefined)} />
     </div>
   </section>
 
   <section class="gruppe">
     <h2>Herkunft &amp; Botanik</h2>
-    <div class="zeile">
-      <span class="label">Herkunft</span>
-      <input class="text-eingabe" type="text" placeholder="Land, Land …"
+    <div class="formularzeile">
+      <span class="formularzeile-label">Herkunft</span>
+      <input class="eingabefeld-text" type="text" placeholder="Land, Land …"
         value={entwurf.herkunft.join(', ')} onchange={(e) => herkunftAendern((e.currentTarget as HTMLInputElement).value)} />
     </div>
-    <div class="zeile">
-      <span class="label">Varietät</span>
-      <input class="text-eingabe" type="text" value={entwurf.varietaet ?? ''}
+    <div class="formularzeile">
+      <span class="formularzeile-label">Varietät</span>
+      <input class="eingabefeld-text" type="text" value={entwurf.varietaet ?? ''}
         onchange={(e) => (entwurf!.varietaet = (e.currentTarget as HTMLInputElement).value || undefined)} />
     </div>
-    <div class="zeile">
-      <span class="label">Anbauhöhe</span>
-      <input class="text-eingabe zahl" type="text" inputmode="numeric" value={entwurf.anbauhoehe ?? ''}
+    <div class="formularzeile">
+      <span class="formularzeile-label">Anbauhöhe</span>
+      <input class="eingabefeld-text zahl" type="text" inputmode="numeric" value={entwurf.anbauhoehe ?? ''}
         onchange={(e) => (entwurf!.anbauhoehe = Number((e.currentTarget as HTMLInputElement).value) || undefined)} /> m
     </div>
-    <div class="zeile spalte">
-      <span class="label">Aufbereitung</span>
+    <div class="formularzeile spalte">
+      <span class="formularzeile-label">Aufbereitung</span>
       <AuswahlListe
         optionen={AUFBEREITUNG_OPTIONEN}
         wert={entwurf.aufbereitung ?? ''}
         onWahl={(w) => (entwurf!.aufbereitung = w as Aufbereitung)}
       />
     </div>
-    <div class="zeile">
-      <span class="label">Botanik</span>
+    <div class="formularzeile">
+      <span class="formularzeile-label">Botanik</span>
       <div class="botanik">
-        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
+        <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
           value={entwurf.botanik?.arabicaProzent ?? ''}
           onchange={(e) => botanikAendern('arabicaProzent', zahl(e))} />
         % Arabica ·
-        <input class="text-eingabe zahl schmal" type="text" inputmode="numeric"
+        <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
           value={entwurf.botanik?.robustaProzent ?? ''}
           onchange={(e) => botanikAendern('robustaProzent', zahl(e))} />
         % Robusta
@@ -176,84 +183,57 @@
 
 <style>
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: 0 0 var(--r3);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .gruppe {
     margin-bottom: var(--r5);
-    padding-bottom: var(--r4);
-    border-bottom: 1px solid var(--linie);
   }
-  .gruppe:last-of-type {
-    border-bottom: none;
-  }
-  .zeile {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: var(--treffer);
-    gap: var(--r3);
-    flex-wrap: wrap;
-    padding: var(--r1) 0;
-  }
-  .zeile.spalte {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--r1);
-  }
-  .zeile.spalte .label {
+  .formularzeile.spalte .formularzeile-label {
     width: auto;
   }
-  /* Roestgrad + Bewertung nebeneinander statt gestapelt — dieselbe
-     Anordnung wie in der Leseansicht (Kaffeeblatt.svelte ".blick"), macht
-     das Vergleichen leichter und braucht weniger Scrollhoehe. */
+  /* Roestgrad + Bewertung als Blattzeile mit senkrechter Haarlinie, wie in
+     der Leseansicht (Kaffeeblatt.svelte ".blick", Paket 2) — dieselbe
+     Komposition in Lese- und Bearbeiten-Ansicht. */
   .blick-zeile {
     display: flex;
-    gap: var(--r6);
-    padding: var(--r2) 0 var(--r3);
+    align-items: center;
+    gap: var(--seitenrand);
+    padding: var(--r4);
+    margin-bottom: var(--r3);
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
   }
   .blick-eintrag {
     display: flex;
     flex-direction: column;
-    gap: var(--r1);
+    gap: var(--r-kachelabstand);
   }
-  .blick-eintrag .label {
-    width: auto;
-  }
-  .label {
-    width: var(--eigenschaftslabel);
-    flex-shrink: 0;
-    font-size: var(--fs-meta);
+  .blick-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
     color: var(--gedaempft);
   }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
-    flex: 1;
-    min-width: 100px;
+  .blick-trenner {
+    align-self: stretch;
+    width: 1px;
+    background: var(--linie);
   }
-  .text-eingabe.zahl {
+  .eingabefeld-text.zahl {
     font-variant-numeric: var(--zahl-features);
     text-align: right;
     flex: 0 0 auto;
     width: 80px;
   }
-  .text-eingabe.schmal {
+  .eingabefeld-text.schmal {
     width: 48px;
   }
   .botanik {
     display: flex;
     align-items: center;
     gap: var(--r1);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
   }

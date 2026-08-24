@@ -270,6 +270,73 @@ button,
   gap: var(--r-kachelabstand);
 }
 
+/* Gruppenkopf (Handoff 3.2: Sans, Versalien, .14em, gedämpft) — Paket 1-3
+   liessen das noch je Datei lokal stehen ("<h2>" tauchte identisch in elf
+   Screens auf), Paket 4 zieht es hier zusammen. Lokale Regeln in
+   einzelnen Dateien duerfen weiterhin nur den margin ueberschreiben, da
+   Svelte-Scoping ihnen automatisch Vorrang vor dieser globalen Regel gibt. */
+h2 {
+  font-family: var(--schrift-sans);
+  font-size: var(--fs-gruppenkopf);
+  letter-spacing: var(--label-spacing);
+  text-transform: uppercase;
+  color: var(--gedaempft);
+  font-weight: var(--gw-text);
+  margin: var(--r5) 0 var(--r-kachelabstand);
+}
+
+/* Formularzeile (Handoff-Screen-Mapping "Geräte/Geräteformulare": "Blatt
+   mit Formularzeilen — Label links Serif 16, Feld rechts in Vertiefung
+   mit Radius 4"). Bruehgeraetblatt/Muehleblatt/Setupblatt/KaffeeBearbeiten
+   bauten das bisher viermal fast wortgleich nach (ux-regeln.md Regel
+   6/12 — hier einmal statt viermal). */
+.formularzeile {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--r3);
+  min-height: var(--treffer);
+  padding: var(--r1) 0;
+  border-bottom: 1px solid var(--linie);
+}
+.formularzeile.spalte {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--r1);
+}
+.formularzeile-label {
+  width: var(--eigenschaftslabel);
+  flex-shrink: 0;
+  font-size: var(--fs-bedienwort);
+  color: var(--satz);
+}
+.formularzeile.spalte .formularzeile-label {
+  width: auto;
+}
+
+/* Eingabefeld Text (Handoff 3.8 "Eingabefeld Text/Auswahl": Vertiefung,
+   Radius 4, Höhe 38, Serif 17) — derselbe Bauteil, den AuswahlListe.svelte
+   fuer ihr geschlossenes Feld schon nutzt, hier fuer echte Freitext-
+   Eingaben (Name, Röster, Herkunft, Chargennummer, …). Höhe 38 statt der
+   48-px-Trefferregel: dieselbe woertliche Handoff-Vorgabe wie bei
+   AuswahlListe.svelte (siehe docs/design/offene-punkte-redesign.md,
+   Punkt 2). */
+.eingabefeld-text {
+  font-family: var(--schrift);
+  font-size: var(--fs-bedienwort);
+  background: var(--vertiefung);
+  border: none;
+  border-radius: var(--r-wertfeld);
+  min-height: 38px;
+  padding: 0 var(--r3);
+  color: var(--tinte);
+  flex: 1;
+  min-width: var(--feld-min);
+}
+.eingabefeld-text::placeholder {
+  color: var(--spur);
+}
+
 /* Fokus sichtbar für Tastatur/Screenreader, ohne neues Token — und
    ausdrücklich eine andere Form als jede Auswahlmarkierung (Handoff 3.7). */
 :focus-visible {

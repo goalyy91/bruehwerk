@@ -5,6 +5,9 @@
   // Werkstattbericht zum Herauskopieren. "gesammelt in den Einstellungen,
   // nicht als Stoerung mitten im Shot" (Konzept) — deshalb ein eigener
   // Bildschirm statt eines Hinweises im Alltagspfad.
+  //
+  // Visueller Redesign-Reset, Paket 4: Eintraege als Blatt-Zeilen statt
+  // eckig umrandeter Liste, Textfelder ueber .eingabefeld-text.
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { offeneBeobachtungen, type Entscheidung } from '../../domain/beobachtungen';
@@ -164,9 +167,9 @@
   {#if offene.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <ul class="liste">
+    <div class="panel">
       {#each offene as b (b.begriff)}
-        <li class="eintrag">
+        <div class="eintrag">
           <div class="kopf">
             <span class="begriff">„{b.begriff}" · {b.anzahl}× seit {seitDatum(b.shotIds)}</span>
             <Kontextmenue
@@ -181,15 +184,15 @@
           </p>
           {#if zusammenfassenOffen === b.begriff}
             <div class="zusammenfassen">
-              <input type="text" placeholder="mit welchem Begriff?" bind:value={zusammenfassenWert} />
+              <input class="eingabefeld-text" type="text" placeholder="mit welchem Begriff?" bind:value={zusammenfassenWert} />
               <Knopf stufe="sekundaer" onKlick={() => zusammenfassenBestaetigen(b.begriff)}>übernehmen</Knopf>
             </div>
           {:else}
             <Knopf stufe="primaer" onKlick={() => void alsChipAnlegen(b.begriff, b.shotIds)}>Als Chip anlegen</Knopf>
           {/if}
-        </li>
+        </div>
       {/each}
-    </ul>
+    </div>
   {/if}
 </section>
 
@@ -198,9 +201,9 @@
   {#if eigeneChips.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <ul class="liste">
+    <div class="panel">
       {#each eigeneChips as chip (chip.id)}
-        <li class="eintrag">
+        <div class="eintrag">
           <div class="kopf">
             <span class="begriff">{chip.label}</span>
             <button type="button" class="link" onclick={() => (regelEditorOffen === chip.id ? (regelEditorOffen = undefined) : regelEditorOeffnen(chip))}>
@@ -219,13 +222,13 @@
                 }}
               />
               <Einzelauswahl optionen={RICHTUNG_JE_PARAMETER[regelParameter]} wert={regelRichtung} onWahl={(w) => (regelRichtung = w as Richtung)} />
-              <input type="number" min="1" bind:value={regelSchritte} aria-label="Schritte" />
+              <input class="eingabefeld-text zahl" type="number" min="1" bind:value={regelSchritte} aria-label="Schritte" />
               <Knopf stufe="primaer" onKlick={() => void regelSpeichern(chip)}>Regel speichern</Knopf>
             </div>
           {/if}
-        </li>
+        </div>
       {/each}
-    </ul>
+    </div>
   {/if}
 </section>
 
@@ -246,24 +249,23 @@
 
 <style>
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: 0 0 var(--r2);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .gruppe {
-    margin-bottom: var(--r6);
+    margin-bottom: var(--r5);
   }
-  .liste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .panel {
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
+    padding: 0 var(--r4);
+    display: flex;
+    flex-direction: column;
+  }
+  .panel > :not(:first-child) {
+    border-top: 1px solid var(--linie);
   }
   .eintrag {
     padding: var(--r3) 0;
-    border-bottom: 1px solid var(--linie-zart);
   }
   .kopf {
     display: flex;
@@ -272,11 +274,11 @@
     gap: var(--r2);
   }
   .begriff {
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--tinte);
-    font-weight: var(--gw-titel);
   }
   .shots {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r3);
@@ -289,18 +291,10 @@
     gap: var(--r3);
     margin-top: var(--r2);
   }
-  .zusammenfassen input,
-  .regeleditor input {
-    min-height: var(--treffer);
-    padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld);
-    color: var(--tinte);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-  }
-  .regeleditor input[type='number'] {
+  .regeleditor .eingabefeld-text {
     width: 72px;
+    flex: none;
+    text-align: right;
   }
   .link {
     background: none;

@@ -106,10 +106,10 @@
     {:else if route.name === 'shot'}
       <ShotErfassung profilId={route.profilId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'historie'}
-      <Kopfzeile titel="Historie" />
+      <Kopfzeile titel="Historie" gross />
       <p class="offen">Historie · kommt in Paket 05</p>
     {:else if route.name === 'getraenke'}
-      <Kopfzeile titel="Getränke" />
+      <Kopfzeile titel="Getränke" gross />
       <p class="offen">Getränke · kommt in Paket 06</p>
     {:else if route.name === 'einstellungen'}
       <Einstellungen

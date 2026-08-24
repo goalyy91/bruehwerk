@@ -3,9 +3,13 @@
   // importiere) war fertig und getestet, aber an keiner Stelle verdrahtet.
   // CLAUDE.md nennt den manuellen Datei-Export ausdruecklich als zweiten,
   // anbieterfreien Backup-Weg neben dem noch nicht gewaehlten Cloud-Backend.
+  //
+  // Visueller Redesign-Reset, Paket 4: Sekundaer-Knoepfe (Vertiefung/
+  // Radius-Pille) statt eckig umrandeter Flaeche.
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
   import { bestand } from '../bestand.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
 
   let exportFehler = $state<string | undefined>(undefined);
   let importFehler = $state<string[] | undefined>(undefined);
@@ -55,8 +59,8 @@
 <p class="hinweis">Vollständiger Bestand, kein Backend beteiligt — funktioniert auch, wenn ein späterer Cloud-Dienst ausfällt.</p>
 
 <div class="knopfreihe">
-  <button type="button" onclick={datenExportieren}>Datei exportieren</button>
-  <button type="button" onclick={() => dateiEingabe?.click()}>Datei importieren</button>
+  <Knopf stufe="sekundaer" onKlick={datenExportieren}>Datei exportieren</Knopf>
+  <Knopf stufe="sekundaer" onKlick={() => dateiEingabe?.click()}>Datei importieren</Knopf>
   <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
 </div>
 
@@ -74,15 +78,8 @@
 {/if}
 
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
-  }
   .hinweis {
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     margin: 0 0 var(--r3);
@@ -91,16 +88,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--r3);
-  }
-  button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--linie);
-    color: var(--tinte);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
   }
   .fehler {
     color: var(--kritisch);
