@@ -33,12 +33,13 @@
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
+  import { verhaeltnisZahl, ertragMl, fertigAbZeitpunkt } from '../../domain/coldbrew';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Knopf from '../../muster/Knopf.svelte';
-  import type { Charge, Profil, Aufbereitung } from '../../daten/schema';
+  import type { Charge, Profil, Ansatz, Aufbereitung } from '../../daten/schema';
 
   let {
     kaffeeId,
@@ -132,9 +133,64 @@
   let neuerProfilName = $state('');
   let neuesProfilSetupId = $state('');
 
+  // Cold Brew — konzept.md:933-955. Ein Ansatz ist ein Vorrat, kein Schritt
+  // in einer Bestellung: angesetzt am, fertig ab (kein Countdown, ein
+  // Zeitpunkt, K "kein Timer"), Menge, Rest.
+  const coldbrewProfile = $derived(profile.filter((p) => bestand.bruehgeraetVon(p.setupId)?.typ === 'coldbrew'));
+  const ansaetze = $derived(
+    bestand.ansaetze.filter((a) => a.kaffeeId === kaffeeId).sort((a, b) => b.angesetzt - a.angesetzt),
+  );
+
+  let neuerAnsatzOffen = $state(false);
+  let neuerAnsatzProfilId = $state('');
+  let neuerAnsatzInput = $state('');
+
+  function ansatzErtrag(profilId: string, inputGramm: number): number | undefined {
+    const profil = coldbrewProfile.find((p) => p.id === profilId);
+    const verhaeltnis = profil?.ansatz ? verhaeltnisZahl(profil.ansatz.verhaeltnis) : undefined;
+    return verhaeltnis === undefined ? undefined : ertragMl(inputGramm, verhaeltnis);
+  }
+
+  async function ansatzAnlegen() {
+    const profil = coldbrewProfile.find((p) => p.id === neuerAnsatzProfilId);
+    const inputGramm = Number(neuerAnsatzInput.replace(',', '.'));
+    if (!profil?.ansatz || !Number.isFinite(inputGramm) || inputGramm <= 0) return;
+    const ertrag = ansatzErtrag(profil.id, inputGramm);
+    if (ertrag === undefined) return;
+    speicherFehler = undefined;
+    const jetzt = Date.now();
+    const neu: Ansatz = {
+      id: crypto.randomUUID(),
+      kaffeeId,
+      profilId: profil.id,
+      angesetzt: jetzt,
+      fertigAb: fertigAbZeitpunkt(jetzt, profil.ansatz.ziehzeit),
+      menge: ertrag,
+      rest: ertrag,
+      status: 'ziehend',
+    };
+    try {
+      await schreiben('ansatz', neu);
+      neuerAnsatzOffen = false;
+      neuerAnsatzInput = '';
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  async function ansatzStatusSetzen(ansatz: Ansatz, status: Ansatz['status']) {
+    speicherFehler = undefined;
+    try {
+      await schreiben('ansatz', { ...ansatz, status });
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
   async function profilAnlegen() {
     if (!kaffee || neuerProfilName.trim() === '' || neuesProfilSetupId === '') return;
     speicherFehler = undefined;
+    const istColdbrew = bestand.bruehgeraetVon(neuesProfilSetupId)?.typ === 'coldbrew';
     const neu: Profil = {
       id: crypto.randomUUID(),
       kaffeeId,
@@ -146,6 +202,10 @@
       ziel: { input: 18, mg: 0, output: 36, zeit: 30 },
       spielraum: SPIELRAUM_VORGABE,
       modus: 'dialin',
+      // Startwerte aus konzept.md:944-951, jeder einzelne ausdruecklich als
+      // Startwert markiert — nur beim Mahlgrad (ziel.mg oben) gibt es
+      // keinen: "der einzige Wert, den ich nicht beziffern will" (konzept.md:949).
+      ansatz: istColdbrew ? { verhaeltnis: '1:15', ziehzeit: 16, ort: 'Kühlschrank', filtern: true } : undefined,
     };
     try {
       await schreiben('profil', neu);
@@ -223,6 +283,70 @@
       {/if}
     </div>
   </section>
+
+  {#if coldbrewProfile.length > 0}
+    <section class="gruppe">
+      <h2>Cold Brew</h2>
+      <div class="panel">
+        {#if ansaetze.length === 0}
+          <p class="hinweis-panel">kein Ansatz</p>
+        {:else}
+          {#each ansaetze as ansatz (ansatz.id)}
+            <div class="ansatz-zeile">
+              <div class="ansatz-kopf">
+                <span class="name">
+                  {ansatz.status === 'ziehend' ? 'zieht' : ansatz.status === 'fertig' ? 'fertig' : 'aufgebraucht'}
+                </span>
+                <span class="meta">
+                  {ansatz.status === 'ziehend' ? 'fertig ab' : 'fertig war'}
+                  {new Date(ansatz.fertigAb).toLocaleDateString('de-DE')}
+                  {new Date(ansatz.fertigAb).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <span class="meta">Rest {Math.round(ansatz.rest)} von {Math.round(ansatz.menge)} ml</span>
+              {#if ansatz.status === 'ziehend'}
+                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'fertig')}>als fertig markieren</button>
+              {:else if ansatz.status === 'fertig' && ansatz.rest <= 0}
+                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'aufgebraucht')}>als aufgebraucht markieren</button>
+              {/if}
+            </div>
+          {/each}
+        {/if}
+
+        {#if neuerAnsatzOffen}
+          <div class="anlage">
+            {#if coldbrewProfile.length > 1}
+              <AuswahlListe
+                optionen={coldbrewProfile.map((p) => ({ wert: p.id, label: p.name }))}
+                wert={neuerAnsatzProfilId}
+                onWahl={(w) => (neuerAnsatzProfilId = w)}
+              />
+            {/if}
+            <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Input in g" bind:value={neuerAnsatzInput} />
+            {#if neuerAnsatzProfilId && Number(neuerAnsatzInput.replace(',', '.')) > 0}
+              <p class="hinweis-panel">
+                ≈ {Math.round(ansatzErtrag(neuerAnsatzProfilId, Number(neuerAnsatzInput.replace(',', '.'))) ?? 0)} ml Ertrag
+              </p>
+            {/if}
+            <Knopf stufe="primaer" onKlick={ansatzAnlegen} deaktiviert={!neuerAnsatzProfilId || Number(neuerAnsatzInput.replace(',', '.')) <= 0}>
+              ansetzen
+            </Knopf>
+          </div>
+        {:else}
+          <button
+            type="button"
+            class="anlegen-zeile"
+            onclick={() => {
+              neuerAnsatzOffen = true;
+              neuerAnsatzProfilId = coldbrewProfile[0]?.id ?? '';
+            }}
+          >
+            + Ansatz
+          </button>
+        {/if}
+      </div>
+    </section>
+  {/if}
 
   <section class="gruppe">
     <div class="panel">
@@ -421,6 +545,31 @@
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
+  }
+  .anlegen-zeile.schmal {
+    min-height: 40px;
+    font-size: var(--fs-meta);
+  }
+  .ansatz-zeile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--r3) 0;
+  }
+  .ansatz-kopf {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--r3);
+  }
+  .ansatz-kopf .name {
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .ansatz-zeile .meta {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
   }
   .falte {
     display: flex;
