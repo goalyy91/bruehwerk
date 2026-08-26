@@ -17,12 +17,15 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
+  import { GROESSEN } from '../../domain/tasting';
+  import { normiereZeitreihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
+  import Rangliste from '../../muster/Rangliste.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import type { Profil } from '../../daten/schema';
 
@@ -137,6 +140,36 @@
   });
   const bruehgruppeAusserhalbMessreihe = $derived(
     profil?.ziel.kt !== undefined && !gruppenTemperatur?.bekannt,
+  );
+
+  // Auswertung, schmal (Paket 05, Rueckfrage 2026-08-26) — beschreibt, was
+  // in den eigenen Verkostungen dieses Profils steht, ohne Ursachen oder
+  // Korrelationen zu behaupten. Tasting traegt keine eigene Zeit (K38 —
+  // Gerechnetes wird nie gespeichert), deshalb die Zeit ueber den Shot dazu.
+  const verkostungenChronologisch = $derived(
+    bestand.tastings
+      .map((t) => {
+        const shot = bestand.shots.find((s) => s.id === t.shotId);
+        return shot && shot.profilId === profilId ? { tasting: t, ts: shot.ts } : undefined;
+      })
+      .filter((e): e is { tasting: (typeof bestand.tastings)[number]; ts: number } => e !== undefined)
+      .sort((a, b) => a.ts - b.ts),
+  );
+
+  const BIPOLARE_GROESSEN = GROESSEN.filter((g) => g.art === 'bipolar');
+  function verlaufFuerGroesse(groesse: (typeof GROESSEN)[number]['id']) {
+    return normiereZeitreihe(verkostungenChronologisch.map((e) => ({ ts: e.ts, wert: e.tasting.groessen[groesse] })));
+  }
+
+  const haeufigeAromen = $derived(haeufigsteAromen(verkostungenChronologisch.flatMap((e) => e.tasting.aromen)));
+
+  function symptomLabel(id: string): string {
+    return bestand.symptome.find((s) => s.id === id)?.label ?? id;
+  }
+  const verschwundene = $derived(
+    verschwundeneAuffaelligkeiten(
+      verkostungenChronologisch.map((e) => ({ ts: e.ts, auffaelligkeitIds: e.tasting.auffaelligkeiten.map((a) => a.id) })),
+    ).map(symptomLabel),
   );
 
   let speicherFehler = $state<string | undefined>(undefined);
@@ -268,6 +301,32 @@
     />
   </section>
 
+  {#if verkostungenChronologisch.length > 0}
+    <section class="verkostungen">
+      <h2>Verkostungen</h2>
+      {#each BIPOLARE_GROESSEN as g (g.id)}
+        <p class="teiltitel">{g.titel}</p>
+        <Verlaufskurve
+          punkte={verlaufFuerGroesse(g.id).map((p) => ({ x: p.x, y: p.wert / 4 }))}
+          achsMarken={[g.woerter[0], g.woerter[2], g.woerter[4]]}
+        />
+      {/each}
+
+      {#if haeufigeAromen.length > 0}
+        <p class="teiltitel">Häufigste Aromen</p>
+        <Rangliste
+          person={profil.name}
+          eintraege={haeufigeAromen.map((a) => ({ id: a.label, name: a.label, wert: a.anzahl }))}
+          mitBalken
+        />
+      {/if}
+
+      {#if verschwundene.length > 0}
+        <p class="verschwunden">Zuletzt nicht mehr aufgefallen: {verschwundene.join(' · ')}.</p>
+      {/if}
+    </section>
+  {/if}
+
   {#if bruehgeraet?.typ === 'pourover'}
     <GussplanEditor {profilId} />
   {/if}
@@ -336,6 +395,23 @@
   }
   .verlauf {
     margin-top: var(--r5);
+  }
+  .verkostungen {
+    margin-top: var(--r5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--r3);
+  }
+  .teiltitel {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: var(--r3) 0 0;
+  }
+  .verschwunden {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: var(--r2) 0 0;
   }
   .setup-wahl {
     margin-top: var(--r5);

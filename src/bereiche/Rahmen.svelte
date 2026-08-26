@@ -39,11 +39,15 @@
   import Setupblatt from './einstellungen/Setupblatt.svelte';
   import Musterblatt from './Musterblatt.svelte';
   import Beobachtungen from './einstellungen/Beobachtungen.svelte';
+  import Historie from './historie/Historie.svelte';
+  import Shotblatt from './historie/Shotblatt.svelte';
+  import Verkostungsbogen from './tasting/Verkostungsbogen.svelte';
+  import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
     { id: 'kaffees', label: 'Kaffees', gebaut: true },
-    { id: 'historie', label: 'Historie', gebaut: false },
+    { id: 'historie', label: 'Historie', gebaut: true },
     { id: 'getraenke', label: 'Getränke', gebaut: false },
     { id: 'einstellungen', label: 'Einstellungen', gebaut: true },
   ];
@@ -106,8 +110,15 @@
     {:else if route.name === 'shot'}
       <ShotErfassung profilId={route.profilId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'historie'}
-      <Kopfzeile titel="Historie" gross />
-      <p class="offen">Historie · kommt in Paket 05</p>
+      <Historie onOeffnen={(shotId) => navigation.gehe({ name: 'historieShot', shotId })} />
+    {:else if route.name === 'historieShot'}
+      <Shotblatt
+        shotId={route.shotId}
+        onZurueck={() => navigation.zurueck()}
+        onOeffnenVerkostung={() => navigation.gehe({ name: 'verkostung', shotId: route.shotId })}
+      />
+    {:else if route.name === 'verkostung'}
+      <Verkostungsbogen shotId={route.shotId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'getraenke'}
       <Kopfzeile titel="Getränke" gross />
       <p class="offen">Getränke · kommt in Paket 06</p>
@@ -116,9 +127,12 @@
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
         onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
+        onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
       />
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'uebung'}
+      <Uebungsmodus onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}
