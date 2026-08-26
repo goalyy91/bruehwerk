@@ -87,7 +87,7 @@ describe('Shot und Profil — Grundform', () => {
     expect(Shot.safeParse(shot).success).toBe(true);
   });
 
-  it('portionen ausserhalb {1,2} schlaegt fehl', () => {
+  it('portionen 3 ist gueltig (K18 — die 3er-Bialetti bedient drei Tassen)', () => {
     const shot = {
       id: 's1',
       ts: Date.now(),
@@ -98,6 +98,22 @@ describe('Shot und Profil — Grundform', () => {
       ist: ZIEL,
       istHerkunft: {},
       portionen: 3,
+      urteil: 'okay',
+    };
+    expect(Shot.safeParse(shot).success).toBe(true);
+  });
+
+  it('portionen ausserhalb {1,2,3} schlaegt fehl', () => {
+    const shot = {
+      id: 's1',
+      ts: Date.now(),
+      kaffeeId: 'k1',
+      chargeId: 'c1',
+      profilId: 'p1',
+      setupId: 'su1',
+      ist: ZIEL,
+      istHerkunft: {},
+      portionen: 4,
       urteil: 'okay',
     };
     expect(Shot.safeParse(shot).success).toBe(false);

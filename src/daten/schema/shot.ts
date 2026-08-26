@@ -70,8 +70,13 @@ export const Shot = z.object({
   setupId: Id,
   ist: ZielWerte,
   istHerkunft: IstWerteHerkunft,
-  /** Ein Bezug, ein oder zwei Tassen — der geteilte Bezug ist die Regel, kein Sonderfall. */
-  portionen: z.union([z.literal(1), z.literal(2)]),
+  /**
+   * Ein Bezug, ein bis drei Tassen — der geteilte Bezug ist die Regel, kein
+   * Sonderfall. Drei ist die 3er-Bialetti (K18, Durchgang.positionIds
+   * erlaubt ebenfalls bis drei) — bei Espresso/Pour Over kommt real nie
+   * mehr als zwei vor, das schema erzwingt es hier aber nicht extra.
+   */
+  portionen: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   urteil: Urteil,
   befunde: z.array(Befund).default([]),
   /** K10 — bleibt am Shot bis zum naechsten Shot, keine Vorbelegung (K12). */
