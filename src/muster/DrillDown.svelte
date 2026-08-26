@@ -40,14 +40,34 @@
 
   const aktuelleEbene = $derived(pfad.length === 0 ? ebenen : (pfad[pfad.length - 1]?.kinder ?? []));
 
+  /**
+   * Rueckmeldung 2026-08-26: waehlbar ist nicht mehr nur ein Blatt ganz
+   * unten — manchmal reicht "fruchtig" oder "Beere", ohne dass man es
+   * genauer benennen kann. `vorfahrenPfad` sind die Knoten OBERHALB von
+   * `knoten` (nicht `knoten` selbst), damit sowohl ein Blatt (Vorfahren =
+   * aktueller pfad) als auch die aktuell offene Ebene selbst (Vorfahren =
+   * pfad ohne ihr letztes Element, siehe waehleAktuelleEbene) dieselbe
+   * Funktion nutzen koennen.
+   */
+  function waehleKnoten(knoten: Knoten, vorfahrenPfad: Knoten[]) {
+    if (gewaehlt.some((g) => g.id === knoten.id)) return;
+    const vollpfad = [...vorfahrenPfad.map((p) => p.label), knoten.label];
+    gewaehlt = [...gewaehlt, { id: knoten.id, label: knoten.label, pfad: vollpfad, nummer: knoten.nummer }];
+    onAenderung?.(gewaehlt);
+  }
+
   function oeffneOderWaehle(knoten: Knoten) {
     if (knoten.kinder && knoten.kinder.length > 0) {
       pfad = [...pfad, knoten];
-    } else if (!gewaehlt.some((g) => g.id === knoten.id)) {
-      const vollpfad = [...pfad.map((p) => p.label), knoten.label];
-      gewaehlt = [...gewaehlt, { id: knoten.id, label: knoten.label, pfad: vollpfad, nummer: knoten.nummer }];
-      onAenderung?.(gewaehlt);
+    } else {
+      waehleKnoten(knoten, pfad);
     }
+  }
+
+  /** Waehlt die Ebene, in der man gerade steht, selbst — ohne tiefer zu muessen. */
+  function waehleAktuelleEbene() {
+    const knoten = pfad[pfad.length - 1];
+    if (knoten) waehleKnoten(knoten, pfad.slice(0, -1));
   }
 
   function entfernen(id: string) {
@@ -66,6 +86,11 @@
       ‹ {pfad[pfad.length - 1]?.label}
     </button>
     <div class="pfad">{pfad.map((p) => p.label).join(' › ')}</div>
+    {#if !gewaehlt.some((g) => g.id === pfad[pfad.length - 1]?.id)}
+      <button type="button" class="hier-waehlen" onclick={waehleAktuelleEbene}>
+        Nur „{pfad[pfad.length - 1]?.label}“ wählen
+      </button>
+    {/if}
   {/if}
 
   <div class="ebene">
@@ -103,6 +128,17 @@
     border-radius: var(--r-wertfeld);
     background: var(--vertiefung);
     color: var(--tinte);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    text-align: left;
+    cursor: pointer;
+  }
+  .hier-waehlen {
+    min-height: var(--treffer);
+    padding: 0 var(--r3);
+    border: none;
+    background: none;
+    color: var(--akzent);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     text-align: left;

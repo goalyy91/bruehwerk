@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GROESSEN, balanceAbstand, berechneBalance, berechneKomplexitaet, berechneGesamt } from './tasting';
+import { GROESSEN, balanceAbstand, berechneBalance, berechneKomplexitaet, berechneGesamt, zusammenfassung } from './tasting';
 
 describe('GROESSEN aus dem Konzept', () => {
   it('sind sechs, in Bogen-Reihenfolge (konzept.md:798-804)', () => {
@@ -60,5 +60,30 @@ describe('Gesamt — kommt aus dem Shot-Urteil, keine zweite Note (K38)', () => 
 
   it('referenz wird fuer die Anzeige grossgeschrieben, wie in Urteil.svelte', () => {
     expect(berechneGesamt('referenz')).toBe('Referenz');
+  });
+});
+
+describe('zusammenfassung — ersetzt die Balance/Komplexitaet/Gesamt-Zeilen (Rueckmeldung 2026-08-26)', () => {
+  const MITTE = { saeure: 2, koerper: 2, bitterkeit: 2 };
+
+  it('ohne Auffaelligkeiten endet der Satz mit einem Punkt', () => {
+    expect(zusammenfassung(MITTE, 0, 0)).toBe('Ausgewogen, keine Aromen.');
+  });
+
+  it('groschreibt den Satzanfang', () => {
+    expect(zusammenfassung(MITTE, 3, 0)).toBe('Ausgewogen, vielschichtig.');
+  });
+
+  it('eine Auffaelligkeit steht in der Einzahl', () => {
+    expect(zusammenfassung(MITTE, 2, 1)).toBe('Ausgewogen, einfach — eine Auffälligkeit notiert.');
+  });
+
+  it('mehrere Auffaelligkeiten stehen in der Mehrzahl mit Zahl', () => {
+    expect(zusammenfassung(MITTE, 2, 3)).toBe('Ausgewogen, einfach — 3 Auffälligkeiten notiert.');
+  });
+
+  it('nennt nie ein Urteilswort (daneben/okay/sehr gut/Referenz)', () => {
+    const satz = zusammenfassung({ saeure: 0, koerper: 0, bitterkeit: 0 }, 6, 2);
+    expect(satz).not.toMatch(/daneben|okay|sehr gut|Referenz/i);
   });
 });

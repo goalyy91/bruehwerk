@@ -49,7 +49,6 @@
       untrack(() => start).map((b): [string, ChipZustand] => [b.symptomId, { phase: 'gewaehlt', staerke: b.staerke }]),
     ),
   );
-  let freitextOffen = $state(untrack(() => freitextStart.length > 0));
   let freitextWert = $state(untrack(() => freitextStart));
 
   function befundeMelden() {
@@ -97,16 +96,11 @@
     });
   }
 
-  // Anpassung: "etwas anderes …" brauchte bisher zwei Tipps (einen zum
-  // Einblenden des Felds, einen zweiten hinein, um die Tastatur zu oeffnen).
-  // Das Feld erscheint jetzt zwar weiterhin erst nach dem ersten Tipp (kein
-  // Eingabefeld ohne erkennbaren Anlass), fokussiert sich dabei aber sofort
-  // selbst — ein Tipp reicht. node.focus() laeuft synchron innerhalb des
-  // Klick-Handlers, das zaehlt auf Android/Chrome (Referenzgeraet) noch als
-  // Nutzergeste und oeffnet die Tastatur direkt mit.
-  function fokussieren(node: HTMLInputElement) {
-    node.focus();
-  }
+  // Rueckmeldung 2026-08-26: "etwas anderes …" stand zunaechst nur als
+  // Textlink da, der erst nach einem Tap zu einem echten Feld wurde — man
+  // sah ihm also nicht an, dass man dort etwas eintippen kann, bevor man es
+  // ausprobiert hatte. Das Feld steht jetzt von Anfang an da wie jedes
+  // andere Eingabefeld auch.
 </script>
 
 <div class="chips">
@@ -145,18 +139,13 @@
 
   {#if freitext}
     <div class="freitext">
-      {#if freitextOffen}
-        <input
-          type="text"
-          class="feld"
-          placeholder="etwas anderes …"
-          bind:value={freitextWert}
-          oninput={() => onFreitext?.(freitextWert)}
-          use:fokussieren
-        />
-      {:else}
-        <button type="button" class="ventil" onclick={() => (freitextOffen = true)}>etwas anderes …</button>
-      {/if}
+      <input
+        type="text"
+        class="feld"
+        placeholder="etwas anderes …"
+        bind:value={freitextWert}
+        oninput={() => onFreitext?.(freitextWert)}
+      />
     </div>
   {/if}
 </div>
@@ -230,16 +219,6 @@
   }
   .staerke-wahl .entfernen {
     color: var(--kritisch);
-  }
-  .freitext .ventil {
-    border: none;
-    background: none;
-    color: var(--gedaempft);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    font-style: normal;
-    cursor: pointer;
-    min-height: var(--treffer);
   }
   .freitext .feld {
     height: var(--treffer);

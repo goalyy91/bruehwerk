@@ -12,13 +12,12 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
-  import { GROESSEN, berechneBalance, berechneKomplexitaet, berechneGesamt } from '../../domain/tasting';
+  import { GROESSEN, zusammenfassung } from '../../domain/tasting';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Treppe from '../../muster/Treppe.svelte';
   import Chips from '../../muster/Chips.svelte';
   import DrillDown from '../../muster/DrillDown.svelte';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
-  import Herkunft from '../../muster/Herkunft.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Tasting, Groessen as GroessenTyp, Staerke } from '../../daten/schema';
 
@@ -81,9 +80,13 @@
 
   let freitext = $state(bestehend?.freitext ?? '');
 
-  const balance = $derived(berechneBalance({ saeure: groessenWerte.saeure, koerper: groessenWerte.koerper, bitterkeit: groessenWerte.bitterkeit }));
-  const komplexitaet = $derived(berechneKomplexitaet(aromenAlle.length));
-  const gesamt = $derived(shot ? berechneGesamt(shot.urteil) : '');
+  const zusammenfassungssatz = $derived(
+    zusammenfassung(
+      { saeure: groessenWerte.saeure, koerper: groessenWerte.koerper, bitterkeit: groessenWerte.bitterkeit },
+      aromenAlle.length,
+      auffaelligkeiten.length,
+    ),
+  );
 
   let speicherFehler = $state('');
 
@@ -125,7 +128,6 @@
   </div>
 
   <div class="block">
-    <p class="gruppenkopf">Auffälligkeiten</p>
     <Chips
       gruppen={chipGruppen}
       start={auffaelligkeiten}
@@ -154,19 +156,8 @@
   </div>
 
   <div class="block gerechnet">
-    <p class="gruppenkopf">Gerechnet</p>
-    <div class="gerechnet-zeile">
-      <span class="label">Balance</span>
-      <Herkunft art="gerechnet" wert={balance} />
-    </div>
-    <div class="gerechnet-zeile">
-      <span class="label">Komplexität</span>
-      <Herkunft art="gerechnet" wert={komplexitaet} />
-    </div>
-    <div class="gerechnet-zeile">
-      <span class="label">Gesamt</span>
-      <Herkunft art="gerechnet" wert={gesamt} mitLegende />
-    </div>
+    <p class="gruppenkopf">Zusammenfassung</p>
+    <p class="zusammenfassung">{zusammenfassungssatz}</p>
   </div>
 
   {#if speicherFehler}
@@ -224,14 +215,10 @@
   .gerechnet .gruppenkopf {
     margin: 0;
   }
-  .gerechnet-zeile {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .label {
+  .zusammenfassung {
     font-size: var(--fs-satz);
     color: var(--satz);
+    margin: 0;
   }
   .hinweis {
     color: var(--gedaempft);

@@ -89,7 +89,27 @@ export function berechneKomplexitaet(anzahlAromen: number): string {
  * Gesamt kommt aus dem Shot-Urteil, es gibt keine zweite Note (K38) — diese
  * Funktion tut nur, was Urteil.svelte fuer die Anzeige ohnehin braucht:
  * 'referenz' -> 'Referenz', der Rest bleibt wie er ist.
+ *
+ * Wird NICHT mehr im Verkostungsbogen selbst gezeigt (Rueckmeldung
+ * 2026-08-26 — das Urteil ist keine Ausgabe des Bogens, sondern eine eigene
+ * Entscheidung aus der Shot-Erfassung bzw. Historie). Bleibt exportiert,
+ * weil Shotblatt.svelte dieselbe Umschrift fuer die dortige Urteil-Anzeige
+ * braucht.
  */
 export function berechneGesamt(urteil: Urteil): string {
   return urteil === 'referenz' ? 'Referenz' : urteil;
+}
+
+/**
+ * Die kurze Zusammenfassung am Ende des Bogens (Rueckmeldung 2026-08-26,
+ * ersetzt die vormaligen Balance/Komplexitaet/Gesamt-Einzelzeilen). Sprache
+ * fuehrt, Werte begleiten (Haltung, konzept.md:1213) — ein Satz statt drei
+ * Zahlen.
+ */
+export function zusammenfassung(werte: BipolareWerte, anzahlAromen: number, anzahlAuffaelligkeiten: number): string {
+  const satzanfang = `${berechneBalance(werte)}, ${berechneKomplexitaet(anzahlAromen)}`;
+  const kern = satzanfang.charAt(0).toUpperCase() + satzanfang.slice(1);
+  if (anzahlAuffaelligkeiten === 0) return `${kern}.`;
+  const nebensatz = anzahlAuffaelligkeiten === 1 ? 'eine Auffälligkeit notiert' : `${anzahlAuffaelligkeiten} Auffälligkeiten notiert`;
+  return `${kern} — ${nebensatz}.`;
 }

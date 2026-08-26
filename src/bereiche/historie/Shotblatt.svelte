@@ -9,7 +9,7 @@
   // (gemessen) — dieselbe Aufteilung wie ShotErfassung.svelte, nur lesend.
 
   import { bestand, schreiben } from '../bestand.svelte';
-  import { berechneGesamt } from '../../domain/tasting';
+  import { berechneGesamt, zusammenfassung } from '../../domain/tasting';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
@@ -23,6 +23,16 @@
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
   const tasting = $derived(bestand.tastingVon(shotId));
+  const tastingZusammenfassung = $derived(
+    tasting
+      ? zusammenfassung(
+          { saeure: tasting.groessen.saeure, koerper: tasting.groessen.koerper, bitterkeit: tasting.groessen.bitterkeit },
+          tasting.aromen.length,
+          tasting.auffaelligkeiten.length,
+        )
+      : '',
+  );
+  const tastingAromen = $derived((tasting?.aromen ?? []).map((a) => a.pfad[a.pfad.length - 1]).join(' · '));
 
   function befundLabel(symptomId: string): string {
     return bestand.symptome.find((s) => s.id === symptomId)?.label ?? symptomId;
@@ -95,17 +105,28 @@
     </div>
   {/if}
 
-  <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
-    <span class="haupt">
-      <span class="name">Verkostung</span>
-      {#if tasting}
-        <span class="meta-klein">Gesamt {berechneGesamt(shot.urteil)}</span>
-      {:else}
-        <span class="meta-klein">noch kein Bogen ausgefüllt</span>
+  <div class="block">
+    <p class="gruppenkopf">Verkostung</p>
+    {#if tasting}
+      <!-- Rueckmeldung 2026-08-26: Ergebnis und erkannte Aromen stehen
+           direkt hier, ohne dass man dafuer erst in den vollen Bogen
+           wechseln muesste — der bleibt fuer alle, die tiefer wollen,
+           einen Tap entfernt. -->
+      <p class="tasting-satz">{tastingZusammenfassung}</p>
+      {#if tastingAromen}
+        <p class="tasting-aromen">{tastingAromen}</p>
       {/if}
-    </span>
-    <span class="chevron" aria-hidden="true">›</span>
-  </button>
+      <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
+        <span>Bogen ansehen</span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
+    {:else}
+      <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
+        <span>Verkostungsbogen ausfüllen</span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
+    {/if}
+  </div>
 
   {#if shot.freitext}
     <p class="freitext">„{shot.freitext}“</p>
@@ -159,34 +180,33 @@
   .vorschlag-zustand {
     font-size: var(--fs-meta);
   }
+  .tasting-satz {
+    font-size: var(--fs-satz);
+    color: var(--satz);
+    margin: 0 0 var(--r2);
+  }
+  .tasting-aromen {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: 0 0 var(--r3);
+  }
   .verkostung-zeile {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--r3);
-    min-height: 60px;
+    min-height: 56px;
     padding: 0 var(--r4);
     border: none;
     background: var(--blatt);
     border-radius: var(--r-blatt);
+    color: var(--akzent);
     font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
-    margin-bottom: var(--r4);
-  }
-  .haupt {
-    display: flex;
-    flex-direction: column;
-  }
-  .name {
-    font-size: var(--fs-bedienwort);
-    color: var(--tinte);
-  }
-  .meta-klein {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
   }
   .chevron {
     color: var(--spur);
