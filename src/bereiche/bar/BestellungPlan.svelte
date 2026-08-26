@@ -16,7 +16,11 @@
   import Knopf from '../../muster/Knopf.svelte';
   import type { Durchgang, Position } from '../../daten/schema';
 
-  let { onZurueck, onWeiterZumAbarbeiten }: { onZurueck: () => void; onWeiterZumAbarbeiten: () => void } = $props();
+  let {
+    onZurueck,
+    onWeiterZumAbarbeiten,
+    onZurueckZumAufnehmen,
+  }: { onZurueck: () => void; onWeiterZumAbarbeiten: () => void; onZurueckZumAufnehmen: () => void } = $props();
 
   const bestellung = $derived(bestand.offeneBestellung());
   const unverplant = $derived(bestand.positionen.filter((p) => bestellung?.positionIds.includes(p.id) && !p.durchgangId));
@@ -119,12 +123,34 @@
 
   const verschnittSichtbar = $derived(verschnittAngebotSichtbar(bezugsplan));
 
+  let fehler = $state('');
+
+  // Die drei Wege (konzept.md:709-715) — je Durchgang mit ungenutztem
+  // Anteil. "verworfen" blendet das Angebot fuer diesen Durchgang lokal
+  // aus (Weg 3 ist der Ist-Zustand, dafuer gibt es nichts zu schreiben).
+  let verworfen = $state<Set<string>>(new Set());
+  const verschnittZeilen = $derived(geordnet.filter((e) => e.durchgang.ungenutzterAnteil > 0 && !verworfen.has(e.id)));
+
+  async function verschnittExtraShot(eintrag: (typeof geordnet)[number]) {
+    fehler = '';
+    const positionId = eintrag.durchgang.positionIds[0];
+    const pos = positionId ? bestand.positionen.find((p) => p.id === positionId) : undefined;
+    if (!pos || pos.modifikatoren.includes('extra-shot')) return;
+    try {
+      await schreiben('position', { ...pos, modifikatoren: [...pos.modifikatoren, 'extra-shot'] });
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  function verschnittVerwerfen(eintragId: string) {
+    verworfen = new Set([...verworfen, eintragId]);
+  }
+
   let aufgeklappt = $state<Set<number>>(new Set());
   function toggleAufklappen(i: number) {
     aufgeklappt = new Set(aufgeklappt.has(i) ? [...aufgeklappt].filter((x) => x !== i) : [...aufgeklappt, i]);
   }
-
-  let fehler = $state('');
 
   async function abarbeitenStarten() {
     if (!bestellung) return;
@@ -222,7 +248,16 @@
   </div>
 
   {#if verschnittSichtbar}
-    <p class="verschnitt-hinweis">Double Shot sinnvoll verwenden — {bezugsplan.verschnittGramm} g Verschnitt</p>
+    {#each verschnittZeilen as eintrag (eintrag.id)}
+      <div class="verschnitt-block">
+        <p class="verschnitt-text">Double Shot sinnvoll verwenden</p>
+        <div class="verschnitt-wege">
+          <button type="button" class="verschnitt-weg" onclick={() => verschnittExtraShot(eintrag)}>Extra Shot</button>
+          <button type="button" class="verschnitt-weg" onclick={onZurueckZumAufnehmen}>eigene Position</button>
+          <button type="button" class="verschnitt-weg" onclick={() => verschnittVerwerfen(eintrag.id)}>verwerfen</button>
+        </div>
+      </div>
+    {/each}
   {/if}
 
   {#if fehler}<p class="fehler">{fehler}</p>{/if}
@@ -294,13 +329,32 @@
     cursor: pointer;
     padding: var(--r1) 0;
   }
-  .verschnitt-hinweis {
+  .verschnitt-block {
     min-height: var(--treffer);
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--r2);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     margin: 0 0 var(--r4);
+  }
+  .verschnitt-text {
+    margin: 0;
+  }
+  .verschnitt-wege {
+    display: flex;
+    gap: var(--r3);
+  }
+  .verschnitt-weg {
+    border: none;
+    background: none;
+    color: var(--akzent);
+    font-family: var(--schrift);
+    font-size: var(--fs-meta);
+    cursor: pointer;
+    padding: 0;
   }
   .hinweis {
     color: var(--gedaempft);

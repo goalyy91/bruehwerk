@@ -96,6 +96,7 @@
       <BestellungPlan
         onZurueck={() => navigation.zurueck()}
         onWeiterZumAbarbeiten={() => navigation.gehe({ name: 'bestellungAbarbeiten' })}
+        onZurueckZumAufnehmen={() => navigation.gehe({ name: 'bestellungAufnehmen' })}
       />
     {:else if route.name === 'bestellungAbarbeiten'}
       <BestellungAbarbeiten onZurueck={() => navigation.zurueck()} onAbgeschlossen={() => navigation.ersetze({ name: 'bar' })} />
