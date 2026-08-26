@@ -23,10 +23,16 @@ class Bestand {
   aromasets = $state<SammlungWert['aromaset'][]>([]);
   uebungen = $state<SammlungWert['uebung'][]>([]);
   beobachtungen = $state<SammlungWert['beobachtung'][]>([]);
+  getraenke = $state<SammlungWert['getraenk'][]>([]);
+  personen = $state<SammlungWert['person'][]>([]);
+  ansaetze = $state<SammlungWert['ansatz'][]>([]);
   muehlen = $state<SammlungWert['muehle'][]>([]);
   bruehgeraete = $state<SammlungWert['bruehgeraet'][]>([]);
   zubehoer = $state<SammlungWert['zubehoer'][]>([]);
   setups = $state<SammlungWert['setup'][]>([]);
+  durchgaenge = $state<SammlungWert['durchgang'][]>([]);
+  positionen = $state<SammlungWert['position'][]>([]);
+  bestellungen = $state<SammlungWert['bestellung'][]>([]);
   /** Singleton, keine Liste — daher eigenes Feld statt eines Arrays. */
   einstellungen = $state<SammlungWert['einstellungen'] | undefined>(undefined);
 
@@ -55,6 +61,12 @@ class Bestand {
         zubehoer,
         setups,
         einstellungen,
+        getraenke,
+        personen,
+        ansaetze,
+        durchgaenge,
+        positionen,
+        bestellungen,
       ] = await Promise.all([
         alle('kaffee'),
         alle('charge'),
@@ -71,6 +83,12 @@ class Bestand {
         alle('zubehoer'),
         alle('setup'),
         alle('einstellungen'),
+        alle('getraenk'),
+        alle('person'),
+        alle('ansatz'),
+        alle('durchgang'),
+        alle('position'),
+        alle('bestellung'),
       ]);
       this.kaffees = kaffees;
       this.chargen = chargen;
@@ -86,6 +104,12 @@ class Bestand {
       this.bruehgeraete = bruehgeraete;
       this.zubehoer = zubehoer;
       this.setups = setups;
+      this.getraenke = getraenke;
+      this.personen = personen;
+      this.ansaetze = ansaetze;
+      this.durchgaenge = durchgaenge;
+      this.positionen = positionen;
+      this.bestellungen = bestellungen;
       this.einstellungen = einstellungen[0];
       this.geladen = true;
     } catch (fehler) {
@@ -163,6 +187,18 @@ function listeFuer(sammlung: Sammlung): unknown[] | undefined {
       return bestand.uebungen;
     case 'beobachtung':
       return bestand.beobachtungen;
+    case 'getraenk':
+      return bestand.getraenke;
+    case 'person':
+      return bestand.personen;
+    case 'ansatz':
+      return bestand.ansaetze;
+    case 'durchgang':
+      return bestand.durchgaenge;
+    case 'position':
+      return bestand.positionen;
+    case 'bestellung':
+      return bestand.bestellungen;
     case 'muehle':
       return bestand.muehlen;
     case 'bruehgeraet':

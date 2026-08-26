@@ -86,6 +86,23 @@ export const BRUEHGERAET_HARIO_V60: Bruehgeraet = {
   tempReferenz: [],
 };
 
+/**
+ * Cold Brew — Startwert "Karaffe" aus der Tabelle konzept.md:944-951.
+ * fuehrungswert: keiner (konzept.md:966, wie Moka gibt es hier nichts zu
+ * fuehren — ein Vorrat mit Fertig-Zeitpunkt, keine laufende Groesse).
+ */
+export const BRUEHGERAET_COLDBREW_KARAFFE: Bruehgeraet = {
+  id: 'bruehgeraet-coldbrew-karaffe',
+  name: 'Cold-Brew-Karaffe',
+  typ: 'coldbrew',
+  gruppen: 1,
+  dampflanze: false,
+  ktEinstellbar: false,
+  fuehrungswert: null,
+  mengen: [1],
+  tempReferenz: [],
+};
+
 export const ZUBEHOER_KAENNCHEN_350: Zubehoer = {
   id: 'zubehoer-kaennchen-350',
   name: 'Milchkaennchen 350 ml',
@@ -117,6 +134,7 @@ export const BRUEHGERAETE: readonly Bruehgeraet[] = [
   BRUEHGERAET_BIALETTI_1,
   BRUEHGERAET_BIALETTI_3,
   BRUEHGERAET_HARIO_V60,
+  BRUEHGERAET_COLDBREW_KARAFFE,
 ];
 
 export const ZUBEHOER: readonly Zubehoer[] = [
@@ -190,6 +208,16 @@ export const SETUP_MOKA_3: Setup = {
   ablaufId: ABLAUF_LEER.id,
 };
 
+/** Cold Brew mahlt an der K6 — "deutlich groeber" als der Moka-Bereich (konzept.md:949), die konkrete Zahl liefert der erste Ansatz. */
+export const SETUP_COLDBREW: Setup = {
+  id: 'setup-coldbrew',
+  name: 'Cold Brew · K6 · Karaffe',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_COLDBREW_KARAFFE.id,
+  zubehoerIds: [],
+  ablaufId: ABLAUF_LEER.id,
+};
+
 /**
  * Die elf System-Chips (Paket 04) als Symptom-Datensaetze — domain/diagnose.ts
  * traegt den Katalog, hier wird daraus nur der Store-Eintrag. Ids sind die
@@ -230,4 +258,5 @@ export const SETUPS: readonly Setup[] = [
   SETUP_POUR_OVER_K6,
   SETUP_MOKA_1,
   SETUP_MOKA_3,
+  SETUP_COLDBREW,
 ];

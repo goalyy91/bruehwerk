@@ -12,14 +12,13 @@
   // hier ist nur noch Verdrahtung.
   //
   // Fuenf Bereiche (Navigation, docs/konzept.md), Trefferflaeche 48 px,
-  // Safe-Area unten. Zwei Bereiche zeigen eine ehrliche "kommt in Paket
-  // X"-Zeile statt einer Attrappe.
+  // Safe-Area unten. Alle fuenf sind inzwischen echte Bildschirme — Paket
+  // 06 traegt noch die eigentliche Bestellung an der Bar nach (Etappen E/F).
 
   import { onMount } from 'svelte';
   import { bestand } from './bestand.svelte';
   import { navigation } from './navigation.svelte';
   import { tabVon, zuPfad, type Bereich } from './route';
-  import Kopfzeile from '../muster/Kopfzeile.svelte';
   import Bar from './bar/Bar.svelte';
   import KaffeeListe from './kaffees/KaffeeListe.svelte';
   import KaffeeNeu from './kaffees/KaffeeNeu.svelte';
@@ -43,12 +42,14 @@
   import Shotblatt from './historie/Shotblatt.svelte';
   import Verkostungsbogen from './tasting/Verkostungsbogen.svelte';
   import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
+  import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
+  import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
     { id: 'kaffees', label: 'Kaffees', gebaut: true },
     { id: 'historie', label: 'Historie', gebaut: true },
-    { id: 'getraenke', label: 'Getränke', gebaut: false },
+    { id: 'getraenke', label: 'Getränke', gebaut: true },
     { id: 'einstellungen', label: 'Einstellungen', gebaut: true },
   ];
 
@@ -120,8 +121,21 @@
     {:else if route.name === 'verkostung'}
       <Verkostungsbogen shotId={route.shotId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'getraenke'}
-      <Kopfzeile titel="Getränke" gross />
-      <p class="offen">Getränke · kommt in Paket 06</p>
+      <GetraenkeListe onOeffnen={(id) => navigation.gehe({ name: 'getraenk', id })} />
+    {:else if route.name === 'getraenk'}
+      <Getraenkeblatt
+        getraenkId={route.id}
+        onZurueck={() => navigation.zurueck()}
+        onGespeichert={() => navigation.zurueck()}
+        onNeuAlsKopie={(vorlageId) => navigation.gehe({ name: 'getraenkNeu', vorlageId })}
+      />
+    {:else if route.name === 'getraenkNeu'}
+      <Getraenkeblatt
+        vorlageId={route.vorlageId}
+        onZurueck={() => navigation.zurueck()}
+        onGespeichert={(id) => navigation.ersetze({ name: 'getraenk', id })}
+        onNeuAlsKopie={(vorlageId) => navigation.ersetze({ name: 'getraenkNeu', vorlageId })}
+      />
     {:else if route.name === 'einstellungen'}
       <Einstellungen
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
@@ -276,10 +290,6 @@
       opacity: 0;
       transform: translateX(-12px);
     }
-  }
-  .offen {
-    color: var(--gedaempft);
-    font-size: var(--fs-satz);
   }
   .fehler {
     color: var(--kritisch);

@@ -17,6 +17,8 @@ export type Route =
   | { name: 'historieShot'; shotId: string }
   | { name: 'verkostung'; shotId: string }
   | { name: 'getraenke' }
+  | { name: 'getraenk'; id: string }
+  | { name: 'getraenkNeu'; vorlageId: string }
   | { name: 'kaffees' }
   | { name: 'kaffeeNeu' }
   | { name: 'kaffee'; kaffeeId: string }
@@ -53,6 +55,10 @@ export function zuPfad(route: Route): string {
       return `/historie/${route.shotId}/verkostung`;
     case 'getraenke':
       return '/getraenke';
+    case 'getraenk':
+      return `/getraenke/${route.id}`;
+    case 'getraenkNeu':
+      return `/getraenke/neu/${route.vorlageId}`;
     case 'kaffees':
       return '/kaffees';
     case 'kaffeeNeu':
@@ -103,7 +109,12 @@ export function ausPfad(pfad: string): Route {
   const t = pfad.split('/').filter(Boolean);
 
   if (t.length === 1 && t[0] === 'bar') return { name: 'bar' };
-  if (t.length === 1 && t[0] === 'getraenke') return { name: 'getraenke' };
+
+  if (t[0] === 'getraenke') {
+    if (t.length === 1) return { name: 'getraenke' };
+    if (t.length === 2) return { name: 'getraenk', id: t[1]! };
+    if (t.length === 3 && t[1] === 'neu') return { name: 'getraenkNeu', vorlageId: t[2]! };
+  }
 
   if (t[0] === 'historie') {
     if (t.length === 1) return { name: 'historie' };
@@ -169,6 +180,9 @@ export function elternVon(route: Route): Route | undefined {
       return undefined;
     case 'historieShot':
       return { name: 'historie' };
+    case 'getraenk':
+    case 'getraenkNeu':
+      return { name: 'getraenke' };
     case 'verkostung':
       return { name: 'historieShot', shotId: route.shotId };
     case 'kaffeeNeu':
@@ -218,6 +232,8 @@ export function tabVon(route: Route): Bereich {
     case 'verkostung':
       return 'historie';
     case 'getraenke':
+    case 'getraenk':
+    case 'getraenkNeu':
       return 'getraenke';
     case 'kaffees':
     case 'kaffeeNeu':

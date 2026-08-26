@@ -11,9 +11,17 @@
 import { alle, lesen, schreiben } from './ablage';
 import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM, AUFFAELLIGKEITEN_STAMM } from './stammdaten';
 import { AROMASETS } from './aromen';
+import { GETRAENKE } from './stammdaten-getraenke';
 import { EINSTELLUNGEN_ID } from './schema';
 
 export async function seedFallsLeer(): Promise<void> {
+  // Paket 06 haengt die Cold-Brew-Karaffe (BRUEHGERAET_COLDBREW_KARAFFE) und
+  // ihr Setup an dieselben Listen — auf einem frischen Profil kommen sie
+  // automatisch mit. Auf einer bereits befuellten DB (dieses Gate greift
+  // nur bei komplett leerem 'bruehgeraet') muessten sie einmalig von Hand
+  // nachgetragen werden; bei einem einzigen Nutzer ohne echte Migrations-
+  // Infrastruktur ist das der bewusst einfachere Weg (siehe CLAUDE.md,
+  // Entscheidungsregel "einfachere vs. komplexere Loesung").
   const vorhandene = await alle('bruehgeraet');
   if (vorhandene.length === 0) {
     await schreiben('ablauf', ABLAUF_LEER);
@@ -37,6 +45,12 @@ export async function seedFallsLeer(): Promise<void> {
   const aromasetsVorhanden = await alle('aromaset');
   if (aromasetsVorhanden.length === 0) {
     for (const aromaset of AROMASETS) await schreiben('aromaset', aromaset);
+  }
+
+  // Paket 06 — die neun Getraenke zum Start (daten/stammdaten-getraenke.ts).
+  const getraenkeVorhanden = await alle('getraenk');
+  if (getraenkeVorhanden.length === 0) {
+    for (const getraenk of GETRAENKE) await schreiben('getraenk', getraenk);
   }
 
   // Eigenes Gate, unabhaengig vom Geraetepark oben — sonst wuerde der
