@@ -4,6 +4,8 @@ import { ausPfad, elternVon, tabVon, zuPfad, wurzelVon, START, type Route } from
 const ALLE_ROUTEN: Route[] = [
   { name: 'bar' },
   { name: 'historie' },
+  { name: 'historieShot', shotId: 's1' },
+  { name: 'verkostung', shotId: 's1' },
   { name: 'getraenke' },
   { name: 'kaffees' },
   { name: 'kaffeeNeu' },
@@ -25,6 +27,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'setupNeu' },
   { name: 'setupBearbeiten', id: 's1' },
   { name: 'tempReferenz' },
+  { name: 'uebung' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -67,6 +70,19 @@ describe('route — elternVon', () => {
 
   it('tempReferenz -> geraete (Fallback ohne eigene Verlaufstiefe)', () => {
     expect(elternVon({ name: 'tempReferenz' })).toEqual({ name: 'geraete' } satisfies Route);
+  });
+
+  it('verkostung -> historieShot -> historie -> Wurzel', () => {
+    const verkostung: Route = { name: 'verkostung', shotId: 's1' };
+    const shotblatt = elternVon(verkostung);
+    expect(shotblatt).toEqual({ name: 'historieShot', shotId: 's1' } satisfies Route);
+    const historie = elternVon(shotblatt!);
+    expect(historie).toEqual({ name: 'historie' } satisfies Route);
+    expect(elternVon(historie!)).toBeUndefined();
+  });
+
+  it('uebung -> einstellungen', () => {
+    expect(elternVon({ name: 'uebung' })).toEqual({ name: 'einstellungen' } satisfies Route);
   });
 
   it('muehle -> geraete -> einstellungen -> Wurzel', () => {
