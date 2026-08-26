@@ -96,26 +96,39 @@ const Regel = z.object({
 export const Symptom = z.object({
   id: Id,
   label: z.string().min(1),
-  /** Geschmack oder Lauf — dieselben zwei Gruppen wie im Chip-Bildschirm (konzept.md:427-437). */
-  gruppe: z.enum(['geschmack', 'lauf']).default('geschmack'),
+  /**
+   * Geschmack oder Lauf sind die beiden Gruppen im Dial-in-Chip-Bildschirm
+   * (konzept.md:427-437). 'auffaelligkeit' ist Paket 05 (K53) — dieselbe
+   * Struktur (Label, Staerke, quelle), aber die Chip-Filter der
+   * Diagnose (ShotErfassung.svelte) fragen gezielt nach 'geschmack'/'lauf'
+   * und sehen diese Gruppe deshalb nie; ein eigener Store waere fuer
+   * denselben Aufbau nur Wiederholung.
+   */
+  gruppe: z.enum(['geschmack', 'lauf', 'auffaelligkeit']).default('geschmack'),
   quelle: z.enum(['system', 'eigen']),
   regel: Regel.optional(),
 });
 export type Symptom = z.infer<typeof Symptom>;
 
+/** Ein Stab der Treppe (Treppe.svelte) — fuenf benannte Stufen, keine zehn (konzept.md:764). */
+const Stufe = z.number().int().min(0).max(4);
+
 /**
  * Sechs gleichrangige Groessen — K52. Bipolar (Mitte ist Ziel) oder
  * einseitig (mehr ist mehr) ist Eigenschaft der Groesse, keine getrennte
- * Struktur mehr.
+ * Struktur mehr. Fuenf Stufen (Index 0..4, Mitte bei 2) statt eines
+ * 0-10-Kontinuums, deckungsgleich mit den fuenf Staeben von Treppe.svelte —
+ * siehe domain/tasting.ts::GROESSEN fuer die Woerter je Stufe.
  */
 export const Groessen = z.object({
-  saeure: z.number().min(0).max(10),
-  koerper: z.number().min(0).max(10),
-  bitterkeit: z.number().min(0).max(10),
-  aroma: z.number().min(0).max(10),
-  suesse: z.number().min(0).max(10),
-  nachklang: z.number().min(0).max(10),
+  saeure: Stufe,
+  koerper: Stufe,
+  bitterkeit: Stufe,
+  aroma: Stufe,
+  suesse: Stufe,
+  nachklang: Stufe,
 });
+export type Groessen = z.infer<typeof Groessen>;
 
 /** staerke traegt jetzt eine eigene Kraft im Chip — K53. */
 export const Auffaelligkeit = z.object({
@@ -140,12 +153,50 @@ export const Tasting = z.object({
 });
 export type Tasting = z.infer<typeof Tasting>;
 
-/** Beide Sets leben in denselben neun SCA-Kategorien — K55, kein Rueckgrat-Konstrukt. */
+/**
+ * Ein Blatt-Aroma im Drill-down (DrillDown.svelte, dritte Ebene). `nummer`
+ * ist nur bei einem Le-Nez-artigen Set belegt (vialNummern: true).
+ */
+const AromaBlatt = z.object({
+  id: Id,
+  label: z.string().min(1),
+  nummer: z.number().int().positive().optional(),
+});
+
+/** Zweite Ebene des Drill-downs — eine Untergruppe innerhalb einer SCA-Kategorie. */
+const AromaGruppe = z.object({
+  id: Id,
+  label: z.string().min(1),
+  aromen: z.array(AromaBlatt).min(1),
+});
+
+/** Erste Ebene — eine der neun SCA-Kategorien. */
+const AromaKategorie = z.object({
+  id: Id,
+  label: z.string().min(1),
+  gruppen: z.array(AromaGruppe).min(1),
+});
+
+/**
+ * Beide Sets leben in denselben neun SCA-Kategorien — K55, kein
+ * Rueckgrat-Konstrukt. Drei feste Ebenen (Kategorie -> Gruppe -> Aroma)
+ * statt freier Rekursion, deckungsgleich mit dem, was DrillDown.svelte
+ * tatsaechlich anzeigt.
+ *
+ * `platzhalter` markiert ein Set, dessen Inhalte noch nicht die echten
+ * Daten sind (Le Nez du Cafe, bis die Liste vom Karton vorliegt — siehe
+ * daten/aromen.ts). Jeder Bildschirm, der ein Set anzeigt, kann daran eine
+ * ehrliche Zeile anzeigen statt die Platzhalter fuer Daten zu halten.
+ */
 export const Aromaset = z.object({
   id: Id,
   name: z.string().min(1),
   quelle: z.string().min(1),
-  kategorien: z.array(z.string().min(1)).min(1),
+  kategorien: z.array(AromaKategorie).min(1),
   vialNummern: z.boolean(),
+  platzhalter: z.boolean().default(false),
 });
 export type Aromaset = z.infer<typeof Aromaset>;
+export type AromaKategorie = z.infer<typeof AromaKategorie>;
+export type AromaGruppe = z.infer<typeof AromaGruppe>;
+export type AromaBlatt = z.infer<typeof AromaBlatt>;

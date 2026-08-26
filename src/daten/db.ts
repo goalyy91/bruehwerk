@@ -27,17 +27,19 @@ import type {
   Bestellung,
   AppEinstellungen,
   Beobachtung,
+  Uebung,
 } from './schema';
 
 const DB_NAME = 'bruehwerk';
 /**
  * Version 2 fuegt den Store 'einstellungen' hinzu (Korrekturrunde, Teil 1),
- * Version 3 den Store 'beobachtung' (Paket 04, Etappe C). upgrade() legt
- * Stores deshalb nur noch an, wenn sie fehlen — sonst wuerde ein
- * Versionssprung auf einer bereits bestehenden DB an einem erneuten
- * createObjectStore() fuer 'setup' etc. krachen.
+ * Version 3 den Store 'beobachtung' (Paket 04, Etappe C), Version 4 den
+ * Store 'uebung' (Paket 05, Uebungsmodus). upgrade() legt Stores deshalb nur
+ * noch an, wenn sie fehlen — sonst wuerde ein Versionssprung auf einer
+ * bereits bestehenden DB an einem erneuten createObjectStore() fuer 'setup'
+ * etc. krachen.
  */
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 /**
  * Der Store-Katalog steht als eine Konstante da, nicht verstreut — Paket 03
@@ -65,6 +67,7 @@ export const SAMMLUNGEN = [
   'bestellung',
   'einstellungen',
   'beobachtung',
+  'uebung',
 ] as const;
 export type Sammlung = (typeof SAMMLUNGEN)[number];
 
@@ -98,6 +101,7 @@ export interface BruehwerkSchema extends DBSchema {
   bestellung: { key: string; value: Bestellung; indexes: { 'by-ts': number } };
   einstellungen: { key: string; value: AppEinstellungen };
   beobachtung: { key: string; value: Beobachtung };
+  uebung: { key: string; value: Uebung; indexes: { 'by-set': string } };
 }
 
 export type BruehwerkDB = IDBPDatabase<BruehwerkSchema>;
@@ -175,6 +179,11 @@ export function oeffneDB(name: string = DB_NAME): Promise<BruehwerkDB> {
 
         if (!hat('einstellungen')) db.createObjectStore('einstellungen', { keyPath: 'id' });
         if (!hat('beobachtung')) db.createObjectStore('beobachtung', { keyPath: 'id' });
+
+        if (!hat('uebung')) {
+          const uebung = db.createObjectStore('uebung', { keyPath: 'id' });
+          uebung.createIndex('by-set', 'setId');
+        }
       },
     });
   }

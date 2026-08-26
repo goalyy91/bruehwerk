@@ -203,6 +203,27 @@ export const SYMPTOME_STAMM: readonly Symptom[] = SYMPTOME.map((s) => ({
   quelle: 'system' as const,
 }));
 
+/**
+ * Die Fehlerliste des Verkostungsbogens (K53) — zehn SCA-Standardfehler,
+ * eigener Katalog neben den elf Dial-in-Symptomen oben: andere Gruppe
+ * ('auffaelligkeit'), andere Chip-Reihe (Verkostungsbogen.svelte statt
+ * ShotErfassung.svelte), kein Regelwerk dahinter. Wie die Dial-in-Chips
+ * traegt jeder Chip seine Staerke selbst (Chips.svelte, leicht/deutlich),
+ * nicht diese Liste.
+ */
+export const AUFFAELLIGKEITEN_STAMM: readonly Symptom[] = [
+  { id: 'papierig', label: 'papierig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'holzig', label: 'holzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'gummig', label: 'gummig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'fermentiert', label: 'fermentiert', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'phenolisch', label: 'phenolisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'erdig', label: 'erdig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'muffig', label: 'muffig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'ranzig', label: 'ranzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'medizinisch', label: 'medizinisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'aschig', label: 'aschig', gruppe: 'auffaelligkeit', quelle: 'system' },
+];
+
 export const SETUPS: readonly Setup[] = [
   SETUP_ESPRESSO,
   SETUP_POUR_OVER_SCULPTOR,

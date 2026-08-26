@@ -19,6 +19,9 @@ class Bestand {
   gusslpaene = $state<SammlungWert['gussplan'][]>([]);
   shots = $state<SammlungWert['shot'][]>([]);
   symptome = $state<SammlungWert['symptom'][]>([]);
+  tastings = $state<SammlungWert['tasting'][]>([]);
+  aromasets = $state<SammlungWert['aromaset'][]>([]);
+  uebungen = $state<SammlungWert['uebung'][]>([]);
   beobachtungen = $state<SammlungWert['beobachtung'][]>([]);
   muehlen = $state<SammlungWert['muehle'][]>([]);
   bruehgeraete = $state<SammlungWert['bruehgeraet'][]>([]);
@@ -36,27 +39,48 @@ class Bestand {
       // Beim allerersten Start ist die DB leer — dann traegt seedFallsLeer
       // den Geraetepark aus stammdaten.ts ein, bevor gelesen wird.
       await seedFallsLeer();
-      const [kaffees, chargen, profile, gusslpaene, shots, symptome, beobachtungen, muehlen, bruehgeraete, zubehoer, setups, einstellungen] =
-        await Promise.all([
-          alle('kaffee'),
-          alle('charge'),
-          alle('profil'),
-          alle('gussplan'),
-          alle('shot'),
-          alle('symptom'),
-          alle('beobachtung'),
-          alle('muehle'),
-          alle('bruehgeraet'),
-          alle('zubehoer'),
-          alle('setup'),
-          alle('einstellungen'),
-        ]);
+      const [
+        kaffees,
+        chargen,
+        profile,
+        gusslpaene,
+        shots,
+        symptome,
+        tastings,
+        aromasets,
+        uebungen,
+        beobachtungen,
+        muehlen,
+        bruehgeraete,
+        zubehoer,
+        setups,
+        einstellungen,
+      ] = await Promise.all([
+        alle('kaffee'),
+        alle('charge'),
+        alle('profil'),
+        alle('gussplan'),
+        alle('shot'),
+        alle('symptom'),
+        alle('tasting'),
+        alle('aromaset'),
+        alle('uebung'),
+        alle('beobachtung'),
+        alle('muehle'),
+        alle('bruehgeraet'),
+        alle('zubehoer'),
+        alle('setup'),
+        alle('einstellungen'),
+      ]);
       this.kaffees = kaffees;
       this.chargen = chargen;
       this.profile = profile;
       this.gusslpaene = gusslpaene;
       this.shots = shots;
       this.symptome = symptome;
+      this.tastings = tastings;
+      this.aromasets = aromasets;
+      this.uebungen = uebungen;
       this.beobachtungen = beobachtungen;
       this.muehlen = muehlen;
       this.bruehgeraete = bruehgeraete;
@@ -85,6 +109,10 @@ class Bestand {
   muehleVon(setupId: string): SammlungWert['muehle'] | undefined {
     const setup = this.setups.find((s) => s.id === setupId);
     return setup ? this.muehlen.find((m) => m.id === setup.muehleId) : undefined;
+  }
+
+  tastingVon(shotId: string): SammlungWert['tasting'] | undefined {
+    return this.tastings.find((t) => t.shotId === shotId);
   }
 }
 
@@ -127,6 +155,12 @@ function listeFuer(sammlung: Sammlung): unknown[] | undefined {
       return bestand.shots;
     case 'symptom':
       return bestand.symptome;
+    case 'tasting':
+      return bestand.tastings;
+    case 'aromaset':
+      return bestand.aromasets;
+    case 'uebung':
+      return bestand.uebungen;
     case 'beobachtung':
       return bestand.beobachtungen;
     case 'muehle':

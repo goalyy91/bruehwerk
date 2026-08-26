@@ -11,3 +11,4 @@ export * from './beobachtung';
 export * from './getraenk';
 export * from './bestellung';
 export * from './einstellungen';
+export * from './uebung';

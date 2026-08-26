@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein } from './index';
+import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset } from './index';
 import { MUEHLE_K6, BRUEHGERAET_MOZZAFIATO, BRUEHGERAET_BIALETTI_1 } from '../stammdaten';
+import { AROMASET_SCA, AROMASET_LENEZ } from '../aromen';
 
 const KAFFEE_BASIS = {
   id: 'k1',
@@ -156,5 +157,58 @@ describe('GussBaustein — sechs typisierte Bausteine plus Altbestand', () => {
       ],
     };
     expect(Gussplan.safeParse(plan).success).toBe(true);
+  });
+});
+
+describe('Groessen — fuenf Stufen, keine zehn (K52, konzept.md:764)', () => {
+  const GUELTIG = { saeure: 2, koerper: 2, bitterkeit: 2, aroma: 0, suesse: 4, nachklang: 2 };
+
+  it('Index 0..4 ist gueltig', () => {
+    expect(Groessen.safeParse(GUELTIG).success).toBe(true);
+  });
+
+  it('Index 5 (altes 0-10-Kontinuum) faellt durch', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: 5 }).success).toBe(false);
+  });
+
+  it('negativer Index faellt durch', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: -1 }).success).toBe(false);
+  });
+
+  it('ein Kommawert faellt durch — die Treppe kennt nur ganze Staebe', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: 2.5 }).success).toBe(false);
+  });
+});
+
+describe('Tasting — Bindung an den Shot', () => {
+  it('ein minimales Tasting ohne Aromen/Auffaelligkeiten ist gueltig', () => {
+    const tasting = {
+      id: 't1',
+      shotId: 's1',
+      groessen: { saeure: 2, koerper: 2, bitterkeit: 2, aroma: 2, suesse: 2, nachklang: 2 },
+    };
+    expect(Tasting.safeParse(tasting).success).toBe(true);
+  });
+});
+
+describe('Aromaset — drei feste Ebenen (K55)', () => {
+  it('AROMASET_SCA aus daten/aromen.ts ist gueltig und nicht platzhalter', () => {
+    const ergebnis = Aromaset.safeParse(AROMASET_SCA);
+    expect(ergebnis.success).toBe(true);
+    if (ergebnis.success) expect(ergebnis.data.platzhalter).toBe(false);
+  });
+
+  it('AROMASET_LENEZ ist gueltig, traegt 60 Flaeschchen und ist als platzhalter markiert', () => {
+    const ergebnis = Aromaset.safeParse(AROMASET_LENEZ);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.platzhalter).toBe(true);
+    const anzahl = ergebnis.data.kategorien.flatMap((k) => k.gruppen).flatMap((g) => g.aromen).length;
+    expect(anzahl).toBe(60);
+  });
+
+  it('eine Kategorie ohne Gruppen faellt durch', () => {
+    const kaputt = { ...AROMASET_SCA, kategorien: [{ id: 'x', label: 'X', gruppen: [] }] };
+    expect(Aromaset.safeParse(kaputt).success).toBe(false);
   });
 });
