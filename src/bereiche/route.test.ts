@@ -3,6 +3,9 @@ import { ausPfad, elternVon, tabVon, zuPfad, wurzelVon, START, type Route } from
 
 const ALLE_ROUTEN: Route[] = [
   { name: 'bar' },
+  { name: 'bestellungAufnehmen' },
+  { name: 'bestellungPlan' },
+  { name: 'bestellungAbarbeiten' },
   { name: 'historie' },
   { name: 'historieShot', shotId: 's1' },
   { name: 'verkostung', shotId: 's1' },
@@ -90,6 +93,17 @@ describe('route — elternVon', () => {
 
   it('personen -> einstellungen', () => {
     expect(elternVon({ name: 'personen' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
+  it('bestellungAbarbeiten -> bestellungPlan -> bestellungAufnehmen -> bar', () => {
+    const abarbeiten: Route = { name: 'bestellungAbarbeiten' };
+    const plan = elternVon(abarbeiten);
+    expect(plan).toEqual({ name: 'bestellungPlan' } satisfies Route);
+    const aufnehmen = elternVon(plan!);
+    expect(aufnehmen).toEqual({ name: 'bestellungAufnehmen' } satisfies Route);
+    const bar = elternVon(aufnehmen!);
+    expect(bar).toEqual({ name: 'bar' } satisfies Route);
+    expect(elternVon(bar!)).toBeUndefined();
   });
 
   it('getraenk und getraenkNeu -> getraenke', () => {

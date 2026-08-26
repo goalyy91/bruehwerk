@@ -45,6 +45,9 @@
   import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
   import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
   import Personen from './einstellungen/Personen.svelte';
+  import BestellungAufnehmen from './bar/BestellungAufnehmen.svelte';
+  import BestellungPlan from './bar/BestellungPlan.svelte';
+  import BestellungAbarbeiten from './bar/BestellungAbarbeiten.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
@@ -83,7 +86,19 @@
         {#if bestand.ladeFehler}
           <p class="fehler">Bestand konnte nicht geladen werden: {bestand.ladeFehler.message}</p>
         {:else if route.name === 'bar'}
-      <Bar />
+      <Bar onOeffnenBestellung={() => navigation.gehe({ name: 'bestellungAufnehmen' })} />
+    {:else if route.name === 'bestellungAufnehmen'}
+      <BestellungAufnehmen
+        onZurueck={() => navigation.zurueck()}
+        onWeiterZumPlan={() => navigation.gehe({ name: 'bestellungPlan' })}
+      />
+    {:else if route.name === 'bestellungPlan'}
+      <BestellungPlan
+        onZurueck={() => navigation.zurueck()}
+        onWeiterZumAbarbeiten={() => navigation.gehe({ name: 'bestellungAbarbeiten' })}
+      />
+    {:else if route.name === 'bestellungAbarbeiten'}
+      <BestellungAbarbeiten onZurueck={() => navigation.zurueck()} onAbgeschlossen={() => navigation.ersetze({ name: 'bar' })} />
     {:else if route.name === 'kaffees'}
       <KaffeeListe
         onOeffnen={(id) => navigation.gehe({ name: 'kaffee', kaffeeId: id })}

@@ -30,6 +30,7 @@ class Bestand {
   bruehgeraete = $state<SammlungWert['bruehgeraet'][]>([]);
   zubehoer = $state<SammlungWert['zubehoer'][]>([]);
   setups = $state<SammlungWert['setup'][]>([]);
+  ablaeufe = $state<SammlungWert['ablauf'][]>([]);
   durchgaenge = $state<SammlungWert['durchgang'][]>([]);
   positionen = $state<SammlungWert['position'][]>([]);
   bestellungen = $state<SammlungWert['bestellung'][]>([]);
@@ -60,6 +61,7 @@ class Bestand {
         bruehgeraete,
         zubehoer,
         setups,
+        ablaeufe,
         einstellungen,
         getraenke,
         personen,
@@ -82,6 +84,7 @@ class Bestand {
         alle('bruehgeraet'),
         alle('zubehoer'),
         alle('setup'),
+        alle('ablauf'),
         alle('einstellungen'),
         alle('getraenk'),
         alle('person'),
@@ -104,6 +107,7 @@ class Bestand {
       this.bruehgeraete = bruehgeraete;
       this.zubehoer = zubehoer;
       this.setups = setups;
+      this.ablaeufe = ablaeufe;
       this.getraenke = getraenke;
       this.personen = personen;
       this.ansaetze = ansaetze;
@@ -137,6 +141,25 @@ class Bestand {
 
   tastingVon(shotId: string): SammlungWert['tasting'] | undefined {
     return this.tastings.find((t) => t.shotId === shotId);
+  }
+
+  ablaufVon(ablaufId: string): SammlungWert['ablauf'] | undefined {
+    return this.ablaeufe.find((a) => a.id === ablaufId);
+  }
+
+  /** Es gibt hoechstens eine offene Bestellung gleichzeitig (Paket 06, Etappe E). */
+  offeneBestellung(): SammlungWert['bestellung'] | undefined {
+    return this.bestellungen.find((b) => b.status === 'offen');
+  }
+
+  /**
+   * Das Profil, das ein Kaffee fuer eine Zubereitungsart einsetzt — bevorzugt
+   * das Standardprofil, sonst das erste passende. `zubereitung` nutzt
+   * dieselben Woerter wie Bruehgeraet.typ (siehe daten/stammdaten-getraenke.ts).
+   */
+  profilFuerZubereitung(kaffeeId: string, zubereitung: string): SammlungWert['profil'] | undefined {
+    const passende = this.profileVon(kaffeeId).filter((p) => this.bruehgeraetVon(p.setupId)?.typ === zubereitung);
+    return passende.find((p) => p.standard) ?? passende[0];
   }
 }
 
@@ -199,6 +222,8 @@ function listeFuer(sammlung: Sammlung): unknown[] | undefined {
       return bestand.positionen;
     case 'bestellung':
       return bestand.bestellungen;
+    case 'ablauf':
+      return bestand.ablaeufe;
     case 'muehle':
       return bestand.muehlen;
     case 'bruehgeraet':

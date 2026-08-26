@@ -13,6 +13,9 @@ export type Bereich = 'bar' | 'kaffees' | 'historie' | 'getraenke' | 'einstellun
 
 export type Route =
   | { name: 'bar' }
+  | { name: 'bestellungAufnehmen' }
+  | { name: 'bestellungPlan' }
+  | { name: 'bestellungAbarbeiten' }
   | { name: 'historie' }
   | { name: 'historieShot'; shotId: string }
   | { name: 'verkostung'; shotId: string }
@@ -48,6 +51,12 @@ export function zuPfad(route: Route): string {
   switch (route.name) {
     case 'bar':
       return '/bar';
+    case 'bestellungAufnehmen':
+      return '/bar/bestellung/aufnehmen';
+    case 'bestellungPlan':
+      return '/bar/bestellung/plan';
+    case 'bestellungAbarbeiten':
+      return '/bar/bestellung/abarbeiten';
     case 'historie':
       return '/historie';
     case 'historieShot':
@@ -112,6 +121,11 @@ export function ausPfad(pfad: string): Route {
   const t = pfad.split('/').filter(Boolean);
 
   if (t.length === 1 && t[0] === 'bar') return { name: 'bar' };
+  if (t[0] === 'bar' && t[1] === 'bestellung') {
+    if (t[2] === 'aufnehmen') return { name: 'bestellungAufnehmen' };
+    if (t[2] === 'plan') return { name: 'bestellungPlan' };
+    if (t[2] === 'abarbeiten') return { name: 'bestellungAbarbeiten' };
+  }
 
   if (t[0] === 'getraenke') {
     if (t.length === 1) return { name: 'getraenke' };
@@ -182,6 +196,12 @@ export function elternVon(route: Route): Route | undefined {
     case 'kaffees':
     case 'einstellungen':
       return undefined;
+    case 'bestellungAufnehmen':
+      return { name: 'bar' };
+    case 'bestellungPlan':
+      return { name: 'bestellungAufnehmen' };
+    case 'bestellungAbarbeiten':
+      return { name: 'bestellungPlan' };
     case 'historieShot':
       return { name: 'historie' };
     case 'getraenk':
@@ -231,6 +251,9 @@ export function elternVon(route: Route): Route | undefined {
 export function tabVon(route: Route): Bereich {
   switch (route.name) {
     case 'bar':
+    case 'bestellungAufnehmen':
+    case 'bestellungPlan':
+    case 'bestellungAbarbeiten':
       return 'bar';
     case 'historie':
     case 'historieShot':
