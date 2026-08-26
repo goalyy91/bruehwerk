@@ -10,7 +10,7 @@
  * Ablauf dahinter ist bewusst leer (K48), die echten Ruestzeiten-Buendel
  * spezifiziert erst der Planer in Paket 06.
  */
-import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom } from './schema';
+import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom, Person } from './schema';
 import { SYMPTOME } from '../domain/diagnose';
 
 export const MUEHLE_SCULPTOR: Muehle = {
@@ -251,6 +251,17 @@ export const AUFFAELLIGKEITEN_STAMM: readonly Symptom[] = [
   { id: 'medizinisch', label: 'medizinisch', gruppe: 'auffaelligkeit', quelle: 'system' },
   { id: 'aschig', label: 'aschig', gruppe: 'auffaelligkeit', quelle: 'system' },
 ];
+
+/** Standard ist Julian, ueberall umstellbar (konzept.md:683, :1039). */
+export const PERSON_JULIAN: Person = {
+  id: 'person-julian',
+  vorname: 'Julian',
+  aktiv: true,
+  standard: true,
+  favoriten: [],
+  koffeinAnteil: 0,
+  extraShotAnteil: 0,
+};
 
 export const SETUPS: readonly Setup[] = [
   SETUP_ESPRESSO,

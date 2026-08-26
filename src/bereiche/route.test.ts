@@ -30,6 +30,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'setupBearbeiten', id: 's1' },
   { name: 'tempReferenz' },
   { name: 'uebung' },
+  { name: 'personen' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -85,6 +86,10 @@ describe('route — elternVon', () => {
 
   it('uebung -> einstellungen', () => {
     expect(elternVon({ name: 'uebung' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
+  it('personen -> einstellungen', () => {
+    expect(elternVon({ name: 'personen' })).toEqual({ name: 'einstellungen' } satisfies Route);
   });
 
   it('getraenk und getraenkNeu -> getraenke', () => {

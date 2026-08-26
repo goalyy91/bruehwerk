@@ -26,11 +26,12 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenMusterblatt, onOeffnenBeobachtungen, onOeffnenUebung }: {
+  let { onOeffnenGeraete, onOeffnenMusterblatt, onOeffnenBeobachtungen, onOeffnenUebung, onOeffnenPersonen }: {
     onOeffnenGeraete: () => void;
     onOeffnenMusterblatt: () => void;
     onOeffnenBeobachtungen: () => void;
     onOeffnenUebung: () => void;
+    onOeffnenPersonen: () => void;
   } = $props();
 
   async function einstellungAendern<K extends keyof AppEinstellungen>(feld: K, wert: AppEinstellungen[K]) {
@@ -64,6 +65,14 @@
 <div class="panel schmal">
   <button type="button" class="blattzeile" onclick={onOeffnenGeraete}>
     <span>Geräte verwalten</span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+</div>
+
+<h2>Personen</h2>
+<div class="panel schmal">
+  <button type="button" class="blattzeile" onclick={onOeffnenPersonen}>
+    <span>Personen verwalten</span>
     <span class="chevron" aria-hidden="true">›</span>
   </button>
 </div>

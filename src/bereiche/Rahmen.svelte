@@ -44,6 +44,7 @@
   import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
   import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
   import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
+  import Personen from './einstellungen/Personen.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
@@ -142,11 +143,14 @@
         onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
+        onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
       />
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'uebung'}
       <Uebungsmodus onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'personen'}
+      <Personen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}

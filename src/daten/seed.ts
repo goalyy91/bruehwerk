@@ -9,7 +9,7 @@
  * vorheriger Start bereits geschrieben — dann wird nichts ueberschrieben.
  */
 import { alle, lesen, schreiben } from './ablage';
-import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM, AUFFAELLIGKEITEN_STAMM } from './stammdaten';
+import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM, AUFFAELLIGKEITEN_STAMM, PERSON_JULIAN } from './stammdaten';
 import { AROMASETS } from './aromen';
 import { GETRAENKE } from './stammdaten-getraenke';
 import { EINSTELLUNGEN_ID } from './schema';
@@ -51,6 +51,12 @@ export async function seedFallsLeer(): Promise<void> {
   const getraenkeVorhanden = await alle('getraenk');
   if (getraenkeVorhanden.length === 0) {
     for (const getraenk of GETRAENKE) await schreiben('getraenk', getraenk);
+  }
+
+  // Paket 06 — Standard ist Julian (konzept.md:683).
+  const personenVorhanden = await alle('person');
+  if (personenVorhanden.length === 0) {
+    await schreiben('person', PERSON_JULIAN);
   }
 
   // Eigenes Gate, unabhaengig vom Geraetepark oben — sonst wuerde der
