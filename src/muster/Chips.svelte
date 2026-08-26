@@ -22,21 +22,35 @@
   // Muster) — onAenderung meldet die gewaehlten Befunde nach aussen, damit
   // ShotErfassung.svelte das Regelwerk (domain/diagnose.ts) danach fragen
   // kann. Das Innenleben (Tap-Zyklus, Sortierung) bleibt unveraendert.
+  //
+  // Paket 05: `start` fuer den Wiedereinstieg — ein gespeicherter
+  // Verkostungsbogen (Verkostungsbogen.svelte) geht mit seinen Chips
+  // wieder auf, statt leer zu starten.
+  import { untrack } from 'svelte';
+
   let {
     gruppen,
     freitext = true,
+    start = [],
+    freitextStart = '',
     onAenderung,
     onFreitext,
   }: {
     gruppen: { titel: string; chips: Chip[] }[];
     freitext?: boolean;
+    start?: { symptomId: string; staerke: Staerke }[];
+    freitextStart?: string;
     onAenderung?: (befunde: { symptomId: string; staerke: Staerke }[]) => void;
     onFreitext?: (text: string) => void;
   } = $props();
 
-  const zustaende = $state<Record<string, ChipZustand>>({});
-  let freitextOffen = $state(false);
-  let freitextWert = $state('');
+  const zustaende = $state<Record<string, ChipZustand>>(
+    Object.fromEntries(
+      untrack(() => start).map((b): [string, ChipZustand] => [b.symptomId, { phase: 'gewaehlt', staerke: b.staerke }]),
+    ),
+  );
+  let freitextOffen = $state(untrack(() => freitextStart.length > 0));
+  let freitextWert = $state(untrack(() => freitextStart));
 
   function befundeMelden() {
     onAenderung?.(

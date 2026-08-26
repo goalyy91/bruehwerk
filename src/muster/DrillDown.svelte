@@ -9,19 +9,34 @@
   // Akzentstrich — dieselbe Optik wie AuswahlListe.svelte fuer eine
   // gewaehlte Zeile, weil dieses Muster strukturell dasselbe ist (eine
   // Liste antippbarer Optionen).
+  //
+  // Paket 05 (Verkostungsbogen, K55): kontrollierte Fassung wie
+  // Chips.svelte in Paket 04 — Innenleben unveraendert, dazu gekommen sind
+  // `start`/`onAenderung` fuer Wiedereinstieg und Rueckmeldung nach aussen,
+  // und die Fussleiste ist jetzt antippbar zum Entfernen (kein zweiter
+  // Regler, dieselbe Zeile). `nummer` an einem Blatt-Knoten (Le Nez) wird
+  // durchgereicht, ohne die Anzeige zu aendern — Verkostungsbogen.svelte
+  // liest sie aus dem gemeldeten Eintrag.
 
-  type Knoten = { id: string; label: string; kinder?: Knoten[] };
+  import { untrack } from 'svelte';
+
+  type Knoten = { id: string; label: string; kinder?: Knoten[]; nummer?: number };
+  type Gewaehlt = { id: string; label: string; pfad: string[]; nummer?: number };
 
   let {
     ebenen,
     grenze = 6,
+    start = [],
+    onAenderung,
   }: {
     ebenen: Knoten[];
     grenze?: number;
+    start?: Gewaehlt[];
+    onAenderung?: (gewaehlt: Gewaehlt[]) => void;
   } = $props();
 
   let pfad = $state<Knoten[]>([]);
-  let gewaehlt = $state<Knoten[]>([]);
+  let gewaehlt = $state<Gewaehlt[]>(untrack(() => start));
 
   const aktuelleEbene = $derived(pfad.length === 0 ? ebenen : (pfad[pfad.length - 1]?.kinder ?? []));
 
@@ -29,8 +44,15 @@
     if (knoten.kinder && knoten.kinder.length > 0) {
       pfad = [...pfad, knoten];
     } else if (!gewaehlt.some((g) => g.id === knoten.id)) {
-      gewaehlt = [...gewaehlt, knoten];
+      const vollpfad = [...pfad.map((p) => p.label), knoten.label];
+      gewaehlt = [...gewaehlt, { id: knoten.id, label: knoten.label, pfad: vollpfad, nummer: knoten.nummer }];
+      onAenderung?.(gewaehlt);
     }
+  }
+
+  function entfernen(id: string) {
+    gewaehlt = gewaehlt.filter((g) => g.id !== id);
+    onAenderung?.(gewaehlt);
   }
 
   function zurueck() {
@@ -58,7 +80,9 @@
     <div class="leiste">
       <span class="zaehlung">{gewaehlt.length}</span>
       {#each gewaehlt.slice(0, grenze) as g (g.id)}
-        <span class="marke">{g.label}</span>
+        <button type="button" class="marke" onclick={() => entfernen(g.id)} aria-label={`${g.label} entfernen`}>
+          {g.label}
+        </button>
       {/each}
       {#if gewaehlt.length > grenze}
         <span class="mehr">+ {gewaehlt.length - grenze}</span>
@@ -131,10 +155,14 @@
   }
   .marke {
     padding: 4px var(--r2);
+    border: none;
     border-radius: var(--r-pille);
     background: var(--vertiefung);
     color: var(--satz);
+    font-family: var(--schrift);
     font-size: var(--fs-meta);
+    cursor: pointer;
+    min-height: 32px;
   }
   .mehr {
     font-size: var(--fs-meta);
