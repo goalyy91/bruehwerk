@@ -23,6 +23,16 @@
   // `hinweis` ist bewusst ein fertiger Text, keine Domain-Logik hier: die
   // Rechnung (z. B. Kessel -> Gruppentemperatur) gehoert in den Aufrufer,
   // dieses Muster zeigt nur an.
+  //
+  // Visueller Redesign-Reset (Handoff 3.8 "Eingabefeld Wert"): Panel jetzt
+  // Blattfläche, Wertfeld Vertiefung mit Radius 4 statt eckigem Vollrahmen.
+  //
+  // Paket 3: Profilblatt/ShotErfassung zeigen ihre Ziel-/Einstellwerte jetzt
+  // über Parameterkachel.svelte (Handoff Abschnitt 6) statt hier — Werteliste
+  // bleibt zuständig für Profilblatt "Spielraum" und die reinen Text-Zeilen
+  // im Kaffeeblatt (Bohne-Details). Maße auf die Spielraum-Referenz gezogen
+  // (Radius 20, Polster 14/18, Wertfeld 76×, Wert 17/500) — Bohne-Details
+  // nutzt weiterhin `.wert-text` unveraendert bei 19/500.
 
   let { zeilen }: { zeilen: WertelisteZeile[] } = $props();
 
@@ -61,38 +71,46 @@
     align-items: center;
     column-gap: var(--r2);
     row-gap: var(--r3);
-    padding: var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    padding: 14px var(--r4);
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
   }
   .zeile {
     display: contents;
   }
   .label {
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--satz);
   }
   .wert,
   .wert-text {
     justify-self: end;
     font-variant-numeric: var(--zahl-features);
-    font-size: var(--fs-satz);
+    font-weight: var(--gw-zahl);
     color: var(--tinte);
   }
+  .wert-text {
+    font-size: var(--fs-wert);
+  }
   .wert {
-    width: 80px;
+    width: 76px;
+    font-size: 17px;
     font-family: var(--schrift);
-    background: var(--feld-blatt);
-    border: 1px solid var(--feld-rahmen);
-    padding: var(--r1) var(--r2);
+    background: var(--vertiefung);
+    border: none;
+    border-radius: var(--r-wertfeld);
+    padding: 7px 12px;
+    text-align: right;
   }
   .einheit {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
   .hinweis {
     grid-column: 2 / -1;
     text-align: right;
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }

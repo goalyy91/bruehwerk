@@ -1,7 +1,14 @@
 <script lang="ts">
   // Muster 1 · Urteil (Sitzung 6 - Übergabe, Abschnitt 2).
   // 2×2-Gitter, vier gleich große Kacheln, Wort mittig, kein Rangzeichen.
-  // Gewählt: Tinte 600 + Akzentstrich unten 2 px + Marke „gut“.
+  //
+  // Visueller Redesign-Reset (Handoff Abschnitt 3.6/3.8): Gewählt ist jetzt
+  // ausschließlich die Füllfläche des Themes — kein Akzentstrich mehr, kein
+  // zusätzliches "gut"-Zeichen obendrauf. Das Zustandszeichen (gefüllt/halb/
+  // schraffiert) bleibt eine eigene Sprache für Messwerte (siehe
+  // Verlaufskurve.svelte, IstGegenZiel.svelte) und beschreibt dort einen
+  // Shot-Befund — hier ging es um die Auswahlmarkierung einer Bedienfläche,
+  // die beiden Zeichen wurden vorher unnötig vermischt.
 
   import { untrack } from 'svelte';
 
@@ -28,7 +35,6 @@
       class:gewaehlt={gewaehlt === stufe}
       onclick={() => waehle(stufe)}
     >
-      {#if gewaehlt === stufe}<span class="marke" aria-hidden="true"></span>{/if}
       {stufe}
     </button>
   {/each}
@@ -42,27 +48,19 @@
   }
   .kachel {
     position: relative;
-    min-height: 60px;
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    min-height: var(--urteilskachel-hoehe);
+    border: none;
+    border-radius: var(--r-kachel);
+    background: var(--vertiefung);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-urteil);
     font-weight: var(--gw-text);
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .kachel.gewaehlt {
-    color: var(--tinte);
-    font-weight: var(--gw-titel);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
-  }
-  .marke {
-    position: absolute;
-    top: var(--r2);
-    right: var(--r2);
-    width: 10px;
-    height: 10px;
-    background: var(--marke-gut);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
 </style>

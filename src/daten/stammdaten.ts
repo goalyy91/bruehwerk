@@ -10,7 +10,7 @@
  * Ablauf dahinter ist bewusst leer (K48), die echten Ruestzeiten-Buendel
  * spezifiziert erst der Planer in Paket 06.
  */
-import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom } from './schema';
+import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom, Person } from './schema';
 import { SYMPTOME } from '../domain/diagnose';
 
 export const MUEHLE_SCULPTOR: Muehle = {
@@ -86,6 +86,23 @@ export const BRUEHGERAET_HARIO_V60: Bruehgeraet = {
   tempReferenz: [],
 };
 
+/**
+ * Cold Brew — Startwert "Karaffe" aus der Tabelle konzept.md:944-951.
+ * fuehrungswert: keiner (konzept.md:966, wie Moka gibt es hier nichts zu
+ * fuehren — ein Vorrat mit Fertig-Zeitpunkt, keine laufende Groesse).
+ */
+export const BRUEHGERAET_COLDBREW_KARAFFE: Bruehgeraet = {
+  id: 'bruehgeraet-coldbrew-karaffe',
+  name: 'Cold-Brew-Karaffe',
+  typ: 'coldbrew',
+  gruppen: 1,
+  dampflanze: false,
+  ktEinstellbar: false,
+  fuehrungswert: null,
+  mengen: [1],
+  tempReferenz: [],
+};
+
 export const ZUBEHOER_KAENNCHEN_350: Zubehoer = {
   id: 'zubehoer-kaennchen-350',
   name: 'Milchkaennchen 350 ml',
@@ -117,6 +134,7 @@ export const BRUEHGERAETE: readonly Bruehgeraet[] = [
   BRUEHGERAET_BIALETTI_1,
   BRUEHGERAET_BIALETTI_3,
   BRUEHGERAET_HARIO_V60,
+  BRUEHGERAET_COLDBREW_KARAFFE,
 ];
 
 export const ZUBEHOER: readonly Zubehoer[] = [
@@ -190,6 +208,16 @@ export const SETUP_MOKA_3: Setup = {
   ablaufId: ABLAUF_LEER.id,
 };
 
+/** Cold Brew mahlt an der K6 — "deutlich groeber" als der Moka-Bereich (konzept.md:949), die konkrete Zahl liefert der erste Ansatz. */
+export const SETUP_COLDBREW: Setup = {
+  id: 'setup-coldbrew',
+  name: 'Cold Brew · K6 · Karaffe',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_COLDBREW_KARAFFE.id,
+  zubehoerIds: [],
+  ablaufId: ABLAUF_LEER.id,
+};
+
 /**
  * Die elf System-Chips (Paket 04) als Symptom-Datensaetze — domain/diagnose.ts
  * traegt den Katalog, hier wird daraus nur der Store-Eintrag. Ids sind die
@@ -203,10 +231,43 @@ export const SYMPTOME_STAMM: readonly Symptom[] = SYMPTOME.map((s) => ({
   quelle: 'system' as const,
 }));
 
+/**
+ * Die Fehlerliste des Verkostungsbogens (K53) — zehn SCA-Standardfehler,
+ * eigener Katalog neben den elf Dial-in-Symptomen oben: andere Gruppe
+ * ('auffaelligkeit'), andere Chip-Reihe (Verkostungsbogen.svelte statt
+ * ShotErfassung.svelte), kein Regelwerk dahinter. Wie die Dial-in-Chips
+ * traegt jeder Chip seine Staerke selbst (Chips.svelte, leicht/deutlich),
+ * nicht diese Liste.
+ */
+export const AUFFAELLIGKEITEN_STAMM: readonly Symptom[] = [
+  { id: 'papierig', label: 'papierig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'holzig', label: 'holzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'gummig', label: 'gummig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'fermentiert', label: 'fermentiert', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'phenolisch', label: 'phenolisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'erdig', label: 'erdig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'muffig', label: 'muffig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'ranzig', label: 'ranzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'medizinisch', label: 'medizinisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'aschig', label: 'aschig', gruppe: 'auffaelligkeit', quelle: 'system' },
+];
+
+/** Standard ist Julian, ueberall umstellbar (konzept.md:683, :1039). */
+export const PERSON_JULIAN: Person = {
+  id: 'person-julian',
+  vorname: 'Julian',
+  aktiv: true,
+  standard: true,
+  favoriten: [],
+  koffeinAnteil: 0,
+  extraShotAnteil: 0,
+};
+
 export const SETUPS: readonly Setup[] = [
   SETUP_ESPRESSO,
   SETUP_POUR_OVER_SCULPTOR,
   SETUP_POUR_OVER_K6,
   SETUP_MOKA_1,
   SETUP_MOKA_3,
+  SETUP_COLDBREW,
 ];

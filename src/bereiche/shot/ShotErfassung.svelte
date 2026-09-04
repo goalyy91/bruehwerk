@@ -11,12 +11,20 @@
   // Zeitpunkt schon geschrieben; Chips/Vorschlag aktualisieren ihn per
   // zweitem schreiben('shot', ...).
 
+  // Visueller Redesign-Reset, Paket 3 (Handoff Abschnitt 6 "Shot-Logging"):
+  // Einstellwerte (Input/Mahlgrad/Drehzahl/Kessel) stehen jetzt als
+  // Parameterkachel-Raster statt Werteliste-Zeilen — gleiche Felder,
+  // gleiches onAendern-Verhalten. "Ziel" (Output/Preinfusion/Zeit) bleibt
+  // IstGegenZiel — das ist laut Handoff-Referenz weiterhin eine Zeilenliste
+  // mit Herkunftskreisen, kein Kachel-Raster (die beiden Blöcke haben
+  // unterschiedliche fachliche Bedeutung: eingestellt vs. gemessen).
+
   import { bestand, schreiben } from '../bestand.svelte';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
   import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
-  import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
+  import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -59,25 +67,6 @@
     mg = profil.ziel.mg;
     rpm = profil.ziel.rpm;
     kt = profil.ziel.kt;
-  });
-
-  // Einstellwerte als Werteliste (docs/konzept.md:721 — "Ziel im
-  // Gruppenkopf, Führungswert groß, die Einstellwerte darunter"): stehen
-  // deshalb unterhalb der Ziel-Karte, nicht davor. Kein hinweis-Text hier
-  // (keine Gruppentemperatur-Anzeige) — anders als im Profilblatt war das
-  // hier nie vorgesehen, das bleibt ein reines Eingabefeld.
-  const einstellwerte = $derived.by((): WertelisteZeile[] => {
-    const zeilen: WertelisteZeile[] = [
-      { label: 'Input', wert: input, einheit: 'g', onAendern: (w) => (input = w) },
-      { label: 'Mahlgrad', wert: mg, einheit: muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined, onAendern: (w) => (mg = w) },
-    ];
-    if (muehle?.rpmEinstellbar) {
-      zeilen.push({ label: 'Drehzahl', wert: rpm ?? '', einheit: 'rpm', onAendern: (w) => (rpm = w) });
-    }
-    if (bruehgeraet?.ktEinstellbar) {
-      zeilen.push({ label: 'Kessel', wert: kt ?? '', einheit: '°C', onAendern: (w) => (kt = w) });
-    }
-    return zeilen;
   });
 
   type Phase = 'eingabe' | 'schreibfehler' | 'diagnose' | 'alltagskorrektur' | 'drift' | 'fertig';
@@ -379,12 +368,29 @@
   {/if}
 
   <div class="eingestellt">
-    <Werteliste zeilen={einstellwerte} />
+    <p class="gruppenkopf">Parameter</p>
+    <div class="parameter-raster">
+      <Parameterkachel symbol="input" label="Input" wert={input} einheit="g" onAendern={(w) => (input = w)} />
+      <Parameterkachel
+        symbol="mahlgrad"
+        label="Mahlgrad"
+        wert={mg}
+        einheit={muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined}
+        onAendern={(w) => (mg = w)}
+      />
+      {#if muehle?.rpmEinstellbar}
+        <Parameterkachel symbol="drehzahl" label="Drehzahl" wert={rpm ?? ''} einheit="rpm" onAendern={(w) => (rpm = w)} />
+      {/if}
+      {#if bruehgeraet?.ktEinstellbar}
+        <Parameterkachel symbol="kessel" label="Kessel" wert={kt ?? ''} einheit="°C" onAendern={(w) => (kt = w)} />
+      {/if}
+    </div>
   </div>
 
   <!-- Spielraum-Zuordnung Zeit/Durchlaufzeit gefolgt der Profilblatt-Logik
-       (Profilblatt.svelte zielZeilen): welches Spielraum-Feld gilt, haengt
-       am Fuehrungswert des Bruehgeraets (K7), nicht am Wortlaut "Zeit" allein
+       (Profilblatt.svelte, Ziel-Parameterkacheln): welches Spielraum-Feld
+       gilt, haengt am Fuehrungswert des Bruehgeraets (K7), nicht am
+       Wortlaut "Zeit" allein
        — vorher waren Preinfusion und Zeit vertauscht (Preinfusion bekam
        spielraum.zeit, was als Naeherung passt, weil es keinen eigenen
        Preinfusion-Spielraum gibt; Zeit bekam faelschlich spielraum.durchlaufzeit,
@@ -406,21 +412,34 @@
   />
 
   <div class="urteil-block">
-    <p class="frage">Wie war er?</p>
+    <p class="frage-objekt">Wie war er?</p>
     <Urteil onWahl={(stufe) => void urteilGewaehlt(stufe)} />
   </div>
 {/if}
 
 <style>
+  /* Objektname (Handoff 3.2: 20-21/400/-.01em) statt Screentitel-Groesse —
+     der Kaffeename ist hier Inhalt, keine Ueberschrift mit Rueckweg
+     daneben (der steht schon in der Kopfzeile darueber). */
   h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
+    font-size: var(--fs-objekt);
+    font-weight: var(--gw-text);
+    letter-spacing: -0.01em;
     margin: 0;
   }
   .setup {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
+  }
+  .gruppenkopf {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .eingestellt {
     margin-bottom: var(--r4);
@@ -440,6 +459,14 @@
   .frage {
     font-size: var(--fs-satz);
     color: var(--satz);
+    margin: 0 0 var(--r3);
+  }
+  /* "Wie war er?" ist der Objektname-Prompt der Handoff-Referenz C3
+     (20/400/-.01em), keine Meta-Rueckfrage wie die uebrigen .frage-Zeilen. */
+  .frage-objekt {
+    font-size: var(--fs-objekt);
+    letter-spacing: -0.01em;
+    color: var(--tinte);
     margin: 0 0 var(--r3);
   }
   .frage-titel {

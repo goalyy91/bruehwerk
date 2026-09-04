@@ -6,6 +6,9 @@
   //
   // Minimalformular, der Rest ist am Kaffeeblatt nachpflegbar (K64 — kein
   // Vollformular-Zwang).
+  //
+  // Visueller Redesign-Reset, Paket 4: Textfelder ueber die globale
+  // Utility .eingabefeld-text aus tokens.css statt lokaler --feld-Box.
 
   import { schreiben } from '../bestand.svelte';
   import Segment from '../../muster/Segment.svelte';
@@ -49,8 +52,8 @@
 <Kopfzeile titel="Neuer Kaffee" {onZurueck} />
 
 <div class="formular">
-  <input class="text-eingabe" type="text" placeholder="Name" bind:value={name} />
-  <input class="text-eingabe" type="text" placeholder="Röster" bind:value={roester} />
+  <input class="eingabefeld-text" type="text" placeholder="Name" bind:value={name} />
+  <input class="eingabefeld-text" type="text" placeholder="Röster" bind:value={roester} />
   <Segment
     optionen={[
       { wert: 'single', label: 'Single Origin' },
@@ -74,15 +77,6 @@
     flex-direction: column;
     gap: var(--r3);
     margin-bottom: var(--r4);
-  }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r2);
-    min-height: var(--treffer);
   }
   .fehler {
     color: var(--kritisch);

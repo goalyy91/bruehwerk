@@ -6,7 +6,7 @@
  * die Buendelungsregel aus domain/plan.ts.
  */
 import { z } from 'zod';
-import { Id } from './common';
+import { Id, Zeitpunkt } from './common';
 
 export const Position = z.object({
   id: Id,
@@ -17,6 +17,15 @@ export const Position = z.object({
   /** Heute nur 'extra-shot' — bewusst Liste statt Flag, damit Spaeteres ein Datensatz ist. */
   modifikatoren: z.array(z.string().min(1)).default([]),
   durchgangId: Id.optional(),
+  /**
+   * Paket 06, Etappe E: das 20-Positionen-Fenster fuer die Koffein-/
+   * Kaennchen-/Bohnen-Vorbelegung (domain/ranking.ts::vorbelegung,
+   * konzept.md:1005) braucht eine chronologische Reihenfolge je Person.
+   * IndexedDB sortiert einen Store ohne eigenen Index nach Schluessel
+   * (bei UUID-Schluesseln also nicht nach Anlegezeitpunkt) — deshalb ein
+   * eigener Zeitstempel statt sich auf die Lesereihenfolge zu verlassen.
+   */
+  ts: Zeitpunkt,
 });
 export type Position = z.infer<typeof Position>;
 

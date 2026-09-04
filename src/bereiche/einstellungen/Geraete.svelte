@@ -16,6 +16,10 @@
   // Alltagseinheit — ein Setup bindet Muehle+Bruehgeraet zusammen und wird
   // spaeter am Getraenk ausgewaehlt, waehrend Muehle/Bruehgeraet fuer sich
   // genommen nur Bausteine dafuer sind.
+  //
+  // Visueller Redesign-Reset, Paket 4 (Handoff Abschnitt 6 "Geräte"):
+  // jede Gruppe als Blatt mit Zeilen 56 px, Haarlinien, "›", "+ X" als
+  // letzte Zeile im Akzent statt separatem Textlink darunter.
 
   import { bestand } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -36,80 +40,89 @@
 <Kopfzeile titel="Geräte" {onZurueck} />
 
 <h2>Setups</h2>
-<ul class="liste">
+<div class="panel">
   {#each bestand.setups as s (s.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>{s.name}</button></li>
+    <button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>
+      <span class="name betont">{s.name}</span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </button>
   {/each}
-</ul>
-<button type="button" class="fusszeile betont" onclick={() => onOeffnenSetup()}>+ Setup</button>
+  <button type="button" class="anlegen" onclick={() => onOeffnenSetup()}>+ Setup</button>
+</div>
 
 <h2>Mühlen</h2>
-<ul class="liste">
+<div class="panel">
   {#each bestand.muehlen as m (m.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenMuehle(m.id)}>{m.name}</button></li>
+    <button type="button" class="zeile" onclick={() => onOeffnenMuehle(m.id)}>
+      <span class="name">{m.name}</span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </button>
   {/each}
-</ul>
-<button type="button" class="fusszeile" onclick={() => onOeffnenMuehle()}>+ Mühle</button>
+  <button type="button" class="anlegen" onclick={() => onOeffnenMuehle()}>+ Mühle</button>
+</div>
 
 <h2>Brühgeräte</h2>
-<ul class="liste">
+<div class="panel">
   {#each bestand.bruehgeraete as b (b.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenBruehgeraet(b.id)}>{b.name}</button></li>
+    <button type="button" class="zeile" onclick={() => onOeffnenBruehgeraet(b.id)}>
+      <span class="name">{b.name}</span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </button>
   {/each}
-</ul>
-<button type="button" class="fusszeile" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
+  <button type="button" class="anlegen" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
+</div>
 
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
+  /* Blatt mit Zeilen, 56 px, Haarlinien, "›" (Handoff Abschnitt 6 "Geräte").
+     Kein zentrales Muster fuer diese Form vorhanden (siehe
+     docs/design/offene-punkte-redesign.md, Punkt 8). */
+  .panel {
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
+    padding: 0 var(--r4);
+    margin-bottom: var(--r5);
+    display: flex;
+    flex-direction: column;
   }
-  .liste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .panel > :not(:first-child) {
+    border-top: 1px solid var(--linie);
   }
   .zeile {
     width: 100%;
-    display: block;
-    min-height: var(--treffer);
-    padding: var(--r2) 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
     border: none;
-    border-bottom: 1px solid var(--linie-zart);
     background: transparent;
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    color: var(--tinte);
     text-align: left;
     cursor: pointer;
-    transition: background var(--t-auswahl) var(--e-rein);
   }
-  .zeile:active {
-    background: var(--feld);
+  .name {
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
   }
-  .fusszeile {
-    display: block;
+  /* Setups sind die eigentliche Alltagseinheit (siehe Kopfkommentar) —
+     etwas staerker gesetzt als Muehlen/Bruehgeraete (Regel 3). */
+  .name.betont {
+    font-weight: var(--gw-titel);
+  }
+  .chevron {
+    color: var(--spur);
+    font-size: var(--fs-bedienwort);
+  }
+  .anlegen {
+    display: flex;
+    align-items: center;
     width: 100%;
-    min-height: var(--treffer);
-    margin-top: var(--r2);
-    background: none;
+    min-height: 56px;
     border: none;
+    background: transparent;
     color: var(--akzent);
     font-family: var(--schrift);
-    font-size: var(--fs-meta);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
-  }
-  /* Setups sind die eigentliche Alltagseinheit (siehe Kopfkommentar) — eine
-     einzige, etwas staerker gesetzte Anlege-Zeile statt drei gleichrangiger
-     "+ X" (Regel 3). Immer noch kein gefuellter Akzentknopf (Regel 6). */
-  .fusszeile.betont {
-    color: var(--tinte);
-    font-size: var(--fs-satz);
-    font-weight: var(--gw-titel);
   }
 </style>

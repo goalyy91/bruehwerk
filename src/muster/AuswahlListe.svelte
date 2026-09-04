@@ -23,6 +23,11 @@
   // Einzelauswahl.svelte), fuer Auswahlen wie die Herkunft-Zeile der
   // Temperaturtabelle. Rein additiv: wer es weglaesst (z. B. Aufbereitung
   // beim Kaffee), sieht nur den Text wie bisher.
+  //
+  // Visueller Redesign-Reset (Handoff 3.8 "Eingabefeld Text/Auswahl"):
+  // geschlossenes Feld = Vertiefung, Radius 4, "▾" in Spurfarbe. Die
+  // aufgeklappte Liste bleibt ein eigenes Blatt mit Haarlinien; eine
+  // gewählte Zeile bekommt jetzt die Füllfläche statt Fettschrift + Haken.
   type Zeichen = 'punkt' | 'ring' | 'gestrichelt';
 
   let {
@@ -96,17 +101,19 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    min-height: var(--treffer);
+    min-height: 38px;
     padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld);
+    border: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;
   }
   .feld.offen {
-    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
   .wert {
     display: inline-flex;
@@ -149,9 +156,9 @@
   .liste {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--feld-rahmen);
-    border-top: none;
-    background: var(--feld);
+    border-radius: 0 0 var(--r-wertfeld) var(--r-wertfeld);
+    overflow: hidden;
+    background: var(--blatt);
   }
   .zeile {
     display: flex;
@@ -161,7 +168,7 @@
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: none;
-    border-top: 1px solid var(--linie-zart);
+    border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--satz);
     font-family: var(--schrift);
@@ -170,10 +177,10 @@
     cursor: pointer;
   }
   .zeile.gewaehlt {
-    color: var(--tinte);
-    font-weight: var(--gw-titel);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .haken {
-    color: var(--akzent);
+    color: inherit;
   }
 </style>

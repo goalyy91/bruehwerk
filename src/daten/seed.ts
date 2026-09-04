@@ -9,10 +9,19 @@
  * vorheriger Start bereits geschrieben — dann wird nichts ueberschrieben.
  */
 import { alle, lesen, schreiben } from './ablage';
-import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM } from './stammdaten';
+import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM, AUFFAELLIGKEITEN_STAMM, PERSON_JULIAN } from './stammdaten';
+import { AROMASETS } from './aromen';
+import { GETRAENKE } from './stammdaten-getraenke';
 import { EINSTELLUNGEN_ID } from './schema';
 
 export async function seedFallsLeer(): Promise<void> {
+  // Paket 06 haengt die Cold-Brew-Karaffe (BRUEHGERAET_COLDBREW_KARAFFE) und
+  // ihr Setup an dieselben Listen — auf einem frischen Profil kommen sie
+  // automatisch mit. Auf einer bereits befuellten DB (dieses Gate greift
+  // nur bei komplett leerem 'bruehgeraet') muessten sie einmalig von Hand
+  // nachgetragen werden; bei einem einzigen Nutzer ohne echte Migrations-
+  // Infrastruktur ist das der bewusst einfachere Weg (siehe CLAUDE.md,
+  // Entscheidungsregel "einfachere vs. komplexere Loesung").
   const vorhandene = await alle('bruehgeraet');
   if (vorhandene.length === 0) {
     await schreiben('ablauf', ABLAUF_LEER);
@@ -24,9 +33,30 @@ export async function seedFallsLeer(): Promise<void> {
 
   // Eigenes Gate: der Symptom-Store bleibt leer, solange nur Geraete gesetzt
   // wurden (z. B. teilweise migrierte DB) — er wird unabhaengig geprueft.
+  // Die Fehlerliste des Verkostungsbogens (K53, AUFFAELLIGKEITEN_STAMM) lebt
+  // im selben Store (gruppe: 'auffaelligkeit', siehe daten/schema/shot.ts)
+  // und gehoert deshalb ins selbe Gate.
   const symptomeVorhanden = await alle('symptom');
   if (symptomeVorhanden.length === 0) {
-    for (const symptom of SYMPTOME_STAMM) await schreiben('symptom', symptom);
+    for (const symptom of [...SYMPTOME_STAMM, ...AUFFAELLIGKEITEN_STAMM]) await schreiben('symptom', symptom);
+  }
+
+  // Paket 05 — die zwei Aromen-Sets (SCA + Le-Nez-Platzhalter, daten/aromen.ts).
+  const aromasetsVorhanden = await alle('aromaset');
+  if (aromasetsVorhanden.length === 0) {
+    for (const aromaset of AROMASETS) await schreiben('aromaset', aromaset);
+  }
+
+  // Paket 06 — die neun Getraenke zum Start (daten/stammdaten-getraenke.ts).
+  const getraenkeVorhanden = await alle('getraenk');
+  if (getraenkeVorhanden.length === 0) {
+    for (const getraenk of GETRAENKE) await schreiben('getraenk', getraenk);
+  }
+
+  // Paket 06 — Standard ist Julian (konzept.md:683).
+  const personenVorhanden = await alle('person');
+  if (personenVorhanden.length === 0) {
+    await schreiben('person', PERSON_JULIAN);
   }
 
   // Eigenes Gate, unabhaengig vom Geraetepark oben — sonst wuerde der

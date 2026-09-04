@@ -29,6 +29,12 @@
   import Kopfzeile from '../muster/Kopfzeile.svelte';
   import Knopf from '../muster/Knopf.svelte';
   import Kontextmenue from '../muster/Kontextmenue.svelte';
+  import Segment from '../muster/Segment.svelte';
+  import Werteliste from '../muster/Werteliste.svelte';
+  import AuswahlListe from '../muster/AuswahlListe.svelte';
+  import Suchfeld from '../muster/Suchfeld.svelte';
+  import Kaffeekarte from '../muster/Kaffeekarte.svelte';
+  import Parameterkachel from '../muster/Parameterkachel.svelte';
 
   // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jetzt jeder Bildschirm
   // selbst, statt dass Rahmen.svelte sie fuer manche Routen von aussen
@@ -38,6 +44,9 @@
 
   let einzelauswahlDemo = $state('b');
   let schalterDemo = $state(true);
+  let segmentDemo = $state('single');
+  let auswahllisteDemo = $state('uebernommen');
+  let suchfeldDemo = $state('');
 
   const ZEICHEN_LEGENDE = [
     { klasse: 'gut', wort: 'gut' },
@@ -59,8 +68,8 @@
           <div class="label">{theme.toUpperCase()} · FLÄCHEN, TINTEN, ZEICHEN</div>
           <div class="flaechen">
             <span class="swatch" style:background="var(--grund)">--grund</span>
-            <span class="swatch" style:background="var(--ruhig)">--ruhig</span>
-            <span class="swatch" style:background="var(--feld)">--feld</span>
+            <span class="swatch" style:background="var(--blatt)">--blatt</span>
+            <span class="swatch" style:background="var(--vertiefung)">--vertiefung</span>
             <span class="swatch" style:background="var(--spur)">--spur</span>
             <span class="swatch akzent" style:background="var(--akzent)">--akzent</span>
           </div>
@@ -73,8 +82,8 @@
             {/each}
           </div>
           <div class="skala">
-            <span class="zahl" style:font-size="var(--fs-fuehrung)">38,4 g</span>
-            <span class="zahl" style:font-size="var(--fs-urteil)" style:color="var(--gedaempft)">≈ 6:10 min</span>
+            <span class="zahl" style:font-size="var(--fs-wert)">38,4 g</span>
+            <span class="zahl" style:font-size="var(--fs-wert)" style:color="var(--gedaempft)">≈ 6:10 min</span>
           </div>
         </div>
       </div>
@@ -368,11 +377,141 @@
     {/each}
   </section>
 
+  <!-- Segment — produktiv u. a. in KaffeeNeu.svelte (Single Origin/Blend) -->
   <section class="muster">
-    <h2>Kopfzeile · Formulare</h2>
+    <h2>Segment · Gleich breite Felder</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Segment
+          optionen={[
+            { wert: 'single', label: 'Single Origin' },
+            { wert: 'blend', label: 'Blend' },
+          ]}
+          wert={segmentDemo}
+          onWahl={(w) => (segmentDemo = w)}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- AuswahlListe — produktiv u. a. in TempReferenz.svelte (Herkunft-Auswahl) -->
+  <section class="muster">
+    <h2>AuswahlListe · Zuklappbares Auswahlfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <AuswahlListe
+          optionen={[
+            { wert: 'gemessen', label: 'gemessen', symbol: 'punkt' },
+            { wert: 'uebernommen', label: 'übernommen', symbol: 'ring' },
+            { wert: 'geschaetzt', label: 'geschätzt', symbol: 'gestrichelt' },
+          ]}
+          wert={auswahllisteDemo}
+          onWahl={(w) => (auswahllisteDemo = w)}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Suchfeld — produktiv einziger Aufrufer KaffeeListe.svelte -->
+  <section class="muster">
+    <h2>Suchfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Suchfeld wert={suchfeldDemo} onWert={(w) => (suchfeldDemo = w)} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kaffeekarte — Trägerform der Kaffeeliste (Handoff Abschnitt 5) -->
+  <section class="muster">
+    <h2>Kaffeekarte</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Kaffeekarte name="Espresso Entcoffeiniert" roester="Café Langen" roestgrad={4} bewertung={3.5} onOeffnen={() => {}} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Parameterkachel — zweispaltiges Raster, produktiv in Profilblatt/ShotErfassung -->
+  <section class="muster">
+    <h2>Parameterkachel · Raster</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <div class="parameter-raster">
+          <Parameterkachel symbol="input" label="Input" wert={18} einheit="g" onAendern={() => {}} />
+          <Parameterkachel symbol="mahlgrad" label="Mahlgrad" wert="3,65" onAendern={() => {}} />
+          <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={4} einheit="s" onAendern={() => {}} />
+          <Parameterkachel symbol="bruehgruppe" label="Brühgruppe" wert="≈94" einheit="°C" />
+          <Parameterkachel symbol="output" label="Output" wert={38.4} einheit="g" onAendern={() => {}} />
+          <Parameterkachel symbol="zeit" label="Zeit" wert={undefined} einheit="s" onAendern={() => {}} />
+        </div>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Werteliste — Spielraum-Editor in Profilblatt.svelte -->
+  <section class="muster">
+    <h2>Werteliste · Zeilen mit Wertfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Werteliste
+          zeilen={[
+            { label: 'Zeit ±', wert: 2, einheit: 's', onAendern: () => {} },
+            { label: 'Output ±', wert: 0.4, einheit: 'g', onAendern: () => {} },
+            { label: 'Durchlaufzeit ±', wert: 5, einheit: 's', onAendern: () => {} },
+          ]}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Formularzeile/Eingabefeld-Text — globale Utility (tokens.css), produktiv
+       in allen Geräteformularen (Bruehgeraetblatt, Muehleblatt, Setupblatt, …) -->
+  <section class="muster">
+    <h2>Formularzeile · Eingabefeld Text</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Bezeichnung</span>
+          <input class="eingabefeld-text" type="text" value="Timemore Sculptor" />
+        </div>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Nicht änderbar</span>
+          <input class="eingabefeld-text" type="text" value="gesperrt" disabled />
+        </div>
+      </div>
+    {/each}
+  </section>
+
+  <section class="muster">
+    <h2>Kopfzeile · Standard</h2>
     {#each ['hell', 'dunkel'] as const as theme (theme)}
       <div class="thema" data-theme={theme}>
         <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kopfzeile gross — Objektseiten (mit Rückweg, z. B. Kaffeeblatt) und
+       Root-Tab-Screens (ohne Rückweg, z. B. Kaffeeliste/Einstellungen) -->
+  <section class="muster">
+    <h2>Kopfzeile · Groß (32/600)</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} gross />
+        <Kopfzeile titel="Kaffees" gross />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Fokuszustand — global in tokens.css (:focus-visible), keine eigene
+       Muster-Komponente. Mit Tab anspringen, um den Ring zu prüfen. -->
+  <section class="muster">
+    <h2>Fokuszustand · Tastatur/Screenreader</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <button type="button" class="fokus-demo">mit Tab anspringen</button>
+        <p class="hinweis">Ring in Akzentfarbe, 2 px, unabhängig von jeder Auswahlmarkierung (Handoff 3.7).</p>
       </div>
     {/each}
   </section>
@@ -456,6 +595,17 @@
     color: var(--gedaempft);
     font-size: var(--fs-meta);
   }
+  .fokus-demo {
+    min-height: var(--treffer);
+    padding: 0 var(--r3);
+    border: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
+    color: var(--tinte);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    cursor: pointer;
+  }
 
   .tokenbeleg {
     display: flex;
@@ -487,7 +637,7 @@
     border: 1px solid var(--linie);
   }
   .swatch.akzent {
-    color: var(--h-papier);
+    color: var(--auf-fuellung);
   }
   .zeichenreihe {
     display: flex;
@@ -508,7 +658,7 @@
     border-radius: 50%;
   }
   .zeichen.gut {
-    background: var(--marke-gut);
+    background: var(--tinte);
   }
   .zeichen.achtung {
     border: 1px solid var(--achtung);

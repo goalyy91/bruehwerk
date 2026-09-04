@@ -13,8 +13,15 @@ export type Bereich = 'bar' | 'kaffees' | 'historie' | 'getraenke' | 'einstellun
 
 export type Route =
   | { name: 'bar' }
+  | { name: 'bestellungAufnehmen' }
+  | { name: 'bestellungPlan' }
+  | { name: 'bestellungAbarbeiten' }
   | { name: 'historie' }
+  | { name: 'historieShot'; shotId: string }
+  | { name: 'verkostung'; shotId: string }
   | { name: 'getraenke' }
+  | { name: 'getraenk'; id: string }
+  | { name: 'getraenkNeu'; vorlageId: string }
   | { name: 'kaffees' }
   | { name: 'kaffeeNeu' }
   | { name: 'kaffee'; kaffeeId: string }
@@ -34,7 +41,9 @@ export type Route =
   | { name: 'tempReferenz' }
   | { name: 'setup'; id: string }
   | { name: 'setupNeu' }
-  | { name: 'setupBearbeiten'; id: string };
+  | { name: 'setupBearbeiten'; id: string }
+  | { name: 'uebung' }
+  | { name: 'personen' };
 
 export const START: Route = { name: 'bar' };
 
@@ -42,10 +51,24 @@ export function zuPfad(route: Route): string {
   switch (route.name) {
     case 'bar':
       return '/bar';
+    case 'bestellungAufnehmen':
+      return '/bar/bestellung/aufnehmen';
+    case 'bestellungPlan':
+      return '/bar/bestellung/plan';
+    case 'bestellungAbarbeiten':
+      return '/bar/bestellung/abarbeiten';
     case 'historie':
       return '/historie';
+    case 'historieShot':
+      return `/historie/${route.shotId}`;
+    case 'verkostung':
+      return `/historie/${route.shotId}/verkostung`;
     case 'getraenke':
       return '/getraenke';
+    case 'getraenk':
+      return `/getraenke/${route.id}`;
+    case 'getraenkNeu':
+      return `/getraenke/neu/${route.vorlageId}`;
     case 'kaffees':
       return '/kaffees';
     case 'kaffeeNeu':
@@ -86,6 +109,10 @@ export function zuPfad(route: Route): string {
       return `/einstellungen/geraete/setup/${route.id}/bearbeiten`;
     case 'tempReferenz':
       return '/einstellungen/geraete/bruehgeraet/temperatur';
+    case 'uebung':
+      return '/einstellungen/uebung';
+    case 'personen':
+      return '/einstellungen/personen';
   }
 }
 
@@ -94,8 +121,23 @@ export function ausPfad(pfad: string): Route {
   const t = pfad.split('/').filter(Boolean);
 
   if (t.length === 1 && t[0] === 'bar') return { name: 'bar' };
-  if (t.length === 1 && t[0] === 'historie') return { name: 'historie' };
-  if (t.length === 1 && t[0] === 'getraenke') return { name: 'getraenke' };
+  if (t[0] === 'bar' && t[1] === 'bestellung') {
+    if (t[2] === 'aufnehmen') return { name: 'bestellungAufnehmen' };
+    if (t[2] === 'plan') return { name: 'bestellungPlan' };
+    if (t[2] === 'abarbeiten') return { name: 'bestellungAbarbeiten' };
+  }
+
+  if (t[0] === 'getraenke') {
+    if (t.length === 1) return { name: 'getraenke' };
+    if (t.length === 2) return { name: 'getraenk', id: t[1]! };
+    if (t.length === 3 && t[1] === 'neu') return { name: 'getraenkNeu', vorlageId: t[2]! };
+  }
+
+  if (t[0] === 'historie') {
+    if (t.length === 1) return { name: 'historie' };
+    if (t.length === 2) return { name: 'historieShot', shotId: t[1]! };
+    if (t.length === 3 && t[2] === 'verkostung') return { name: 'verkostung', shotId: t[1]! };
+  }
 
   if (t[0] === 'kaffees') {
     if (t.length === 1) return { name: 'kaffees' };
@@ -114,6 +156,8 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 1) return { name: 'einstellungen' };
     if (t.length === 2 && t[1] === 'musterblatt') return { name: 'musterblatt' };
     if (t.length === 2 && t[1] === 'beobachtungen') return { name: 'beobachtungen' };
+    if (t.length === 2 && t[1] === 'uebung') return { name: 'uebung' };
+    if (t.length === 2 && t[1] === 'personen') return { name: 'personen' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
     if (t.length === 4 && t[1] === 'geraete' && t[2] === 'bruehgeraet' && t[3] === 'temperatur') {
       return { name: 'tempReferenz' };
@@ -152,6 +196,19 @@ export function elternVon(route: Route): Route | undefined {
     case 'kaffees':
     case 'einstellungen':
       return undefined;
+    case 'bestellungAufnehmen':
+      return { name: 'bar' };
+    case 'bestellungPlan':
+      return { name: 'bestellungAufnehmen' };
+    case 'bestellungAbarbeiten':
+      return { name: 'bestellungPlan' };
+    case 'historieShot':
+      return { name: 'historie' };
+    case 'getraenk':
+    case 'getraenkNeu':
+      return { name: 'getraenke' };
+    case 'verkostung':
+      return { name: 'historieShot', shotId: route.shotId };
     case 'kaffeeNeu':
       return { name: 'kaffees' };
     case 'kaffee':
@@ -165,6 +222,8 @@ export function elternVon(route: Route): Route | undefined {
     case 'geraete':
     case 'musterblatt':
     case 'beobachtungen':
+    case 'uebung':
+    case 'personen':
       return { name: 'einstellungen' };
     case 'muehle':
     case 'muehleNeu':
@@ -192,10 +251,17 @@ export function elternVon(route: Route): Route | undefined {
 export function tabVon(route: Route): Bereich {
   switch (route.name) {
     case 'bar':
+    case 'bestellungAufnehmen':
+    case 'bestellungPlan':
+    case 'bestellungAbarbeiten':
       return 'bar';
     case 'historie':
+    case 'historieShot':
+    case 'verkostung':
       return 'historie';
     case 'getraenke':
+    case 'getraenk':
+    case 'getraenkNeu':
       return 'getraenke';
     case 'kaffees':
     case 'kaffeeNeu':
@@ -218,6 +284,8 @@ export function tabVon(route: Route): Bereich {
     case 'setupNeu':
     case 'setupBearbeiten':
     case 'tempReferenz':
+    case 'uebung':
+    case 'personen':
       return 'einstellungen';
   }
 }

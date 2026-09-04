@@ -3,6 +3,16 @@
   // importiere) war fertig und getestet, aber an keiner Stelle verdrahtet.
   // CLAUDE.md nennt den manuellen Datei-Export ausdruecklich als zweiten,
   // anbieterfreien Backup-Weg neben dem noch nicht gewaehlten Cloud-Backend.
+  //
+  // Visueller Redesign-Reset, Paket 4: Sekundaer-Knoepfe (Vertiefung/
+  // Radius-Pille) statt eckig umrandeter Flaeche.
+  //
+  // Rueckmeldung (2026-08-24): als freistehende Knoepfe ohne Blattflaeche
+  // war nicht erkennbar, dass "Datei exportieren"/"Datei importieren"
+  // antippbar sind — jetzt dieselbe Blattzeile wie ueberall sonst auf der
+  // Einstellungen-Seite (Geraete verwalten, Beobachtungen, …), nur ohne
+  // Chevron: eine Blattzeile mit "›" verspricht einen Bildschirmwechsel,
+  // hier passiert die Aktion aber sofort an Ort und Stelle.
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
   import { bestand } from '../bestand.svelte';
@@ -54,9 +64,9 @@
 <h2>Backup</h2>
 <p class="hinweis">Vollständiger Bestand, kein Backend beteiligt — funktioniert auch, wenn ein späterer Cloud-Dienst ausfällt.</p>
 
-<div class="knopfreihe">
-  <button type="button" onclick={datenExportieren}>Datei exportieren</button>
-  <button type="button" onclick={() => dateiEingabe?.click()}>Datei importieren</button>
+<div class="panel schmal">
+  <button type="button" class="blattzeile" onclick={datenExportieren}>Datei exportieren</button>
+  <button type="button" class="blattzeile" onclick={() => dateiEingabe?.click()}>Datei importieren</button>
   <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
 </div>
 
@@ -74,32 +84,36 @@
 {/if}
 
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
-  }
   .hinweis {
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     margin: 0 0 var(--r3);
   }
-  .knopfreihe {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--r3);
-  }
-  button {
-    min-height: var(--treffer);
+  .panel {
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
     padding: 0 var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--linie);
-    color: var(--tinte);
+    display: flex;
+    flex-direction: column;
+  }
+  .panel.schmal {
+    margin-bottom: var(--r3);
+  }
+  .panel > :not(:first-child) {
+    border-top: 1px solid var(--linie);
+  }
+  .blattzeile {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 56px;
+    border: none;
+    background: transparent;
+    color: var(--akzent);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
+    text-align: left;
     cursor: pointer;
   }
   .fehler {

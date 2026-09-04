@@ -3,8 +3,15 @@ import { ausPfad, elternVon, tabVon, zuPfad, wurzelVon, START, type Route } from
 
 const ALLE_ROUTEN: Route[] = [
   { name: 'bar' },
+  { name: 'bestellungAufnehmen' },
+  { name: 'bestellungPlan' },
+  { name: 'bestellungAbarbeiten' },
   { name: 'historie' },
+  { name: 'historieShot', shotId: 's1' },
+  { name: 'verkostung', shotId: 's1' },
   { name: 'getraenke' },
+  { name: 'getraenk', id: 'g1' },
+  { name: 'getraenkNeu', vorlageId: 'g1' },
   { name: 'kaffees' },
   { name: 'kaffeeNeu' },
   { name: 'kaffee', kaffeeId: 'k1' },
@@ -25,6 +32,8 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'setupNeu' },
   { name: 'setupBearbeiten', id: 's1' },
   { name: 'tempReferenz' },
+  { name: 'uebung' },
+  { name: 'personen' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -67,6 +76,39 @@ describe('route — elternVon', () => {
 
   it('tempReferenz -> geraete (Fallback ohne eigene Verlaufstiefe)', () => {
     expect(elternVon({ name: 'tempReferenz' })).toEqual({ name: 'geraete' } satisfies Route);
+  });
+
+  it('verkostung -> historieShot -> historie -> Wurzel', () => {
+    const verkostung: Route = { name: 'verkostung', shotId: 's1' };
+    const shotblatt = elternVon(verkostung);
+    expect(shotblatt).toEqual({ name: 'historieShot', shotId: 's1' } satisfies Route);
+    const historie = elternVon(shotblatt!);
+    expect(historie).toEqual({ name: 'historie' } satisfies Route);
+    expect(elternVon(historie!)).toBeUndefined();
+  });
+
+  it('uebung -> einstellungen', () => {
+    expect(elternVon({ name: 'uebung' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
+  it('personen -> einstellungen', () => {
+    expect(elternVon({ name: 'personen' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
+  it('bestellungAbarbeiten -> bestellungPlan -> bestellungAufnehmen -> bar', () => {
+    const abarbeiten: Route = { name: 'bestellungAbarbeiten' };
+    const plan = elternVon(abarbeiten);
+    expect(plan).toEqual({ name: 'bestellungPlan' } satisfies Route);
+    const aufnehmen = elternVon(plan!);
+    expect(aufnehmen).toEqual({ name: 'bestellungAufnehmen' } satisfies Route);
+    const bar = elternVon(aufnehmen!);
+    expect(bar).toEqual({ name: 'bar' } satisfies Route);
+    expect(elternVon(bar!)).toBeUndefined();
+  });
+
+  it('getraenk und getraenkNeu -> getraenke', () => {
+    expect(elternVon({ name: 'getraenk', id: 'g1' })).toEqual({ name: 'getraenke' } satisfies Route);
+    expect(elternVon({ name: 'getraenkNeu', vorlageId: 'g1' })).toEqual({ name: 'getraenke' } satisfies Route);
   });
 
   it('muehle -> geraete -> einstellungen -> Wurzel', () => {

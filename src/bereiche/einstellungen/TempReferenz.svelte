@@ -23,8 +23,12 @@
   // auch beim reinen Ansehen einer bestehenden Tabelle (Regel 2/8) — jetzt
   // hinter "+ Messpunkt". Bleibt nach dem Hinzufuegen offen, weil eine
   // Messreihe meist aus mehreren Zeilen hintereinander besteht.
+  //
+  // Visueller Redesign-Reset, Paket 4: Zeilenliste als Blatt statt eckig
+  // umrandet, Eingabefelder ueber die globale Utility .eingabefeld-text.
 
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
   import type { TempReferenzPunkt } from '../../daten/schema';
 
   let { werte, onAendern }: { werte: TempReferenzPunkt[]; onAendern: (werte: TempReferenzPunkt[]) => void } = $props();
@@ -64,9 +68,9 @@
 {#if reihe.length === 0}
   <p class="hinweis">keine Messreihe</p>
 {:else}
-  <ul class="liste">
+  <div class="panel">
     {#each reihe as punkt, i (i)}
-      <li class="zeile">
+      <div class="zeile">
         <span class="zeichen" class:voll={punkt.herkunft === 'gemessen'} class:ring={punkt.herkunft === 'uebernommen'} class:gestrichelt={punkt.herkunft === 'geschaetzt'}></span>
         <span class="werte">
           <span class="zahl">{punkt.kt} °C Kessel</span>
@@ -75,20 +79,20 @@
           </span>
         </span>
         <button type="button" class="entfernen" onclick={() => zeileEntfernen(i)}>entfernen</button>
-      </li>
+      </div>
     {/each}
-  </ul>
+  </div>
 {/if}
 
 {#if formularOffen}
   <div class="neue-zeile">
-    <label>Kessel <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
-    <label>Gruppe <input type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
+    <label>Kessel <input class="eingabefeld-text zahl" type="text" inputmode="decimal" placeholder="°C" bind:value={neuKt} /></label>
+    <label>Gruppe <input class="eingabefeld-text zahl" type="text" inputmode="decimal" placeholder="°C" bind:value={neuGruppe} /></label>
     <div class="herkunft-feld">
       <span class="feld-label">Herkunft</span>
       <AuswahlListe optionen={HERKUNFT_OPTIONEN} wert={neuHerkunft} onWahl={(w) => (neuHerkunft = w as TempReferenzPunkt['herkunft'])} />
     </div>
-    <button type="button" class="hinzufuegen" onclick={zeileHinzufuegen} disabled={neuKt === '' || neuGruppe === ''}>Zeile hinzufügen</button>
+    <Knopf stufe="primaer" onKlick={zeileHinzufuegen} deaktiviert={neuKt === '' || neuGruppe === ''}>Zeile hinzufügen</Knopf>
   </div>
 {:else}
   <button type="button" class="messpunkt-oeffnen" onclick={() => (formularOffen = true)}>+ Messpunkt</button>
@@ -96,28 +100,33 @@
 
 <style>
   h3 {
-    font-size: var(--fs-label);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
     color: var(--gedaempft);
     font-weight: var(--gw-text);
-    margin: var(--r4) 0 var(--r2);
+    margin: var(--r5) 0 var(--r-kachelabstand);
   }
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }
-  .liste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .panel {
+    background: var(--blatt);
+    border-radius: var(--r-blatt);
+    padding: 0 var(--r4);
+    display: flex;
+    flex-direction: column;
+  }
+  .panel > :not(:first-child) {
+    border-top: 1px solid var(--linie);
   }
   .zeile {
     display: flex;
     align-items: center;
     gap: var(--r3);
     min-height: var(--treffer);
-    border-bottom: 1px solid var(--linie-zart);
   }
   .zeichen {
     flex: none;
@@ -148,6 +157,7 @@
     color: var(--tinte);
   }
   .abgeleitet {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
   }
@@ -170,13 +180,11 @@
     width: 100%;
     min-height: var(--treffer);
     margin-top: var(--r3);
-    padding-top: var(--r3);
     border: none;
-    border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--akzent);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
   }
@@ -185,27 +193,18 @@
     flex-direction: column;
     gap: var(--r2);
     margin-top: var(--r3);
-    padding-top: var(--r3);
-    border-top: 1px solid var(--linie);
   }
   .neue-zeile label {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--r2);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
   }
-  .neue-zeile input {
-    width: var(--feld-min);
-    font-family: var(--schrift);
-    font-variant-numeric: var(--zahl-features);
-    font-size: var(--fs-satz);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
-    color: var(--tinte);
-    padding: var(--r1) var(--r2);
-    min-height: var(--treffer);
+  .neue-zeile .eingabefeld-text {
+    flex: 0 0 var(--feld-min);
     text-align: right;
   }
   .herkunft-feld {
@@ -215,20 +214,8 @@
     align-items: stretch;
   }
   .feld-label {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
-  }
-  .hinzufuegen {
-    min-height: var(--treffer);
-    background: var(--feld);
-    border: 1px solid var(--linie);
-    color: var(--tinte);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    cursor: pointer;
-  }
-  .hinzufuegen:disabled {
-    opacity: 0.5;
-    cursor: default;
   }
 </style>

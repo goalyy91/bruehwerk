@@ -57,13 +57,14 @@
     gap: 6px;
     min-height: var(--treffer);
     padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    border: none;
+    border-radius: var(--r-pille);
+    background: var(--vertiefung);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .zeichen {
     display: inline-block;
@@ -82,8 +83,17 @@
     border: 1px dashed var(--gedaempft);
   }
   .chip.gewaehlt {
-    color: var(--tinte);
-    font-weight: var(--gw-titel);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
+  }
+  /* Das Herkunftszeichen ist gegen --tinte/--gedaempft gezeichnet — auf der
+     Füllfläche braucht es die Gegenfarbe, sonst verschwindet es im Dunkel-
+     Theme (--fuellung ist dort hell, --tinte ist es dort ebenfalls). */
+  .chip.gewaehlt .zeichen.voll {
+    background: var(--auf-fuellung);
+  }
+  .chip.gewaehlt .zeichen.ring,
+  .chip.gewaehlt .zeichen.gestrichelt {
+    border-color: var(--auf-fuellung);
   }
 </style>

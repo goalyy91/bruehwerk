@@ -12,14 +12,13 @@
   // hier ist nur noch Verdrahtung.
   //
   // Fuenf Bereiche (Navigation, docs/konzept.md), Trefferflaeche 48 px,
-  // Safe-Area unten. Zwei Bereiche zeigen eine ehrliche "kommt in Paket
-  // X"-Zeile statt einer Attrappe.
+  // Safe-Area unten. Alle fuenf sind inzwischen echte Bildschirme — Paket
+  // 06 traegt noch die eigentliche Bestellung an der Bar nach (Etappen E/F).
 
   import { onMount } from 'svelte';
   import { bestand } from './bestand.svelte';
   import { navigation } from './navigation.svelte';
   import { tabVon, zuPfad, type Bereich } from './route';
-  import Kopfzeile from '../muster/Kopfzeile.svelte';
   import Bar from './bar/Bar.svelte';
   import KaffeeListe from './kaffees/KaffeeListe.svelte';
   import KaffeeNeu from './kaffees/KaffeeNeu.svelte';
@@ -39,12 +38,22 @@
   import Setupblatt from './einstellungen/Setupblatt.svelte';
   import Musterblatt from './Musterblatt.svelte';
   import Beobachtungen from './einstellungen/Beobachtungen.svelte';
+  import Historie from './historie/Historie.svelte';
+  import Shotblatt from './historie/Shotblatt.svelte';
+  import Verkostungsbogen from './tasting/Verkostungsbogen.svelte';
+  import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
+  import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
+  import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
+  import Personen from './einstellungen/Personen.svelte';
+  import BestellungAufnehmen from './bar/BestellungAufnehmen.svelte';
+  import BestellungPlan from './bar/BestellungPlan.svelte';
+  import BestellungAbarbeiten from './bar/BestellungAbarbeiten.svelte';
 
   const BEREICHE: { id: Bereich; label: string; gebaut: boolean }[] = [
     { id: 'bar', label: 'Bar', gebaut: true },
     { id: 'kaffees', label: 'Kaffees', gebaut: true },
-    { id: 'historie', label: 'Historie', gebaut: false },
-    { id: 'getraenke', label: 'Getränke', gebaut: false },
+    { id: 'historie', label: 'Historie', gebaut: true },
+    { id: 'getraenke', label: 'Getränke', gebaut: true },
     { id: 'einstellungen', label: 'Einstellungen', gebaut: true },
   ];
 
@@ -77,7 +86,20 @@
         {#if bestand.ladeFehler}
           <p class="fehler">Bestand konnte nicht geladen werden: {bestand.ladeFehler.message}</p>
         {:else if route.name === 'bar'}
-      <Bar />
+      <Bar onOeffnenBestellung={() => navigation.gehe({ name: 'bestellungAufnehmen' })} />
+    {:else if route.name === 'bestellungAufnehmen'}
+      <BestellungAufnehmen
+        onZurueck={() => navigation.zurueck()}
+        onWeiterZumPlan={() => navigation.gehe({ name: 'bestellungPlan' })}
+      />
+    {:else if route.name === 'bestellungPlan'}
+      <BestellungPlan
+        onZurueck={() => navigation.zurueck()}
+        onWeiterZumAbarbeiten={() => navigation.gehe({ name: 'bestellungAbarbeiten' })}
+        onZurueckZumAufnehmen={() => navigation.gehe({ name: 'bestellungAufnehmen' })}
+      />
+    {:else if route.name === 'bestellungAbarbeiten'}
+      <BestellungAbarbeiten onZurueck={() => navigation.zurueck()} onAbgeschlossen={() => navigation.ersetze({ name: 'bar' })} />
     {:else if route.name === 'kaffees'}
       <KaffeeListe
         onOeffnen={(id) => navigation.gehe({ name: 'kaffee', kaffeeId: id })}
@@ -106,19 +128,45 @@
     {:else if route.name === 'shot'}
       <ShotErfassung profilId={route.profilId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'historie'}
-      <Kopfzeile titel="Historie" />
-      <p class="offen">Historie · kommt in Paket 05</p>
+      <Historie onOeffnen={(shotId) => navigation.gehe({ name: 'historieShot', shotId })} />
+    {:else if route.name === 'historieShot'}
+      <Shotblatt
+        shotId={route.shotId}
+        onZurueck={() => navigation.zurueck()}
+        onOeffnenVerkostung={() => navigation.gehe({ name: 'verkostung', shotId: route.shotId })}
+      />
+    {:else if route.name === 'verkostung'}
+      <Verkostungsbogen shotId={route.shotId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
     {:else if route.name === 'getraenke'}
-      <Kopfzeile titel="Getränke" />
-      <p class="offen">Getränke · kommt in Paket 06</p>
+      <GetraenkeListe onOeffnen={(id) => navigation.gehe({ name: 'getraenk', id })} />
+    {:else if route.name === 'getraenk'}
+      <Getraenkeblatt
+        getraenkId={route.id}
+        onZurueck={() => navigation.zurueck()}
+        onGespeichert={() => navigation.zurueck()}
+        onNeuAlsKopie={(vorlageId) => navigation.gehe({ name: 'getraenkNeu', vorlageId })}
+      />
+    {:else if route.name === 'getraenkNeu'}
+      <Getraenkeblatt
+        vorlageId={route.vorlageId}
+        onZurueck={() => navigation.zurueck()}
+        onGespeichert={(id) => navigation.ersetze({ name: 'getraenk', id })}
+        onNeuAlsKopie={(vorlageId) => navigation.ersetze({ name: 'getraenkNeu', vorlageId })}
+      />
     {:else if route.name === 'einstellungen'}
       <Einstellungen
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
         onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
+        onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
+        onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
       />
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'uebung'}
+      <Uebungsmodus onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'personen'}
+      <Personen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}
@@ -185,9 +233,16 @@
       >
         <span class="symbol" aria-hidden="true">
           {#if bereich.id === 'bar'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z" /><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17" /><path d="M8 3.5c0 1-1 1-1 2s1 1 1 2M12 3.5c0 1-1 1-1 2s1 1 1 2" /></svg>
+            <!-- Rueckmeldung 2026-08-24: dieselbe Tasse wie Parameterkachel.svelte
+                 (Symbol "output") statt der bisherigen Milchkaenchen-Silhouette —
+                 auf 24er-Raster skaliert (Quelle war 20er), gleiche Linienstaerke
+                 wie die uebrigen Tab-Icons. -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9.6h9.6v6a3 3 0 0 1-3 3h-3.6A3 3 0 0 1 6 15.6z" /><path d="M15.6 11.16h1.92a1.92 1.92 0 0 1 0 3.84H15.6" /><path d="M5.4 20.4h10.8" /></svg>
           {:else if bereich.id === 'kaffees'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c-3 2-2 3-4 5s-2 4 0 6 5 1 6-1-1-3 1-5 1-4-3-5Z" /><path d="M12 12.5c-.6.6-.4 1.2 0 1.6" /></svg>
+            <!-- Rueckmeldung 2026-08-24: dieselbe Bohnenform wie Bohnen.svelte
+                 (Kontur + S-Rille), als Outline statt Fuellflaeche, damit sie zu
+                 den uebrigen Strich-Icons der Leiste passt. -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4.5C8.7 5.9 6.5 8.9 6.5 12S8.7 18.1 12 19.5c3.3-1.4 5.5-4.4 5.5-7.5S15.3 5.9 12 4.5Z" /><path d="M12 6.1c-1.6 1.9-1 3.8.1 5.9s1.7 4 .1 5.9" /></svg>
           {:else if bereich.id === 'historie'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12a8 8 0 1 1 2.6 5.9" /><path d="M4 6v6h6" /><path d="M12 8v4l3 2" /></svg>
           {:else if bereich.id === 'getraenke'}
@@ -218,11 +273,25 @@
   /* Punkt 7 der Korrekturrunde: Ebenenwechsel-Uebergang. Reine
      CSS-Animation statt Sveltes JS-Transitions — nur so greift der
      bestehende globale prefers-reduced-motion-Block (tokens.css), der
-     animation-duration auf 1ms erzwingt. */
+     animation-duration auf 1ms erzwingt.
+
+     Rueckmeldung 2026-08-24 — echter Bug gefunden: "animation-fill-mode:
+     both" liess Chrome dieses Element dauerhaft (auch nach Animationsende)
+     als Containing Block fuer "position: fixed"-Nachfahren behandeln, weil
+     ein CSS-Animation-Effekt mit Fill "both"/"forwards" wirksam bleibt,
+     bis die Klasse ".vor"/".zurueck" wieder entfernt wird — das passiert
+     hier nie, {#key} erzeugt bei jedem Bildschirmwechsel ein komplett
+     neues Element. Ergebnis: KaffeeListe.svelte's schwebender "+"-Knopf
+     (position: fixed) verhielt sich wie position: absolute relativ zu
+     .ebene und scrollte mit dem Inhalt statt fix im Bild zu bleiben. Fill
+     "both" war hier ohnehin wirkungslos, weil die einzig definierte
+     Keyframe ("from") beim Animationsende ohnehin in die normale,
+     unanimierte Basisdarstellung dieses Elements zurueckfaellt (kein
+     "to" definiert) — das passiert mit oder ohne Fill-Mode identisch,
+     nur ohne "both" endet die Animation danach auch wirklich. */
   .ebene {
     animation-duration: var(--t-ebene);
     animation-timing-function: var(--e-rein);
-    animation-fill-mode: both;
   }
   .ebene.vor {
     animation-name: ebene-vor-ein;
@@ -242,10 +311,6 @@
       transform: translateX(-12px);
     }
   }
-  .offen {
-    color: var(--gedaempft);
-    font-size: var(--fs-satz);
-  }
   .fehler {
     color: var(--kritisch);
     font-size: var(--fs-satz);
@@ -253,10 +318,10 @@
   .leiste {
     display: flex;
     flex-shrink: 0;
-    /* Flaechenhierarchie ueber Farbe statt Schatten (Regel 6) — die
-       border-top-Linie plus --ruhig grenzen die Leiste bereits ab. */
-    border-top: 1px solid var(--linie);
-    background: var(--ruhig);
+    /* Visueller Redesign-Reset (Handoff 3.8 "Tab-Leiste"): kein Rand nach
+       oben mehr — die Fläche grenzt sich allein über Helligkeit ab
+       (--blatt gegen --grund, drei Flächenebenen statt Linie + Schatten). */
+    background: var(--blatt);
     padding-bottom: var(--safe-unten);
   }
   .eintrag {
@@ -278,6 +343,11 @@
     width: var(--symbol-tab);
     height: var(--symbol-tab);
     display: block;
+    border-radius: var(--r-pille);
+    transition:
+      background var(--t-auswahl) var(--e-rein),
+      width var(--t-auswahl) var(--e-rein),
+      height var(--t-auswahl) var(--e-rein);
   }
   .symbol svg {
     width: 100%;
@@ -289,5 +359,17 @@
   .eintrag.aktiv {
     color: var(--akzent);
     font-weight: var(--gw-titel);
+  }
+  /* Rueckmeldung 2026-08-24: "sieht klein und verloren aus" — Handoff 3.8
+     nennt 64/24/11 woertlich, das bleibt die Basis (siehe Kommentar oben).
+     Als erster Schritt bekommt nur das aktive Icon mehr Praesenz: eigene
+     Flaeche (--badge, dieselbe Rolle wie die runden Icon-Badges in
+     Kaffeeblatt.svelte) und ein paar Pixel mehr Groesse, per negativem
+     Rand ohne Verschiebung der Beschriftung darunter. */
+  .eintrag.aktiv .symbol {
+    width: calc(var(--symbol-tab) + 8px);
+    height: calc(var(--symbol-tab) + 8px);
+    margin: -4px;
+    background: var(--badge);
   }
 </style>

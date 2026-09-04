@@ -1,13 +1,16 @@
 <script lang="ts">
   // Schalter — Ergaenzung zum Musterblatt (Paket 03, Korrekturrunde).
-  // Ein Kippschalter aus --spur/--akzent statt einer nativen Checkbox —
-  // kein OS-Kaestchen bricht mit der Laborbuch-Optik. Fuer Ja/Nein-
-  // Einstellungen ausserhalb des Alltagspfads (Filter, Formulare); im
-  // Alltagspfad selbst uebernehmen VorbelegteFrage/LesartUmschalter diese
-  // Rolle mit ihrer jeweils eigenen Bedeutung — der Schalter tritt ihnen
-  // nicht in den Weg, er fuellt nur die Luecke, die beide bewusst nicht
-  // abdecken (reine Einstellungen ohne Anteils-Begruendung oder
-  // Lesart-Bedeutung).
+  // Ein Kippschalter statt einer nativen Checkbox — kein OS-Kaestchen bricht
+  // mit der Laborbuch-Optik. Fuer Ja/Nein-Einstellungen ausserhalb des
+  // Alltagspfads (Filter, Formulare); im Alltagspfad selbst uebernehmen
+  // VorbelegteFrage/LesartUmschalter diese Rolle mit ihrer jeweils eigenen
+  // Bedeutung — der Schalter tritt ihnen nicht in den Weg, er fuellt nur die
+  // Luecke, die beide bewusst nicht abdecken (reine Einstellungen ohne
+  // Anteils-Begruendung oder Lesart-Bedeutung).
+  //
+  // Visueller Redesign-Reset (Handoff 3.8 "Schalter"): 52×32, Knopf 26; an =
+  // Füllfläche mit hellem/dunklem Knopf je Theme (--auf-fuellung), aus =
+  // Vertiefung.
 
   let {
     label,
@@ -49,26 +52,27 @@
   .schalter {
     flex-shrink: 0;
     position: relative;
-    width: 44px;
-    height: 26px;
-    background: var(--spur);
-    border-radius: 13px;
+    width: var(--schalter-breite);
+    height: var(--schalter-hoehe);
+    background: var(--vertiefung);
+    border-radius: var(--r-pille);
     transition: background var(--t-auswahl) var(--e-rein);
   }
   .schalter.an {
-    background: var(--akzent);
+    background: var(--fuellung);
   }
   .knopf {
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 20px;
-    height: 20px;
+    width: var(--schalter-knopf);
+    height: var(--schalter-knopf);
     border-radius: 50%;
-    background: var(--h-papier);
+    background: var(--blatt);
     transition: transform var(--t-auswahl) var(--e-rein);
   }
   .schalter.an .knopf {
-    transform: translateX(18px);
+    background: var(--auf-fuellung);
+    transform: translateX(20px);
   }
 </style>
