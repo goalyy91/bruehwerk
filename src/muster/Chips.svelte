@@ -116,6 +116,7 @@
                 type="button"
                 class="chip"
                 class:gewaehlt={z.phase === 'gewaehlt'}
+                class:leicht={z.phase === 'gewaehlt' && z.staerke === 'leicht'}
                 class:offen={z.phase === 'offen'}
                 onclick={() => klick(chip.id)}
               >
@@ -201,6 +202,13 @@
   .chip.gewaehlt {
     background: var(--fuellung);
     color: var(--auf-fuellung);
+  }
+  /* Redesign v2, Etappe 1: "leicht" bekommt die hellere Füllfläche statt
+     Grün — Farbe war irreführend (suggerierte "gut"). Stärke steht ohnehin
+     schon im Chip-Text (label()), die Füllintensität verstärkt sie nur. */
+  .chip.gewaehlt.leicht {
+    background: var(--fuellung-leicht);
+    color: var(--tinte);
   }
   .staerke-wahl {
     display: flex;

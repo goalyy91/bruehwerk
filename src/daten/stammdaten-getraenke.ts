@@ -32,7 +32,13 @@ export const GETRAENK_ESPRESSO: Getraenk = {
   aktiv: true,
   kategorie: 'schwarz',
   zubereitung: 'espresso',
-  basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'ganz', ausVorrat: false },
+  // Rückmeldung 2026-09-04: war faelschlich 'ganz' — ein Espresso braucht
+  // physisch nur einen Shot (halben Bezug), genau wie die Espresso-
+  // Komponente eines Cappuccino. Erst dadurch buendeln Espresso + Cappuccino
+  // derselben Bohne ueber die unveraenderte Logik in domain/plan.ts zu einem
+  // gemeinsamen Bezug ("Doppelbezug"), 0 g Verschnitt statt 9 g. Doppio
+  // bleibt bewusst 'ganz' — zwei Shots, die volle Bezugsmenge.
+  basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'halb', ausVorrat: false },
   fuellmenge: 80,
   ausgleich: null,
   gefaess: { name: 'Espressotasse', volumen: 80 },

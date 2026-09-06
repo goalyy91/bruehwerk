@@ -29,6 +29,7 @@
 
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import type { TempReferenzPunkt } from '../../daten/schema';
 
   let { werte, onAendern }: { werte: TempReferenzPunkt[]; onAendern: (werte: TempReferenzPunkt[]) => void } = $props();
@@ -68,7 +69,7 @@
 {#if reihe.length === 0}
   <p class="hinweis">keine Messreihe</p>
 {:else}
-  <div class="panel">
+  <Blattliste>
     {#each reihe as punkt, i (i)}
       <div class="zeile">
         <span class="zeichen" class:voll={punkt.herkunft === 'gemessen'} class:ring={punkt.herkunft === 'uebernommen'} class:gestrichelt={punkt.herkunft === 'geschaetzt'}></span>
@@ -81,7 +82,7 @@
         <button type="button" class="entfernen" onclick={() => zeileEntfernen(i)}>entfernen</button>
       </div>
     {/each}
-  </div>
+  </Blattliste>
 {/if}
 
 {#if formularOffen}
@@ -112,16 +113,9 @@
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
+  /* Blattflaeche + Trennlinie kommen jetzt von Blattliste.svelte (Etappe 8,
+     Block D) — das Herkunftszeichen und der "entfernen"-Knopf bleiben lokal,
+     kein Blattzeile-Kandidat (keine Navigation, kein Chevron). */
   .zeile {
     display: flex;
     align-items: center;

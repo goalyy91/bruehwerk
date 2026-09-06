@@ -23,6 +23,8 @@
 
   import { bestand } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
 
   let {
     onZurueck,
@@ -40,89 +42,30 @@
 <Kopfzeile titel="Geräte" {onZurueck} />
 
 <h2>Setups</h2>
-<div class="panel">
+<Blattliste>
   {#each bestand.setups as s (s.id)}
-    <button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>
-      <span class="name betont">{s.name}</span>
-      <span class="chevron" aria-hidden="true">›</span>
-    </button>
+    <Blattzeile label={s.name} betont onKlick={() => onOeffnenSetup(s.id)} />
   {/each}
-  <button type="button" class="anlegen" onclick={() => onOeffnenSetup()}>+ Setup</button>
-</div>
+  <Blattzeile label="+ Setup" akzent chevron={false} onKlick={() => onOeffnenSetup()} />
+</Blattliste>
 
 <h2>Mühlen</h2>
-<div class="panel">
+<Blattliste>
   {#each bestand.muehlen as m (m.id)}
-    <button type="button" class="zeile" onclick={() => onOeffnenMuehle(m.id)}>
-      <span class="name">{m.name}</span>
-      <span class="chevron" aria-hidden="true">›</span>
-    </button>
+    <Blattzeile label={m.name} onKlick={() => onOeffnenMuehle(m.id)} />
   {/each}
-  <button type="button" class="anlegen" onclick={() => onOeffnenMuehle()}>+ Mühle</button>
-</div>
+  <Blattzeile label="+ Mühle" akzent chevron={false} onKlick={() => onOeffnenMuehle()} />
+</Blattliste>
 
 <h2>Brühgeräte</h2>
-<div class="panel">
+<Blattliste>
   {#each bestand.bruehgeraete as b (b.id)}
-    <button type="button" class="zeile" onclick={() => onOeffnenBruehgeraet(b.id)}>
-      <span class="name">{b.name}</span>
-      <span class="chevron" aria-hidden="true">›</span>
-    </button>
+    <Blattzeile label={b.name} onKlick={() => onOeffnenBruehgeraet(b.id)} />
   {/each}
-  <button type="button" class="anlegen" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
-</div>
+  <Blattzeile label="+ Brühgerät" akzent chevron={false} onKlick={() => onOeffnenBruehgeraet()} />
+</Blattliste>
 
-<style>
-  /* Blatt mit Zeilen, 56 px, Haarlinien, "›" (Handoff Abschnitt 6 "Geräte").
-     Kein zentrales Muster fuer diese Form vorhanden (siehe
-     docs/design/offene-punkte-redesign.md, Punkt 8). */
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    margin-bottom: var(--r5);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
-  .zeile {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 56px;
-    border: none;
-    background: transparent;
-    font-family: var(--schrift);
-    text-align: left;
-    cursor: pointer;
-  }
-  .name {
-    font-size: var(--fs-bedienwort);
-    color: var(--tinte);
-  }
-  /* Setups sind die eigentliche Alltagseinheit (siehe Kopfkommentar) —
-     etwas staerker gesetzt als Muehlen/Bruehgeraete (Regel 3). */
-  .name.betont {
-    font-weight: var(--gw-titel);
-  }
-  .chevron {
-    color: var(--spur);
-    font-size: var(--fs-bedienwort);
-  }
-  .anlegen {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 56px;
-    border: none;
-    background: transparent;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-bedienwort);
-    text-align: left;
-    cursor: pointer;
-  }
-</style>
+<!-- Kein lokales CSS mehr — Blattliste/Blattzeile.svelte (src/muster/)
+     tragen jetzt die gesamte Darstellung (Etappe 8, Block D). "Setup" bleibt
+     stärker gesetzt als Mühle/Brühgerät über den `betont`-Prop, dieselbe
+     Regel wie vorher (Setups sind die eigentliche Alltagseinheit). -->

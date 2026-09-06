@@ -14,6 +14,14 @@
  * Eine Füllfläche je Theme für Auswahl UND Primäraktion (Handoff 3.1/3.6) —
  * deshalb kein „--marke-gut" mehr: „gewählt" ist ab jetzt ausschließlich
  * die Füllfläche, nie ein zusätzliches Zeichen obendrauf.
+ *
+ * Redesign v2 (docs/design/offene-punkte-redesign.md, Abschnitt 21+):
+ * `--schatten`/`--schatten-weich` sind neu und widersprechen Handoff
+ * "NICHT VERHANDELBAR: keine Schatten, nirgends" — bewusst, mit Julians
+ * Freigabe ("Designregeln sind vorab gelockert") und am Bildsprache-Mockup
+ * über fünf Rückmelderunden unwidersprochen bestätigt. Sparsam einsetzen:
+ * nur bei angehobenen/tappbaren Flächen (Primäraktion, Bestandkarte), nicht
+ * als generelle "Elevation" auf jeder Karte.
  */
 
 @import '@fontsource-variable/source-serif-4';
@@ -31,10 +39,13 @@
   --h-gedaempft: #8a8175;
   --h-akzent: #a2643b;
   --h-fuellung: #83553a;
+  --h-fuellung-leicht: #d9b7a0;
   --h-auf-fuellung: #f7efe4;
   --h-badge: #f4ece1;
   --h-achtung: #7d6415;
   --h-kritisch: #93332a;
+  --h-schatten: rgba(41, 28, 18, 0.16);
+  --h-schatten-weich: rgba(41, 28, 18, 0.08);
 
   /* ---- Rohfarben DUNKEL · immer definiert (Handoff 3.1/7) ---- */
   --d-grund: #17140f;
@@ -47,10 +58,13 @@
   --d-gedaempft: #948c81;
   --d-akzent: #d29a66;
   --d-fuellung: #e0ae79;
+  --d-fuellung-leicht: #8f6c4d;
   --d-auf-fuellung: #221d18;
   --d-badge: #2b2620;
   --d-achtung: #c9a15a;
   --d-kritisch: #cd7a63;
+  --d-schatten: rgba(0, 0, 0, 0.5);
+  --d-schatten-weich: rgba(0, 0, 0, 0.3);
 
   /* ---- Zuordnung · HELL ist Standard ---- */
   --grund: var(--h-grund);
@@ -63,10 +77,13 @@
   --gedaempft: var(--h-gedaempft);
   --akzent: var(--h-akzent);
   --fuellung: var(--h-fuellung);
+  --fuellung-leicht: var(--h-fuellung-leicht);
   --auf-fuellung: var(--h-auf-fuellung);
   --badge: var(--h-badge);
   --achtung: var(--h-achtung);
   --kritisch: var(--h-kritisch);
+  --schatten: var(--h-schatten);
+  --schatten-weich: var(--h-schatten-weich);
 
   /* ---- Schrift (Handoff 3.2) ---- */
   --schrift: 'Source Serif 4 Variable', Georgia, serif; /* trägt allen Inhalt */
@@ -84,6 +101,7 @@
   --fs-kachel-label: 10.5px; /* Sans, Versalien, .12em */
   --fs-meta: 12px; /* Sans, Meta/Einheit/Zählform/Datum, gedämpft */
   --fs-label: 11px; /* Sans, Tab-Label */
+  --fs-erklaerung: 12.5px; /* Sans, gedämpfter Erklärsatz unter Schalter/Feld — Etappe 8, war 12.5/14.5px gemischt */
 
   --gw-text: 400;
   --gw-zahl: 500;
@@ -106,6 +124,7 @@
   --seitenrand: 22px;
   --safe-unten: env(safe-area-inset-bottom, 22px);
   --treffer: 48px; /* Trefferfläche ≥ 48, nicht verhandelbar */
+  --blattzeile: 56px; /* Zeile in Blattliste/Blattzeile — Etappe 8: ersetzt 48/56/60px-Streuung */
   --fusszeile: 64px; /* Tab-Leiste (Handoff 3.8) */
   --angebot-duenn: 48px;
   --typspalte: 98px;
@@ -166,10 +185,13 @@
     --gedaempft: var(--d-gedaempft);
     --akzent: var(--d-akzent);
     --fuellung: var(--d-fuellung);
+    --fuellung-leicht: var(--d-fuellung-leicht);
     --auf-fuellung: var(--d-auf-fuellung);
     --badge: var(--d-badge);
     --achtung: var(--d-achtung);
     --kritisch: var(--d-kritisch);
+    --schatten: var(--d-schatten);
+    --schatten-weich: var(--d-schatten-weich);
   }
 }
 
@@ -185,10 +207,13 @@
   --gedaempft: var(--d-gedaempft);
   --akzent: var(--d-akzent);
   --fuellung: var(--d-fuellung);
+  --fuellung-leicht: var(--d-fuellung-leicht);
   --auf-fuellung: var(--d-auf-fuellung);
   --badge: var(--d-badge);
   --achtung: var(--d-achtung);
   --kritisch: var(--d-kritisch);
+  --schatten: var(--d-schatten);
+  --schatten-weich: var(--d-schatten-weich);
 }
 [data-theme='hell'] {
   --grund: var(--h-grund);
@@ -201,10 +226,13 @@
   --gedaempft: var(--h-gedaempft);
   --akzent: var(--h-akzent);
   --fuellung: var(--h-fuellung);
+  --fuellung-leicht: var(--h-fuellung-leicht);
   --auf-fuellung: var(--h-auf-fuellung);
   --badge: var(--h-badge);
   --achtung: var(--h-achtung);
   --kritisch: var(--h-kritisch);
+  --schatten: var(--h-schatten);
+  --schatten-weich: var(--h-schatten-weich);
 }
 
 /* ---- Grundlagen, die an jedem Bildschirm gelten ---- */
@@ -246,6 +274,17 @@ button,
   font-variant-numeric: var(--zahl-features);
   font-weight: var(--gw-zahl);
   letter-spacing: -0.01em;
+}
+
+/* Bühnen-Zahl — Redesign v2, Etappe 3: erst lokal in Bar.svelte
+   (Bestandkarte), jetzt zweiter echter Aufrufer (Kaffeeblatt "Aktuelle
+   Charge"), deshalb hier statt zweimal lokal (ux-regeln.md Regel 6/12).
+   Kombiniert mit .zahl für tabular-nums; eigenständig fuer die Groesse,
+   damit sie ausserhalb von Bestand-Kontexten nicht ungewollt mitgezogen
+   wird. */
+.zahl-buehne {
+  font-size: 26px;
+  line-height: 1;
 }
 
 /* Parameterkachel-Raster (Handoff 3.8: "Raster 2 Spalten, Abstand 10") —

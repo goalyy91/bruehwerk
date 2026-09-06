@@ -74,6 +74,10 @@
     padding: 14px var(--r4);
     background: var(--blatt);
     border-radius: var(--r-blatt);
+    /* Redesign v2, Rückmeldung 2026-09-04 — dieselbe Karten-mit-Schatten-
+       Behandlung wie Kaffeeblatt.svelte .identitaet: ohne Schatten kaum vom
+       Papier-Hintergrund abgesetzt. */
+    box-shadow: 0 8px 22px -14px var(--schatten);
   }
   .zeile {
     display: contents;

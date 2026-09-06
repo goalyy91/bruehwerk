@@ -78,6 +78,9 @@ export async function seedFallsLeer(): Promise<void> {
       begruendungKoffein: true,
       begruendungBohne: true,
       sammelSchaeumen: 'einzeln',
+      bestandKnappBezuege: 2,
+      bestandFrischWochen: 8,
+      bestandEingefrorenMonate: 8,
     });
   }
 }

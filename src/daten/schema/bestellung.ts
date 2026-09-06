@@ -10,7 +10,14 @@ import { Id, Zeitpunkt } from './common';
 
 export const Position = z.object({
   id: Id,
-  personId: Id,
+  /**
+   * Redesign v2, Etappe 7 — optional statt Pflichtfeld: der Mengen-Modus
+   * (docs/konzept.md "Die Bestellung") nimmt Positionen mengenbasiert auf,
+   * ganz ohne Person. `undefined` bedeutet woertlich
+   * "keine Personenzuordnung, keine Historie" — kein Sonderfall-Wert wie
+   * eine "anonym"-Person, die die Personenliste verschmutzen wuerde.
+   */
+  personId: Id.optional(),
   getraenkId: Id,
   kaffeeId: Id,
   koffein: z.enum(['normal', 'entkoffeiniert']),

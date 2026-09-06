@@ -23,6 +23,16 @@ export const AppEinstellungen = z.object({
   begruendungKoffein: z.boolean().default(true),
   begruendungBohne: z.boolean().default(true),
   sammelSchaeumen: z.enum(['einzeln', 'gesammelt']).default('einzeln'),
+  /**
+   * Redesign v2, Etappe 2 — Schwellen fuer die Bestandsverwaltung
+   * (domain/vorrat.ts::brauchtAufmerksamkeit). Julians Vorgabe als Default:
+   * "knapp" unter 2 Bezuegen, "sollte bald raus" ab 8 Wochen frisch bzw. 8
+   * Monaten eingefroren — bewusst hier statt als Konstante in domain/, damit
+   * sie in den Einstellungen aenderbar sind.
+   */
+  bestandKnappBezuege: z.number().int().positive().default(2),
+  bestandFrischWochen: z.number().positive().default(8),
+  bestandEingefrorenMonate: z.number().positive().default(8),
 });
 export type AppEinstellungen = z.infer<typeof AppEinstellungen>;
 

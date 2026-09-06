@@ -13,9 +13,15 @@
   // Einstellungen-Seite (Geraete verwalten, Beobachtungen, …), nur ohne
   // Chevron: eine Blattzeile mit "›" verspricht einen Bildschirmwechsel,
   // hier passiert die Aktion aber sofort an Ort und Stelle.
+  //
+  // Etappe 8, Block E (2026-09-06): die eigene "Backup"-Ueberschrift entfaellt
+  // — Einstellungen.svelte traegt jetzt "Daten" als gemeinsame Ueberschrift
+  // fuer Migration und Backup (vier Gruppen statt sieben).
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
   import { bestand } from '../bestand.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
 
   let exportFehler = $state<string | undefined>(undefined);
   let importFehler = $state<string[] | undefined>(undefined);
@@ -61,14 +67,15 @@
   }
 </script>
 
-<h2>Backup</h2>
 <p class="hinweis">Vollständiger Bestand, kein Backend beteiligt — funktioniert auch, wenn ein späterer Cloud-Dienst ausfällt.</p>
 
-<div class="panel schmal">
-  <button type="button" class="blattzeile" onclick={datenExportieren}>Datei exportieren</button>
-  <button type="button" class="blattzeile" onclick={() => dateiEingabe?.click()}>Datei importieren</button>
-  <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
+<div class="aktionen">
+  <Blattliste>
+    <Blattzeile label="Datei exportieren" akzent chevron={false} onKlick={datenExportieren} />
+    <Blattzeile label="Datei importieren" akzent chevron={false} onKlick={() => dateiEingabe?.click()} />
+  </Blattliste>
 </div>
+<input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
 
 {#if exportFehler}
   <p class="fehler">Export fehlgeschlagen: {exportFehler}</p>
@@ -90,31 +97,12 @@
     font-size: var(--fs-meta);
     margin: 0 0 var(--r3);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel.schmal {
+  /* Blattliste.svelte traegt die Flaeche selbst, hier nur der Abstand zu den
+     Melde-Zeilen darunter (frueher .panel.schmal { margin-bottom }). Der
+     Wrapper ".aktionen" ist noetig, damit der :global()-Teil ausschliesslich
+     die Blattliste dieser Datei trifft, nicht jede andere auf der Seite. */
+  .aktionen :global(.blattliste) {
     margin-bottom: var(--r3);
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
-  .blattzeile {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 56px;
-    border: none;
-    background: transparent;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-bedienwort);
-    text-align: left;
-    cursor: pointer;
   }
   .fehler {
     color: var(--kritisch);

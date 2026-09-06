@@ -39,6 +39,20 @@
     onOeffnenShot: () => void;
   } = $props();
 
+  /** Etappe 8, Block C: Spielraum ist Einstellsache, keine Alltagsinformation — eingeklappter Start. */
+  let spielraumOffen = $state(false);
+
+  /**
+   * Fehlender Umschalter (Fund 2026-09-06): `profil.modus` wird bei "+ Profil"
+   * auf 'dialin' gesetzt (Kaffeeblatt.svelte) und danach nirgends mehr
+   * geändert — die Dashboard-Meldung "Dial-in offen" (domain/hinweise.ts)
+   * wäre ohne das hier unabstellbar.
+   */
+  async function alsEingefahrenMarkieren() {
+    if (!profil) return;
+    await schreiben('profil', { ...profil, modus: 'eingefahren' });
+  }
+
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
@@ -287,9 +301,18 @@
   </section>
 
   <section class="spielraum">
-    <h2>Spielraum</h2>
-    <Werteliste zeilen={spielraumZeilen} />
+    <button type="button" class="aufklappbar spielraum-kopf" aria-expanded={spielraumOffen} onclick={() => (spielraumOffen = !spielraumOffen)}>
+      <span>Spielraum</span>
+      <span class="pfeil" class:offen={spielraumOffen} aria-hidden="true">▾</span>
+    </button>
+    {#if spielraumOffen}
+      <Werteliste zeilen={spielraumZeilen} />
+    {/if}
   </section>
+
+  {#if profil.modus === 'dialin'}
+    <button type="button" class="link" onclick={() => void alsEingefahrenMarkieren()}>Als eingefahren markieren</button>
+  {/if}
 
   <section class="verlauf">
     <h2>Verlauf</h2>
@@ -393,6 +416,9 @@
     line-height: 1.4;
     color: var(--gedaempft);
   }
+  .spielraum {
+    margin-top: var(--r5);
+  }
   .verlauf {
     margin-top: var(--r5);
   }
@@ -436,6 +462,30 @@
   }
   .aufklappbar .pfeil.offen {
     transform: rotate(180deg);
+  }
+  /* Spielraum-Falte: derselbe Gruppenkopf-Look wie das globale <h2> (Sans-
+     Versalien, gedämpft) statt der leiseren Meta-Zeile von "Setup ändern" —
+     Spielraum bleibt eine Abschnittsüberschrift, nur zuklappbar. Reihenfolge
+     nach ".aufklappbar", damit diese Deklarationen die dortigen (Farbe,
+     Schriftgröße) überschreiben. */
+  .spielraum-kopf {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .link {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--akzent);
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    min-height: var(--treffer);
+    padding: 0;
+    margin-top: var(--r2);
+    cursor: pointer;
   }
   .hinweis {
     color: var(--gedaempft);

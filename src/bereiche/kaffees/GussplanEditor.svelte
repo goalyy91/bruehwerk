@@ -15,6 +15,7 @@
   // Vertiefung (offener Zustand), Textfelder ueber .eingabefeld-text.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
@@ -69,7 +70,7 @@
     if (!profil) return;
     speicherFehler = undefined;
     const neu: Gussplan = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       name: profil.name,
       gesamtwasser: profil.ziel.output || 1,
       lesart: 'kumulativ',

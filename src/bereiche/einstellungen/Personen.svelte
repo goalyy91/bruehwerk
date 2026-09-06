@@ -15,9 +15,11 @@
   // nichts groesser ist als ein Schalter oder ein kurzes Textfeld.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Suchfeld from '../../muster/Suchfeld.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import type { Person } from '../../daten/schema';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
@@ -39,7 +41,7 @@
     fehler = '';
     try {
       const neu: Person = {
-        id: crypto.randomUUID(),
+        id: neueId(),
         vorname,
         aktiv: true,
         standard: bestand.personen.length === 0,
@@ -84,7 +86,7 @@
 
 {#if fehler}<p class="fehler">{fehler}</p>{/if}
 
-<div class="panel">
+<Blattliste>
   {#each gefiltert as person (person.id)}
     <div class="eintrag">
       <button type="button" class="zeile" onclick={() => (bearbeiteId = bearbeiteId === person.id ? undefined : person.id)}>
@@ -132,7 +134,7 @@
   {#if gefiltert.length === 0 && !suchtext.trim()}
     <p class="hinweis">Noch niemand angelegt — Suchzeile tippen legt an.</p>
   {/if}
-</div>
+</Blattliste>
 
 <style>
   .suchzeile {
@@ -143,16 +145,9 @@
     font-size: var(--fs-satz);
     margin: 0 0 var(--r3);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .eintrag:not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
+  /* Blattflaeche + Trennlinie kommen jetzt von Blattliste.svelte (Etappe 8,
+     Block D) — das Zeileninnenleben hier (Aufklapp-Details) bleibt lokal,
+     kein Blattzeile-Kandidat. */
   .zeile {
     width: 100%;
     display: flex;

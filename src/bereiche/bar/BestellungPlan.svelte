@@ -9,8 +9,10 @@
   // unangetastet stehen, falls waehrenddessen eine Position dazukam.
 
   import { bestand, schreiben } from '../bestand.svelte';
-  import { planeBezuege, verschnittAngebotSichtbar, type Position as PlanPosition } from '../../domain/plan';
+  import { neueId } from '../../daten/id';
+  import { planeBezuege, verschnittAngebotSichtbar, bohnenwechselKandidaten, type Position as PlanPosition } from '../../domain/plan';
   import { geschaetzteDauer, reihenfolge, type ReihenfolgeDurchgang, type SetupNutzung } from '../../domain/ablauf';
+  import { bohnenSchnittmenge } from '../../domain/getraenk';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Herkunft from '../../muster/Herkunft.svelte';
   import Knopf from '../../muster/Knopf.svelte';
@@ -90,6 +92,24 @@
     return ids.map((id) => planbar.planbare.find((p) => p.position.id === id)?.position).filter((p): p is Position => !!p);
   }
 
+  /**
+   * Redesign v2, Rückmeldung 2026-09-04 — die eingeklappte Bezug-Zeile zeigte
+   * bisher nur den Kaffee-Namen. Zwei Bezüge derselben Bohne mit
+   * unterschiedlichen Getränken (z. B. "2× Cappuccino" und ein einzelner
+   * "Espresso") sahen dadurch wie ein Duplikat aus, statt erkennbar zwei
+   * verschiedene Bezüge zu sein. "3× Cappuccino" statt "Cappuccino +
+   * Cappuccino + Cappuccino" — gruppiert nach Getraenk-Id, mehrere
+   * unterschiedliche Getraenke bleiben mit "+" getrennt wie in
+   * BestellungAbarbeiten.svelte::getraenkNamen.
+   */
+  function getraenkeZusammenfassung(positionIds: readonly string[]): string {
+    const anzahlJeGetraenk = new Map<string, number>();
+    for (const pos of positionenVon(positionIds)) {
+      anzahlJeGetraenk.set(pos.getraenkId, (anzahlJeGetraenk.get(pos.getraenkId) ?? 0) + 1);
+    }
+    return [...anzahlJeGetraenk.entries()].map(([id, anzahl]) => (anzahl > 1 ? `${anzahl}× ${getraenkName(id)}` : getraenkName(id))).join(' + ');
+  }
+
   // Reihenfolge + geschaetzte Dauer (domain/ablauf.ts) — je Bezug ein
   // synthetischer Schluessel, weil planeBezuege() keine eigene Id vergibt.
   const reihenfolgeEingabe = $derived(
@@ -147,6 +167,37 @@
     verworfen = new Set([...verworfen, eintragId]);
   }
 
+  /**
+   * Vierter Weg (Rueckmeldung 2026-09-04): eine andere Bohne, die im selben
+   * Plan ebenfalls einen unpaarigen Rest hat (bohnenwechselKandidaten,
+   * domain/plan.ts), UND fuer dieses Getraenk/Koffein tatsaechlich geeignet
+   * ist (bohnenSchnittmenge, dieselbe Pruefung wie bei der Bohnenauswahl
+   * beim Aufnehmen — verhindert einen Wechsel ueber Koffein/Entkoffeiniert
+   * hinweg). Erste passende Bohne gewinnt, keine eigene Auswahl noetig.
+   */
+  function bohnenwechselZiel(eintrag: (typeof geordnet)[number]): { kaffeeId: string; name: string } | undefined {
+    const positionId = eintrag.durchgang.positionIds[0];
+    const pos = positionId ? bestand.positionen.find((p) => p.id === positionId) : undefined;
+    const getraenk = pos ? bestand.getraenke.find((g) => g.id === pos.getraenkId) : undefined;
+    if (!pos || !getraenk) return undefined;
+    const kandidatenIds = bohnenwechselKandidaten(bezugsplan, eintrag.durchgang.kaffeeId);
+    const geeignet = bohnenSchnittmenge(bestand.kaffees, getraenk.zubereitung, pos.koffein).filter((k) => kandidatenIds.includes(k.id));
+    const ziel = geeignet[0];
+    return ziel ? { kaffeeId: ziel.id, name: ziel.name } : undefined;
+  }
+
+  async function bohneWechseln(eintrag: (typeof geordnet)[number], zielKaffeeId: string) {
+    fehler = '';
+    const positionId = eintrag.durchgang.positionIds[0];
+    const pos = positionId ? bestand.positionen.find((p) => p.id === positionId) : undefined;
+    if (!pos) return;
+    try {
+      await schreiben('position', { ...pos, kaffeeId: zielKaffeeId });
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
   let aufgeklappt = $state<Set<number>>(new Set());
   function toggleAufklappen(i: number) {
     aufgeklappt = new Set(aufgeklappt.has(i) ? [...aufgeklappt].filter((x) => x !== i) : [...aufgeklappt, i]);
@@ -164,7 +215,7 @@
         const kaffee = bestand.kaffees.find((k) => k.id === d.kaffeeId);
         if (!profil || !setup || !kaffee?.aktuelleChargeId) continue;
         const neuerDurchgang: Durchgang = {
-          id: crypto.randomUUID(),
+          id: neueId(),
           geraetId: setup.bruehgeraetId,
           kaffeeId: d.kaffeeId,
           chargeId: kaffee.aktuelleChargeId,
@@ -213,7 +264,7 @@
   {#if planbar.unplanbar.length > 0}
     <p class="fehler">
       {#each planbar.unplanbar as u (u.position.id)}
-        {personName(u.position.personId)} · {getraenkName(u.position.getraenkId)} — {u.grund}<br />
+        {u.position.personId ? `${personName(u.position.personId)} · ` : ''}{getraenkName(u.position.getraenkId)} — {u.grund}<br />
       {/each}
     </p>
   {/if}
@@ -224,17 +275,19 @@
       {@const beteiligtePositionen = positionenVon(d.positionIds)}
       <div class="bezug-zeile">
         <button type="button" class="bezug-kopf" onclick={() => toggleAufklappen(i)}>
-          <span class="name">{kaffeeName(d.kaffeeId)}</span>
-          <span class="meta">
-            {beteiligtePositionen.length} {beteiligtePositionen.length === 1 ? 'Portion' : 'Portionen'}
-            {d.ungenutzterAnteil > 0 ? '· Verschnitt' : ''}
+          <span class="bezug-kopf-haupt">
+            <span class="name">{kaffeeName(d.kaffeeId)}</span>
+            <span class="getraenke">{getraenkeZusammenfassung(d.positionIds)}</span>
+          </span>
+          <span class="meta" class:verschnitt={d.ungenutzterAnteil > 0}>
+            {d.ungenutzterAnteil > 0 ? 'Verschnitt' : `${beteiligtePositionen.length} ${beteiligtePositionen.length === 1 ? 'Portion' : 'Portionen'}`}
           </span>
         </button>
         {#if aufgeklappt.has(i)}
           <div class="bezug-details">
             {#each beteiligtePositionen as pos (pos.id)}
               <p class="detail-zeile">
-                {personName(pos.personId)} · {getraenkName(pos.getraenkId)}
+                {pos.personId ? `${personName(pos.personId)} · ` : ''}{getraenkName(pos.getraenkId)}
                 {pos.modifikatoren.includes('extra-shot') ? '· Extra Shot' : ''}
               </p>
             {/each}
@@ -249,12 +302,22 @@
 
   {#if verschnittSichtbar}
     {#each verschnittZeilen as eintrag (eintrag.id)}
-      <div class="verschnitt-block">
-        <p class="verschnitt-text">Double Shot sinnvoll verwenden</p>
+      {@const wechselZiel = bohnenwechselZiel(eintrag)}
+      <div class="verschnitt-karte">
+        <p class="verschnitt-titel">
+          <span class="punkt" aria-hidden="true"></span>
+          {kaffeeName(eintrag.durchgang.kaffeeId)} · {getraenkeZusammenfassung(eintrag.durchgang.positionIds)}
+        </p>
+        <p class="verschnitt-satz">Double Shot sinnvoll verwenden</p>
         <div class="verschnitt-wege">
-          <button type="button" class="verschnitt-weg" onclick={() => verschnittExtraShot(eintrag)}>Extra Shot</button>
-          <button type="button" class="verschnitt-weg" onclick={onZurueckZumAufnehmen}>eigene Position</button>
-          <button type="button" class="verschnitt-weg" onclick={() => verschnittVerwerfen(eintrag.id)}>verwerfen</button>
+          <button type="button" class="weg-knopf" onclick={() => verschnittExtraShot(eintrag)}>Extra Shot</button>
+          <button type="button" class="weg-knopf" onclick={onZurueckZumAufnehmen}>eigene Position</button>
+          {#if wechselZiel}
+            <button type="button" class="weg-knopf" onclick={() => bohneWechseln(eintrag, wechselZiel.kaffeeId)}>
+              Bohne wechseln → {wechselZiel.name}
+            </button>
+          {/if}
+          <button type="button" class="weg-knopf still" onclick={() => verschnittVerwerfen(eintrag.id)}>verwerfen</button>
         </div>
       </div>
     {/each}
@@ -274,6 +337,9 @@
   .panel {
     background: var(--blatt);
     border-radius: var(--r-blatt);
+    /* Redesign v2, Rückmeldung 2026-09-04 — Karten-Schatten wie Kaffeeblatt
+       .identitaet, sonst kaum vom Papier-Hintergrund abgesetzt. */
+    box-shadow: 0 8px 22px -14px var(--schatten);
     padding: 0 var(--r4);
     margin-bottom: var(--r4);
     display: flex;
@@ -292,21 +358,40 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--r3);
-    min-height: 60px;
+    min-height: 64px;
     border: none;
     background: transparent;
     font-family: var(--schrift);
     text-align: left;
     cursor: pointer;
   }
+  /* Redesign v2, Rückmeldung 2026-09-04 — zwei Bezuege derselben Bohne mit
+     unterschiedlichen Getraenken sahen bisher wie ein Duplikat aus (nur der
+     Kaffee-Name stand da). Jetzt eine zweite Zeile mit der
+     Getraenke-Zusammenfassung (getraenkeZusammenfassung()). */
+  .bezug-kopf-haupt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
   .name {
     font-size: var(--fs-bedienwort);
     color: var(--tinte);
   }
+  .getraenke {
+    font-family: var(--schrift-sans);
+    font-size: 12.5px;
+    color: var(--gedaempft);
+  }
   .meta {
+    flex: none;
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
+  }
+  .meta.verschnitt {
+    color: var(--achtung);
   }
   .bezug-details {
     padding: 0 0 var(--r3);
@@ -329,32 +414,67 @@
     cursor: pointer;
     padding: var(--r1) 0;
   }
-  .verschnitt-block {
-    min-height: var(--treffer);
+  /* Redesign v2, Rückmeldung 2026-09-04 — vorher eine lose Textzeile mit drei
+     Textlinks direkt auf dem Grund, wirkte wie Beiwerk statt wie ein echtes
+     Angebot. Jetzt eine eigene, leicht getönte Karte (dieselbe
+     color-mix-Behandlung wie Kaffeeblatt .steckbrief-kachel), Wege als
+     Pillen-Knöpfe. Bleibt trotzdem ruhig — kein Ausrufezeichen, keine
+     Signalfarbe (konzept.md:738 "kein Ausrufezeichen, keine Farbe"). */
+  .verschnitt-karte {
+    background: color-mix(in srgb, var(--akzent) 7%, var(--blatt));
+    border-radius: var(--r-kachel);
+    padding: var(--r4);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--r2);
-    color: var(--gedaempft);
-    font-size: var(--fs-meta);
     margin: 0 0 var(--r4);
   }
-  .verschnitt-text {
+  .verschnitt-titel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .verschnitt-titel .punkt {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--akzent);
+    flex: none;
+  }
+  /* Rückmeldung 2026-09-04 — ohne Bezug war nicht erkennbar, welche der
+     mehreren Verschnitt-Karten sich auf welchen Bezug bezieht ("worauf sich
+     der Vorschlag bezieht muss klar sein, sonst weiß ich nicht, wo ich im
+     Zweifel was ändere"). Titel nennt jetzt Kaffee + Getränk, der erklärende
+     Satz rückt eine Zeile tiefer und wird gedämpft. */
+  .verschnitt-satz {
+    margin: 0;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
   }
   .verschnitt-wege {
     display: flex;
-    gap: var(--r3);
+    gap: var(--r2);
+    flex-wrap: wrap;
   }
-  .verschnitt-weg {
+  .weg-knopf {
     border: none;
-    background: none;
+    background: var(--blatt);
     color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-meta);
+    font-family: var(--schrift-sans);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: var(--r-pille);
     cursor: pointer;
-    padding: 0;
+  }
+  .weg-knopf.still {
+    color: var(--gedaempft);
+    background: transparent;
+    font-weight: 400;
   }
   .hinweis {
     color: var(--gedaempft);

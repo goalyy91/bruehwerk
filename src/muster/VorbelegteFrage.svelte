@@ -11,6 +11,20 @@
   // 40–60 % fragen ohne Vorbelegung · ≤ 40 % gar nicht fragen. Keine
   // Vorbelegung bei Rezepturänderungen (K12) — dafür gibt es kein
   // `anteil`-Prop, sondern der Aufrufer lässt `vorbelegung` einfach weg.
+  //
+  // Fund 2026-09-06: die "≤ 40 % gar nicht fragen"-Schwelle stand frueher
+  // ALS EIGENES Sichtbarkeits-Gate hier im Bauteil (anteil > 40) — doppelt
+  // zur Pruefung, die jeder echte Aufrufer schon selbst macht
+  // (`{#if getraenkId && koffeinVorbelegung.frage}` in BestellungAufnehmen.svelte
+  // und Bar.svelte). Bei einer brandneuen Person (0 Positionen) liefert
+  // domain/ranking.ts::vorbelegung() bewusst `frage: true, anteil: 0` — "frag
+  // trotzdem, beleg aber nichts vor" (siehe Test "fragt bei neuer Person,
+  // belegt aber nichts vor"). Das eigene Gate hier sah nur die 0 und blendete
+  // sich trotzdem aus — die Frage liess sich fuer eine neue Person nie
+  // beantworten, "Position hinzufuegen" blieb dauerhaft deaktiviert. Jetzt
+  // rendert dieses Bauteil immer, wenn es gemountet wird — die
+  // "≤ 40 %"-Entscheidung bleibt Sache des Aufrufers (`.frage`), nicht
+  // dieses Bauteils.
 
   import { untrack } from 'svelte';
 
@@ -29,7 +43,6 @@
   } = $props();
 
   const vorbelegtJa = $derived(anteil >= 60);
-  const zeigtSichUeberhaupt = $derived(anteil > 40);
   let antwort = $state<boolean | undefined>(
     untrack(() => start ?? (anteil >= 60 ? true : undefined)),
   );
@@ -40,36 +53,34 @@
   }
 </script>
 
-{#if zeigtSichUeberhaupt}
-  <div class="frage">
-    <div class="text">{frage}</div>
-    <div class="felder">
-      <button
-        type="button"
-        class="feld"
-        class:gewaehlt={antwort === true}
-        class:vorbelegt={vorbelegtJa && antwort === true}
-        onclick={() => waehle(true)}
-      >
-        Ja
-      </button>
-      <button
-        type="button"
-        class="feld"
-        class:gewaehlt={antwort === false}
-        onclick={() => waehle(false)}
-      >
-        Nein
-      </button>
-    </div>
-    {#if begruendung}
-      <div class="begruendung">
-        <span class="zeichen"></span>
-        {begruendung}
-      </div>
-    {/if}
+<div class="frage">
+  <div class="text">{frage}</div>
+  <div class="felder">
+    <button
+      type="button"
+      class="feld"
+      class:gewaehlt={antwort === true}
+      class:vorbelegt={vorbelegtJa && antwort === true}
+      onclick={() => waehle(true)}
+    >
+      Ja
+    </button>
+    <button
+      type="button"
+      class="feld"
+      class:gewaehlt={antwort === false}
+      onclick={() => waehle(false)}
+    >
+      Nein
+    </button>
   </div>
-{/if}
+  {#if begruendung}
+    <div class="begruendung">
+      <span class="zeichen"></span>
+      {begruendung}
+    </div>
+  {/if}
+</div>
 
 <style>
   .frage {

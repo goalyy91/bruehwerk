@@ -49,6 +49,35 @@
     entwurf.botanik = { ...basis, [feld]: wert };
   }
 
+  /**
+   * Redesign v2, Rückmeldung 2026-09-04 — "geeignet für" hatte bisher gar
+   * keine Bedienung: KaffeeNeu.svelte setzte hart [], nichts konnte es
+   * danach aendern. Folge: bohnenSchnittmenge() (domain/getraenk.ts) fand
+   * fuer jeden selbst angelegten Kaffee nie eine Bohne — "keine passende
+   * Bohne aktiv" in der Bestellung, unabhaengig vom Aufnahme-Modus.
+   * Optionen kommen aus den tatsaechlich vorhandenen Getraenken statt aus
+   * einer festen Liste, die mit neuen Zubereitungsarten veralten wuerde.
+   */
+  const ZUBEREITUNG_LABEL: Readonly<Record<string, string>> = {
+    espresso: 'Espresso',
+    moka: 'Moka',
+    pourover: 'Pour Over',
+    coldbrew: 'Cold Brew',
+  };
+  const zubereitungOptionen = $derived(
+    [...new Set(bestand.getraenke.map((g) => g.zubereitung))].map((z) => ({
+      wert: z,
+      label: ZUBEREITUNG_LABEL[z] ?? z,
+    })),
+  );
+
+  function geeignetFuerUmschalten(zubereitung: string, an: boolean) {
+    if (!entwurf) return;
+    entwurf.geeignetFuer = an
+      ? [...entwurf.geeignetFuer, zubereitung]
+      : entwurf.geeignetFuer.filter((z) => z !== zubereitung);
+  }
+
   function zahl(e: Event): number {
     return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
   }
@@ -104,8 +133,21 @@
     <div class="formularzeile">
       <Schalter label="entkoffeiniert" an={entwurf.entkoffeiniert} onWahl={(a) => (entwurf!.entkoffeiniert = a)} />
     </div>
-    <div class="formularzeile">
-      <Schalter label="aktiv" an={entwurf.aktiv} onWahl={(a) => (entwurf!.aktiv = a)} />
+    <!-- "aktiv" ist ab Etappe 8, Block B keine Formularzeile mehr — die
+         Verwaltungsaktion sitzt jetzt im ⋯-Kontextmenü des Kaffeeblatts
+         (Kaffeeblatt.svelte), außerhalb des Editiermodus. `entwurf.aktiv`
+         bleibt im Schema/Snapshot unverändert und wird beim Speichern hier
+         nur unangetastet mitgeschrieben. -->
+    <div class="formularzeile spalte">
+      <span class="formularzeile-label">Geeignet für</span>
+      <div class="geeignet-liste">
+        {#each zubereitungOptionen as opt (opt.wert)}
+          <Schalter label={opt.label} an={entwurf.geeignetFuer.includes(opt.wert)} onWahl={(a) => geeignetFuerUmschalten(opt.wert, a)} />
+        {/each}
+      </div>
+      {#if zubereitungOptionen.length === 0}
+        <p class="hinweis">Noch keine Getränke angelegt.</p>
+      {/if}
     </div>
   </section>
 
@@ -122,11 +164,9 @@
         <Sterne wert={entwurf.bewertung} onWahl={(w) => (entwurf!.bewertung = w)} />
       </div>
     </div>
-    <div class="formularzeile">
-      <span class="formularzeile-label">Röstgrad (Röster)</span>
-      <input class="eingabefeld-text" type="text" value={entwurf.roestgradRoester ?? ''}
-        onchange={(e) => (entwurf!.roestgradRoester = (e.currentTarget as HTMLInputElement).value || undefined)} />
-    </div>
+    <!-- Rückmeldung 2026-09-04: "Röstgrad (Röster)" entfernt — ein
+         Röstgrad-Zeichen (oben) reicht. Schema-Feld bleibt (unbenutzt),
+         damit alte Werte gültig bleiben. -->
   </section>
 
   <section class="gruppe">
@@ -245,6 +285,14 @@
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
+  }
+  /* Mehrfachauswahl "Geeignet für" — eine Reihe Schalter statt einer neuen
+     Auswahlkomponente, passend zur kleinen, festen Anzahl Zubereitungsarten. */
+  .geeignet-liste {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--r5);
+    row-gap: var(--r2);
   }
   .fehler {
     color: var(--kritisch);

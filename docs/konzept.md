@@ -388,6 +388,11 @@ Hast du vor dem Bezug am Mahlgrad gedreht, steht der neue Wert ohnehin schon im 
 
 Das *ist* die Alltagskorrektur. Kein eigener Modus, kein eigener Screen — ein Tap im Anschluss an einen ohnehin geloggten Shot.
 
+Der Übergang „ein eingefahrenes Profil" (Tabelle oben, Zeile „Ergebnis") ist ein bewusster Tap,
+keine Automatik: solange ein Profil auf „Dial-in" steht, zeigt das Profilblatt „Als eingefahren
+markieren" — die App schließt den Dial-in nie eigenmächtig, auch nicht nach vielen Shots
+(Redesign v2, Etappe 8).
+
 #### Wie die Werte dastehen K3 K5 K6
 
 Drei Entscheidungen aus der Gestaltung ändern, wie die Shot-Erfassung aussieht — und alle drei nehmen Arbeit weg.
@@ -514,6 +519,27 @@ Dieselbe Mechanik läuft über den Aroma-Freitext im Tasting. Ein *ignorieren* i
 | läuft schneller als die eigene Historie, Urteil ok | Drift oder neue Charge | einen Schritt feiner — als Alltagskorrektur, nicht als Dial-in |
 
 Die letzte Zeile ist die Brücke zwischen beiden Modi: Sie feuert ohne dass du etwas meldest, allein weil die App die Laufzeit dieses Profils über Wochen kennt.
+
+#### Wenn nur ein Symptom gewählt ist — die Achsen-Stufe
+
+*Nachtrag, Redesign v2, Etappe 5.* Die Tabelle oben verlangt fast überall mehrere Symptome
+gleichzeitig — „zu sauer" allein steht in keiner Zeile. In der Praxis wird aber selten die volle
+Lehrbuch-Kombination angetippt, meistens ein oder zwei Chips. Ohne eine zweite Stufe blieb die
+App dann stumm, obwohl sie etwas hätte sagen können.
+
+Deshalb gehört jedes der elf Symptome zusätzlich zu genau einer von fünf **Achsen** — derselben
+Gruppierung, die schon in der Tabelle steckt, hier nur benannt: Unterextraktion (sauer, dünn,
+schnell, salzig), Überextraktion (bitter, adstringent, langsam), KT zu hoch (brandig, stark),
+Konzentration zu niedrig (flach), Verteilung (ungleichmäßig). Passt keine Zeile der Tabelle
+exakt, gewinnt die Achse mit den meisten ausgewählten Symptomen; bei Gleichstand entscheidet die
+Reihenfolge der Tabelle. Diagnose, Empfehlungstext und Änderungsformel kommen unverändert von
+der passenden Tabellenzeile — nur die Voraussetzung, sie zu zeigen, ist weicher. Ein einzelnes
+„salzig" bekommt dabei die einfache Unterextraktion, nicht die verschärfte „starke
+Unterextraktion" — die bleibt der exakten Zwei-Symptom-Kombination vorbehalten.
+
+Ein Vorschlag aus dieser zweiten Stufe trägt eine gedämpfte Meta-Zeile „geschätzt aus
+Einzelbefund" — dieselbe Sprache wie bei geschätzten Zahlenwerten (K54/K13), kein neuer
+Sprachbaustein.
 
 #### Die Totzonen-Karte K40
 
@@ -687,6 +713,24 @@ Person, Getränk, Koffein, Bohne — in dieser Reihenfolge, und die Reihenfolge 
 
 Aufgenommene Positionen liegen in einer Falte oben und bleiben änderbar: Getränk, Bohne und Person K60. Jede Änderung lässt den Plan neu rechnen.
 
+#### Zwei Aufnahme-Wege — Modus A (Café-Style)
+
+*Nachtrag, Redesign v2, Etappe 7.* Der Weg oben — Person, Getränk, Koffein, Bohne — bleibt der
+Standardfall und ändert sich nicht. Daneben gibt es einen zweiten, mengenbasierten Weg: **Getränk,
+Menge, Koffein, Bohne**, ganz ohne Person. „3× Cappuccino, 2× Espresso" statt für jede Tasse
+erst jemanden auszuwählen — wie im Café, wo die Bestellung zählt, nicht wer sie bekommt.
+
+Eine Position aus Modus A trägt keine Person — nicht als Sonderwert wie „anonym", sondern
+wörtlich keine. Sie fließt deshalb auch in keine personenbezogene Historie oder Vorbelegung ein;
+die Getränke-Rangliste zählt in diesem Modus café-weit statt je Person. Koffein wird ohne
+Vorbelegung gefragt (keine Historie, an die sich anlehnen ließe), eine Extra-Shot-Frage entfällt
+beim Aufnehmen — bei „3× Cappuccino" ist unklar, welche der drei es beträfe. Ein danach
+entstehender halber Bezug läuft stattdessen ganz regulär durch das Verschnitt-Angebot unten.
+
+**Ab dem Plan sind beide Wege identisch.** Bündelung, Verschnitt-Angebot, Reihenfolge, Abarbeiten
+kennen keine Unterscheidung zwischen den Aufnahme-Wegen — sie rechnen ohnehin nur mit Bohne und
+Profil, nie mit Person.
+
 #### Der Plan K47 K42
 
 Vier Dinge, mehr nicht:
@@ -710,9 +754,16 @@ Bleibt bei ungerader Anzahl ein halber Bezug übrig, führt das Angebot in ein B
 | --- | --- | --- |
 | **Extra Shot** | Modifikator an einer bestehenden Position; die Ausgleichszutat wird um seine Menge reduziert | kein eigenes |
 | **Eigene Position** | vollwertig, mit Person und Getränk — der halbe Bezug wird ein zweites Getränk | eigenes |
+| **Bohne wechseln** | die Position wechselt zu einer anderen Bohne, die im selben Plan ebenfalls einen unpaarigen Rest hat — macht beide Rechnungen glatt | kein eigenes |
 | **Verwerfen** | der Rest geht in den Ausguss, der Verschnitt wird mitgerechnet | — |
 
 Der zweite Weg fehlte bisher. Er ist der naheliegendste von allen: wenn ohnehin ein halber Bezug übrig ist und jemand danebensteht, wird daraus ein Getränk und keine Zugabe.
+
+*Nachtrag, Redesign v2.* Der vierte Weg erscheint nur, wenn es tatsächlich eine passende andere
+Bohne gibt — geeignet für dasselbe Getränk, gleicher Koffein-Status (ein Wechsel darf nie
+stillschweigend von normal auf entkoffeiniert wechseln oder umgekehrt). Er löst genau den Fall,
+in dem zwei verschiedene Bohnen je einen übrig gebliebenen halben Bezug haben: statt zweimal
+Verschnitt entsteht keiner, weil eine der beiden Positionen zur anderen Bohne wechselt.
 
 Angeboten wird das **am Fuß des Plans, nicht als Warnung** K21 K42: eine ruhige Zeile in Feldhöhe, *„Double Shot sinnvoll verwenden"*. Sie steht nur da, solange etwas zu holen ist — sobald der halbe Bezug verbraucht oder der Wert von Hand überschrieben ist, verschwindet sie ersatzlos. Kein Ausrufezeichen, keine Farbe, keine zweite Rückfrage.
 
@@ -789,7 +840,9 @@ Drill-down über drei Ebenen, kein radiales Rad — die Entscheidung aus Fassung
 >
 > **Le Nez lebt in denselben neun SCA-Kategorien** K55. Es gibt keine zwei Ordnungen, sondern eine mit zwei Beschriftungen. Die Fläschchennummer steht in einer festen Spalte daneben — sie ist der eigentliche Gewinn des Koffers, weil sie nachprüfbar macht, was du gerochen hast. Kein Radverweis im Bild; die Zuordnung liegt im Hintergrund und hält die Historie zusammen, ohne sie zu erklären.
 
-Der Umschalter zwischen beiden Sets ist derselbe wie im Gussplan-Editor: zwei gleich große Felder, zwei Wörter K39. Er wechselt die *Sprache* derselben Daten, nicht ihren Umfang. Und keine Farbcodierung K36 — ein Akzent bleibt ein Akzent, auch im Aromarad.
+Der Umschalter zwischen beiden Sets ist derselbe wie im Gussplan-Editor: zwei gleich große Felder, zwei Wörter K39. Er wechselt die *Sprache* derselben Daten, nicht ihren Umfang.
+
+**K36 aufgehoben (Redesign v2, Etappe 1):** neun gedämpfte, warme Kategoriefarben sind jetzt erlaubt — ein kleiner Punkt und ein dünner Rand je Kategorie, keine Vollflächen. Ursprünglich galt „keine Farbcodierung — ein Akzent bleibt ein Akzent, auch im Aromarad"; am Bildsprache-Mockup zeigte sich, dass neun Kategorien ohne Farbe schlecht unterscheidbar bleiben, und die Kategoriefarben waren über fünf Rückmelderunden die mit Abstand am besten aufgenommene Änderung. Bleibt auf das Aromarad begrenzt — der eine App-weite Akzent gilt überall sonst unverändert.
 
 Zur Größe des Koffers: **60 Aromen** in der großen Ausgabe, 36 in der „Révélation". Die Nummern und ihre Kategoriezuordnung lieferst du beim Bauen; die Zahlen in den Entwürfen sind Beispiele.
 

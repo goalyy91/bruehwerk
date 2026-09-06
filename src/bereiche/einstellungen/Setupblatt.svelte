@@ -19,6 +19,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { ABLAUF_LEER } from '../../daten/stammdaten';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -37,7 +38,7 @@
 
   function leererEntwurf(): Setup {
     return {
-      id: crypto.randomUUID(),
+      id: neueId(),
       name: '',
       muehleId: bestand.muehlen[0]?.id ?? '',
       bruehgeraetId: bestand.bruehgeraete[0]?.id ?? '',

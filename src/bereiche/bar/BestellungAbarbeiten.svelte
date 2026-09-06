@@ -11,7 +11,8 @@
   // Ablaufliste.svelte passt strukturell nicht (ihr Abhaken ist rein lokal,
   // ohne Rueckmeldung nach aussen, siehe Kommentar dort).
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
@@ -74,7 +75,7 @@
     fehler = '';
     const portionen = Math.min(3, Math.max(1, aktiv.positionIds.length)) as 1 | 2 | 3;
     const shot: Shot = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       ts: Date.now(),
       kaffeeId: aktiv.kaffeeId,
       chargeId: aktiv.chargeId,
@@ -91,6 +92,8 @@
     };
     try {
       await schreiben('shot', shot);
+      // FIFO-Chargenrotation (Rückmeldung 2026-09-04) — siehe ShotErfassung.svelte.
+      await chargeStatusAktualisieren(aktiv.kaffeeId, profil.ziel.input);
       await schreiben('durchgang', { ...aktiv, shotId: shot.id, erledigt: true });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);

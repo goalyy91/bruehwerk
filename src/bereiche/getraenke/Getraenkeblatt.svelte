@@ -12,6 +12,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -38,7 +39,7 @@
   const vorlage = $derived(vorlageId ? bestand.getraenke.find((g) => g.id === vorlageId) : undefined);
 
   function ausVorlage(v: Getraenk): Getraenk {
-    return { ...$state.snapshot(v), id: crypto.randomUUID(), name: `${v.name} Kopie` };
+    return { ...$state.snapshot(v), id: neueId(), name: `${v.name} Kopie` };
   }
 
   // Nur einmal beim Aufbau gelesen (untrack) — Bearbeiten und Kopieren
@@ -300,7 +301,7 @@
 <style>
   .erklaerung {
     font-family: var(--schrift-sans);
-    font-size: 14.5px;
+    font-size: var(--fs-erklaerung);
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r3);
   }

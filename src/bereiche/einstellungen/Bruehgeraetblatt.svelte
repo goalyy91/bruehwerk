@@ -34,6 +34,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { bruehgeraetEntwurf } from './bruehgeraetEntwurf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -56,7 +57,7 @@
 
   function leererEntwurf(): Bruehgeraet {
     return {
-      id: crypto.randomUUID(),
+      id: neueId(),
       name: '',
       typ: 'espresso',
       gruppen: 1,
@@ -279,7 +280,7 @@
 <style>
   .erklaerung {
     font-family: var(--schrift-sans);
-    font-size: 12.5px;
+    font-size: var(--fs-erklaerung);
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r2);
   }

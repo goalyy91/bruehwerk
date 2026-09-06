@@ -30,6 +30,11 @@
   // Einstellungen, Bar — Handoff nennt fuer sie explizit "Titel 32/600",
   // ohne Rueckweg). Ohne onZurueck/aktion faellt die Icon-Reihe einfach
   // weg, statt eine leere Zeile zu rendern.
+  //
+  // Paket 07: Bar.svelte verzichtet inzwischen ganz auf diese Kopfzeile —
+  // begruendete Einzelfall-Abweichung von der Root-Tab-Regel oben, siehe
+  // Kommentar dort. Die Begruessung uebernimmt die Headline-Rolle, die
+  // Tab-Leiste zeigt "Bar" ohnehin schon aktiv an.
   import type { Snippet } from 'svelte';
 
   let {

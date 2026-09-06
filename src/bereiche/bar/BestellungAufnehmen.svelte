@@ -9,18 +9,30 @@
   // nicht, dann zeigt die Bohnenliste nur noch die Schnittmenge.
 
   import { bestand, schreiben, loeschen } from '../bestand.svelte';
-  import { score } from '../../domain/ranking';
-  import { vorbelegung, begruendung } from '../../domain/ranking';
+  import { neueId } from '../../daten/id';
+  import { rangiereGetraenke, vorbelegung, begruendung } from '../../domain/ranking';
   import { bohnenSchnittmenge, milchAusFuellmenge, extraShotErlaubt } from '../../domain/getraenk';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import VorbelegteFrage from '../../muster/VorbelegteFrage.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Suchfeld from '../../muster/Suchfeld.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Position } from '../../daten/schema';
 
   let { onZurueck, onWeiterZumPlan }: { onZurueck: () => void; onWeiterZumPlan: () => void } = $props();
+
+  // Redesign v2, Etappe 7 — zwei Aufnahme-Wege fuer dieselbe Bestellung.
+  // Rueckmeldung 2026-09-06 (Etappe 9): seit der Fastway (Bar.svelte springt
+  // bei einer Kachel jetzt direkt zu ShotErfassung, ohne Bestellung) ist
+  // dieser Screen nur noch ueber den allgemeinen "Getraenk waehlen"-Knopf
+  // erreichbar — eine Getraenk-Vorwahl gibt es dafuer nicht mehr.
+  // bestellungEntwurf.svelte.ts ist seitdem verwaist (kein Aufrufer schreibt
+  // noch hinein) — bewusst nicht geloescht, das ist eine eigene Entscheidung.
+  // Default "person": Rueckmeldung — "für mich/andere" ist der haeufigere
+  // Fall, nicht "Mengen".
+  let modus = $state<'person' | 'mengen'>('person');
 
   const bestellung = $derived(bestand.offeneBestellung());
   const positionen = $derived(bestand.positionen.filter((p) => bestellung?.positionIds.includes(p.id)));
@@ -52,6 +64,12 @@
   // hinweg stehen, damit mehrere Getraenke fuer dieselbe Person schnell
   // hintereinander gehen.
   let personId = $state(bestand.personen.find((p) => p.standard)?.id ?? bestand.personen[0]?.id ?? '');
+  // Fund 2026-09-06: bei komplett leerer Personenliste kollabierten beide
+  // Seiten des Vergleichs auf '' und "istStandardPerson" wurde faelschlich
+  // wahr — der Picker blieb dauerhaft verborgen, "Position hinzufuegen" liess
+  // sich nie aktivieren. personId muss selbst existieren, nicht nur zufaellig
+  // mit dem (nicht vorhandenen) Standard uebereinstimmen.
+  const istStandardPerson = $derived(personId !== '' && bestand.personen.some((p) => p.standard && p.id === personId));
   let personWechselnOffen = $state(false);
   let personSuchtext = $state('');
   const personenKurzliste = $derived(bestand.personen.filter((p) => p.aktiv).slice(0, 4));
@@ -63,7 +81,7 @@
     const vorname = personSuchtext.trim();
     if (!vorname) return;
     const neu = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       vorname,
       aktiv: true,
       standard: bestand.personen.length === 0,
@@ -78,23 +96,13 @@
   }
 
   // Getraenk — Rangliste ohne Score im Bild (konzept.md:684), Reihenfolge
-  // aus dem Decay-Zaehler ueber die Positionen dieser Person, geraetuebergreifend.
+  // aus dem Decay-Zaehler ueber die Positionen dieser Person,
+  // geraetuebergreifend. Rechnung jetzt in domain/ranking.ts::rangiereGetraenke
+  // (Paket 07) — dieselbe Quelle, die auch die Zwei-Tap-Kacheln auf dem
+  // Bar-Screen nutzen, statt einer zweiten Kopie (ux-regeln.md Regel 6/12).
+  //
   let getraenkId = $state('');
-  const getraenkeSortiert = $derived.by(() => {
-    const eigenePositionen = bestand.positionen.filter((p) => p.personId === personId);
-    const zeitenJeGetraenk = new Map<string, number[]>();
-    for (const p of eigenePositionen) {
-      const liste = zeitenJeGetraenk.get(p.getraenkId) ?? [];
-      liste.push(p.ts);
-      zeitenJeGetraenk.set(p.getraenkId, liste);
-    }
-    const jetzt = Date.now();
-    return bestand.getraenke
-      .filter((g) => g.aktiv)
-      .map((g) => ({ getraenk: g, score: score(zeitenJeGetraenk.get(g.id) ?? [], jetzt) }))
-      .sort((a, b) => b.score - a.score)
-      .map((e) => e.getraenk);
-  });
+  const getraenkeSortiert = $derived(rangiereGetraenke(bestand.positionen, bestand.getraenke.filter((g) => g.aktiv), personId, Date.now()));
   const getraenkGewaehlt = $derived(bestand.getraenke.find((g) => g.id === getraenkId));
 
   // Koffein vor der Bohne (K45 K56) — 20-Positionen-Fenster dieser Person.
@@ -144,7 +152,7 @@
     if (!bestellung || !getraenkId || !koffein || !kaffeeId) return;
     fehler = '';
     const neu: Position = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       personId,
       getraenkId,
       kaffeeId,
@@ -156,6 +164,64 @@
       await schreiben('position', neu);
       await schreiben('bestellung', { ...bestellung, positionIds: [...bestellung.positionIds, neu.id] });
       zuruecksetzenFuerNaechste();
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  // Modus "Mengen" (Etappe 7, urspruenglich "Café-Style" genannt — Rueckmeldung
+  // 2026-09-06: die Bezeichnung wirkte schraeg, umbenannt): Getraenk + Menge +
+  // Koffein + Bohne, keine Person. Getraenke-Rangliste ungefiltert
+  // (rangiereGetraenke mit personId=undefined, siehe domain/ranking.ts) statt
+  // personenbezogen.
+  let mengenGetraenkId = $state('');
+  let mengenAnzahl = $state(1);
+  let mengenKoffein = $state<'normal' | 'entkoffeiniert'>('normal');
+  let mengenKaffeeId = $state('');
+
+  const mengenGetraenkeSortiert = $derived(rangiereGetraenke(bestand.positionen, bestand.getraenke.filter((g) => g.aktiv), undefined, Date.now()));
+  const mengenGetraenkGewaehlt = $derived(bestand.getraenke.find((g) => g.id === mengenGetraenkId));
+  const mengenBohnenOptionen = $derived(
+    mengenGetraenkGewaehlt ? bohnenSchnittmenge(bestand.kaffees, mengenGetraenkGewaehlt.zubereitung, mengenKoffein) : [],
+  );
+  const mengenBohnenGesamt = $derived(bestand.kaffees.filter((k) => k.aktiv).length);
+
+  // Bei genau einer passenden Bohne direkt vorbelegen — Modus "Mengen" soll
+  // schneller sein als der personenbezogene Weg, nicht nur anders.
+  $effect(() => {
+    if (mengenBohnenOptionen.length === 1 && !mengenKaffeeId) {
+      mengenKaffeeId = mengenBohnenOptionen[0]!.id;
+    }
+  });
+
+  function mengenZuruecksetzenFuerNaechste() {
+    mengenGetraenkId = '';
+    mengenAnzahl = 1;
+    mengenKoffein = 'normal';
+    mengenKaffeeId = '';
+  }
+
+  async function mengenPositionenHinzufuegen() {
+    if (!bestellung || !mengenGetraenkId || !mengenKaffeeId) return;
+    fehler = '';
+    const neueIds: string[] = [];
+    try {
+      for (let i = 0; i < mengenAnzahl; i++) {
+        const neu: Position = {
+          id: neueId(),
+          getraenkId: mengenGetraenkId,
+          kaffeeId: mengenKaffeeId,
+          koffein: mengenKoffein,
+          modifikatoren: [],
+          ts: Date.now(),
+        };
+        await schreiben('position', neu);
+        neueIds.push(neu.id);
+      }
+      // Ein abschliessender Schreibvorgang statt einer pro Position —
+      // derselbe Zuschnitt wie BestellungPlan.svelte::abarbeitenStarten().
+      await schreiben('bestellung', { ...bestellung, positionIds: [...bestellung.positionIds, ...neueIds] });
+      mengenZuruecksetzenFuerNaechste();
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -172,7 +238,10 @@
       {#each positionen as pos (pos.id)}
         <div class="position-zeile">
           <span class="haupt">
-            <span class="name">{personName(pos.personId)} · {getraenkName(pos.getraenkId)}</span>
+            <!-- Redesign v2, Etappe 7 — Positionen aus dem Mengen-Modus tragen
+                 keine personId (keine Personenzuordnung): dann faellt die
+                 Namens-Vorsilbe weg statt "unbekannt" zu zeigen. -->
+            <span class="name">{pos.personId ? `${personName(pos.personId)} · ` : ''}{getraenkName(pos.getraenkId)}</span>
             <span class="meta">
               {kaffeeName(pos.kaffeeId)}
               {pos.koffein === 'entkoffeiniert' ? '· entkoffeiniert' : ''}
@@ -186,11 +255,89 @@
   {/if}
 
   <div class="block">
-    <p class="gruppenkopf">Person</p>
-    <p class="person-zeile">
-      <span class="name">{personName(personId) || 'wählen …'}</span>
-      <button type="button" class="wechseln" onclick={() => (personWechselnOffen = !personWechselnOffen)}>wechseln</button>
-    </p>
+    <!-- Redesign v2, Etappe 7 — zwei Aufnahme-Wege fuer dieselbe Bestellung
+         (docs/konzept.md "Die Bestellung"). "person" bleibt Default, damit
+         sich am bestehenden Zwei-Tap-Alltagspfad nichts aendert. -->
+    <Segment
+      optionen={[{ wert: 'person', label: 'Personen' }, { wert: 'mengen', label: 'Mengen' }]}
+      wert={modus}
+      onWahl={(w) => (modus = w === 'mengen' ? 'mengen' : 'person')}
+    />
+  </div>
+
+  {#if modus === 'mengen'}
+    <div class="block">
+      <p class="gruppenkopf">Getränk</p>
+      <Einzelauswahl
+        optionen={mengenGetraenkeSortiert.map((g) => ({ wert: g.id, label: g.name }))}
+        wert={mengenGetraenkId}
+        onWahl={(w) => (mengenGetraenkId = w)}
+      />
+    </div>
+
+    {#if mengenGetraenkId}
+      <div class="block">
+        <p class="gruppenkopf">Menge</p>
+        <div class="mengensteller">
+          <button type="button" class="mengenknopf" onclick={() => (mengenAnzahl = Math.max(1, mengenAnzahl - 1))} aria-label="weniger" disabled={mengenAnzahl <= 1}>−</button>
+          <span class="mengenwert">{mengenAnzahl}</span>
+          <button type="button" class="mengenknopf" onclick={() => (mengenAnzahl = Math.min(20, mengenAnzahl + 1))} aria-label="mehr" disabled={mengenAnzahl >= 20}>+</button>
+        </div>
+      </div>
+
+      <div class="block">
+        <p class="gruppenkopf">Koffein</p>
+        <Segment
+          optionen={[{ wert: 'normal', label: 'normal' }, { wert: 'entkoffeiniert', label: 'entkoffeiniert' }]}
+          wert={mengenKoffein}
+          onWahl={(w) => {
+            mengenKoffein = w === 'entkoffeiniert' ? 'entkoffeiniert' : 'normal';
+            mengenKaffeeId = '';
+          }}
+        />
+      </div>
+
+      <div class="block">
+        <p class="gruppenkopf">Bohne · {mengenBohnenOptionen.length} von {mengenBohnenGesamt}</p>
+        {#if mengenBohnenOptionen.length === 0}
+          <p class="hinweis">Keine passende Bohne aktiv — bei einem Kaffee unter „bearbeiten" fehlt „Geeignet für" für diese Zubereitung, oder Koffein passt nicht.</p>
+        {:else}
+          <Einzelauswahl optionen={mengenBohnenOptionen.map((k) => ({ wert: k.id, label: k.name }))} wert={mengenKaffeeId} onWahl={(w) => (mengenKaffeeId = w)} />
+        {/if}
+      </div>
+    {/if}
+
+    {#if fehler}<p class="fehler">{fehler}</p>{/if}
+
+    <div class="knopfreihe">
+      <Knopf stufe="primaer" onKlick={mengenPositionenHinzufuegen} deaktiviert={!mengenGetraenkId || !mengenKaffeeId}>
+        {mengenAnzahl}× hinzufügen
+      </Knopf>
+    </div>
+
+    {#if positionen.length > 0}
+      <div class="knopfreihe">
+        <Knopf stufe="sekundaer" onKlick={onWeiterZumPlan}>weiter zum Plan</Knopf>
+      </div>
+    {/if}
+  {:else}
+    <div class="block">
+    <!-- De-emphasiert fuer den Alltagsfall "nur fuer mich" (Paket 07): die
+         volle Person-Zeile erscheint nur, wenn tatsaechlich gewechselt wird
+         oder schon fuer jemand anderen gilt — sonst nur ein kleiner Link,
+         statt bei jedem eigenen Kaffee erneut den eigenen Namen zu zeigen. -->
+    {#if personWechselnOffen || !istStandardPerson}
+      <p class="gruppenkopf">Person</p>
+      <p class="person-zeile">
+        <!-- personName() liefert bei unbekannter Id "unbekannt" (truthy) zurueck,
+             nicht leer — die ||-Alternative griff deshalb nie. Explizit auf
+             personId pruefen statt auf den Rueckgabewert der Funktion. -->
+        <span class="name">{personId ? personName(personId) : 'wählen …'}</span>
+        <button type="button" class="wechseln" onclick={() => (personWechselnOffen = !personWechselnOffen)}>wechseln</button>
+      </p>
+    {:else}
+      <button type="button" class="fuer-andere" onclick={() => (personWechselnOffen = true)}>für jemand anderen</button>
+    {/if}
     {#if personWechselnOffen}
       <Einzelauswahl
         optionen={personenKurzliste.map((p) => ({ wert: p.id, label: p.vorname }))}
@@ -241,6 +388,17 @@
         onWahl={(ja) => (koffein = ja ? 'entkoffeiniert' : 'normal')}
       />
     </div>
+  {:else if getraenkId && koffein !== undefined}
+    <!-- Rückmeldung 2026-09-06: bei ≤ 40 % fragt die App laut K56 bewusst gar
+         nicht erst (kein Alarmsignal ohne Inhalt) — koffein wird oben still
+         auf 'normal' gesetzt. Ohne diese Zeile gab es aber keinen Weg mehr,
+         es für eine einzelne Position doch zu ändern, sobald einmal eine
+         Historie besteht. Derselbe leise Ausnahme-Link wie "für jemand
+         anderen" oben — die stille Vorbelegung bleibt Regelfall, ein Tap
+         genügt für die Ausnahme. -->
+    <button type="button" class="fuer-andere koffein-umschalten" onclick={() => (koffein = koffein === 'entkoffeiniert' ? 'normal' : 'entkoffeiniert')}>
+      {koffein === 'entkoffeiniert' ? 'stattdessen normal' : 'stattdessen entkoffeiniert'}
+    </button>
   {/if}
 
   {#if getraenkId && koffein}
@@ -271,12 +429,16 @@
       <Knopf stufe="sekundaer" onKlick={onWeiterZumPlan}>weiter zum Plan</Knopf>
     </div>
   {/if}
+  {/if}
 {/if}
 
 <style>
   .panel {
     background: var(--blatt);
     border-radius: var(--r-blatt);
+    /* Redesign v2, Rückmeldung 2026-09-04 — Karten-Schatten wie Kaffeeblatt
+       .identitaet, sonst kaum vom Papier-Hintergrund abgesetzt. */
+    box-shadow: 0 8px 22px -14px var(--schatten);
     padding: 0 var(--r4);
     margin-bottom: var(--r5);
     display: flex;
@@ -344,6 +506,19 @@
     font-size: var(--fs-meta);
     cursor: pointer;
   }
+  .fuer-andere {
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--akzent);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    cursor: pointer;
+  }
+  .koffein-umschalten {
+    display: block;
+    margin-bottom: var(--r5);
+  }
   .suchzeile {
     margin: var(--r3) 0;
   }
@@ -358,6 +533,41 @@
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;
+  }
+  /* Menge-Steller (Redesign v2, Etappe 7, Modus "Mengen") — kein eigenes
+     Muster fuer einen einzigen Aufrufer, gleiche Kreisgroesse wie andere
+     runde Tapflaechen im Redesign (--r-knopf-rund). */
+  .mengensteller {
+    display: flex;
+    align-items: center;
+    gap: var(--r4);
+  }
+  .mengenknopf {
+    width: var(--r-knopf-rund);
+    height: var(--r-knopf-rund);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    color: var(--tinte);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .mengenknopf:disabled {
+    color: var(--gedaempft);
+    cursor: default;
+  }
+  .mengenwert {
+    min-width: 2ch;
+    text-align: center;
+    font-size: var(--fs-wert);
+    font-weight: var(--gw-zahl);
+    font-variant-numeric: tabular-nums;
+    color: var(--tinte);
   }
   .hinweis {
     color: var(--gedaempft);

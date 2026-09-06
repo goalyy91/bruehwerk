@@ -133,7 +133,7 @@ export function migriereSeiten(seiten: readonly SeedSeite[], gezogenAmMs: number
     // Notion hat nie Chargen gefuehrt, Roestdaten stehen nur unstrukturiert
     // in Freitext und werden nicht herausgeraten.
     const chargeId = `${kaffeeId}-charge-migration`;
-    chargen.push({ id: chargeId, kaffeeId, nummer: 'unbekannt (Migration)', roestdatum: gezogenAmMs, leer: false });
+    chargen.push({ id: chargeId, kaffeeId, nummer: 'unbekannt (Migration)', roestdatum: gezogenAmMs, leer: false, eingefroren: false });
     offen.push({
       quelle: seite.titel,
       was: 'Charge ist ein Platzhalter',

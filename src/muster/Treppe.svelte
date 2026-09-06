@@ -1,15 +1,20 @@
 <script lang="ts">
-  // Muster 2 · Fünf-Stufen-Skala als Treppe (Übergabe, Abschnitt 2).
-  // Höhe der Stäbe = Entfernung vom Ziel. bipolar 46·32·18·32·46 px (Mitte
-  // am niedrigsten, trägt aber immer den Akzent), einseitig 14·22·30·38·46 px.
-  // Sechs Größen sind gleichrangig, keine Trennung in Achsen und Skalen.
+  // Muster 2 · Fünf-Stufen-Skala als Treppe (Übergabe, Abschnitt 2 · K52).
+  //
+  // Redesign v2, Etappe 1: Pixel-Balken (14–46px) wurden zu gestapelten
+  // Strichen (1–3 je Stufe) — Julians Wunsch aus dem Bildsprache-Mockup,
+  // "in der Höhe komprimiert, aber alle fünf Stufen weiter sichtbar". Die
+  // Zahlenreihen sind keine Pixelmaße mehr, sondern Strich-Anzahlen:
+  // bipolar faellt zur Mitte hin auf 1 (Ziel = wenigste Striche, traegt aber
+  // immer den Akzent sobald erreicht), einseitig waechst von 1 auf 3.
+  // istGefuellt() — welche Stufen "erreicht" sind — ist unveraendert.
 
   import { untrack } from 'svelte';
 
   type Art = 'bipolar' | 'einseitig';
-  const HOEHEN: Record<Art, readonly number[]> = {
-    bipolar: [46, 32, 18, 32, 46],
-    einseitig: [14, 22, 30, 38, 46],
+  const STRICHE: Record<Art, readonly number[]> = {
+    bipolar: [3, 2, 1, 2, 3],
+    einseitig: [1, 1, 2, 3, 3],
   };
 
   let {
@@ -18,18 +23,24 @@
     woerter,
     start,
     onWahl,
+    mitErklaerung = true,
   }: {
     titel: string;
     art: Art;
     woerter: readonly [string, string, string, string, string];
     start?: number;
     onWahl?: (index: number) => void;
+    /** false, wenn mehrere Treppen hintereinander stehen und ein einzelner
+     *  zusammenfassender Satz die Erklaerung uebernimmt (siehe
+     *  Verkostungsbogen.svelte) — Default true fuer den Alleinstand
+     *  (Musterblatt.svelte). */
+    mitErklaerung?: boolean;
   } = $props();
 
   // `start` ist nur der Anfangswert — danach führt die Komponente ihre
   // eigene Auswahl. untrack() macht dieses Nur-einmal-lesen ausdrücklich.
   let gewaehlt = $state<number | undefined>(untrack(() => start));
-  const hoehen = $derived(HOEHEN[art]);
+  const striche = $derived(STRICHE[art]);
 
   function istGefuellt(i: number): boolean {
     if (gewaehlt === undefined) return i === 2 && art === 'bipolar';
@@ -50,12 +61,18 @@
 <div class="treppe">
   <div class="kopf">
     <span class="titel">{titel}</span>
-    <span class="meta">{art === 'bipolar' ? 'bipolar · Mitte ist Ziel' : 'einseitig · mehr ist mehr'}</span>
+    {#if mitErklaerung}
+      <span class="meta">{art === 'bipolar' ? 'bipolar · Mitte ist Ziel' : 'einseitig · mehr ist mehr'}</span>
+    {/if}
   </div>
   <div class="staebe">
-    {#each hoehen as hoehe, i (i)}
+    {#each striche as anzahl, i (i)}
       <button type="button" class="spalte" onclick={() => waehle(i)} aria-label={woerter[i]}>
-        <span class="stab" class:gefuellt={istGefuellt(i)} style:height={`${hoehe}px`}></span>
+        <span class="tick-stapel">
+          {#each Array.from({ length: anzahl }) as _, t (t)}
+            <span class="tick" class:gefuellt={istGefuellt(i)}></span>
+          {/each}
+        </span>
       </button>
     {/each}
   </div>
@@ -78,11 +95,14 @@
     align-items: baseline;
   }
   .titel {
-    font-size: var(--fs-satz);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
     font-weight: var(--gw-titel);
+    letter-spacing: 0.02em;
     color: var(--tinte);
   }
   .meta {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
@@ -90,25 +110,34 @@
     display: flex;
     align-items: flex-end;
     gap: 4px;
-    height: 46px;
   }
   .spalte {
     flex: 1;
     display: flex;
     align-items: flex-end;
+    justify-content: center;
     border: none;
     background: none;
     padding: 0;
     cursor: pointer;
     min-height: var(--treffer);
   }
-  .stab {
+  .tick-stapel {
+    width: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding-bottom: var(--r2);
+  }
+  .tick {
     display: block;
     width: 100%;
-    background: var(--spur);
+    height: 3px;
     border-radius: 1px;
+    background: var(--fuellung-leicht);
   }
-  .stab.gefuellt {
+  .tick.gefuellt {
     background: var(--akzent);
   }
   .woerter {

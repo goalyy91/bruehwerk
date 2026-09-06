@@ -4,6 +4,22 @@ Stand: Sitzung 8, Designphase abgeschlossen. Bildquelle: `Sitzung 8 - Final.dc.h
 (Vorstufen: `Sitzung 8 - Schärfung.dc.html`, `Sitzung 8 - Überarbeitet.dc.html`,
 `Sitzung 8 - Visueller Reset.dc.html`).
 
+> **Statushinweis (Redesign v2, 2026-09-04 ff.):** dieses Dokument bleibt als
+> Quelle für Maße, Bauteile und Screen-Mapping gültig — der aktuelle,
+> überarbeitete Stand steht aber in `docs/design/offene-punkte-redesign.md`
+> ab Abschnitt 21. Zwei Regeln unter "NICHT VERHANDELBAR" (Abschnitt weiter
+> unten) sind seither ausdrücklich aufgehoben, mit Julians Freigabe und in
+> mehreren Rückmelderunden bestätigt:
+> - **"Keine Schatten, nirgends"** — `tokens.css` führt seit Etappe 1
+>   `--schatten`/`--schatten-weich`, sparsam auf angehobenen/tappbaren
+>   Flächen (Primäraktion, Bestandkarte, Blattliste). Alle Blätter der App
+>   tragen ihn inzwischen (Etappe 8, Block D).
+> - **K36 "keine Farbcodierung im Aromarad"** — aufgehoben, neun gedämpfte
+>   Kategorietöne erlaubt, begrenzt auf das Aromarad (siehe `docs/konzept.md`,
+>   `docs/konzept-nachzug.md`).
+>
+> Alles andere unter "NICHT VERHANDELBAR" gilt unverändert.
+
 ---
 
 ## 1 · STATUS

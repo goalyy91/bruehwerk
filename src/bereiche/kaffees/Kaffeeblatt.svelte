@@ -5,9 +5,12 @@
   // Autosave, das liess sich nicht ansehen, ohne es auch zu aendern.
   //
   // Chargen bleiben hier: eine neue Charge anzulegen ist eine eigene
-  // Handlung (ein neuer Datensatz), keine Aenderung an den Kaffee-Feldern —
-  // die vorherige Charge wird dabei automatisch als leer markiert, ohne
-  // Rueckfrage (immer genau eine offene Packung).
+  // Handlung (ein neuer Datensatz), keine Aenderung an den Kaffee-Feldern.
+  // Redesign v2 (Rueckmeldung 2026-09-04): FIFO statt Auto-Nullung — welche
+  // Charge "aktuell" ist, bestimmt bestand.svelte.ts::
+  // chargeStatusAktualisieren (siehe dort). Geleerte Chargen bleiben in der
+  // Ablage, verschwinden aber aus dieser Liste ("wuesste nicht wozu ich die
+  // noch brauche") — sichtbareChargen filtert sie aus.
   //
   // UX-Korrekturrunde (Regel 2/7/8, docs/ux-regeln.md): Profile — der
   // einzige Weg zum Shot loggen, also der Alltagspfad — stehen jetzt direkt
@@ -31,15 +34,42 @@
   // Nachbau eines bereits vorhandenen Bausteins. Alle Felder, Reihenfolge,
   // Zustaende (aktuelle/leer bei Chargen) und Handlungen unveraendert.
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import { verhaeltnisZahl, ertragMl, fertigAbZeitpunkt } from '../../domain/coldbrew';
+  import { restGramm, geschaetzteBezuege, benoetigtProBezug } from '../../domain/vorrat';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
+  import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import ProfilIcon, { type ProfilIconTyp } from '../../muster/ProfilIcon.svelte';
   import type { Charge, Profil, Ansatz, Aufbereitung } from '../../daten/schema';
+
+  /** Reihenfolge in der Auswahlzeile beim Profil-Anlegen. */
+  const PROFIL_ICON_OPTIONEN: readonly ProfilIconTyp[] = [
+    'siebtraeger',
+    'moka',
+    'pourover',
+    'coldbrew',
+    'ristretto',
+    'espresso',
+    'lungo',
+  ];
+  /** Geräte-Icons brauchen mehr Fläche als die Tassen-Füllstände, um in der
+   *  56-px-Kachel nicht "dünn" zu wirken (Rückmeldung zur Icon-Bibliothek). */
+  function profilIconGroesse(icon: ProfilIconTyp): number {
+    return icon === 'ristretto' || icon === 'espresso' || icon === 'lungo' ? 26 : 30;
+  }
+  /** Vorbelegung aus dem Gerät — espresso heißt hier "siebtraeger" (das
+   *  Icon zeigt den Portafilter, nicht die Zubereitungsart-Bezeichnung). */
+  function standardIconVon(typ: 'espresso' | 'moka' | 'pourover' | 'coldbrew' | undefined): ProfilIconTyp {
+    if (typ === 'espresso') return 'siebtraeger';
+    return typ ?? 'siebtraeger';
+  }
 
   let {
     kaffeeId,
@@ -54,8 +84,40 @@
   } = $props();
 
   const kaffee = $derived(bestand.kaffees.find((k) => k.id === kaffeeId));
+
+  /**
+   * Etappe 8, Block B (Rückmeldung 2026-09-06): aktiv/inaktiv ist eine
+   * Verwaltungssache, keine Bearbeitung — sie gehört nicht mehr hinter
+   * "speichern" (KaffeeBearbeiten.svelte). Genau der Weg, den Mühle,
+   * Brühgerät und Getränk schon gehen (Kontextmenue statt Schalter im
+   * Formular).
+   */
+  async function sichtbarkeitUmschalten() {
+    if (!kaffee) return;
+    await schreiben('kaffee', { ...kaffee, aktiv: !kaffee.aktiv });
+  }
   const chargen = $derived(bestand.chargenVon(kaffeeId));
+  // Rückmeldung 2026-09-04: geleerte Chargen verschwinden aus der Anzeige —
+  // "wüsste nicht wozu ich die noch brauche". Sie bleiben in der Ablage
+  // (chargeIds, kein Löschen), nur die Chargen-Liste blendet sie aus.
+  const sichtbareChargen = $derived(chargen.filter((c) => !c.leer));
   const profile = $derived(bestand.profileVon(kaffeeId));
+
+  // Bestandsrechnung (Redesign v2, Etappe 2) — domain/vorrat.ts kennt keine
+  // Charge-/Shot-Typen, nur die drei Felder, die es tatsaechlich braucht.
+  const alleShotsAlsVerbrauch = $derived(
+    bestand.shots.map((s) => ({ chargeId: s.chargeId, ts: s.ts, inputGramm: s.ist.input })),
+  );
+  const aktuelleCharge = $derived(chargen.find((c) => c.id === kaffee?.aktuelleChargeId));
+  const standardProfilInput = $derived((profile.find((p) => p.standard) ?? profile[0])?.ziel.input);
+  const aktuellerRest = $derived(
+    aktuelleCharge ? restGramm(aktuelleCharge, aktuelleCharge.id, alleShotsAlsVerbrauch) : undefined,
+  );
+  const aktuelleBezuege = $derived(
+    aktuelleCharge && aktuellerRest !== undefined
+      ? geschaetzteBezuege(aktuellerRest, benoetigtProBezug(aktuelleCharge, aktuelleCharge.id, alleShotsAlsVerbrauch, standardProfilInput))
+      : undefined,
+  );
 
   const AUFBEREITUNG_LABEL: Record<Aufbereitung, string> = {
     washed: 'Washed',
@@ -66,64 +128,107 @@
     sonstige: 'Sonstige',
   };
 
-  let bohneDetailsOffen = $state(false);
   let speicherFehler = $state<string | undefined>(undefined);
 
-  // Rueckmeldung 2026-08-24: Bohne-Details standen bisher als Werteliste da
-  // (Wert 19/500 — groesser/fetter als die Beschriftung, gedacht fuer
-  // gemessene Zahlen wie Spielraum/Gruppen). Hier sind es aber ueberwiegend
-  // Textmerkmale (Aufbereitung, Botanik, …), keine Messwerte — deshalb jetzt
-  // Zeilen im selben Panel wie die "Bohne"-Falte, Wert in derselben
-  // Schriftstaerke wie die Beschriftung, kein eigenes Kachel-Set (das haette
-  // fuer sieben ueberwiegend textuelle Merkmale eher aufgeblaeht als
-  // geklaert).
-  const bohneDetails = $derived.by(() => {
-    if (!kaffee) return [];
-    return [
-      { label: 'Art', wert: kaffee.art === 'blend' ? 'Blend' : 'Single Origin' },
-      { label: 'Herkunft', wert: kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—' },
-      { label: 'Varietät', wert: kaffee.varietaet ?? '—' },
-      { label: 'Anbauhöhe', wert: kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—' },
-      { label: 'Aufbereitung', wert: kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—' },
-      {
-        label: 'Botanik',
-        wert: kaffee.botanik ? `${kaffee.botanik.arabicaProzent}% Arabica · ${kaffee.botanik.robustaProzent}% Robusta` : '—',
-      },
-      { label: 'Röstgrad (Röster)', wert: kaffee.roestgradRoester ?? '—' },
-    ];
-  });
+  // Redesign v2 — "Bohne" ist jetzt Teil der einen Identitäts-Karte
+  // (.identitaet), keine eigene Falte mehr: "bei einer Karte, die man
+  // ohnehin ansieht, macht eine Falte sie unruhiger" (Rückmeldung
+  // 2026-09-04). Herkunft/Anbauhöhe/Varietät/Aufbereitung als
+  // Icon-Kacheln (Mockup-geprüft), Art/Botanik als Fußzeilen darunter.
+  // "Röstgrad (Röster)" bleibt entfernt — ein Röstgrad-Zeichen (Bohnen
+  // oben im Blick-Bereich) reicht.
+  const bohneArt = $derived(kaffee ? (kaffee.art === 'blend' ? 'Blend' : 'Single Origin') : '');
+  /**
+   * Rückmeldung 2026-09-04: "wenn es 100% vom einen ist, muss das andere
+   * nicht angezeigt werden" — bei einer reinen Sorte ist die zweite Zahl
+   * (immer 0%) keine Information, nur Redundanz.
+   */
+  function botanikSatz(botanik: { arabicaProzent: number; robustaProzent: number }): string {
+    if (botanik.arabicaProzent === 100) return '100% Arabica';
+    if (botanik.robustaProzent === 100) return '100% Robusta';
+    return `${botanik.arabicaProzent}% Arabica · ${botanik.robustaProzent}% Robusta`;
+  }
 
   let neueChargeOffen = $state(false);
-  let neueChargeNummer = $state('');
   // Default: heute, im Format, das <input type="date"> erwartet (YYYY-MM-DD).
   let neuesRoestdatum = $state(new Date().toISOString().slice(0, 10));
+  // Redesign v2, Etappe 2 — Einwaage/eingefroren/Portionsgroesse fuers neue
+  // Charge-Formular. Vorbelegung 250 g (uebliche Beutelgroesse), aber
+  // absichtlich als Text statt Zahl-Input, damit ein leeres Feld moeglich
+  // bleibt (Charge ohne Einwaage ist gueltig — kein Bestand wird dann
+  // einfach nicht angezeigt, nicht erfunden).
+  let neueEinwaage = $state('250');
+  let neuEingefroren = $state(false);
+  let neuePortionsgroesse = $state('');
 
   async function chargeAnlegen() {
-    if (!kaffee || neueChargeNummer.trim() === '' || neuesRoestdatum === '') return;
+    if (!kaffee || neuesRoestdatum === '') return;
     speicherFehler = undefined;
+    const einwaageZahl = Number(neueEinwaage.replace(',', '.'));
+    const portionsgroesseZahl = Number(neuePortionsgroesse.replace(',', '.'));
     const neue: Charge = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       kaffeeId,
-      nummer: neueChargeNummer.trim(),
       // Das Roestdatum ist relevant (Frischeeinschaetzung, Vergleich im
       // Verlauf) und wird deshalb mitgegeben, nicht aus "heute" geraten.
+      // Es ist jetzt zugleich die einzige Chargenbezeichnung (Rückmeldung
+      // 2026-09-04) — keine Nummer mehr abgefragt.
       roestdatum: new Date(`${neuesRoestdatum}T00:00:00`).getTime(),
       leer: false,
+      einwaage: Number.isFinite(einwaageZahl) && einwaageZahl > 0 ? einwaageZahl : undefined,
+      eingefroren: neuEingefroren,
+      portionsgroesse: neuEingefroren && Number.isFinite(portionsgroesseZahl) && portionsgroesseZahl > 0 ? portionsgroesseZahl : undefined,
     };
     try {
+      // FIFO statt Auto-Nullung (Rückmeldung 2026-09-04) — die bisherige
+      // Charge wird NICHT mehr automatisch geleert. Sie bleibt "aktuell",
+      // solange sie noch fuer einen Bezug reicht; chargeStatusAktualisieren
+      // entscheidet danach, ob die neue Charge uebernehmen muss (nur wenn
+      // gerade keine andere mehr gueltig ist).
       await schreiben('charge', neue);
-      if (kaffee.aktuelleChargeId) {
-        const vorherige = bestand.chargen.find((c) => c.id === kaffee.aktuelleChargeId);
-        if (vorherige) await schreiben('charge', { ...vorherige, leer: true });
-      }
-      await schreiben('kaffee', {
-        ...kaffee,
-        chargeIds: [...kaffee.chargeIds, neue.id],
-        aktuelleChargeId: neue.id,
-      });
+      await schreiben('kaffee', { ...kaffee, chargeIds: [...kaffee.chargeIds, neue.id] });
+      await chargeStatusAktualisieren(kaffeeId, standardProfilInput);
       neueChargeOffen = false;
-      neueChargeNummer = '';
       neuesRoestdatum = new Date().toISOString().slice(0, 10);
+      neueEinwaage = '250';
+      neuEingefroren = false;
+      neuePortionsgroesse = '';
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  let korrekturOffen = $state(false);
+  let korrekturWert = $state('');
+
+  async function bestandKorrigieren() {
+    if (!aktuelleCharge) return;
+    const gramm = Number(korrekturWert.replace(',', '.'));
+    if (!Number.isFinite(gramm) || gramm < 0) return;
+    speicherFehler = undefined;
+    try {
+      await schreiben('charge', { ...aktuelleCharge, korrektur: { gramm, ts: Date.now() } });
+      // Reicht der korrigierte Rest nicht mehr fuer einen Bezug, uebernimmt
+      // hier automatisch die naechste Charge in der FIFO-Reihenfolge.
+      await chargeStatusAktualisieren(kaffeeId, standardProfilInput);
+      korrekturOffen = false;
+      korrekturWert = '';
+    } catch (fehler) {
+      speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  /**
+   * Ausweg fuer Chargen ohne bekannte Einwaage (K64) — die koennen
+   * rechnerisch nie ausscheiden (domain/vorrat.ts::chargeAusgeschieden),
+   * z. B. die migrierte "unbekannt"-Charge. Schreibt "leer" direkt, dann
+   * uebernimmt chargeStatusAktualisieren die FIFO-Neuvergabe.
+   */
+  async function alsLeerMarkieren(charge: Charge) {
+    speicherFehler = undefined;
+    try {
+      await schreiben('charge', { ...charge, leer: true });
+      await chargeStatusAktualisieren(kaffeeId, standardProfilInput);
     } catch (fehler) {
       speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
     }
@@ -132,6 +237,17 @@
   let neuesProfilOffen = $state(false);
   let neuerProfilName = $state('');
   let neuesProfilSetupId = $state('');
+  let neuesProfilIcon = $state<ProfilIconTyp | undefined>(undefined);
+  /** Vom Nutzer aktiv gewähltes Icon — sonst folgt es weiter live dem Gerät. */
+  let neuesProfilIconManuell = $state(false);
+
+  /** Setup gewechselt -> Icon-Vorbelegung folgt, solange niemand manuell gewählt hat. */
+  function neuesProfilSetupGewaehlt(setupId: string) {
+    neuesProfilSetupId = setupId;
+    if (!neuesProfilIconManuell) {
+      neuesProfilIcon = standardIconVon(bestand.bruehgeraetVon(setupId)?.typ);
+    }
+  }
 
   // Cold Brew — konzept.md:933-955. Ein Ansatz ist ein Vorrat, kein Schritt
   // in einer Bestellung: angesetzt am, fertig ab (kein Countdown, ein
@@ -160,7 +276,7 @@
     speicherFehler = undefined;
     const jetzt = Date.now();
     const neu: Ansatz = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       kaffeeId,
       profilId: profil.id,
       angesetzt: jetzt,
@@ -191,8 +307,12 @@
     if (!kaffee || neuerProfilName.trim() === '' || neuesProfilSetupId === '') return;
     speicherFehler = undefined;
     const istColdbrew = bestand.bruehgeraetVon(neuesProfilSetupId)?.typ === 'coldbrew';
+    // Nur eine bewusst vom Geraet abweichende Wahl wird gespeichert — folgt
+    // sie dem Geraet-Standard, bleibt "icon" undefined und die Oberflaeche
+    // leitet spaeter live her (siehe daten/schema/kaffee.ts::Profil.icon).
+    const geraeteIcon = standardIconVon(bestand.bruehgeraetVon(neuesProfilSetupId)?.typ);
     const neu: Profil = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       kaffeeId,
       setupId: neuesProfilSetupId,
       name: neuerProfilName.trim(),
@@ -206,12 +326,15 @@
       // Startwert markiert — nur beim Mahlgrad (ziel.mg oben) gibt es
       // keinen: "der einzige Wert, den ich nicht beziffern will" (konzept.md:949).
       ansatz: istColdbrew ? { verhaeltnis: '1:15', ziehzeit: 16, ort: 'Kühlschrank', filtern: true } : undefined,
+      icon: neuesProfilIcon && neuesProfilIcon !== geraeteIcon ? neuesProfilIcon : undefined,
     };
     try {
       await schreiben('profil', neu);
       neuesProfilOffen = false;
       neuerProfilName = '';
       neuesProfilSetupId = '';
+      neuesProfilIcon = undefined;
+      neuesProfilIconManuell = false;
       onOeffnenProfil(neu.id);
     } catch (fehler) {
       speicherFehler = fehler instanceof Error ? fehler.message : String(fehler);
@@ -225,63 +348,141 @@
 {:else}
   <Kopfzeile titel={kaffee.name} onZurueck={onZurueck} gross>
     {#snippet aktion()}
-      <button type="button" class="stift" onclick={onBearbeiten} aria-label="Kaffee bearbeiten">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z" /></svg>
-      </button>
+      <Kontextmenue
+        eintraege={[
+          { text: 'bearbeiten', onWahl: onBearbeiten },
+          { text: kaffee.aktiv ? 'ausblenden' : 'wieder einblenden', onWahl: () => void sichtbarkeitUmschalten() },
+        ]}
+      />
     {/snippet}
   </Kopfzeile>
-  <p class="roester">
-    {kaffee.roester}
-    {#if kaffee.entkoffeiniert}<span class="flagge">· entkoffeiniert</span>{/if}
-    {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
-  </p>
+  <!-- Redesign v2 — eine zusammenhängende Identitäts-Karte statt vier
+       Einzelblätter (Blick-Panel, Bohne-Falte, freischwebendes
+       Steckbrief-Grid, Botanik-Panel). Rückmeldung 2026-09-04: "die Karte
+       gefällt mir schon richtig gut", "wirkte wie ein Durcheinander" davor. -->
+  <div class="identitaet">
+    <p class="roester">
+      {kaffee.roester}
+      {#if kaffee.entkoffeiniert}<span class="flagge">· entkoffeiniert</span>{/if}
+      {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
+    </p>
 
-  <section class="blick">
-    <div class="blick-eintrag">
-      <span class="label">Röstgrad</span>
-      <Bohnen stufe={kaffee.roestgrad} />
+    <div class="blick">
+      <div class="blick-eintrag">
+        <span class="label">Röstgrad</span>
+        <Bohnen stufe={kaffee.roestgrad} />
+      </div>
+      <div class="blick-trenner" aria-hidden="true"></div>
+      <div class="blick-eintrag">
+        <span class="label">Bewertung</span>
+        <Sterne wert={kaffee.bewertung} />
+      </div>
     </div>
-    <div class="blick-trenner" aria-hidden="true"></div>
-    <div class="blick-eintrag">
-      <span class="label">Bewertung</span>
-      <Sterne wert={kaffee.bewertung} />
+
+    <div class="steckbrief">
+      <div class="steckbrief-kachel">
+        <span class="steckbrief-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" />
+          </svg>
+        </span>
+        <span class="steckbrief-wert">{kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—'}</span>
+        <span class="steckbrief-label">Herkunft</span>
+      </div>
+      <div class="steckbrief-kachel">
+        <span class="steckbrief-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 18.5l6-9.5 4 5 2-3 6 7.5z" />
+          </svg>
+        </span>
+        <span class="steckbrief-wert">{kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—'}</span>
+        <span class="steckbrief-label">Anbauhöhe</span>
+      </div>
+      <div class="steckbrief-kachel">
+        <span class="steckbrief-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 20.5C4 12 9 5 18 4c1 8-4 15-12 16.5z" /><path d="M7.5 19c3-4 6-7 9.5-9.5" stroke-width="1.1" />
+          </svg>
+        </span>
+        <span class="steckbrief-wert">{kaffee.varietaet ?? '—'}</span>
+        <span class="steckbrief-label">Varietät</span>
+      </div>
+      <div class="steckbrief-kachel">
+        <span class="steckbrief-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 3s6 7.4 6 11.7A6 6 0 0 1 6 14.7C6 10.4 12 3 12 3z" />
+          </svg>
+        </span>
+        <span class="steckbrief-wert">{kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—'}</span>
+        <span class="steckbrief-label">Aufbereitung</span>
+      </div>
     </div>
-  </section>
+
+    <div class="kb-fusszeilen">
+      <div class="fuss-eintrag">
+        <span class="fuss-label">Art</span>
+        <span class="fuss-wert">{bohneArt}</span>
+      </div>
+      <div class="fuss-trenner" aria-hidden="true"></div>
+      <div class="fuss-eintrag">
+        <span class="fuss-label">Botanik</span>
+        <span class="fuss-wert">{kaffee.botanik ? botanikSatz(kaffee.botanik) : '—'}</span>
+      </div>
+    </div>
+  </div>
 
   <section class="gruppe">
     <h2>Profile</h2>
-    <div class="panel">
-      {#if profile.length === 0}
-        <p class="hinweis-panel">keine</p>
-      {:else}
-        {#each profile as profilEintrag (profilEintrag.id)}
-          <button type="button" class="listenzeile" onclick={() => onOeffnenProfil(profilEintrag.id)}>
-            <span class="badge" aria-hidden="true">
-              <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 8h9v5a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" /><path d="M13 9.5h1.8a1.8 1.8 0 0 1 0 3.6H13" /><path d="M4.5 18.5h10" /></svg>
-            </span>
-            <span class="name">{profilEintrag.name}</span>
-            <span class="meta">{profilEintrag.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</span>
-            <span class="chevron" aria-hidden="true">›</span>
-          </button>
-        {/each}
-      {/if}
+    <div class="profil-raster">
+      {#each profile as profilEintrag (profilEintrag.id)}
+        {@const icon = profilEintrag.icon ?? standardIconVon(bestand.bruehgeraetVon(profilEintrag.setupId)?.typ)}
+        <button type="button" class="profil-kachel" onclick={() => onOeffnenProfil(profilEintrag.id)}>
+          <span class="profil-icon-kreis" aria-hidden="true">
+            <ProfilIcon {icon} groesse={profilIconGroesse(icon)} />
+          </span>
+          <span class="profil-name">{profilEintrag.name}</span>
+        </button>
+      {/each}
+      <button type="button" class="profil-kachel profil-plus" onclick={() => (neuesProfilOffen = true)}>
+        <span class="profil-icon-kreis" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14" /></svg>
+        </span>
+        <span class="profil-name">Profil</span>
+      </button>
+    </div>
 
-      {#if neuesProfilOffen}
+    {#if neuesProfilOffen}
+      <div class="panel">
         <div class="anlage">
           <input type="text" class="text-eingabe" placeholder="Profilname" bind:value={neuerProfilName} />
           <AuswahlListe
             optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
             wert={neuesProfilSetupId}
-            onWahl={(w) => (neuesProfilSetupId = w)}
+            onWahl={neuesProfilSetupGewaehlt}
           />
+          <p class="icon-auswahl-label">Symbol</p>
+          <div class="icon-auswahl">
+            {#each PROFIL_ICON_OPTIONEN as option (option)}
+              <button
+                type="button"
+                class="icon-option"
+                class:gewaehlt={neuesProfilIcon === option}
+                aria-label={option}
+                onclick={() => {
+                  neuesProfilIcon = option;
+                  neuesProfilIconManuell = true;
+                }}
+              >
+                <ProfilIcon icon={option} groesse={20} />
+              </button>
+            {/each}
+          </div>
           <Knopf stufe="primaer" onKlick={profilAnlegen} deaktiviert={neuerProfilName.trim() === '' || neuesProfilSetupId === ''}>
             anlegen
           </Knopf>
         </div>
-      {:else}
-        <button type="button" class="anlegen-zeile" onclick={() => (neuesProfilOffen = true)}>+ Profil</button>
-      {/if}
-    </div>
+      </div>
+    {/if}
   </section>
 
   {#if coldbrewProfile.length > 0}
@@ -349,47 +550,74 @@
   {/if}
 
   <section class="gruppe">
-    <div class="panel">
-      <button
-        type="button"
-        class="falte"
-        aria-expanded={bohneDetailsOffen}
-        onclick={() => (bohneDetailsOffen = !bohneDetailsOffen)}
-      >
-        <span class="falte-label">Bohne</span>
-        <span class="pfeil" class:offen={bohneDetailsOffen} aria-hidden="true">▾</span>
-      </button>
-      {#if bohneDetailsOffen}
-        {#each bohneDetails as feld (feld.label)}
-          <div class="detailzeile">
-            <span class="detail-label">{feld.label}</span>
-            <span class="detail-wert">{feld.wert}</span>
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </section>
-
-  <section class="gruppe">
     <h2>Chargen</h2>
     <div class="panel">
-      {#if chargen.length === 0}
+      {#if sichtbareChargen.length === 0}
         <p class="hinweis-panel">keine</p>
       {:else}
-        {#each chargen as charge (charge.id)}
-          <div class="chargenzeile" class:aktuelle={charge.id === kaffee.aktuelleChargeId} class:leer={charge.leer}>
-            <span class="nummer">{charge.nummer}</span>
-            <span class="datum zahl">{new Date(charge.roestdatum).toLocaleDateString('de-DE')}</span>
-            {#if charge.leer}<span class="markiert">leer</span>{/if}
+        {#each sichtbareChargen as charge (charge.id)}
+          <div class="chargenzeile" class:aktuelle={charge.id === kaffee.aktuelleChargeId}>
+            <div class="chargenzeile-kopf">
+              <!-- Rückmeldung 2026-09-04: keine Chargennummer mehr —
+                   Röstdatum ist die einzige Chargenbezeichnung, deshalb
+                   jetzt im Haupttext statt als kleines Meta daneben. -->
+              <span class="chargen-titel">{new Date(charge.roestdatum).toLocaleDateString('de-DE')}</span>
+            </div>
+
+            {#if charge.id === kaffee.aktuelleChargeId}
+              <div class="bestand-info">
+                {#if aktuellerRest !== undefined}
+                  <div class="bestand-wert">
+                    <div class="bestand-zahlzeile">
+                      <span class="zahl zahl-buehne">{aktuellerRest}</span>
+                      <span class="bestand-einheit">g</span>
+                    </div>
+                    {#if aktuelleBezuege !== undefined}
+                      <span class="bestand-bezuege">noch ~{aktuelleBezuege} Bezüge</span>
+                    {/if}
+                  </div>
+                {:else}
+                  <span class="bestand-unbekannt">Bestand unbekannt</span>
+                {/if}
+                {#if !korrekturOffen}
+                  <span class="bestand-aktionen">
+                    <button type="button" class="korrigieren-link" onclick={() => (korrekturOffen = true)}>Korrigieren</button>
+                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>Als leer markieren</button>
+                  </span>
+                {/if}
+              </div>
+
+              {#if korrekturOffen}
+                <div class="anlage">
+                  <div class="mengenfeld">
+                    <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Gramm jetzt" bind:value={korrekturWert} />
+                    <span class="einheit">g</span>
+                  </div>
+                  <Knopf stufe="primaer" onKlick={bestandKorrigieren} deaktiviert={korrekturWert.trim() === ''}>
+                    Bestand speichern
+                  </Knopf>
+                </div>
+              {/if}
+            {/if}
           </div>
         {/each}
       {/if}
 
       {#if neueChargeOffen}
         <div class="anlage">
-          <input type="text" class="text-eingabe" placeholder="Chargennummer" bind:value={neueChargeNummer} />
           <input type="date" class="text-eingabe" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
-          <Knopf stufe="primaer" onKlick={chargeAnlegen} deaktiviert={neueChargeNummer.trim() === '' || neuesRoestdatum === ''}>
+          <div class="mengenfeld">
+            <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Einwaage (optional)" bind:value={neueEinwaage} />
+            <span class="einheit">g</span>
+          </div>
+          <Schalter label="Eingefroren" an={neuEingefroren} onWahl={(a) => (neuEingefroren = a)} />
+          {#if neuEingefroren}
+            <div class="mengenfeld">
+              <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Portionsgröße (optional)" bind:value={neuePortionsgroesse} />
+              <span class="einheit">g</span>
+            </div>
+          {/if}
+          <Knopf stufe="primaer" onKlick={chargeAnlegen} deaktiviert={neuesRoestdatum === ''}>
             anlegen
           </Knopf>
         </div>
@@ -405,32 +633,27 @@
 {/if}
 
 <style>
-  /* Kopfzeile-Aktion (Stift): runder Knopf auf Blattflaeche, gleiche
-     Sprache wie der Rueckweg-Knopf in Kopfzeile.svelte selbst — beide
-     stehen im gross-Modus in derselben Zeile. */
-  .stift {
-    width: var(--r-knopf-rund);
-    height: var(--r-knopf-rund);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 50%;
-    background: var(--blatt);
-    color: var(--akzent);
-    cursor: pointer;
-  }
-  .stift svg {
-    width: 16px;
-    height: 16px;
-  }
+  /* Redesign v2 — jetzt die erste Zeile der Identitaets-Karte statt eigene
+     Zeile ueber dem Panel, daher kleinerer Abstand nach unten (der grosse
+     --seitenrand-Abstand kommt jetzt von der Karte selbst). */
   .roester {
     font-size: 15px;
     color: var(--akzent);
-    margin: 0 0 var(--seitenrand);
+    margin: 0 0 var(--r4);
   }
   .flagge {
     color: var(--gedaempft);
+  }
+  /* Identitaets-Karte (Redesign v2, "Quartett-Karte") — ersetzt vier
+     ehemals separate Bloecke (Blick-Panel, Bohne-Falte, freischwebendes
+     Steckbrief-Grid, Botanik-Panel) durch eine zusammenhaengende Flaeche.
+     Werte aus dem freigegebenen Mockup (Artifact "kaffeeblatt-v2.html"). */
+  .identitaet {
+    background: var(--blatt);
+    border-radius: 22px;
+    padding: 20px 20px 6px;
+    box-shadow: 0 10px 26px -16px var(--schatten);
+    margin: 10px 0 var(--seitenrand);
   }
   /* h2-Basistypografie kommt aus tokens.css (global) — hier nur der lokale
      margin (Regel: lokale Ueberschreibung darf nur margin setzen). Bis
@@ -439,17 +662,18 @@
   h2 {
     margin: 0 0 var(--r-kachelabstand);
   }
-  /* Roestgrad | Bewertung in einer Blattzeile mit senkrechter Haarlinie
-     dazwischen (Handoff 3.5: "senkrechte Haarlinie nur zwischen zwei
-     Werteblöcken"). */
+  /* Roestgrad | Bewertung, senkrechte Haarlinie dazwischen (Handoff 3.5:
+     "senkrechte Haarlinie nur zwischen zwei Werteblöcken"). Redesign v2:
+     kein eigenes Blatt mehr — .blick sitzt jetzt selbst in der
+     Identitaets-Karte (.identitaet) und markiert sich nur noch als
+     interner Abschnitt per Trennlinie darunter. */
   .blick {
     display: flex;
     align-items: center;
     gap: var(--seitenrand);
-    padding: var(--r4);
-    margin-bottom: var(--seitenrand);
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
+    padding-bottom: var(--r4);
+    margin-bottom: var(--r4);
+    border-bottom: 1px solid var(--linie);
   }
   .blick-eintrag {
     display: flex;
@@ -471,11 +695,12 @@
   .gruppe {
     margin-bottom: var(--seitenrand);
   }
-  /* Blatt mit Zeilen — Profile, Bohne-Falte, Chargen. Radius 20 (Handoff
-     3.4 "Blatt"), horizontales Innenpolster 18, Zeilenhoehe je Zeilenart;
-     jede Zeile ausser der ersten bekommt eine Haarlinie darueber. Kein
-     zentrales Muster fuer diese Form existiert bisher (siehe
-     docs/design/offene-punkte-redesign.md, Punkt 1). */
+  /* Blatt mit Zeilen — Chargen, Cold-Brew-Ansaetze. Radius 20 (Handoff 3.4
+     "Blatt"), horizontales Innenpolster 18; jede Zeile ausser der ersten
+     bekommt eine Haarlinie darueber. Profile und die Bohnen-Stammdaten
+     nutzen seit Redesign v2 eigene Formen (.profil-raster, .identitaet)
+     statt dieses Blatts — siehe docs/design/offene-punkte-redesign.md,
+     Punkt 1. */
   .panel {
     background: var(--blatt);
     border-radius: var(--r-blatt);
@@ -492,46 +717,6 @@
     font-size: var(--fs-satz);
     padding: var(--r3) 0;
     margin: 0;
-  }
-  .listenzeile {
-    display: flex;
-    align-items: center;
-    gap: var(--r4);
-    min-height: 66px;
-    border: none;
-    background: transparent;
-    font-family: var(--schrift);
-    text-align: left;
-    cursor: pointer;
-  }
-  .badge {
-    flex: none;
-    width: var(--r-knopf-rund);
-    height: var(--r-knopf-rund);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--badge);
-    color: var(--akzent);
-  }
-  .badge svg {
-    width: 18px;
-    height: 18px;
-  }
-  .listenzeile .name {
-    flex: 1;
-    font-size: var(--fs-bedienwort);
-    color: var(--tinte);
-  }
-  .listenzeile .meta {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .chevron {
-    color: var(--spur);
-    font-size: var(--fs-bedienwort);
   }
   .anlegen-zeile {
     display: flex;
@@ -571,81 +756,264 @@
     font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
-  .falte {
+  /* Steckbrief — Redesign v2, Etappe 3 (Bildsprache-Mockup): Herkunft,
+     Anbauhöhe, Varietät, Aufbereitung als Icon-Kacheln statt Textzeilen —
+     das sind die "Geschichte" der Bohne, kein reiner Messwert. Warm
+     getönter Kachelgrund statt Vertiefung, damit es zum erzählenden Text
+     der Sektion passt statt wie ein Formular zu wirken. */
+  .steckbrief {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: var(--r-kachelabstand) 0;
+  }
+  .steckbrief-kachel {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--akzent) 7%, var(--blatt));
+  }
+  .steckbrief-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--vertiefung);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 58px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
+    justify-content: center;
+    color: var(--akzent);
   }
-  .falte-label {
+  .steckbrief-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .steckbrief-wert {
+    font-size: 15.5px;
+    color: var(--tinte);
+    line-height: 1.25;
+  }
+  .steckbrief-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: var(--label-spacing-kachel);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  /* Art | Botanik — letzter Abschnitt der Identitaets-Karte, gleiche
+     Zeilen-Trenner-Sprache wie .blick oben, nur umgedreht (Trennlinie
+     darueber statt darunter, da diese Zeile den Kartenboden bildet). */
+  .kb-fusszeilen {
+    display: flex;
+    align-items: center;
+    gap: var(--seitenrand);
+    padding-top: var(--r3);
+    padding-bottom: var(--r3);
+    border-top: 1px solid var(--linie);
+  }
+  .fuss-eintrag {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fuss-label {
     font-family: var(--schrift-sans);
     font-size: var(--fs-gruppenkopf);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
     color: var(--gedaempft);
   }
-  .falte .pfeil {
-    color: var(--spur);
-    transition: transform var(--t-auswahl) var(--e-rein);
+  .fuss-wert {
+    font-size: var(--fs-satz);
+    color: var(--tinte);
   }
-  .falte .pfeil.offen {
-    transform: rotate(180deg);
+  .fuss-trenner {
+    align-self: stretch;
+    width: 1px;
+    background: var(--linie);
   }
-  .detailzeile {
+  /* Profil-Raster (Redesign v2) — ersetzt die Zeilenliste (Badge · Name ·
+     Modus · Chevron) durch Icon-Kacheln, Alltagspfad-tauglich: ein Blick
+     zeigt sofort, welche Zubereitungsart welches Profil ist, statt erst
+     den Namen lesen zu muessen. Groessen-Lehre aus der Icon-Bibliothek
+     (Artifact "profil-icons.html"): siehe profilIconGroesse() im Script. */
+  .profil-raster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--r4);
+  }
+  .profil-kachel {
+    flex: none;
+    width: 74px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    font-family: var(--schrift-sans);
+    cursor: pointer;
+  }
+  .profil-icon-kreis {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--r3);
-    min-height: 52px;
+    justify-content: center;
+    background: var(--blatt);
+    color: var(--akzent);
+    box-shadow: 0 6px 16px -10px var(--schatten-weich);
   }
-  .detail-label {
-    font-size: var(--fs-bedienwort);
-    color: var(--satz);
+  .profil-plus .profil-icon-kreis {
+    background: transparent;
+    border: 1px dashed var(--linie);
+    color: var(--gedaempft);
+    box-shadow: none;
   }
-  .detail-wert {
-    font-size: var(--fs-bedienwort);
+  .profil-plus .profil-icon-kreis svg {
+    width: 18px;
+    height: 18px;
+  }
+  .profil-name {
+    font-size: 12.5px;
     color: var(--tinte);
-    text-align: right;
+    text-align: center;
+    line-height: 1.25;
+  }
+  .profil-plus .profil-name {
+    color: var(--gedaempft);
+  }
+  /* Icon-Auswahlzeile im "+ Profil"-Formular — kleine Kreise wie eine
+     Farbpalette (Plan-Vorgabe), vorbelegt mit dem aus dem Setup
+     hergeleiteten Geraete-Icon, frei ueberschreibbar. */
+  .icon-auswahl-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+    margin: 0;
+  }
+  .icon-auswahl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--r2);
+  }
+  .icon-option {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    color: var(--gedaempft);
+    cursor: pointer;
+  }
+  .icon-option.gewaehlt {
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .chargenzeile {
     display: flex;
-    align-items: center;
-    gap: var(--r3);
-    min-height: 60px;
+    flex-direction: column;
+    gap: var(--r2);
+    padding: var(--r3) 0;
     font-size: var(--fs-bedienwort);
     color: var(--tinte);
   }
-  .chargenzeile.leer {
-    color: var(--gedaempft);
+  .chargenzeile-kopf {
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+    min-height: 34px;
   }
-  .chargenzeile .nummer {
+  .chargenzeile .chargen-titel {
     flex: 1;
   }
-  .chargenzeile.aktuelle .nummer {
+  .chargenzeile.aktuelle .chargen-titel {
     /* Rueckmeldung 2026-08-24: nicht mehr fett — "aktuelle" haebt sich ueber
        die Akzentfarbe ab, nicht mehr ueber Schriftgewicht. */
     color: var(--akzent);
   }
-  .chargenzeile .datum {
+  /* Redesign v2, Etappe 2 (Rueckmeldung 2026-09-04) — Bestand-Info und
+     Korrektur gehoeren sichtbar zur aktuellen Charge, nicht als lose,
+     durch Haarlinien getrennte Einzelzeilen danach (das wirkte
+     "unuebersichtlich" — jede Zeile bekam ueber .panel > * eine eigene
+     Trennlinie, obwohl sie inhaltlich zusammengehoerten). Jetzt Teil
+     derselben .chargenzeile, die Trennlinie faellt pro Charge, nicht pro
+     Info-Schnipsel. */
+  .bestand-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  /* Redesign v2, Etappe 3 — dieselbe Bühnen-Zahl wie die Bestandkarte im
+     Dashboard ("im selben Stil wie im Dashboard", Mockup-Notiz), statt nur
+     einer Textzeile. */
+  .bestand-wert {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .bestand-zahlzeile {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .bestand-einheit,
+  .bestand-bezuege,
+  .bestand-unbekannt {
     font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
-  .chargenzeile .markiert {
+  .bestand-einheit {
+    font-size: var(--fs-meta);
+  }
+  .bestand-bezuege,
+  .bestand-unbekannt {
+    font-size: 13px;
+  }
+  .bestand-aktionen {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+  }
+  .korrigieren-link {
+    flex: none;
+    padding: 4px 0;
+    border: none;
+    background: transparent;
+    color: var(--akzent);
     font-family: var(--schrift-sans);
-    font-size: var(--fs-label);
-    color: var(--gedaempft);
+    font-size: 13px;
+    cursor: pointer;
   }
   .anlage {
     display: flex;
     flex-direction: column;
     gap: var(--r3);
     padding: var(--r3) 0;
+  }
+  /* Zahlenfeld mit sichtbarer Einheit daneben, statt nur im Platzhalter
+     ("Einwaage in g") — der verschwindet beim Tippen, die Einheit bleibt. */
+  .mengenfeld {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+  }
+  .mengenfeld .text-eingabe {
+    flex: 1;
+  }
+  .einheit {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
   }
   .text-eingabe {
     font-family: var(--schrift);

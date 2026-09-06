@@ -19,7 +19,8 @@
   // mit Herkunftskreisen, kein Kachel-Raster (die beiden Blöcke haben
   // unterschiedliche fachliche Bedeutung: eingestellt vs. gemessen).
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
   import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
@@ -208,7 +209,7 @@
 
     const urteil: UrteilTyp = stufe === 'Referenz' ? 'referenz' : stufe;
     const shot: Shot = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       ts: Date.now(),
       kaffeeId: kaffee.id,
       chargeId: kaffee.aktuelleChargeId,
@@ -235,6 +236,10 @@
   async function schreibversuch(shot: Shot) {
     try {
       await schreiben('shot', shot);
+      // FIFO-Chargenrotation (Rückmeldung 2026-09-04): reicht der Rest der
+      // genutzten Charge nach diesem Bezug fuer keinen weiteren mehr,
+      // uebernimmt hier automatisch die naechste Charge.
+      await chargeStatusAktualisieren(shot.kaffeeId, profil?.ziel.input);
       if (shot.urteil === 'daneben') {
         // Paket 04, Etappe A — Diagnose statt direktem Abschluss.
         phase = 'diagnose';
@@ -324,12 +329,25 @@
       <Vorschlag
         diagnose={diagnoseErgebnis.diagnose}
         empfehlung={diagnoseErgebnis.empfehlungstext}
+        herkunft={diagnoseErgebnis.geschaetzt ? 'geschätzt aus Einzelbefund' : undefined}
         start={ausserhalbMessreihe ? 'fehlt' : 'offen'}
         begruendungFehlt={ausserhalbMessreihe}
         onUebernehmen={() => void diagnoseAbschliessen(true)}
         onSpaeter={() => void diagnoseAbschliessen(false)}
       />
     </div>
+  {:else if diagnoseErgebnis && diagnoseUnterdrueckt}
+    <!-- K68/K76 — es GIBT eine passende Regel, sie wurde aber schon beim
+         letzten Mal gezeigt und nicht uebernommen; sie kehrt erst zurueck,
+         wenn zwei aufeinanderfolgende Shots denselben Befund zeigen. Ohne
+         diesen Satz sah das aus wie eine Sackgasse: Chips ausgewaehlt,
+         nichts passiert. -->
+    <p class="hinweis">Diese Diagnose kam beim letzten Mal schon — sie erscheint erst wieder, wenn sich der Befund beim nächsten Shot wiederholt.</p>
+  {:else if diagnoseBefunde.length > 0}
+    <!-- Kein REGELN-Eintrag passt zu genau dieser Kombination — laut Konzept
+         (docs/konzept.md:459) bewusst keine erzwungene Diagnose. Ohne diesen
+         Satz blieb unklar, ob die App das ueberhaupt gesehen hat. -->
+    <p class="hinweis">Für diese Auswahl gibt es noch keine hinterlegte Regel — die Befunde bleiben trotzdem am Shot stehen.</p>
   {/if}
 
   {#if !diagnoseErgebnis || diagnoseUnterdrueckt || ausserhalbMessreihe}

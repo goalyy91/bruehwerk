@@ -69,6 +69,14 @@ export interface Diagnose {
   readonly empfehlungstext: string;
   /** Fehlt bei Regeln ohne eindeutigen Einzelwert (Verteilung/Channeling, K nicht automatisch aenderbar). */
   readonly aenderung?: Aenderung;
+  /**
+   * true, wenn dieser Vorschlag nicht aus einer exakten Konzept-Kombination
+   * stammt, sondern aus dem Achsen-Scoring (diagnostiziereAchse) — ein
+   * einzelnes Symptom oder eine unvollstaendige Kombination, die auf eine
+   * Achse einzahlt. Die Oberflaeche zeigt das als gedaempfte Meta-Zeile,
+   * dieselbe Sprache wie bei geschaetzten Zahlenwerten (K54/K13).
+   */
+  readonly geschaetzt?: boolean;
 }
 
 interface RegelDefinition {
@@ -144,10 +152,10 @@ const REGELN: readonly RegelDefinition[] = [
  * Spezifischste Regel gewinnt: bei mehreren passenden Regeln zaehlt die mit
  * den meisten geforderten Symptomen (z. B. "sauer+duenn+schnell" schlaegt
  * eine zweistellige Regel, die zufaellig ebenfalls passt). undefined, wenn
- * keine Auswahl-Kombination im Regelwerk steht — dann bleibt der Shot ohne
- * Diagnose, statt eine zu erzwingen.
+ * keine Auswahl-Kombination exakt im Regelwerk steht — diagnostiziere()
+ * faellt dann auf das Achsen-Scoring zurueck, statt hier schon aufzugeben.
  */
-export function diagnostiziere(befunde: readonly Befund[]): Diagnose | undefined {
+function diagnostiziereExakt(befunde: readonly Befund[]): Diagnose | undefined {
   const ids = new Set(befunde.map((b) => b.symptomId));
   const kandidaten = REGELN.filter(
     (regel) =>
@@ -163,6 +171,91 @@ export function diagnostiziere(befunde: readonly Befund[]): Diagnose | undefined
     empfehlungstext: regel.empfehlungstext,
     aenderung: regel.aenderung?.(staerke),
   };
+}
+
+/**
+ * Fuenf Achsen, dieselbe Gruppierung, die schon in der Konzepttabelle steckt
+ * (konzept.md "Die Regeln dahinter"), hier nur benannt statt implizit ueber
+ * Regel-Kombinationen. "starke-unterextraktion" hat bewusst keine eigene
+ * Achse — sie bleibt exklusiv der exakten sauer+salzig-Kombination
+ * vorbehalten, sonst wuerde ein einzelnes "salzig" zu stark gedeutet.
+ */
+type Achse = 'unterextraktion' | 'ueberextraktion' | 'konzentration-niedrig' | 'kt-hoch' | 'verteilung';
+
+const SYMPTOM_ACHSE: Readonly<Record<string, Achse>> = {
+  sauer: 'unterextraktion',
+  duenn: 'unterextraktion',
+  schnell: 'unterextraktion',
+  salzig: 'unterextraktion',
+  bitter: 'ueberextraktion',
+  adstringent: 'ueberextraktion',
+  langsam: 'ueberextraktion',
+  brandig: 'kt-hoch',
+  stark: 'kt-hoch',
+  flach: 'konzentration-niedrig',
+  ungleichmaessig: 'verteilung',
+};
+
+/** Bei Gleichstand entscheidet diese Reihenfolge — dieselbe wie in der Konzepttabelle. */
+const ACHSEN_PRIORITAET: readonly Achse[] = [
+  'unterextraktion',
+  'ueberextraktion',
+  'konzentration-niedrig',
+  'kt-hoch',
+  'verteilung',
+];
+
+/** Welche der sechs REGELN eine Achse vertritt, wenn kein exakter Treffer vorliegt. */
+const ACHSEN_REGEL_ID: Readonly<Record<Achse, string>> = {
+  unterextraktion: 'unterextraktion',
+  ueberextraktion: 'ueberextraktion',
+  'konzentration-niedrig': 'konzentration-niedrig',
+  'kt-hoch': 'kt-zu-hoch',
+  verteilung: 'verteilung',
+};
+
+/**
+ * Zweite, weichere Stufe (Redesign v2, Etappe 5 — "Evidenz statt
+ * Konjunktion"): greift nur, wenn diagnostiziereExakt() nichts findet. Jedes
+ * Symptom zahlt auf seine Achse ein, die Achse mit den meisten Treffern
+ * gewinnt. Titel/Empfehlungstext/Aenderungsformel kommen unveraendert von
+ * der Vertreter-Regel dieser Achse — kein neuer Text, nur eine weichere
+ * Voraussetzung, um ihn zu zeigen.
+ */
+function diagnostiziereAchse(befunde: readonly Befund[]): Diagnose | undefined {
+  const proAchse = new Map<Achse, Befund[]>();
+  for (const befund of befunde) {
+    const achse = SYMPTOM_ACHSE[befund.symptomId];
+    if (!achse) continue;
+    const bisher = proAchse.get(achse) ?? [];
+    bisher.push(befund);
+    proAchse.set(achse, bisher);
+  }
+
+  let beste: Achse | undefined;
+  let besteAnzahl = 0;
+  for (const achse of ACHSEN_PRIORITAET) {
+    const anzahl = proAchse.get(achse)?.length ?? 0;
+    if (anzahl > besteAnzahl) {
+      beste = achse;
+      besteAnzahl = anzahl;
+    }
+  }
+  if (!beste) return undefined;
+
+  const regel = REGELN.find((r) => r.id === ACHSEN_REGEL_ID[beste!])!;
+  const staerke = maxStaerke(befunde, proAchse.get(beste)!.map((b) => b.symptomId));
+  return {
+    regelId: `achse-${regel.id}`,
+    diagnose: regel.diagnose,
+    empfehlungstext: regel.empfehlungstext,
+    aenderung: regel.aenderung?.(staerke),
+    geschaetzt: true,
+  };
+}
+
+export function diagnostiziere(befunde: readonly Befund[]): Diagnose | undefined {
+  return diagnostiziereExakt(befunde) ?? diagnostiziereAchse(befunde);
 }
 
 /**

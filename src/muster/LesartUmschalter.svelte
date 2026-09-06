@@ -47,6 +47,9 @@
     border-radius: var(--r-pille);
     padding: var(--segment-bahn-polster);
   }
+  /* Redesign v2, Etappe 1 hatte hier Sans probiert, wurde am echten Gerät
+     zusammen mit Knopf.svelte .primaer zurueckgedreht — zurueck auf Serif,
+     dieselbe Schriftart wie Kaffeeblatt Name/Röster. */
   .feld {
     flex: 1;
     min-height: var(--segment-feld-hoehe);

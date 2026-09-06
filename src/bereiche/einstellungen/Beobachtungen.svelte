@@ -10,6 +10,7 @@
   // eckig umrandeter Liste, Textfelder ueber .eingabefeld-text.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { offeneBeobachtungen, type Entscheidung } from '../../domain/beobachtungen';
   import { werkstattbericht, type BerichtShot } from '../../domain/bericht';
   import type { RegelParameter, Richtung } from '../../domain/diagnose';
@@ -17,6 +18,7 @@
   import Knopf from '../../muster/Knopf.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import type { Befund } from '../../daten/schema';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
@@ -47,7 +49,7 @@
   async function entscheidungSpeichern(begriff: string, entscheidung: Entscheidung['entscheidung'], zielBegriff?: string) {
     fehler = undefined;
     try {
-      await schreiben('beobachtung', { id: crypto.randomUUID(), begriff, entscheidung, zielBegriff, ts: Date.now() });
+      await schreiben('beobachtung', { id: neueId(), begriff, entscheidung, zielBegriff, ts: Date.now() });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -56,7 +58,7 @@
   /** Weg a — der Chip wirkt rueckwirkend: er wird an genau die Shots gehaengt, aus denen er entstanden ist (konzept.md:480), mit Staerke "deutlich". */
   async function alsChipAnlegen(begriff: string, shotIds: readonly string[]) {
     fehler = undefined;
-    const neu = { id: crypto.randomUUID(), label: begriff, gruppe: 'geschmack' as const, quelle: 'eigen' as const };
+    const neu = { id: neueId(), label: begriff, gruppe: 'geschmack' as const, quelle: 'eigen' as const };
     try {
       await schreiben('symptom', neu);
       for (const shot of shotsVon(shotIds)) {
@@ -167,7 +169,7 @@
   {#if offene.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <div class="panel">
+    <Blattliste>
       {#each offene as b (b.begriff)}
         <div class="eintrag">
           <div class="kopf">
@@ -192,7 +194,7 @@
           {/if}
         </div>
       {/each}
-    </div>
+    </Blattliste>
   {/if}
 </section>
 
@@ -201,7 +203,7 @@
   {#if eigeneChips.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <div class="panel">
+    <Blattliste>
       {#each eigeneChips as chip (chip.id)}
         <div class="eintrag">
           <div class="kopf">
@@ -228,7 +230,7 @@
           {/if}
         </div>
       {/each}
-    </div>
+    </Blattliste>
   {/if}
 </section>
 
@@ -254,16 +256,9 @@
   .gruppe {
     margin-bottom: var(--r5);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
+  /* Blattflaeche + Trennlinie kommen jetzt von Blattliste.svelte (Etappe 8,
+     Block D) — das Zeileninnenleben (Kontextmenü, Aufklapp-Formular) bleibt
+     lokal, kein Blattzeile-Kandidat. */
   .eintrag {
     padding: var(--r3) 0;
   }

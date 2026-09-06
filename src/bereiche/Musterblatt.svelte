@@ -29,6 +29,8 @@
   import Kopfzeile from '../muster/Kopfzeile.svelte';
   import Knopf from '../muster/Knopf.svelte';
   import Kontextmenue from '../muster/Kontextmenue.svelte';
+  import Blattliste from '../muster/Blattliste.svelte';
+  import Blattzeile from '../muster/Blattzeile.svelte';
   import Segment from '../muster/Segment.svelte';
   import Werteliste from '../muster/Werteliste.svelte';
   import AuswahlListe from '../muster/AuswahlListe.svelte';
@@ -302,7 +304,7 @@
       <div class="thema stapel" data-theme={theme}>
         <VorbelegteFrage frage="Wieder entkoffeiniert?" anteil={70} begruendung="7 von 8 zuletzt" />
         <VorbelegteFrage frage="500er Kännchen?" anteil={50} begruendung="10 von 20 zuletzt" />
-        <p class="hinweis">≤ 40 % (hier nicht gezeigt): die Frage entfällt ganz.</p>
+        <p class="hinweis">≤ 40 %: der Aufrufer bindet das Bauteil dann gar nicht erst ein (Fund 2026-09-06 — das Bauteil selbst blendet sich nicht mehr aus).</p>
       </div>
     {/each}
   </section>
@@ -545,6 +547,23 @@
             />
           {/snippet}
         </Kopfzeile>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Blattliste/Blattzeile — Etappe 8, Block D. Ersetzt das siebenfach
+       wortgleich nachgebaute "Blatt mit Zeilen" (Einstellungen, Geräte,
+       Backup, Getränkeliste, Personen, Beobachtungen, Temperatur-Referenz). -->
+  <section class="muster">
+    <h2>Blattliste · Blattzeile</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Blattliste>
+          <Blattzeile label="Timemore Sculptor" betont onKlick={() => {}} />
+          <Blattzeile label="Kaffeeklatsch, entkoffeiniert" meta="Espresso · ausgeblendet" gedaempft onKlick={() => {}} />
+          <Blattzeile label="Geräte verwalten" akzent onKlick={() => {}} />
+          <Blattzeile label="+ Setup" akzent chevron={false} onKlick={() => {}} />
+        </Blattliste>
       </div>
     {/each}
   </section>

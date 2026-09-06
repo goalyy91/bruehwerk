@@ -4,6 +4,7 @@ import {
   scoreFortschreiben,
   vorbelegung,
   begruendung,
+  rangiereGetraenke,
   HALBWERTSZEIT_TAGE,
   FENSTER_POSITIONEN,
 } from './ranking';
@@ -127,5 +128,50 @@ describe('Begruendung', () => {
 
   it('fehlt ohne Historie', () => {
     expect(begruendung(vorbelegung([]))).toBeNull();
+  });
+});
+
+describe('Getraenke-Ranking', () => {
+  const cappuccino = { id: 'cappuccino' };
+  const flatWhite = { id: 'flat-white' };
+  const espresso = { id: 'espresso' };
+
+  it('sortiert nach Decay-Score absteigend', () => {
+    const positionen = [
+      { personId: 'julian', getraenkId: 'flat-white', ts: vorTagen(1) },
+      { personId: 'julian', getraenkId: 'cappuccino', ts: vorTagen(40) },
+    ];
+    const ergebnis = rangiereGetraenke(positionen, [cappuccino, flatWhite, espresso], 'julian', JETZT);
+    expect(ergebnis.map((g) => g.id)).toEqual(['flat-white', 'cappuccino', 'espresso']);
+  });
+
+  it('zaehlt nur Positionen der gefragten Person', () => {
+    const positionen = [
+      { personId: 'lisa', getraenkId: 'flat-white', ts: JETZT },
+      { personId: 'lisa', getraenkId: 'flat-white', ts: JETZT },
+    ];
+    const ergebnis = rangiereGetraenke(positionen, [cappuccino, flatWhite], 'julian', JETZT);
+    // Ohne eigene Historie ist die Reihenfolge stabil (Score 0 fuer beide) —
+    // bleibt bei der Eingabereihenfolge.
+    expect(ergebnis.map((g) => g.id)).toEqual(['cappuccino', 'flat-white']);
+  });
+
+  it('kommt ohne jede Historie zurecht', () => {
+    expect(rangiereGetraenke([], [cappuccino, flatWhite], 'julian', JETZT).map((g) => g.id)).toEqual([
+      'cappuccino',
+      'flat-white',
+    ]);
+  });
+
+  it('Redesign v2, Etappe 7 — ohne personId (Modus A) zaehlt ueber alle Positionen, ungefiltert', () => {
+    const positionen = [
+      { personId: 'julian', getraenkId: 'espresso', ts: JETZT },
+      { personId: 'lisa', getraenkId: 'espresso', ts: JETZT },
+      // personId fehlt hier absichtlich — genau der Modus-A-Fall.
+      { getraenkId: 'cappuccino', ts: JETZT },
+    ];
+    const ergebnis = rangiereGetraenke(positionen, [flatWhite, cappuccino, espresso], undefined, JETZT);
+    // espresso zaehlt zwei Positionen (egal von wem), cappuccino eine, flat-white keine.
+    expect(ergebnis.map((g) => g.id)).toEqual(['espresso', 'cappuccino', 'flat-white']);
   });
 });

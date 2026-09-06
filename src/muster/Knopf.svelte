@@ -57,17 +57,34 @@
     opacity: 0.5;
     cursor: default;
   }
-  /* Primäraktion: Pille, Füllfläche, Schrift auf Füllfläche (Handoff 3.8). */
+  /* Primäraktion: Pille, Füllfläche, Schrift auf Füllfläche (Handoff 3.8).
+     Redesign v2, Etappe 1 hatte hier kurzzeitig Sans probiert (Mockup-
+     Rückmeldung "Serif 600 wirkt klobig"), am echten Gerät ("Import
+     ausführen", Migration.svelte) war das Urteil umgekehrt: zurück auf
+     Serif, dieselbe Schriftart wie Kaffeeblatt Name/Röster — .knopf
+     liefert sie bereits (var(--schrift), fs-bedienwort), .primaer braucht
+     keine eigene Font-Deklaration mehr. */
   .primaer {
     min-height: var(--primaeraktion-hoehe);
     background: var(--fuellung);
     color: var(--auf-fuellung);
     border: none;
+    /* Einen Schritt kleiner als die Knopf-Grundschrift (17px) — die volle
+       50px-Pillenfläche traegt schon genug Gewicht, 600 gleicht die
+       kleinere Groesse aus (Handoff 3.2: Fett ausdruecklich auf der
+       Fuellflaeche erlaubt). */
+    font-size: var(--fs-satz);
+    font-weight: 600;
   }
+  /* Redesign v2, Rückmeldung 2026-09-04 — der 1px-Rand war auf der warmen
+     Papierfarbe kaum sichtbar ("sieht nur nach Text aus"). Jetzt dieselbe
+     --vertiefung-Fläche wie andere ruhige Bedienelemente (Segment,
+     Mengensteller) — bleibt klar unter --fuellung, ist aber eindeutig ein
+     Knopf statt eines Links. */
   .sekundaer {
-    background: transparent;
+    background: var(--vertiefung);
     color: var(--satz);
-    border: 1px solid var(--linie);
+    border: none;
   }
   .still {
     background: transparent;

@@ -11,6 +11,7 @@
 import { alle, schreiben as ablageSchreiben, loeschen as ablageLoeschen, type SammlungWert } from '../daten/ablage';
 import { seedFallsLeer } from '../daten/seed';
 import type { Sammlung } from '../daten/db';
+import { chargeAusgeschieden, naechsteAktiveCharge, benoetigtProBezug } from '../domain/vorrat';
 
 class Bestand {
   kaffees = $state<SammlungWert['kaffee'][]>([]);
@@ -177,6 +178,43 @@ export async function schreiben<S extends Sammlung>(sammlung: S, wert: SammlungW
   const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === (wert as { id: string }).id);
   if (index === -1) liste.push(wert as never);
   else liste[index] = wert as never;
+}
+
+/**
+ * FIFO-Chargenrotation (Redesign v2, Rückmeldung 2026-09-04) — bestimmt neu,
+ * welche Charge eines Kaffees "aktuell" sein sollte, und schreibt
+ * `kaffee.aktuelleChargeId` nur, wenn sich das wirklich geaendert hat. Lebt
+ * hier statt in domain/vorrat.ts, weil sie schreibt (domain/ kennt kein idb).
+ *
+ * Aufrufen nach jeder Handlung, die eine Charge zum Ausscheiden bringen
+ * kann: ein neu geloggter Shot, eine Bestand-Korrektur, eine neue Charge
+ * (falls die alte schon vorher ausgeschieden war), "als leer markieren".
+ *
+ * `benoetigtFallback` ist die Referenzmenge fuer "reicht das noch fuer
+ * einen Bezug" (typischerweise `profil.ziel.input`) — greift nur, wenn eine
+ * Charge noch keine eigenen Shots hat (siehe durchschnittlicherInput).
+ */
+export async function chargeStatusAktualisieren(kaffeeId: string, benoetigtFallback?: number): Promise<void> {
+  const kaffee = bestand.kaffees.find((k) => k.id === kaffeeId);
+  if (!kaffee) return;
+
+  const shotsVerbrauch = bestand.shots.map((s) => ({ chargeId: s.chargeId, ts: s.ts, inputGramm: s.ist.input }));
+  const benoetigtVon = (charge: SammlungWert['charge']) =>
+    benoetigtProBezug(charge, charge.id, shotsVerbrauch, benoetigtFallback);
+
+  // Die hinterlegte aktuelle Charge, die rechnerisch nicht mehr fuer einen
+  // Bezug reicht, zusaetzlich als leer schreiben — einheitliche Anzeige mit
+  // manuell geleerten Chargen ("faellt aus der View raus").
+  const bisherige = bestand.chargen.find((c) => c.id === kaffee.aktuelleChargeId);
+  if (bisherige && !bisherige.leer && chargeAusgeschieden(bisherige, shotsVerbrauch, benoetigtVon(bisherige))) {
+    await schreiben('charge', { ...bisherige, leer: true });
+  }
+
+  const chargenDesKaffees = bestand.chargenVon(kaffeeId);
+  const naechste = naechsteAktiveCharge(chargenDesKaffees, shotsVerbrauch, benoetigtVon);
+  if (naechste?.id !== kaffee.aktuelleChargeId) {
+    await schreiben('kaffee', { ...kaffee, aktuelleChargeId: naechste?.id });
+  }
 }
 
 /** Loescht einen Datensatz und haelt den Speicher synchron. Kein Kaskadenloeschen — wer abhaengige Datensaetze schuetzen will, prueft vorher selbst (siehe Geraete.svelte). */

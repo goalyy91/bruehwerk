@@ -86,7 +86,13 @@
         {#if bestand.ladeFehler}
           <p class="fehler">Bestand konnte nicht geladen werden: {bestand.ladeFehler.message}</p>
         {:else if route.name === 'bar'}
-      <Bar onOeffnenBestellung={() => navigation.gehe({ name: 'bestellungAufnehmen' })} />
+      <Bar
+        onOeffnenBestellung={() => navigation.gehe({ name: 'bestellungAufnehmen' })}
+        onOeffnenKaffee={(kaffeeId) => navigation.gehe({ name: 'kaffee', kaffeeId })}
+        onOeffnenProfil={(kaffeeId, profilId) => navigation.gehe({ name: 'profil', kaffeeId, profilId })}
+        onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
+        onOeffnenShot={(kaffeeId, profilId) => navigation.gehe({ name: 'shot', kaffeeId, profilId })}
+      />
     {:else if route.name === 'bestellungAufnehmen'}
       <BestellungAufnehmen
         onZurueck={() => navigation.zurueck()}

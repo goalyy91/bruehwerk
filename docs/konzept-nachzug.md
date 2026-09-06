@@ -46,7 +46,7 @@ Hauptstelle hat — die meisten Punkte sind zusätzlich an weiteren Stellen bele
 | K33 | Textfelder wandern bei Fokus ins obere Drittel (Tastatur ~368 px) | Entschieden › Geklärt, ohne Folge fürs Konzept |
 | K34 | Keine Personenzuordnung je Tasse außerhalb der Bestellung; Füllmenge wird geteilt; Spielraum je Größe am Profil pflegbar; Gussplan im Zubereitungsweg, nur ansehbar | Getränke › Was je Gerät gilt |
 | K35 | ersetzt durch K53 (Auffälligkeiten tragen doch eine Stärke) | Entschieden › Geklärt, ohne Folge fürs Konzept |
-| K36 | keine Farbcodierung im Aromarad — ein Akzent bleibt ein Akzent | Die Verkostung › Aromen |
+| K36 | *aufgehoben, Redesign v2 Etappe 1* — ursprünglich „keine Farbcodierung im Aromarad", jetzt neun gedämpfte Kategoriefarben (Punkt/dünner Rand, keine Vollflächen), begrenzt auf das Aromarad | Die Verkostung › Aromen |
 | K37 | im Abarbeiten wird nur die Positions-/Durchgangsebene abgehakt | Die Bestellung › Abarbeiten |
 | K38 | berechnete Größen liegen ruhig; Gesamt kommt aus dem Shot-Urteil, keine zweite Note | Die Verkostung › Was gerechnet wird |
 | K39 | Muster 15 Lesart-Umschalter (Aromenset, kumulativ/inkrementell) | Pour Over: der Gussplan › Wie der Editor sich bedient |

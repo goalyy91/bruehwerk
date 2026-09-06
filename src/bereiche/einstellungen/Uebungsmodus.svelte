@@ -8,6 +8,7 @@
   // Abzeichen, kein Konfetti — nur die Trefferquote als ehrliche Auskunft.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { naechstesAroma, trefferquote, type AromaOption, type TrefferStand } from '../../domain/uebung';
   import { datenblattZu, FLAESCHCHEN_GESAMT, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -82,7 +83,7 @@
     const bisher = bestand.uebungen.find((u) => u.setId === set.id && u.aromaId === frage!.id);
     try {
       await schreiben('uebung', {
-        id: bisher?.id ?? crypto.randomUUID(),
+        id: bisher?.id ?? neueId(),
         setId: set.id,
         aromaId: frage.id,
         versuche: (bisher?.versuche ?? 0) + 1,

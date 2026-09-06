@@ -12,6 +12,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { GROESSEN, zusammenfassung } from '../../domain/tasting';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Treppe from '../../muster/Treppe.svelte';
@@ -93,7 +94,7 @@
   async function speichern() {
     if (!shot) return;
     const tasting: Tasting = {
-      id: bestehend?.id ?? crypto.randomUUID(),
+      id: bestehend?.id ?? neueId(),
       shotId: shot.id,
       groessen: groessenWerte,
       auffaelligkeiten: auffaelligkeiten.map((a) => ({ id: a.symptomId, staerke: a.staerke })),
@@ -121,9 +122,20 @@
   <h1>{kaffee?.name ?? 'Unbekannter Kaffee'}</h1>
   <p class="meta">{profil?.name} · {new Date(shot.ts).toLocaleDateString('de-DE')}</p>
 
+  <p class="treppen-legende">
+    <b>Säure · Körper · Bitterkeit</b> sind bipolar — die Mitte ist das Ziel, der Ausschlag zeigt die
+    Richtung. <b>Aroma · Süße · Nachklang</b> sind einseitig — mehr ist mehr.
+  </p>
   <div class="treppen">
     {#each GROESSEN as g (g.id)}
-      <Treppe titel={g.titel} art={g.art} woerter={g.woerter} start={groessenWerte[g.id]} onWahl={(i) => (groessenWerte[g.id] = i)} />
+      <Treppe
+        titel={g.titel}
+        art={g.art}
+        woerter={g.woerter}
+        start={groessenWerte[g.id]}
+        onWahl={(i) => (groessenWerte[g.id] = i)}
+        mitErklaerung={false}
+      />
     {/each}
   </div>
 
@@ -171,9 +183,13 @@
 
 <style>
   h1 {
-    font-size: var(--fs-objekt);
-    font-weight: var(--gw-text);
-    letter-spacing: -0.01em;
+    /* Redesign v2, Etappe 1: groesser/kraeftiger — der Kaffeename ist die
+       eigentliche Ueberschrift dieses Screens, "Verkostung" (Kopfzeile)
+       bleibt die schmale Orientierungszeile darueber. */
+    font-size: var(--fs-titel);
+    font-weight: var(--gw-titel);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
     margin: 0;
   }
   .meta {
@@ -181,6 +197,17 @@
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r5);
+  }
+  .treppen-legende {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    line-height: 1.5;
+    color: var(--gedaempft);
+    margin: 0 0 var(--r3);
+  }
+  .treppen-legende b {
+    color: var(--satz);
+    font-weight: 600;
   }
   .treppen {
     display: flex;

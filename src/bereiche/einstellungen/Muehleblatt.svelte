@@ -19,6 +19,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
@@ -37,7 +38,7 @@
   const bestehend = $derived(muehleId ? bestand.muehlen.find((m) => m.id === muehleId) : undefined);
 
   function leererEntwurf(): Muehle {
-    return { id: crypto.randomUUID(), name: '', skala: { typ: 'numerisch', min: 0, max: 10, schritt: 0.1 }, rpmEinstellbar: false };
+    return { id: neueId(), name: '', skala: { typ: 'numerisch', min: 0, max: 10, schritt: 0.1 }, rpmEinstellbar: false };
   }
 
   // bestehend liefert nur die Startbelegung (Bearbeiten-Fall); danach lebt
