@@ -10,18 +10,26 @@
  * CLAUDE.md es fuer die Milliliter-Angaben der Getraenke schon vormerkt) —
  * an der Kategoriestruktur selbst aendert eine Pruefung nichts.
  *
- * AROMASET_LENEZ ist ausdruecklich PLATZHALTER (Rueckfrage 2026-08-26): die
- * 60 echten Fläschchennummern und ihre Zuordnung kommen erst vom Karton
- * (siehe CLAUDE.md "Offen — noch nicht geliefert"). Jedes Blatt-Aroma
- * traegt "(Platzhalter)" im Label selbst — nicht nur als Meta-Zeile
- * daneben —, damit auch ein Screenshot oder ein Bericht ausserhalb der App
- * nicht mit echten Daten verwechselt werden kann. Sobald die echte Liste
- * vorliegt, ersetzt sie ausschliesslich den Inhalt dieser einen Konstante;
- * bestehende Uebungsmodus-Datensaetze (daten/schema/uebung.ts) werden dabei
- * sinnlos und sollten von Hand geloescht werden (Einstellungen > Backup),
- * weil sich die Nummer-zu-Aroma-Zuordnung mit dem Austausch aendert.
+ * AROMASET_LENEZ wird seit 2026-09-06 **aus den Datenblaettern gebaut**
+ * (aroma-datenblaetter.ts): auf jedem eingescannten Blatt stehen Nummer,
+ * Name und Kategorie, also ist das Blatt der Ursprung und nicht eine
+ * Beschreibung neben einer zweiten, handgepflegten Liste. Vorher stand hier
+ * eine erfundene Kategorienverteilung mit 60 "(Platzhalter)"-Labels; sie ist
+ * ersatzlos weg, weil geratene Daten schlechter sind als sichtbar fehlende.
+ *
+ * Ein noch nicht erfasstes Flaeschchen heisst "Nr. N (noch nicht erfasst)"
+ * und sammelt sich in einer eigenen Kategorie gleichen Namens — kein
+ * Screenshot und kein Bericht kann das mit echten Daten verwechseln. Das Set
+ * bleibt `platzhalter: true`, bis alle 60 Blaetter da sind.
+ *
+ * Die Ids bleiben `flaeschchen-N`, also an die Nummer gebunden und nicht an
+ * den Namen: ein Haeppchen neuer Blaetter macht damit bestehende
+ * Uebungsmodus-Datensaetze (daten/schema/uebung.ts) nicht ungueltig, weil
+ * sich die Nummer-zu-Flaeschchen-Zuordnung nie aendert — nur die Beschriftung
+ * kommt hinzu.
  */
 import type { Aromaset } from './schema';
+import { DATENBLAETTER, FLAESCHCHEN_GESAMT, datenblattZu } from './aroma-datenblaetter';
 
 export const AROMASET_SCA: Aromaset = {
   id: 'aromaset-sca',
@@ -287,42 +295,59 @@ export const AROMASET_SCA: Aromaset = {
   ],
 };
 
-/** Sieben Fläschchen je Kategorie, letzte drei Kategorien mit sechs — Summe 60. */
-const LENEZ_VERTEILUNG: readonly { kategorieId: string; kategorieLabel: string; anzahl: number }[] = [
-  { kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', anzahl: 7 },
-  { kategorieId: 'sauer-fermentiert', kategorieLabel: 'Sauer / Fermentiert', anzahl: 7 },
-  { kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', anzahl: 6 },
-  { kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', anzahl: 6 },
-  { kategorieId: 'roestig', kategorieLabel: 'Röstig', anzahl: 7 },
-  { kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', anzahl: 6 },
-  { kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', anzahl: 7 },
-  { kategorieId: 'suess', kategorieLabel: 'Süß', anzahl: 7 },
-  { kategorieId: 'blumig', kategorieLabel: 'Blumig', anzahl: 7 },
-];
+/** Die Kategorie, in der alles landet, wozu noch kein Datenblatt vorliegt. */
+const NICHT_ERFASST_ID = 'nicht-erfasst';
+const NICHT_ERFASST_LABEL = 'Noch nicht erfasst';
 
-let naechsteNummer = 1;
-const LENEZ_KATEGORIEN: Aromaset['kategorien'] = LENEZ_VERTEILUNG.map(({ kategorieId, kategorieLabel, anzahl }) => ({
-  id: kategorieId,
-  label: kategorieLabel,
-  gruppen: [
-    {
-      id: `${kategorieId}-flaeschchen`,
-      label: 'Fläschchen',
-      aromen: Array.from({ length: anzahl }, () => {
-        const nummer = naechsteNummer++;
-        return { id: `flaeschchen-${nummer}`, label: `Nr. ${nummer} (Platzhalter)`, nummer };
-      }),
-    },
-  ],
-}));
+/** Id eines Flaeschchens — an die Nummer gebunden, nie an den Namen (siehe Kopfkommentar). */
+export function flaeschchenId(nummer: number): string {
+  return `flaeschchen-${nummer}`;
+}
+
+/**
+ * Baut die neun (bzw. bis zur vollstaendigen Erfassung zehn) Kategorien aus
+ * den vorliegenden Datenblaettern. Die Reihenfolge der Kategorien folgt der
+ * ersten erfassten Nummer, damit die Liste bei jedem Haeppchen stabil waechst
+ * statt sich umzusortieren; "Noch nicht erfasst" steht immer am Ende.
+ */
+function lenezKategorien(): Aromaset['kategorien'] {
+  const kategorien: Aromaset['kategorien'] = [];
+  const nachId = new Map<string, Aromaset['kategorien'][number]>();
+
+  for (let nummer = 1; nummer <= FLAESCHCHEN_GESAMT; nummer++) {
+    const blatt = datenblattZu(nummer);
+    const id = blatt?.kategorieId ?? NICHT_ERFASST_ID;
+    const label = blatt?.kategorieLabel ?? NICHT_ERFASST_LABEL;
+
+    let kategorie = nachId.get(id);
+    if (!kategorie) {
+      kategorie = { id, label, gruppen: [{ id: `${id}-flaeschchen`, label: 'Fläschchen', aromen: [] }] };
+      nachId.set(id, kategorie);
+      kategorien.push(kategorie);
+    }
+    kategorie.gruppen[0]!.aromen.push({
+      id: flaeschchenId(nummer),
+      label: blatt ? blatt.name : `Nr. ${nummer} (noch nicht erfasst)`,
+      nummer,
+    });
+  }
+
+  // "Noch nicht erfasst" ans Ende, egal bei welcher Nummer die Luecke begann.
+  const offen = kategorien.findIndex((k) => k.id === NICHT_ERFASST_ID);
+  if (offen >= 0) kategorien.push(...kategorien.splice(offen, 1));
+  return kategorien;
+}
 
 export const AROMASET_LENEZ: Aromaset = {
   id: 'aromaset-lenez',
   name: 'Le Nez du Café',
-  quelle: 'Platzhalter — echte Fläschchenliste steht noch aus, wird nachgereicht',
+  quelle:
+    DATENBLAETTER.length === FLAESCHCHEN_GESAMT
+      ? 'Le Nez du Café — Begleitmaterial, deutsche Fassung'
+      : `${DATENBLAETTER.length} von ${FLAESCHCHEN_GESAMT} Datenblättern erfasst — der Rest wird nachgetragen`,
   vialNummern: true,
-  platzhalter: true,
-  kategorien: LENEZ_KATEGORIEN,
+  platzhalter: DATENBLAETTER.length < FLAESCHCHEN_GESAMT,
+  kategorien: lenezKategorien(),
 };
 
 export const AROMASETS: readonly Aromaset[] = [AROMASET_SCA, AROMASET_LENEZ];

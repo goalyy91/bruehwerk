@@ -9,10 +9,12 @@
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { naechstesAroma, trefferquote, type AromaOption, type TrefferStand } from '../../domain/uebung';
+  import { datenblattZu, FLAESCHCHEN_GESAMT, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Rangliste from '../../muster/Rangliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Aromadatenblatt from './Aromadatenblatt.svelte';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
 
@@ -22,8 +24,16 @@
   // ist das ohnehin nur AROMASET_LENEZ (daten/aromen.ts).
   const set = $derived(bestand.aromasets.find((a) => a.vialNummern));
 
+  // Geuebt wird nur, wozu ein Datenblatt vorliegt. Stuenden die erfassten
+  // Namen zwischen lauter "Nr. N (noch nicht erfasst)", waere die Antwort
+  // durch Ausschluss zu erraten — die Trefferquote waere dann Selbstauskunft
+  // statt Messung. Lieber ein kleiner ehrlicher Vorrat, der mit jedem
+  // Haeppchen Scans waechst (daten/aroma-datenblaetter.ts).
   const alleAromen = $derived<AromaOption[]>(
-    (set?.kategorien ?? []).flatMap((k) => k.gruppen.flatMap((g) => g.aromen.map((a) => ({ id: a.id, label: a.label, nummer: a.nummer })))),
+    (set?.kategorien ?? [])
+      .flatMap((k) => k.gruppen.flatMap((g) => g.aromen))
+      .filter((a) => a.nummer !== undefined && datenblattZu(a.nummer) !== undefined)
+      .map((a) => ({ id: a.id, label: a.label, nummer: a.nummer })),
   );
 
   function standVon(aromaId: string): TrefferStand | undefined {
@@ -37,6 +47,12 @@
   let aufgedeckt = $state(false);
   let letztesRichtig = $state(false);
   let fehler = $state('');
+
+  // Das offene Datenblatt. Eigener Zustand statt einer zweiten
+  // Navigations-Ebene: die laufende Frage bleibt unangetastet stehen,
+  // waehrend das Blatt oben liegt, und der Rueckweg fuehrt genau dorthin
+  // zurueck — kein neues Wuerfeln, kein verlorener Tipp.
+  let datenblatt = $state<AromaDatenblatt | undefined>(undefined);
 
   function neueFrage() {
     const bekannteStaende = new Map<string, TrefferStand>();
@@ -85,42 +101,62 @@
   );
 </script>
 
-<Kopfzeile titel="Übungsmodus" {onZurueck} />
-
-{#if !set}
-  <p class="hinweis">Kein Aromenset mit Fläschchennummern hinterlegt.</p>
+{#if datenblatt}
+  <Aromadatenblatt
+    blatt={datenblatt}
+    onZurueck={() => (datenblatt = undefined)}
+    onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)}
+  />
 {:else}
-  {#if set.platzhalter}
-    <p class="quelle">{set.quelle}</p>
-  {/if}
+  <Kopfzeile titel="Übungsmodus" {onZurueck} />
 
-  {#if frage}
-    <div class="frage-block">
-      <p class="frage-titel">
-        {frage.nummer !== undefined ? `Fläschchen ${frage.nummer}` : frage.label}
+  {#if !set}
+    <p class="hinweis">Kein Aromenset mit Fläschchennummern hinterlegt.</p>
+  {:else}
+    {#if set.platzhalter}
+      <p class="quelle">{alleAromen.length} von {FLAESCHCHEN_GESAMT} Fläschchen erfasst</p>
+    {/if}
+
+    {#if alleAromen.length === 0}
+      <p class="hinweis">
+        Noch kein Datenblatt erfasst — bis dahin gibt es nichts abzufragen.
       </p>
-      {#if !aufgedeckt}
-        {#key frage.id}
-          <AuswahlListe optionen={alleAromen.map((a) => ({ wert: a.id, label: a.label }))} wert={tipp} onWahl={(w) => (tipp = w)} platzhalter="dein Tipp …" />
-        {/key}
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={aufdecken} deaktiviert={!tipp}>aufdecken</Knopf>
-        </div>
-      {:else}
-        <p class="ergebnis" class:richtig={letztesRichtig}>
-          {letztesRichtig ? 'Richtig.' : `Das war „${frage.label}“.`}
-        </p>
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={neueFrage}>nächstes Fläschchen</Knopf>
+    {:else}
+      {#if frage}
+        <div class="frage-block">
+          <p class="frage-titel">
+            {frage.nummer !== undefined ? `Fläschchen ${frage.nummer}` : frage.label}
+          </p>
+          {#if !aufgedeckt}
+            {#key frage.id}
+              <AuswahlListe optionen={alleAromen.map((a) => ({ wert: a.id, label: a.label }))} wert={tipp} onWahl={(w) => (tipp = w)} platzhalter="dein Tipp …" />
+            {/key}
+            <div class="knopfreihe">
+              <Knopf stufe="primaer" onKlick={aufdecken} deaktiviert={!tipp}>aufdecken</Knopf>
+            </div>
+          {:else}
+            <p class="ergebnis" class:richtig={letztesRichtig}>
+              {letztesRichtig ? 'Richtig.' : `Das war „${frage.label}“.`}
+            </p>
+            <!-- Erst hier, nie vorher: auf dem Datenblatt steht der Name in
+                 der Ueberschrift — vor dem Aufdecken erreichbar waere es die
+                 Loesung auf Knopfdruck. -->
+            <div class="knopfreihe">
+              <Knopf stufe="primaer" onKlick={neueFrage}>nächstes Fläschchen</Knopf>
+              {#if frage.nummer !== undefined && datenblattZu(frage.nummer)}
+                <Knopf onKlick={() => (datenblatt = datenblattZu(frage!.nummer!))}>Datenblatt ansehen</Knopf>
+              {/if}
+            </div>
+          {/if}
+          {#if fehler}<p class="fehler">{fehler}</p>{/if}
         </div>
       {/if}
-      {#if fehler}<p class="fehler">{fehler}</p>{/if}
-    </div>
-  {/if}
 
-  <section class="trefferquote">
-    <Rangliste person="Trefferquote" eintraege={rangliste} mitBalken />
-  </section>
+      <section class="trefferquote">
+        <Rangliste person="Trefferquote" eintraege={rangliste} mitBalken />
+      </section>
+    {/if}
+  {/if}
 {/if}
 
 <style>
@@ -146,6 +182,10 @@
     color: var(--satz);
   }
   .knopfreihe {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--r2);
     margin-top: var(--r3);
   }
   .hinweis {

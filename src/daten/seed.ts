@@ -41,11 +41,20 @@ export async function seedFallsLeer(): Promise<void> {
     for (const symptom of [...SYMPTOME_STAMM, ...AUFFAELLIGKEITEN_STAMM]) await schreiben('symptom', symptom);
   }
 
-  // Paket 05 — die zwei Aromen-Sets (SCA + Le-Nez-Platzhalter, daten/aromen.ts).
-  const aromasetsVorhanden = await alle('aromaset');
-  if (aromasetsVorhanden.length === 0) {
-    for (const aromaset of AROMASETS) await schreiben('aromaset', aromaset);
-  }
+  // Paket 05 — die zwei Aromen-Sets (SCA + Le Nez, daten/aromen.ts).
+  //
+  // Kein "nur falls leer"-Gate wie oben, sondern **Durchschreiben bei jedem
+  // Start**: die Le-Nez-Flaeschchenliste waechst mit jedem Haeppchen
+  // eingescannter Datenblaetter (aroma-datenblaetter.ts). Mit einem
+  // Leer-Gate wuerde auf einem bereits benutzten Geraet fuer immer die erste,
+  // fast leere Fassung stehen bleiben — der Nachtrag kaeme nie an.
+  //
+  // Das ist gefahrlos, weil ein Aromaset reines Nachschlagewerk ist und
+  // keine Nutzereingaben traegt: die Uebungsergebnisse liegen getrennt im
+  // 'uebung'-Store (daten/schema/uebung.ts) und sind an die Flaeschchen-Id
+  // gebunden, die sich nie aendert. Ueberschrieben wird ausschliesslich, was
+  // in AROMASETS steht — ein selbst angelegtes Set bliebe unberuehrt.
+  for (const aromaset of AROMASETS) await schreiben('aromaset', aromaset);
 
   // Paket 06 — die neun Getraenke zum Start (daten/stammdaten-getraenke.ts).
   const getraenkeVorhanden = await alle('getraenk');

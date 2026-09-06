@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "scans": "node werkzeuge/scan-blaetter.cjs",
     "test:unit": "vitest run",
     "test:typen": "svelte-check --tsconfig ./tsconfig.json --threshold error --output human",
     "test": "npm run test:unit && npm run test:typen && npm run build"
