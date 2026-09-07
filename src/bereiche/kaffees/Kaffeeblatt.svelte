@@ -911,7 +911,8 @@
     border: none;
     border-radius: 50%;
     background: var(--vertiefung);
-    color: var(--gedaempft);
+    /* Rundes Bedienzeichen auf der tieferen Vertiefung — siehe tokens.css. */
+    color: var(--gedaempft-tief);
     cursor: pointer;
   }
   .icon-option.gewaehlt {

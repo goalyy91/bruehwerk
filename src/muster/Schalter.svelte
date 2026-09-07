@@ -69,6 +69,15 @@
     height: var(--schalter-knopf);
     border-radius: 50%;
     background: var(--blatt);
+    /* Der Schlagschatten ist das, was einen Schalter ueberhaupt lesbar macht —
+       nicht die Farbe der Bahn. Jedes native System zeichnet ihn so; selbst
+       dort liegt die Aus-Bahn nur knapp ueber dem Grund. Ohne ihn war der
+       Knopf hier ein weisser Punkt im Nichts (und im dunklen Theme sogar
+       dunkler als seine eigene Bahn). Deshalb zusaetzlich die Haarlinie:
+       sie traegt den Rand dort, wo der Schatten zu wenig hergibt. */
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.28),
+      0 0 0 0.5px rgba(0, 0, 0, 0.06);
     transition: transform var(--t-auswahl) var(--e-rein);
   }
   .schalter.an .knopf {

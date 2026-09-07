@@ -97,6 +97,13 @@
     border-radius: var(--r-kachel);
     overflow: hidden;
     background: var(--blatt);
+    /* Das Menue liegt *ueber* der Seite — das erzaehlt man mit Hoehe, nicht
+       mit Farbe. Blatt auf Grund sind 1,14:1, es klebte deshalb als flacher
+       Block auf dem Bildschirm. Genau der Fall, den der Token-Kopfkommentar
+       fuer Schatten vorsieht: angehobene Flaeche, nicht generelle Elevation. */
+    box-shadow:
+      0 14px 30px -16px var(--schatten),
+      0 2px 6px -2px var(--schatten);
   }
   .zeile {
     min-height: var(--treffer);

@@ -31,7 +31,21 @@
   /* ---- Rohfarben HELL · immer definiert (Handoff 3.1) ---- */
   --h-grund: #f1ebe1;
   --h-blatt: #fcfaf6;
-  --h-vertiefung: #e8dfd1;
+  /* Kontrast der Bedienschicht (2026-09-07). Die Vertiefung stand auf #e8dfd1
+     und damit bei 1,11:1 zum Grund — rechnerisch ein Unterschied, praktisch
+     keiner: Eingabefelder und Schalterbahnen waren am Telefon bei Tageslicht
+     unsichtbar. Jetzt 1,36:1. Bewusst nicht auf die von WCAG 1.4.11 fuer
+     Bedienelement-*Grenzen* geforderten 3:1 gezogen: die Grenze traegt hier
+     Beschriftung, Abstand und Position mit, und eine Kontur haette jedes
+     Formular in sichtbare Kaesten zerlegt (Mockup-Entscheidung, Variante A).
+     Der eine Fall, wo das nicht traegt — der Schalter —, loest es ueber den
+     Schlagschatten am Knopf, so wie jedes native System es macht. */
+  --h-vertiefung: #d9cab4;
+  /* Gedaempfter Text *auf* der Vertiefung. --gedaempft selbst kommt dort nur
+     noch auf 2,38:1; dieser Wert auf 3,20:1 und bleibt zugleich klar leichter
+     als eingegebener Text (10,8:1) — Platzhalter muss als leer erkennbar
+     bleiben. */
+  --h-gedaempft-tief: #766c5e;
   --h-linie: #f0e8db;
   --h-spur: #cfc4b2;
   --h-tinte: #1e1a16;
@@ -50,7 +64,8 @@
   /* ---- Rohfarben DUNKEL · immer definiert (Handoff 3.1/7) ---- */
   --d-grund: #17140f;
   --d-blatt: #211d18;
-  --d-vertiefung: #2b2620;
+  --d-vertiefung: #423a30; /* war #2b2620 — 1,23:1, siehe Hell oben. Jetzt 1,64:1. */
+  --d-gedaempft-tief: #a09789; /* 3,87:1 auf der Vertiefung */
   --d-linie: #2f2922;
   --d-spur: #5f584e;
   --d-tinte: #f1ece4;
@@ -75,6 +90,7 @@
   --tinte: var(--h-tinte);
   --satz: var(--h-satz);
   --gedaempft: var(--h-gedaempft);
+  --gedaempft-tief: var(--h-gedaempft-tief);
   --akzent: var(--h-akzent);
   --fuellung: var(--h-fuellung);
   --fuellung-leicht: var(--h-fuellung-leicht);
@@ -199,6 +215,7 @@
     --tinte: var(--d-tinte);
     --satz: var(--d-satz);
     --gedaempft: var(--d-gedaempft);
+    --gedaempft-tief: var(--d-gedaempft-tief);
     --akzent: var(--d-akzent);
     --fuellung: var(--d-fuellung);
     --fuellung-leicht: var(--d-fuellung-leicht);
@@ -221,6 +238,7 @@
   --tinte: var(--d-tinte);
   --satz: var(--d-satz);
   --gedaempft: var(--d-gedaempft);
+  --gedaempft-tief: var(--d-gedaempft-tief);
   --akzent: var(--d-akzent);
   --fuellung: var(--d-fuellung);
   --fuellung-leicht: var(--d-fuellung-leicht);
@@ -240,6 +258,7 @@
   --tinte: var(--h-tinte);
   --satz: var(--h-satz);
   --gedaempft: var(--h-gedaempft);
+  --gedaempft-tief: var(--h-gedaempft-tief);
   --akzent: var(--h-akzent);
   --fuellung: var(--h-fuellung);
   --fuellung-leicht: var(--h-fuellung-leicht);
@@ -376,7 +395,11 @@ h2 {
   min-width: var(--feld-min);
 }
 .eingabefeld-text::placeholder {
-  color: var(--spur);
+  /* War --spur und damit auf der tieferen Feldflaeche bei 1,07:1 — praktisch
+     unsichtbar. --gedaempft-tief liegt bei 3,20:1 und bleibt trotzdem klar
+     leichter als eingegebener Text (10,8:1): ein Platzhalter muss lesbar
+     sein und zugleich als "noch leer" erkennbar bleiben. */
+  color: var(--gedaempft-tief);
 }
 
 /* Fokus sichtbar für Tastatur/Screenreader, ohne neues Token — und

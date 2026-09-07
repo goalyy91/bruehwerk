@@ -112,7 +112,10 @@
   }
   .voll.abgelehnt {
     background: var(--vertiefung);
-    color: var(--gedaempft);
+    /* Abgelehnt heißt zurückgenommen, nicht unleserlich: --gedaempft läge auf
+       der tieferen Vertiefung bei 2,38:1. Ein abgelehnter Vorschlag muss man
+       noch lesen können, sonst kann man ihn nicht überdenken. */
+    color: var(--gedaempft-tief);
   }
   .titel-zeile {
     display: flex;
@@ -191,7 +194,10 @@
   }
   .duenn.abgelehnt {
     background: var(--vertiefung);
-    color: var(--gedaempft);
+    /* Abgelehnt heißt zurückgenommen, nicht unleserlich: --gedaempft läge auf
+       der tieferen Vertiefung bei 2,38:1. Ein abgelehnter Vorschlag muss man
+       noch lesen können, sonst kann man ihn nicht überdenken. */
+    color: var(--gedaempft-tief);
   }
   .duenn .satz {
     flex: 1;

@@ -102,7 +102,10 @@
   }
   .zeile.erledigt {
     background: var(--vertiefung);
-    color: var(--gedaempft);
+    /* --gedaempft laege auf der tieferen Vertiefung bei 2,38:1 (vorher 2,90).
+       --gedaempft-tief haelt 3,20:1 und bleibt trotzdem sichtbar
+       zurueckgenommen — erledigt heisst leiser, nicht unleserlich. */
+    color: var(--gedaempft-tief);
     cursor: pointer;
   }
   .label {
@@ -136,7 +139,9 @@
     border: none;
     border-top: 1px solid var(--linie);
     background: var(--vertiefung);
-    color: var(--gedaempft);
+    /* Wie oben — hier zusaetzlich wichtig, weil die Falte ein antippbares
+       Bedienelement in Meta-Groesse (12px) ist. */
+    color: var(--gedaempft-tief);
     font-family: var(--schrift);
     font-size: var(--fs-meta);
     text-align: left;
