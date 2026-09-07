@@ -138,6 +138,26 @@
   // "Röstgrad (Röster)" bleibt entfernt — ein Röstgrad-Zeichen (Bohnen
   // oben im Blick-Bereich) reicht.
   const bohneArt = $derived(kaffee ? (kaffee.art === 'blend' ? 'Blend' : 'Single Origin') : '');
+
+  /**
+   * Leere Zustaende verschwinden, statt Platz zu belegen (Rueckmeldung
+   * 2026-09-07 zum Kaffeeblatt-Screenshot: vier grosse Kacheln mit Symbol,
+   * Beschriftung und viermal "—" waren der halbe Bildschirm fuer nichts).
+   * Ein nicht erfasstes Feld ist keine Information — es ist die Abwesenheit
+   * einer, und die braucht keine Kachel.
+   *
+   * Der Roestgrad kommt hier dazu, obwohl Bohnen.svelte seine fuenf Stufen
+   * bewusst immer zeigt (K79, Systemregel): das Bauteil bleibt unangetastet,
+   * es wird nur nicht mehr aufgerufen, wenn nichts erfasst ist. Fuenf leere
+   * Bohnen *und* das Wort "unbekannt" daneben waren zweimal dasselbe Nichts.
+   */
+  const hatHerkunft = $derived((kaffee?.herkunft.length ?? 0) > 0);
+  const hatAnbauhoehe = $derived(kaffee?.anbauhoehe !== undefined);
+  const hatVarietaet = $derived(!!kaffee?.varietaet);
+  const hatAufbereitung = $derived(!!kaffee?.aufbereitung);
+  const hatSteckbrief = $derived(hatHerkunft || hatAnbauhoehe || hatVarietaet || hatAufbereitung);
+  const hatRoestgrad = $derived(kaffee?.roestgrad !== undefined);
+  const hatBewertung = $derived(kaffee?.bewertung !== undefined);
   /**
    * Rückmeldung 2026-09-04: "wenn es 100% vom einen ist, muss das andere
    * nicht angezeigt werden" — bei einer reinen Sorte ist die zweite Zahl
@@ -367,67 +387,89 @@
       {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
     </p>
 
-    <div class="blick">
-      <div class="blick-eintrag">
-        <span class="label">Röstgrad</span>
-        <Bohnen stufe={kaffee.roestgrad} />
+    {#if hatRoestgrad || hatBewertung}
+      <div class="blick">
+        {#if hatRoestgrad}
+          <div class="blick-eintrag">
+            <span class="label">Röstgrad</span>
+            <Bohnen stufe={kaffee.roestgrad} />
+          </div>
+        {/if}
+        {#if hatRoestgrad && hatBewertung}
+          <div class="blick-trenner" aria-hidden="true"></div>
+        {/if}
+        {#if hatBewertung}
+          <div class="blick-eintrag">
+            <span class="label">Bewertung</span>
+            <Sterne wert={kaffee.bewertung} />
+          </div>
+        {/if}
       </div>
-      <div class="blick-trenner" aria-hidden="true"></div>
-      <div class="blick-eintrag">
-        <span class="label">Bewertung</span>
-        <Sterne wert={kaffee.bewertung} />
-      </div>
-    </div>
+    {/if}
 
-    <div class="steckbrief">
-      <div class="steckbrief-kachel">
-        <span class="steckbrief-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" />
-          </svg>
-        </span>
-        <span class="steckbrief-wert">{kaffee.herkunft.length > 0 ? kaffee.herkunft.join(', ') : '—'}</span>
-        <span class="steckbrief-label">Herkunft</span>
+    {#if hatSteckbrief}
+      <div class="steckbrief">
+        {#if hatHerkunft}
+          <div class="steckbrief-kachel">
+            <span class="steckbrief-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" />
+              </svg>
+            </span>
+            <span class="steckbrief-wert">{kaffee.herkunft.join(', ')}</span>
+            <span class="steckbrief-label">Herkunft</span>
+          </div>
+        {/if}
+        {#if hatAnbauhoehe}
+          <div class="steckbrief-kachel">
+            <span class="steckbrief-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 18.5l6-9.5 4 5 2-3 6 7.5z" />
+              </svg>
+            </span>
+            <span class="steckbrief-wert">{kaffee.anbauhoehe} m</span>
+            <span class="steckbrief-label">Anbauhöhe</span>
+          </div>
+        {/if}
+        {#if hatVarietaet}
+          <div class="steckbrief-kachel">
+            <span class="steckbrief-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 20.5C4 12 9 5 18 4c1 8-4 15-12 16.5z" /><path d="M7.5 19c3-4 6-7 9.5-9.5" stroke-width="1.1" />
+              </svg>
+            </span>
+            <span class="steckbrief-wert">{kaffee.varietaet}</span>
+            <span class="steckbrief-label">Varietät</span>
+          </div>
+        {/if}
+        {#if hatAufbereitung && kaffee.aufbereitung}
+          <div class="steckbrief-kachel">
+            <span class="steckbrief-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 3s6 7.4 6 11.7A6 6 0 0 1 6 14.7C6 10.4 12 3 12 3z" />
+              </svg>
+            </span>
+            <span class="steckbrief-wert">{AUFBEREITUNG_LABEL[kaffee.aufbereitung]}</span>
+            <span class="steckbrief-label">Aufbereitung</span>
+          </div>
+        {/if}
       </div>
-      <div class="steckbrief-kachel">
-        <span class="steckbrief-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M3 18.5l6-9.5 4 5 2-3 6 7.5z" />
-          </svg>
-        </span>
-        <span class="steckbrief-wert">{kaffee.anbauhoehe !== undefined ? `${kaffee.anbauhoehe} m` : '—'}</span>
-        <span class="steckbrief-label">Anbauhöhe</span>
-      </div>
-      <div class="steckbrief-kachel">
-        <span class="steckbrief-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M6 20.5C4 12 9 5 18 4c1 8-4 15-12 16.5z" /><path d="M7.5 19c3-4 6-7 9.5-9.5" stroke-width="1.1" />
-          </svg>
-        </span>
-        <span class="steckbrief-wert">{kaffee.varietaet ?? '—'}</span>
-        <span class="steckbrief-label">Varietät</span>
-      </div>
-      <div class="steckbrief-kachel">
-        <span class="steckbrief-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 3s6 7.4 6 11.7A6 6 0 0 1 6 14.7C6 10.4 12 3 12 3z" />
-          </svg>
-        </span>
-        <span class="steckbrief-wert">{kaffee.aufbereitung ? AUFBEREITUNG_LABEL[kaffee.aufbereitung] : '—'}</span>
-        <span class="steckbrief-label">Aufbereitung</span>
-      </div>
-    </div>
+    {/if}
 
+    <!-- "Art" steht immer (Single Origin/Blend ist nie leer), "Botanik" nur,
+         wenn erfasst — dieselbe Regel wie beim Steckbrief oben. -->
     <div class="kb-fusszeilen">
       <div class="fuss-eintrag">
         <span class="fuss-label">Art</span>
         <span class="fuss-wert">{bohneArt}</span>
       </div>
-      <div class="fuss-trenner" aria-hidden="true"></div>
-      <div class="fuss-eintrag">
-        <span class="fuss-label">Botanik</span>
-        <span class="fuss-wert">{kaffee.botanik ? botanikSatz(kaffee.botanik) : '—'}</span>
-      </div>
+      {#if kaffee.botanik}
+        <div class="fuss-trenner" aria-hidden="true"></div>
+        <div class="fuss-eintrag">
+          <span class="fuss-label">Botanik</span>
+          <span class="fuss-wert">{botanikSatz(kaffee.botanik)}</span>
+        </div>
+      {/if}
     </div>
   </div>
 
