@@ -90,7 +90,10 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-width: 180px;
+    /* Etappe 9, Block D: keine Mindestbreite mehr — das Menü ist so breit wie
+       sein längster Eintrag. 180 px zwangen kurze Menüs ("Löschen") in eine
+       Fläche, die zur Hälfte leer war. */
+    width: max-content;
     border-radius: var(--r-kachel);
     overflow: hidden;
     background: var(--blatt);
@@ -102,8 +105,14 @@
     border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--satz);
-    font-family: var(--schrift);
-    font-size: var(--fs-bedienwort);
+    /* Etappe 9, Block D — der groesste einzelne Hebel der Etappe: Sans statt
+       Serif. Ein Aktionsmenue ist Apparat, kein Inhalt; die Projektregel
+       "Serif traegt den Inhalt, Sans nur den Apparat" gilt laengst und wurde
+       hier nie befolgt. Native Kontextmenues sind ausnahmslos Systemschrift,
+       nie eine Buchschrift — genau daran erkennt man an dieser Stelle, dass
+       die App keine App ist. Zeilenhoehe bleibt bei --treffer. */
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;
   }

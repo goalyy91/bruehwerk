@@ -73,6 +73,10 @@
   }
   .schalter.an .knopf {
     background: var(--auf-fuellung);
-    transform: translateX(20px);
+    /* Etappe 9, Block D: der Weg haengt an Pillenbreite und Knopfgroesse und
+       stand vorher als nackte 20 hier — jetzt als Token neben den beiden
+       Maszen, damit er beim naechsten Umbau nicht stehen bleibt und der
+       Knopf aus der Pille laeuft. */
+    transform: translateX(var(--schalter-weg));
   }
 </style>

@@ -131,8 +131,14 @@
   {/if}
 
   {#if aktiv && profil}
-    <h1>{kaffeeName(aktiv.kaffeeId)}</h1>
-    <p class="meta">{profil.name} · {getraenkNamen(aktiv.positionIds)}</p>
+    <!-- Etappe 9, Block C: Getraenkename ist die Ueberschrift, nicht der
+         Kaffeename. Beim Abarbeiten lautet die Frage "welche Tasse mache ich
+         gerade" — das Getraenk ist die Entscheidung, Bohne und Profil sind
+         die Begleitumstaende. Vorher stand das Getraenk klein und gedaempft
+         in der Meta-Zeile und war zwischen zwei Tassen leicht zu uebersehen.
+         Bei einem Doppelbezug nennt getraenkNamen() beide, mit "+" verbunden. -->
+    <h1>{getraenkNamen(aktiv.positionIds)}</h1>
+    <p class="meta">{kaffeeName(aktiv.kaffeeId)} · {profil.name}</p>
 
     <div class="block">
       <p class="gruppenkopf">Ziel</p>

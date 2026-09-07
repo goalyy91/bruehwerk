@@ -52,7 +52,9 @@
     background: transparent;
     color: var(--satz);
     font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    /* Etappe 9, Block D: eine Stufe unter dem Satz. Die Leiste ist Apparat,
+       kein Fliesstext — sie darf schmaler wirken als das, was sie umschaltet. */
+    font-size: var(--fs-segment);
     cursor: pointer;
     transition: background var(--t-auswahl) var(--e-rein);
   }

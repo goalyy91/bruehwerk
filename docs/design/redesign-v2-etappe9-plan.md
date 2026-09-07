@@ -94,7 +94,14 @@ als Fix mit umgesetzt, `let modus = $state(...)('person')`). Seit der Fastway (B
    entkoffeiniert"/"stattdessen normal") — die stille Vorbelegung bleibt Regelfall (kein
    Alarmsignal ohne Inhalt, K56), ein Tap genügt für die Ausnahme.
 
-## C · Abarbeiten — welches Getränk, deutlicher
+## C · Abarbeiten — welches Getränk, deutlicher — ERLEDIGT (2026-09-07)
+
+*Umgesetzt wie unten vorgeschlagen:* `BestellungAbarbeiten.svelte`, Überschrift trägt jetzt
+`getraenkNamen(aktiv.positionIds)`, die Meta-Zeile darunter `kaffeeName · profil.name`. Nur die
+aktive Karte betroffen — „Danach"- und „Erledigt"-Zeilen behalten ihre Form (`Kaffee · Getränk`),
+weil sie Übersicht sind und keine Entscheidung. Keine Größen- oder Abstandsänderung; die
+Typografie kommt in Block D.
+
 
 Der Getränkename steht heute schon in der Meta-Zeile (`{profil.name} · {getraenkNamen(...)}`),
 aber klein und gedämpft direkt unter dem Kaffeenamen — leicht zu übersehen, wenn du gerade
@@ -103,7 +110,32 @@ Entscheidung, die du gerade triffst — "welche Tasse"), Kaffeename rutscht in d
 darunter (umgekehrte Reihenfolge). Bei einem Doppelbezug (zwei Getränke, ein Durchgang) zeigt
 die Überschrift beide, mit "+" verbunden — das tut `getraenkNamen()` schon.
 
-## D · Typografie und Bedienelemente — sichtbar schlanker, Tippzone unverändert
+## D · Typografie und Bedienelemente — sichtbar schlanker, Tippzone unverändert — ERLEDIGT (2026-09-07)
+
+*Mockup vorab wie vorgesehen* (Artifact „Schlanker gezeichnet", alt gegen neu, hell und dunkel,
+mit sichtbar gemachter 48-px-Zone), danach freigegeben und umgesetzt in `tokens.css`,
+`Schalter.svelte`, `Segment.svelte`, `Kontextmenue.svelte`.
+
+**Zwei Abweichungen von der Tabelle unten, beide beim Nachrechnen aufgefallen:**
+
+1. **Segment 38 px statt 36.** Die Tabelle übersah, dass beim Segment das Feld *selbst* die
+   Tippfläche ist — es gibt keine Zeile drumherum wie beim Schalter. Heute misst ein Feld 42 px
+   (die 48 der Leiste kommen erst durch 2×3 px Bahnpolster). 36 hätte die „≥ 48, nicht
+   verhandelbar"-Regel tiefer gebrochen als der Ist-Zustand. 38 ist optisch kaum von 36 zu
+   unterscheiden und kostet nur vier statt sechs Pixel Trefferfläche.
+2. **`Knopf.svelte` gar nicht angefasst.** Die Tabellenzeile verlangt „weniger vertikales
+   Innenpolster" — das existiert im Code nicht, die Höhe kommt allein aus `min-height: 48px`,
+   das Polster ist waagerecht. Es gab dort schlicht nichts wegzunehmen. Die Knöpfe wirken
+   trotzdem leichter, allein durch die von der Leiter geerbte kleinere Schrift.
+
+Neu dazu: `--fs-segment: 13.5px` und `--schalter-weg: 18px` (der Knopfweg stand vorher als
+nackte `translateX(20px)` in der Komponente und wäre beim nächsten Maßwechsel stehen geblieben).
+
+**Offene Drift, nicht hier behoben:** `Kaffeeblatt.svelte` setzt den Rösternamen auf feste
+`15px` — ein Echo des alten `--fs-satz`, das jetzt aus der Reihe fällt. Gehört in Block F, der
+diese Datei ohnehin öffnet. (`Werteliste.svelte` mit festen 17px ist dagegen Absicht: eigener
+Handoff-Wert für Werteingabefelder, und Werte bleiben in Block D unangetastet.)
+
 
 ### Perspektive UX
 

@@ -92,10 +92,17 @@
   --fs-blattitel: 32px; /* Blattitel, Screentitel groß, 600, 1.12, -.02em */
   --fs-titel: 26px; /* Screentitel mit Rückweg, 600, 1.2, -.02em */
   --fs-objekt: 20px; /* Objektname/Frage ("Wie war er?"), 400, 1.25, -.01em */
-  --fs-bedienwort: 17px; /* Listenname, Bedienwort, Zeile, 400, 1.3 */
-  --fs-satz: 15px; /* Satz, Beschreibung, 400, 1.55 */
+  /* Etappe 9, Block D: 17→16 und 15→14.5. Source Serif 4 traegt bei gleicher
+     Zahl mehr optisches Gewicht als eine Systemschrift — ein knapper Punkt
+     weniger wirkt deshalb "leicht" statt "klein". Beide bleiben ueber der
+     13-px-Untergrenze fuer Fliesstext. --fs-wert und die Titel bleiben
+     ausdruecklich unangetastet: filigran heisst weniger Flaeche *um* die
+     Zahlen, nicht kleinere Zahlen. */
+  --fs-bedienwort: 16px; /* Listenname, Bedienwort, Zeile, 400, 1.3 */
+  --fs-satz: 14.5px; /* Satz, Beschreibung, 400, 1.55 */
   --fs-wert: 19px; /* Wert/Zahl, 500, tabular-nums lining-nums, -.01em */
   --fs-urteil: var(--fs-bedienwort); /* Alias: Urteilskachel-/Chip-Text folgt Bedienwort-Größe */
+  --fs-segment: 13.5px; /* Segment-Leiste: eine Stufe unter dem Satz, siehe Bauteilmaße unten */
 
   --fs-gruppenkopf: 10.5px; /* Sans, Versalien, .14em */
   --fs-kachel-label: 10.5px; /* Sans, Versalien, .12em */
@@ -152,11 +159,20 @@
   --suchfeld-hoehe: 60px;
   --kartenpolster-quer: 20px; /* Kartenpolster 18/20 (Handoff 3.3) — 18 deckt --r4 bereits ab */
   --primaeraktion-hoehe: 50px;
-  --segment-feld-hoehe: 42px;
+  /* Etappe 9, Block D — schlanker gezeichnet, Tippzone bewusst betrachtet:
+     Beim Schalter traegt die ganze Zeile die 48 px (Schalter.svelte
+     .schalter-zeile), die Pille darf deshalb frei schrumpfen. Beim Segment
+     ist das Feld *selbst* die Tippflaeche — es gibt keine Zeile drumherum.
+     Deshalb 38 statt der im Plan genannten 36: der optische Unterschied ist
+     im Mockup kaum zu sehen, aber die Trefferflaeche verliert gegenueber
+     heute (42) nur vier statt sechs Pixel. Die Bahn behaelt ihr 3-px-Polster,
+     die Leiste misst damit 44 statt 48. */
+  --segment-feld-hoehe: 38px;
   --segment-bahn-polster: 3px;
-  --schalter-breite: 52px;
-  --schalter-hoehe: 32px;
-  --schalter-knopf: 26px;
+  --schalter-breite: 44px;
+  --schalter-hoehe: 26px;
+  --schalter-knopf: 20px;
+  --schalter-weg: 18px; /* Knopfweg = Breite − Knopf − 2×3 px Rand */
   --urteilskachel-hoehe: 58px;
 
   /* ---- Zustandszeichen (Handoff 3.6, Form unverändert) ---- */
