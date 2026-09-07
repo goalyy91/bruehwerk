@@ -39,6 +39,7 @@
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import { verhaeltnisZahl, ertragMl, fertigAbZeitpunkt } from '../../domain/coldbrew';
   import { restGramm, geschaetzteBezuege, benoetigtProBezug } from '../../domain/vorrat';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -155,7 +156,6 @@
   const hatAnbauhoehe = $derived(kaffee?.anbauhoehe !== undefined);
   const hatVarietaet = $derived(!!kaffee?.varietaet);
   const hatAufbereitung = $derived(!!kaffee?.aufbereitung);
-  const hatSteckbrief = $derived(hatHerkunft || hatAnbauhoehe || hatVarietaet || hatAufbereitung);
   const hatRoestgrad = $derived(kaffee?.roestgrad !== undefined);
   const hatBewertung = $derived(kaffee?.bewertung !== undefined);
   /**
@@ -376,16 +376,35 @@
       />
     {/snippet}
   </Kopfzeile>
-  <!-- Redesign v2 — eine zusammenhängende Identitäts-Karte statt vier
-       Einzelblätter (Blick-Panel, Bohne-Falte, freischwebendes
-       Steckbrief-Grid, Botanik-Panel). Rückmeldung 2026-09-04: "die Karte
-       gefällt mir schon richtig gut", "wirkte wie ein Durcheinander" davor. -->
-  <div class="identitaet">
+  <!-- Zug B (2026-09-07): Der Kopfbereich steht frei auf dem Grund, ohne
+       Karte. Karten sind fuer Listen; die Identitaet eines Gegenstands ist
+       keine Liste. Vorher lag alles in einer .identitaet-Karte — dadurch war
+       der Kaffeename optisch gleichrangig mit "Profile" und "Chargen", und
+       es gab keinen Ort, an dem das Auge landet.
+       Die zwei Kennzahlen sind hierhergezogen: sie standen bisher ganz unten
+       in der Chargenliste, hinter Profilen und Cold Brew. Wie viel noch da
+       ist, ist die haeufigste Frage an dieses Blatt und gehoert nach oben. -->
+  <div class="kopfbereich">
     <p class="roester">
       {kaffee.roester}
       {#if kaffee.entkoffeiniert}<span class="flagge">· entkoffeiniert</span>{/if}
       {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
     </p>
+
+    {#if aktuellerRest !== undefined}
+      <div class="kennzahlen">
+        <div class="kennzahl">
+          <span class="kennzahl-wert">{aktuellerRest}<span class="kennzahl-einheit">g</span></span>
+          <span class="kennzahl-label">Bestand</span>
+        </div>
+        {#if aktuelleBezuege !== undefined}
+          <div class="kennzahl">
+            <span class="kennzahl-wert">{aktuelleBezuege}</span>
+            <span class="kennzahl-label">Bezüge</span>
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     {#if hatRoestgrad || hatBewertung}
       <div class="blick">
@@ -407,71 +426,54 @@
       </div>
     {/if}
 
-    {#if hatSteckbrief}
-      <div class="steckbrief">
-        {#if hatHerkunft}
-          <div class="steckbrief-kachel">
-            <span class="steckbrief-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" />
-              </svg>
-            </span>
-            <span class="steckbrief-wert">{kaffee.herkunft.join(', ')}</span>
-            <span class="steckbrief-label">Herkunft</span>
-          </div>
-        {/if}
-        {#if hatAnbauhoehe}
-          <div class="steckbrief-kachel">
-            <span class="steckbrief-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M3 18.5l6-9.5 4 5 2-3 6 7.5z" />
-              </svg>
-            </span>
-            <span class="steckbrief-wert">{kaffee.anbauhoehe} m</span>
-            <span class="steckbrief-label">Anbauhöhe</span>
-          </div>
-        {/if}
-        {#if hatVarietaet}
-          <div class="steckbrief-kachel">
-            <span class="steckbrief-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M6 20.5C4 12 9 5 18 4c1 8-4 15-12 16.5z" /><path d="M7.5 19c3-4 6-7 9.5-9.5" stroke-width="1.1" />
-              </svg>
-            </span>
-            <span class="steckbrief-wert">{kaffee.varietaet}</span>
-            <span class="steckbrief-label">Varietät</span>
-          </div>
-        {/if}
-        {#if hatAufbereitung && kaffee.aufbereitung}
-          <div class="steckbrief-kachel">
-            <span class="steckbrief-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 3s6 7.4 6 11.7A6 6 0 0 1 6 14.7C6 10.4 12 3 12 3z" />
-              </svg>
-            </span>
-            <span class="steckbrief-wert">{AUFBEREITUNG_LABEL[kaffee.aufbereitung]}</span>
-            <span class="steckbrief-label">Aufbereitung</span>
-          </div>
-        {/if}
-      </div>
-    {/if}
+  </div>
 
-    <!-- "Art" steht immer (Single Origin/Blend ist nie leer), "Botanik" nur,
-         wenn erfasst — dieselbe Regel wie beim Steckbrief oben. -->
-    <div class="kb-fusszeilen">
-      <div class="fuss-eintrag">
-        <span class="fuss-label">Art</span>
-        <span class="fuss-wert">{bohneArt}</span>
+  <!-- Zug B/E (2026-09-07): Die vier Icon-Kacheln und die Fusszeilen sind zu
+       Zeilen in einer Karte geworden — dieselbe Form wie ueberall sonst
+       (Muehle, Geraete). Sie waren ein fuenftes Layout-Idiom auf demselben
+       Blatt und der Hauptgrund, warum es unruhig wirkte. Blattliste statt
+       lokalem .panel, damit die Karte denselben Schatten traegt wie der Rest.
+       Art steht immer (Single Origin/Blend ist nie leer), alles andere nur
+       wenn erfasst — Leerzustaende verschwinden weiterhin (fdd3f34). -->
+  <section class="gruppe">
+    <h2>Bohne</h2>
+    <Blattliste>
+      <div class="wertzeile">
+        <span class="wz-label">Art</span>
+        <span class="wz-wert">{bohneArt}</span>
       </div>
-      {#if kaffee.botanik}
-        <div class="fuss-trenner" aria-hidden="true"></div>
-        <div class="fuss-eintrag">
-          <span class="fuss-label">Botanik</span>
-          <span class="fuss-wert">{botanikSatz(kaffee.botanik)}</span>
+      {#if hatHerkunft}
+        <div class="wertzeile">
+          <span class="wz-label">Herkunft</span>
+          <span class="wz-wert">{kaffee.herkunft.join(', ')}</span>
         </div>
       {/if}
-    </div>
-  </div>
+      {#if hatVarietaet}
+        <div class="wertzeile">
+          <span class="wz-label">Varietät</span>
+          <span class="wz-wert">{kaffee.varietaet}</span>
+        </div>
+      {/if}
+      {#if hatAnbauhoehe}
+        <div class="wertzeile">
+          <span class="wz-label">Anbauhöhe</span>
+          <span class="wz-wert">{kaffee.anbauhoehe} m</span>
+        </div>
+      {/if}
+      {#if hatAufbereitung && kaffee.aufbereitung}
+        <div class="wertzeile">
+          <span class="wz-label">Aufbereitung</span>
+          <span class="wz-wert">{AUFBEREITUNG_LABEL[kaffee.aufbereitung]}</span>
+        </div>
+      {/if}
+      {#if kaffee.botanik}
+        <div class="wertzeile">
+          <span class="wz-label">Botanik</span>
+          <span class="wz-wert">{botanikSatz(kaffee.botanik)}</span>
+        </div>
+      {/if}
+    </Blattliste>
+  </section>
 
   <section class="gruppe">
     <h2>Profile</h2>
@@ -494,7 +496,7 @@
     </div>
 
     {#if neuesProfilOffen}
-      <div class="panel">
+      <Blattliste>
         <div class="anlage">
           <input type="text" class="text-eingabe" placeholder="Profilname" bind:value={neuerProfilName} />
           <AuswahlListe
@@ -523,14 +525,14 @@
             anlegen
           </Knopf>
         </div>
-      </div>
+      </Blattliste>
     {/if}
   </section>
 
   {#if coldbrewProfile.length > 0}
     <section class="gruppe">
       <h2>Cold Brew</h2>
-      <div class="panel">
+      <Blattliste>
         {#if ansaetze.length === 0}
           <p class="hinweis-panel">kein Ansatz</p>
         {:else}
@@ -587,13 +589,13 @@
             + Ansatz
           </button>
         {/if}
-      </div>
+      </Blattliste>
     </section>
   {/if}
 
   <section class="gruppe">
     <h2>Chargen</h2>
-    <div class="panel">
+    <Blattliste>
       {#if sichtbareChargen.length === 0}
         <p class="hinweis-panel">keine</p>
       {:else}
@@ -607,18 +609,14 @@
             </div>
 
             {#if charge.id === kaffee.aktuelleChargeId}
+              <!-- Die grosse Bestandszahl stand bis 2026-09-07 hier — ganz
+                   unten, hinter Profilen und Cold Brew. Sie ist in den
+                   Kopfbereich gezogen (Zug B), weil "wie viel ist noch da"
+                   die haeufigste Frage an dieses Blatt ist. Hier bleiben nur
+                   die Handlungen; die Zahl zweimal gross zu zeigen waere
+                   schlechter als sie einmal richtig zu platzieren. -->
               <div class="bestand-info">
-                {#if aktuellerRest !== undefined}
-                  <div class="bestand-wert">
-                    <div class="bestand-zahlzeile">
-                      <span class="zahl zahl-buehne">{aktuellerRest}</span>
-                      <span class="bestand-einheit">g</span>
-                    </div>
-                    {#if aktuelleBezuege !== undefined}
-                      <span class="bestand-bezuege">noch ~{aktuelleBezuege} Bezüge</span>
-                    {/if}
-                  </div>
-                {:else}
+                {#if aktuellerRest === undefined}
                   <span class="bestand-unbekannt">Bestand unbekannt</span>
                 {/if}
                 {#if !korrekturOffen}
@@ -666,7 +664,7 @@
       {:else}
         <button type="button" class="anlegen-zeile" onclick={() => (neueChargeOffen = true)}>+ Charge</button>
       {/if}
-    </div>
+    </Blattliste>
   </section>
 
   {#if speicherFehler}
@@ -678,10 +676,76 @@
   /* Redesign v2 — jetzt die erste Zeile der Identitaets-Karte statt eigene
      Zeile ueber dem Panel, daher kleinerer Abstand nach unten (der grosse
      --seitenrand-Abstand kommt jetzt von der Karte selbst). */
+  /* Zug B: der Kopfbereich steht frei auf dem Grund, ohne Karte. */
+  .kopfbereich {
+    margin-bottom: var(--r6);
+  }
   .roester {
-    font-size: 15px;
-    color: var(--akzent);
-    margin: 0 0 var(--r4);
+    font-size: var(--fs-satz);
+    /* Zug D: war --akzent. Ein Rösternamen ist nichts, was man antippen kann;
+       der Akzent gehört den Dingen, die etwas tun. Wenn eine Farbe alles
+       markiert, markiert sie nichts. */
+    color: var(--gedaempft);
+    margin: 0 0 var(--r5);
+  }
+
+  /* Zug B: die zwei Zahlen, die man dieses Blatt am häufigsten fragt.
+     Groß gesetzt, damit das Auge einen Ort hat — der Rest der Seite ist
+     bewusst leiser. Serif, weil Zahlen (wie Namen und Titel) das sind,
+     wofür die Buchschrift in dieser App zuständig bleibt. */
+  .kennzahlen {
+    display: flex;
+    gap: var(--r6);
+    margin-bottom: var(--r5);
+  }
+  .kennzahl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .kennzahl-wert {
+    font-size: 34px;
+    font-weight: var(--gw-zahl);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--tinte);
+    font-variant-numeric: var(--zahl-features);
+  }
+  .kennzahl-einheit {
+    font-size: 17px;
+    font-weight: var(--gw-text);
+    color: var(--gedaempft);
+    margin-left: 3px;
+  }
+  .kennzahl-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: var(--label-spacing-kachel);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+
+  /* Zug E: eine Wertzeile, wie sie die Mühle und die Geräte längst zeigen —
+     Beschriftung links in Sans, Wert rechts in Serif. Ersetzt die vier
+     Icon-Kacheln und die zwei Fußzeilen des alten Steckbriefs. */
+  .wertzeile {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--r4);
+    min-height: var(--treffer);
+    padding: var(--r2) 0;
+  }
+  .wz-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
+    color: var(--satz);
+    flex-shrink: 0;
+  }
+  .wz-wert {
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+    text-align: right;
   }
   .flagge {
     color: var(--gedaempft);
@@ -689,14 +753,6 @@
   /* Identitaets-Karte (Redesign v2, "Quartett-Karte") — ersetzt vier
      ehemals separate Bloecke (Blick-Panel, Bohne-Falte, freischwebendes
      Steckbrief-Grid, Botanik-Panel) durch eine zusammenhaengende Flaeche.
-     Werte aus dem freigegebenen Mockup (Artifact "kaffeeblatt-v2.html"). */
-  .identitaet {
-    background: var(--blatt);
-    border-radius: 22px;
-    padding: 20px 20px 6px;
-    box-shadow: 0 10px 26px -16px var(--schatten);
-    margin: 10px 0 var(--seitenrand);
-  }
   /* h2-Basistypografie kommt aus tokens.css (global) — hier nur der lokale
      margin (Regel: lokale Ueberschreibung darf nur margin setzen). Bis
      2026-08-24 dupliziert, dabei sogar mit falschem font-family (Serif
@@ -742,18 +798,6 @@
      bekommt eine Haarlinie darueber. Profile und die Bohnen-Stammdaten
      nutzen seit Redesign v2 eigene Formen (.profil-raster, .identitaet)
      statt dieses Blatts — siehe docs/design/offene-punkte-redesign.md,
-     Punkt 1. */
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
   .hinweis-panel {
     color: var(--gedaempft);
     font-size: var(--fs-satz);
@@ -802,80 +846,8 @@
      Anbauhöhe, Varietät, Aufbereitung als Icon-Kacheln statt Textzeilen —
      das sind die "Geschichte" der Bohne, kein reiner Messwert. Warm
      getönter Kachelgrund statt Vertiefung, damit es zum erzählenden Text
-     der Sektion passt statt wie ein Formular zu wirken. */
-  .steckbrief {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: var(--r-kachelabstand) 0;
-  }
-  .steckbrief-kachel {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding: 14px;
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--akzent) 7%, var(--blatt));
-  }
-  .steckbrief-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    background: var(--vertiefung);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--akzent);
-  }
-  .steckbrief-icon svg {
-    width: 15px;
-    height: 15px;
-  }
-  .steckbrief-wert {
-    font-size: 15.5px;
-    color: var(--tinte);
-    line-height: 1.25;
-  }
-  .steckbrief-label {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-kachel-label);
-    letter-spacing: var(--label-spacing-kachel);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-  }
   /* Art | Botanik — letzter Abschnitt der Identitaets-Karte, gleiche
      Zeilen-Trenner-Sprache wie .blick oben, nur umgedreht (Trennlinie
-     darueber statt darunter, da diese Zeile den Kartenboden bildet). */
-  .kb-fusszeilen {
-    display: flex;
-    align-items: center;
-    gap: var(--seitenrand);
-    padding-top: var(--r3);
-    padding-bottom: var(--r3);
-    border-top: 1px solid var(--linie);
-  }
-  .fuss-eintrag {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .fuss-label {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-  }
-  .fuss-wert {
-    font-size: var(--fs-satz);
-    color: var(--tinte);
-  }
-  .fuss-trenner {
-    align-self: stretch;
-    width: 1px;
-    background: var(--linie);
-  }
   /* Profil-Raster (Redesign v2) — ersetzt die Zeilenliste (Badge · Name ·
      Modus · Chevron) durch Icon-Kacheln, Alltagspfad-tauglich: ein Blick
      zeigt sofort, welche Zubereitungsart welches Profil ist, statt erst
@@ -995,29 +967,12 @@
     flex-direction: column;
     gap: 8px;
   }
-  /* Redesign v2, Etappe 3 — dieselbe Bühnen-Zahl wie die Bestandkarte im
-     Dashboard ("im selben Stil wie im Dashboard", Mockup-Notiz), statt nur
-     einer Textzeile. */
-  .bestand-wert {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .bestand-zahlzeile {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-  }
-  .bestand-einheit,
-  .bestand-bezuege,
+  /* Die Bühnen-Zahl ist in den Kopfbereich gezogen (Zug B) — hier bleibt nur
+     der Fall "Bestand unbekannt", der keine Zahl hat. */
   .bestand-unbekannt {
     font-family: var(--schrift-sans);
     color: var(--gedaempft);
   }
-  .bestand-einheit {
-    font-size: var(--fs-meta);
-  }
-  .bestand-bezuege,
   .bestand-unbekannt {
     font-size: 13px;
   }

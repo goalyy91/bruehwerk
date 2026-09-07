@@ -13,6 +13,8 @@
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
+  import { milchAusFuellmenge } from '../../domain/getraenk';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -95,6 +97,46 @@
     return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
   }
 
+  /** Überschrift der Ausgleichs-Gruppe — sie benennt, was gerade eingestellt ist. */
+  const ausgleichTitel = $derived(
+    entwurf?.ausgleich === 'milch' ? 'Milch' : entwurf?.ausgleich === 'heisswasser' ? 'Heißwasser' : 'Ausgleich',
+  );
+
+  /**
+   * Die Aufteilung der Füllmenge, sichtbar gemacht (Zug C, 2026-09-07):
+   * `Milch = Füllmenge − Σ Shots` ist die zentrale Regel des Getränkemodells
+   * (CLAUDE.md, konzept.md:903-913) — auf dem Bildschirm war sie bisher
+   * unsichtbar, drei Zahlen ohne erkennbare Beziehung.
+   *
+   * Das Getränk kennt seine Shot-Menge nicht selbst; sie steht am Profil.
+   * Deshalb über das gebundene Brühgerät zum Standardprofil und dessen
+   * `ziel.output`. Das ist eine **Schätzung** und wird auch so gezeigt
+   * (Tilde, gedämpft — die Herkunftsregel des Projekts für geschätzte Werte).
+   * Gibt es kein Profil zu diesem Brühgerät, erscheint gar nichts: lieber
+   * keine Grafik als eine erfundene.
+   */
+  const shotMl = $derived.by(() => {
+    if (!entwurf?.basis.bruehgeraetId) return undefined;
+    const passende = bestand.profile.filter(
+      (p) => bestand.bruehgeraetVon(p.setupId)?.id === entwurf!.basis.bruehgeraetId,
+    );
+    const profil = passende.find((p) => p.standard) ?? passende[0];
+    if (!profil?.ziel.output) return undefined;
+    // Ein halber Bezug ist ein halber Shot (domain/plan.ts, Bündelung).
+    return entwurf.basis.anteilBezug === 'halb' ? profil.ziel.output / 2 : profil.ziel.output;
+  });
+
+  const aufteilung = $derived.by(() => {
+    if (!entwurf || entwurf.ausgleich === null || shotMl === undefined) return undefined;
+    if (!entwurf.fuellmenge || entwurf.fuellmenge <= 0) return undefined;
+    const kaffee = Math.min(Math.round(shotMl), entwurf.fuellmenge);
+    const rest = Math.round(milchAusFuellmenge(entwurf.fuellmenge, kaffee));
+    if (rest < 0) return undefined;
+    return { kaffee, rest, anteilKaffee: (kaffee / entwurf.fuellmenge) * 100 };
+  });
+
+  let feinheitenOffen = $state(false);
+
   async function speichern() {
     if (!entwurf) return;
     fehler = undefined;
@@ -123,7 +165,7 @@
   <Kopfzeile titel="Getränk" {onZurueck} />
   <p class="hinweis">Getränk nicht gefunden.</p>
 {:else}
-  <Kopfzeile titel={bestehend ? entwurf.name : 'Neues Getränk'} {onZurueck}>
+  <Kopfzeile titel={bestehend ? entwurf.name : 'Neues Getränk'} {onZurueck} gross>
     {#snippet aktion()}
       {#if bestehend}
         <Kontextmenue
@@ -136,158 +178,214 @@
     {/snippet}
   </Kopfzeile>
 
-  <div class="formularzeile">
-    <span class="formularzeile-label">Name</span>
-    <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
-  </div>
+  <!-- 2026-09-07: Aus vierzehn Formularzeilen ohne einen einzigen Gruppenkopf
+       werden fünf Gruppen ("wenn ich auf die Getränkeseite komm bin ich
+       überfordert"). Kein Feld verschwindet, keins kommt dazu.
+       Weil die Gruppe den Zusammenhang trägt, werden die Beschriftungen
+       kürzer — "Textur" statt "Milch-Textur", "Anteil" statt "Bezugsanteil".
+       Genau daher kam das ausgefranste Raster: "Milch-Temperatur" passte
+       nicht in die 104-px-Spalte und drückte die Zeile auseinander.
+       Vier der fünf Erklärsätze entfallen, weil der Gruppenkopf sie
+       überflüssig macht. -->
 
-  <div class="formularzeile spalte">
-    <span class="formularzeile-label">Zubereitung</span>
-    <AuswahlListe optionen={ZUBEREITUNG_OPTIONEN} wert={entwurf.zubereitung} onWahl={(w) => (entwurf!.zubereitung = w)} />
-  </div>
-  <p class="erklaerung">Bestimmt, welche Bohnen in der Bestellung dafür infrage kommen (K46).</p>
+  <section class="gruppe">
+    <h2>Das Getränk</h2>
+    <Blattliste>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Name</span>
+        <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
+      </div>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Kategorie</span>
+        <input class="eingabefeld-text" type="text" bind:value={entwurf.kategorie} />
+      </div>
+      <div class="formularzeile spalte">
+        <span class="formularzeile-label">Zubereitung</span>
+        <AuswahlListe optionen={ZUBEREITUNG_OPTIONEN} wert={entwurf.zubereitung} onWahl={(w) => (entwurf!.zubereitung = w)} />
+      </div>
+    </Blattliste>
+  </section>
 
-  <div class="formularzeile">
-    <span class="formularzeile-label">Kategorie</span>
-    <input class="eingabefeld-text" type="text" bind:value={entwurf.kategorie} />
-  </div>
+  <section class="gruppe">
+    <h2>Der Bezug</h2>
+    <Blattliste>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Brühgerät</span>
+        <AuswahlListe
+          optionen={bestand.bruehgeraete.map((b) => ({ wert: b.id, label: b.name }))}
+          wert={entwurf.basis.bruehgeraetId}
+          onWahl={(w) => (entwurf!.basis.bruehgeraetId = w)}
+        />
+      </div>
+      <div class="formularzeile spalte">
+        <span class="formularzeile-label">Anteil</span>
+        <Segment
+          optionen={[{ wert: 'halb', label: 'halber Bezug' }, { wert: 'ganz', label: 'ganzer Bezug' }]}
+          wert={entwurf.basis.anteilBezug}
+          onWahl={(w) => (entwurf!.basis.anteilBezug = w as 'ganz' | 'halb')}
+        />
+      </div>
+      <div class="formularzeile">
+        <Schalter label="aus dem Vorrat" an={entwurf.basis.ausVorrat} onWahl={(a) => (entwurf!.basis.ausVorrat = a)} />
+      </div>
+    </Blattliste>
+  </section>
 
-  <div class="formularzeile spalte">
-    <span class="formularzeile-label">Bezugsanteil</span>
-    <Segment
-      optionen={[{ wert: 'halb', label: 'halber Bezug' }, { wert: 'ganz', label: 'ganzer Bezug' }]}
-      wert={entwurf.basis.anteilBezug}
-      onWahl={(w) => (entwurf!.basis.anteilBezug = w as 'ganz' | 'halb')}
-    />
-  </div>
-  <p class="erklaerung">Zwei Getränke mit halbem Bezug, derselben Bohne und demselben Profil teilen sich einen Bezug.</p>
+  <section class="gruppe">
+    <h2>Die Menge</h2>
+    <Blattliste>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Füllmenge</span>
+        <input
+          class="eingabefeld-text zahl"
+          type="text"
+          inputmode="decimal"
+          value={entwurf.fuellmenge}
+          onchange={(e) => (entwurf!.fuellmenge = zahl(e))}
+        />
+        <span class="einheit">ml</span>
+      </div>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Gefäß</span>
+        <input class="eingabefeld-text" type="text" bind:value={entwurf.gefaess.name} />
+      </div>
+      <div class="formularzeile">
+        <span class="formularzeile-label">Volumen</span>
+        <input
+          class="eingabefeld-text zahl"
+          type="text"
+          inputmode="decimal"
+          value={entwurf.gefaess.volumen}
+          onchange={(e) => (entwurf!.gefaess.volumen = zahl(e))}
+        />
+        <span class="einheit">ml</span>
+      </div>
 
-  <div class="formularzeile">
-    <span class="formularzeile-label">Brühgerät</span>
-    <AuswahlListe
-      optionen={bestand.bruehgeraete.map((b) => ({ wert: b.id, label: b.name }))}
-      wert={entwurf.basis.bruehgeraetId}
-      onWahl={(w) => (entwurf!.basis.bruehgeraetId = w)}
-    />
-  </div>
+      <!-- Zug C: die Rechnung, die das Modell ohnehin kennt, sichtbar gemacht.
+           Geschätzt (Tilde, gedämpft), weil die Shot-Menge vom Standardprofil
+           des Brühgeräts kommt und nicht am Getränk steht. -->
+      {#if aufteilung}
+        <div class="aufteilung">
+          <div class="balken" aria-hidden="true">
+            <span class="balken-kaffee" style="width: {aufteilung.anteilKaffee}%"></span>
+          </div>
+          <p class="aufteilung-text">
+            ≈ {aufteilung.kaffee} ml Kaffee · {aufteilung.rest} ml {ausgleichTitel === 'Ausgleich' ? 'Ausgleich' : ausgleichTitel}
+          </p>
+        </div>
+      {/if}
+    </Blattliste>
+  </section>
 
-  <div class="formularzeile spalte">
-    <span class="formularzeile-label">Ausgleichszutat</span>
-    <Segment
-      optionen={[
-        { wert: 'keiner', label: 'keine' },
-        { wert: 'milch', label: 'Milch' },
-        { wert: 'heisswasser', label: 'Heißwasser' },
-      ]}
-      wert={ausgleichWahl(entwurf)}
-      onWahl={(w) => ausgleichAendern(entwurf!, w)}
-    />
-  </div>
+  <section class="gruppe">
+    <h2>{ausgleichTitel}</h2>
+    <Blattliste>
+      <div class="formularzeile spalte">
+        <span class="formularzeile-label">Zutat</span>
+        <Segment
+          optionen={[
+            { wert: 'keiner', label: 'keine' },
+            { wert: 'milch', label: 'Milch' },
+            { wert: 'heisswasser', label: 'Heißwasser' },
+          ]}
+          wert={ausgleichWahl(entwurf)}
+          onWahl={(w) => ausgleichAendern(entwurf!, w)}
+        />
+      </div>
 
-  <div class="formularzeile">
-    <span class="formularzeile-label">Füllmenge</span>
-    <input
-      class="eingabefeld-text zahl"
-      type="text"
-      inputmode="decimal"
-      value={entwurf.fuellmenge}
-      onchange={(e) => (entwurf!.fuellmenge = zahl(e))}
-    />
-    <span class="einheit">ml</span>
-  </div>
-  <p class="erklaerung">Wie voll das fertige Getränk ist — die Ausgleichszutat füllt auf, was der Kaffee übrig lässt.</p>
+      {#if entwurf.ausgleich === 'milch' && entwurf.milch}
+        <div class="formularzeile">
+          <span class="formularzeile-label">Textur</span>
+          <input class="eingabefeld-text" type="text" bind:value={entwurf.milch.textur} />
+        </div>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Temperatur</span>
+          <input
+            class="eingabefeld-text zahl"
+            type="text"
+            inputmode="decimal"
+            value={entwurf.milch.temperatur}
+            onchange={(e) => (entwurf!.milch!.temperatur = zahl(e))}
+          />
+          <span class="einheit">°C</span>
+        </div>
+      {/if}
 
-  {#if entwurf.ausgleich !== null}
-    <div class="formularzeile">
-      <span class="formularzeile-label">Mindestmenge</span>
-      <input
-        class="eingabefeld-text zahl"
-        type="text"
-        inputmode="decimal"
-        value={entwurf.mindestAusgleich ?? ''}
-        placeholder="—"
-        onchange={(e) => (entwurf!.mindestAusgleich = e.currentTarget.value === '' ? undefined : zahl(e))}
-      />
-      <span class="einheit">ml</span>
-    </div>
-    <p class="erklaerung">Darunter wird ein Extra Shot hier gar nicht erst angeboten — leer lassen für "immer erlaubt".</p>
-  {/if}
+      {#if entwurf.ausgleich === 'heisswasser' && entwurf.heisswasser}
+        <div class="formularzeile">
+          <span class="formularzeile-label">Temperatur</span>
+          <input
+            class="eingabefeld-text zahl"
+            type="text"
+            inputmode="decimal"
+            value={entwurf.heisswasser.temperatur}
+            onchange={(e) => (entwurf!.heisswasser!.temperatur = zahl(e))}
+          />
+          <span class="einheit">°C</span>
+        </div>
+      {/if}
 
-  {#if entwurf.ausgleich === 'milch' && entwurf.milch}
-    <div class="formularzeile">
-      <span class="formularzeile-label">Milch-Textur</span>
-      <input class="eingabefeld-text" type="text" bind:value={entwurf.milch.textur} />
-    </div>
-    <div class="formularzeile">
-      <span class="formularzeile-label">Milch-Temperatur</span>
-      <input
-        class="eingabefeld-text zahl"
-        type="text"
-        inputmode="decimal"
-        value={entwurf.milch.temperatur}
-        onchange={(e) => (entwurf!.milch!.temperatur = zahl(e))}
-      />
-      <span class="einheit">°C</span>
-    </div>
-  {/if}
+      {#if entwurf.ausgleich !== null}
+        <div class="formularzeile">
+          <span class="formularzeile-label">Mindestens</span>
+          <input
+            class="eingabefeld-text zahl"
+            type="text"
+            inputmode="decimal"
+            value={entwurf.mindestAusgleich ?? ''}
+            placeholder="—"
+            onchange={(e) => (entwurf!.mindestAusgleich = e.currentTarget.value === '' ? undefined : zahl(e))}
+          />
+          <span class="einheit">ml</span>
+        </div>
+      {/if}
+    </Blattliste>
+    {#if entwurf.ausgleich !== null}
+      <!-- Der einzige Erklärsatz, der bleibt: er beschreibt eine echte
+           Nebenwirkung (ein Extra Shot verschwindet), die man dem Feld nicht
+           ansieht. Die anderen vier sagten, was jetzt der Gruppenkopf sagt. -->
+      <p class="erklaerung">Darunter wird ein Extra Shot gar nicht erst angeboten. Leer heißt: immer erlaubt.</p>
+    {/if}
+  </section>
 
-  {#if entwurf.ausgleich === 'heisswasser' && entwurf.heisswasser}
-    <div class="formularzeile">
-      <span class="formularzeile-label">Wasser-Temperatur</span>
-      <input
-        class="eingabefeld-text zahl"
-        type="text"
-        inputmode="decimal"
-        value={entwurf.heisswasser.temperatur}
-        onchange={(e) => (entwurf!.heisswasser!.temperatur = zahl(e))}
-      />
-      <span class="einheit">°C</span>
-    </div>
-  {/if}
-
-  <div class="formularzeile">
-    <span class="formularzeile-label">Gefäß</span>
-    <input class="eingabefeld-text" type="text" bind:value={entwurf.gefaess.name} />
-  </div>
-  <div class="formularzeile">
-    <span class="formularzeile-label">Volumen</span>
-    <input
-      class="eingabefeld-text zahl"
-      type="text"
-      inputmode="decimal"
-      value={entwurf.gefaess.volumen}
-      onchange={(e) => (entwurf!.gefaess.volumen = zahl(e))}
-    />
-    <span class="einheit">ml</span>
-  </div>
-
-  <div class="formularzeile">
-    <span class="formularzeile-label">Reihenfolge</span>
-    <input
-      class="eingabefeld-text"
-      type="text"
-      placeholder="z. B. wasser, shot"
-      value={reihenfolgeText(entwurf)}
-      onchange={(e) => reihenfolgeAendern(entwurf!, e.currentTarget.value)}
-    />
-  </div>
-  <p class="erklaerung">Trägt z. B. den Unterschied zwischen Long Black (Wasser zuerst) und Americano.</p>
-
-  <div class="formularzeile">
-    <span class="formularzeile-label">Empfindlichkeit</span>
-    <input
-      class="eingabefeld-text zahl"
-      type="text"
-      inputmode="numeric"
-      value={entwurf.empfindlichkeit}
-      onchange={(e) => (entwurf!.empfindlichkeit = Math.max(0, Math.min(10, Math.round(zahl(e)))))}
-    />
-  </div>
-  <p class="erklaerung">0 = verfällt kaum (Cold Brew), 10 = verfällt sofort (Espresso pur). Wirkt nur auf die Planer-Reihenfolge, erscheint nirgends im Bild (K48).</p>
-
-  <div class="formularzeile">
-    <Schalter label="aus dem Vorrat (Cold Brew)" an={entwurf.basis.ausVorrat} onWahl={(a) => (entwurf!.basis.ausVorrat = a)} />
-  </div>
+  <!-- Reihenfolge und Empfindlichkeit stellt man einmal beim Anlegen ein und
+       danach nie wieder. Empfindlichkeit wirkt ausschließlich auf die
+       Planer-Reihenfolge und erscheint nirgends in der Bedienung (K48).
+       Eingeklappt, nicht gelöscht — beide bleiben einen Tap entfernt. -->
+  <section class="gruppe">
+    <button type="button" class="falte" onclick={() => (feinheitenOffen = !feinheitenOffen)}>
+      <span>Feinheiten · Reihenfolge, Empfindlichkeit</span>
+      <span class="falte-zeichen" aria-hidden="true">{feinheitenOffen ? '−' : '+'}</span>
+    </button>
+    {#if feinheitenOffen}
+      <Blattliste>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Reihenfolge</span>
+          <input
+            class="eingabefeld-text"
+            type="text"
+            placeholder="z. B. wasser, shot"
+            value={reihenfolgeText(entwurf)}
+            onchange={(e) => reihenfolgeAendern(entwurf!, e.currentTarget.value)}
+          />
+        </div>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Empfindlichkeit</span>
+          <input
+            class="eingabefeld-text zahl"
+            type="text"
+            inputmode="numeric"
+            value={entwurf.empfindlichkeit}
+            onchange={(e) => (entwurf!.empfindlichkeit = Math.max(0, Math.min(10, Math.round(zahl(e)))))}
+          />
+        </div>
+      </Blattliste>
+      <p class="erklaerung">
+        Reihenfolge trägt z. B. den Unterschied zwischen Long Black (Wasser zuerst) und Americano.
+        Empfindlichkeit: 0 = verfällt kaum (Cold Brew), 10 = verfällt sofort (Espresso pur).
+      </p>
+    {/if}
+  </section>
 
   {#if fehler}
     <p class="fehler">Nicht gespeichert: {fehler}.</p>
@@ -299,11 +397,74 @@
 {/if}
 
 <style>
+  /* Die Formularzeilen liegen jetzt in Blattliste-Karten, und die Karte zieht
+     die Trennlinien zwischen ihren Kindern selbst. Die eigene Unterlinie der
+     globalen .formularzeile würde sich damit verdoppeln.
+     Wenn die übrigen Formularbildschirme (Brühgerät, Mühle, Setup, Kaffee
+     bearbeiten) ebenfalls in Karten ziehen, gehört diese Zeile in tokens.css
+     statt hierher — bis dahin bleibt sie lokal, damit jene Screens ihre
+     Trennlinien behalten. */
+  .gruppe :global(.formularzeile) {
+    border-bottom: none;
+  }
+  .gruppe {
+    margin-bottom: var(--r5);
+  }
+
+  /* Zug C — die Aufteilung der Füllmenge als Bild statt als drei Zahlen ohne
+     erkennbare Beziehung. Gedämpft und mit Tilde, weil die Shot-Menge aus dem
+     Standardprofil geschätzt ist (Herkunftsregel des Projekts). */
+  .aufteilung {
+    padding: var(--r3) 0 var(--r4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--r2);
+  }
+  .balken {
+    display: flex;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--fuellung-leicht);
+  }
+  .balken-kaffee {
+    display: block;
+    height: 100%;
+    background: var(--fuellung);
+  }
+  .aufteilung-text {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: 0;
+  }
+
+  .falte {
+    width: 100%;
+    min-height: var(--treffer);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--r3);
+    padding: 0 var(--r4);
+    border: none;
+    border-radius: var(--r-blatt);
+    background: var(--vertiefung);
+    color: var(--gedaempft-tief);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
+    text-align: left;
+    cursor: pointer;
+  }
+  .falte-zeichen {
+    font-size: var(--fs-bedienwort);
+  }
+
   .erklaerung {
     font-family: var(--schrift-sans);
     font-size: var(--fs-erklaerung);
     color: var(--gedaempft);
-    margin: var(--r1) 0 var(--r3);
+    margin: var(--r2) 0 0;
   }
   .einheit {
     font-family: var(--schrift-sans);
