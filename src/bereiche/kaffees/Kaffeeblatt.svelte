@@ -444,24 +444,44 @@
       </div>
       {#if hatHerkunft}
         <div class="wertzeile">
+          <span class="wz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z" /><circle cx="12" cy="9" r="2.2" />
+            </svg>
+          </span>
           <span class="wz-label">Herkunft</span>
           <span class="wz-wert">{kaffee.herkunft.join(', ')}</span>
         </div>
       {/if}
       {#if hatVarietaet}
         <div class="wertzeile">
+          <span class="wz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 20.5C4 12 9 5 18 4c1 8-4 15-12 16.5z" /><path d="M7.5 19c3-4 6-7 9.5-9.5" stroke-width="1.1" />
+            </svg>
+          </span>
           <span class="wz-label">Varietät</span>
           <span class="wz-wert">{kaffee.varietaet}</span>
         </div>
       {/if}
       {#if hatAnbauhoehe}
         <div class="wertzeile">
+          <span class="wz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 18.5l6-9.5 4 5 2-3 6 7.5z" />
+            </svg>
+          </span>
           <span class="wz-label">Anbauhöhe</span>
           <span class="wz-wert">{kaffee.anbauhoehe} m</span>
         </div>
       {/if}
       {#if hatAufbereitung && kaffee.aufbereitung}
         <div class="wertzeile">
+          <span class="wz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3s6 7.4 6 11.7A6 6 0 0 1 6 14.7C6 10.4 12 3 12 3z" />
+            </svg>
+          </span>
           <span class="wz-label">Aufbereitung</span>
           <span class="wz-wert">{AUFBEREITUNG_LABEL[kaffee.aufbereitung]}</span>
         </div>
@@ -498,7 +518,7 @@
     {#if neuesProfilOffen}
       <Blattliste>
         <div class="anlage">
-          <input type="text" class="text-eingabe" placeholder="Profilname" bind:value={neuerProfilName} />
+          <input type="text" class="eingabefeld-text" placeholder="Profilname" bind:value={neuerProfilName} />
           <AuswahlListe
             optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
             wert={neuesProfilSetupId}
@@ -567,7 +587,7 @@
                 onWahl={(w) => (neuerAnsatzProfilId = w)}
               />
             {/if}
-            <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Input in g" bind:value={neuerAnsatzInput} />
+            <input type="text" inputmode="decimal" class="eingabefeld-text" placeholder="Input in g" bind:value={neuerAnsatzInput} />
             {#if neuerAnsatzProfilId && Number(neuerAnsatzInput.replace(',', '.')) > 0}
               <p class="hinweis-panel">
                 ≈ {Math.round(ansatzErtrag(neuerAnsatzProfilId, Number(neuerAnsatzInput.replace(',', '.'))) ?? 0)} ml Ertrag
@@ -630,7 +650,7 @@
               {#if korrekturOffen}
                 <div class="anlage">
                   <div class="mengenfeld">
-                    <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Gramm jetzt" bind:value={korrekturWert} />
+                    <input type="text" inputmode="decimal" class="eingabefeld-text" placeholder="Gramm jetzt" bind:value={korrekturWert} />
                     <span class="einheit">g</span>
                   </div>
                   <Knopf stufe="primaer" onKlick={bestandKorrigieren} deaktiviert={korrekturWert.trim() === ''}>
@@ -645,15 +665,15 @@
 
       {#if neueChargeOffen}
         <div class="anlage">
-          <input type="date" class="text-eingabe" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
+          <input type="date" class="eingabefeld-text" bind:value={neuesRoestdatum} aria-label="Röstdatum" />
           <div class="mengenfeld">
-            <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Einwaage (optional)" bind:value={neueEinwaage} />
+            <input type="text" inputmode="decimal" class="eingabefeld-text" placeholder="Einwaage (optional)" bind:value={neueEinwaage} />
             <span class="einheit">g</span>
           </div>
           <Schalter label="Eingefroren" an={neuEingefroren} onWahl={(a) => (neuEingefroren = a)} />
           {#if neuEingefroren}
             <div class="mengenfeld">
-              <input type="text" inputmode="decimal" class="text-eingabe" placeholder="Portionsgröße (optional)" bind:value={neuePortionsgroesse} />
+              <input type="text" inputmode="decimal" class="eingabefeld-text" placeholder="Portionsgröße (optional)" bind:value={neuePortionsgroesse} />
               <span class="einheit">g</span>
             </div>
           {/if}
@@ -730,17 +750,38 @@
      Icon-Kacheln und die zwei Fußzeilen des alten Steckbriefs. */
   .wertzeile {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--r4);
+    align-items: center;
+    gap: var(--r3);
     min-height: var(--treffer);
     padding: var(--r2) 0;
+  }
+  /* Rückmeldung 2026-09-07: "bin ein klein wenig enttäuscht, dass die
+     Grafikanzeigen nicht mehr da sind". Die Symbole kommen zurück — aber als
+     ruhiges Zeichen am Zeilenanfang statt als eigene Kachel mit Kreisfläche.
+     Damit bleibt der Zeilenrhythmus der App erhalten und das Blatt bekommt
+     seine Bildlichkeit zurück. Gedämpft, weil das Symbol die Zeile begleitet
+     und nicht die Hauptsache ist. */
+  .wz-icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    display: block;
+    color: var(--gedaempft);
+  }
+  .wz-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
   .wz-label {
     font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     color: var(--satz);
     flex-shrink: 0;
+  }
+  /* Der Wert schiebt sich nach rechts, egal ob ein Symbol davor steht. */
+  .wz-wert {
+    margin-left: auto;
   }
   .wz-wert {
     font-size: var(--fs-bedienwort);
@@ -765,13 +806,15 @@
      kein eigenes Blatt mehr — .blick sitzt jetzt selbst in der
      Identitaets-Karte (.identitaet) und markiert sich nur noch als
      interner Abschnitt per Trennlinie darunter. */
+  /* Rückmeldung 2026-09-07: "sieht so aus als sei es weiter links als der
+     Rest". Ursache war die Trennlinie: sie lief über die volle Breite,
+     während die Karte darunter 18 px innen eingerückt ist — dadurch wirkte
+     die Zeile breiter und damit weiter links. Die Linie entfällt ersatzlos;
+     der Gruppenkopf darunter trennt bereits. */
   .blick {
     display: flex;
     align-items: center;
-    gap: var(--seitenrand);
-    padding-bottom: var(--r4);
-    margin-bottom: var(--r4);
-    border-bottom: 1px solid var(--linie);
+    gap: var(--r6);
   }
   .blick-eintrag {
     display: flex;
@@ -812,7 +855,7 @@
     border: none;
     background: transparent;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
@@ -1005,23 +1048,13 @@
     align-items: center;
     gap: var(--r2);
   }
-  .mengenfeld .text-eingabe {
+  .mengenfeld :global(.eingabefeld-text) {
     flex: 1;
   }
   .einheit {
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
-  }
-  .text-eingabe {
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    background: var(--vertiefung);
-    border: none;
-    border-radius: var(--r-wertfeld);
-    color: var(--tinte);
-    padding: var(--r2) var(--r3);
-    min-height: var(--treffer);
   }
   .hinweis {
     color: var(--gedaempft);

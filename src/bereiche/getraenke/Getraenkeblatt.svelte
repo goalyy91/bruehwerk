@@ -13,7 +13,6 @@
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
-  import { milchAusFuellmenge } from '../../domain/getraenk';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
@@ -102,38 +101,6 @@
     entwurf?.ausgleich === 'milch' ? 'Milch' : entwurf?.ausgleich === 'heisswasser' ? 'Heißwasser' : 'Ausgleich',
   );
 
-  /**
-   * Die Aufteilung der Füllmenge, sichtbar gemacht (Zug C, 2026-09-07):
-   * `Milch = Füllmenge − Σ Shots` ist die zentrale Regel des Getränkemodells
-   * (CLAUDE.md, konzept.md:903-913) — auf dem Bildschirm war sie bisher
-   * unsichtbar, drei Zahlen ohne erkennbare Beziehung.
-   *
-   * Das Getränk kennt seine Shot-Menge nicht selbst; sie steht am Profil.
-   * Deshalb über das gebundene Brühgerät zum Standardprofil und dessen
-   * `ziel.output`. Das ist eine **Schätzung** und wird auch so gezeigt
-   * (Tilde, gedämpft — die Herkunftsregel des Projekts für geschätzte Werte).
-   * Gibt es kein Profil zu diesem Brühgerät, erscheint gar nichts: lieber
-   * keine Grafik als eine erfundene.
-   */
-  const shotMl = $derived.by(() => {
-    if (!entwurf?.basis.bruehgeraetId) return undefined;
-    const passende = bestand.profile.filter(
-      (p) => bestand.bruehgeraetVon(p.setupId)?.id === entwurf!.basis.bruehgeraetId,
-    );
-    const profil = passende.find((p) => p.standard) ?? passende[0];
-    if (!profil?.ziel.output) return undefined;
-    // Ein halber Bezug ist ein halber Shot (domain/plan.ts, Bündelung).
-    return entwurf.basis.anteilBezug === 'halb' ? profil.ziel.output / 2 : profil.ziel.output;
-  });
-
-  const aufteilung = $derived.by(() => {
-    if (!entwurf || entwurf.ausgleich === null || shotMl === undefined) return undefined;
-    if (!entwurf.fuellmenge || entwurf.fuellmenge <= 0) return undefined;
-    const kaffee = Math.min(Math.round(shotMl), entwurf.fuellmenge);
-    const rest = Math.round(milchAusFuellmenge(entwurf.fuellmenge, kaffee));
-    if (rest < 0) return undefined;
-    return { kaffee, rest, anteilKaffee: (kaffee / entwurf.fuellmenge) * 100 };
-  });
 
   let feinheitenOffen = $state(false);
 
@@ -189,7 +156,7 @@
        überflüssig macht. -->
 
   <section class="gruppe">
-    <h2>Das Getränk</h2>
+    <h2>Getränk</h2>
     <Blattliste>
       <div class="formularzeile">
         <span class="formularzeile-label">Name</span>
@@ -207,7 +174,7 @@
   </section>
 
   <section class="gruppe">
-    <h2>Der Bezug</h2>
+    <h2>Bezug</h2>
     <Blattliste>
       <div class="formularzeile">
         <span class="formularzeile-label">Brühgerät</span>
@@ -232,7 +199,7 @@
   </section>
 
   <section class="gruppe">
-    <h2>Die Menge</h2>
+    <h2>Menge</h2>
     <Blattliste>
       <div class="formularzeile">
         <span class="formularzeile-label">Füllmenge</span>
@@ -260,20 +227,6 @@
         />
         <span class="einheit">ml</span>
       </div>
-
-      <!-- Zug C: die Rechnung, die das Modell ohnehin kennt, sichtbar gemacht.
-           Geschätzt (Tilde, gedämpft), weil die Shot-Menge vom Standardprofil
-           des Brühgeräts kommt und nicht am Getränk steht. -->
-      {#if aufteilung}
-        <div class="aufteilung">
-          <div class="balken" aria-hidden="true">
-            <span class="balken-kaffee" style="width: {aufteilung.anteilKaffee}%"></span>
-          </div>
-          <p class="aufteilung-text">
-            ≈ {aufteilung.kaffee} ml Kaffee · {aufteilung.rest} ml {ausgleichTitel === 'Ausgleich' ? 'Ausgleich' : ausgleichTitel}
-          </p>
-        </div>
-      {/if}
     </Blattliste>
   </section>
 
@@ -414,30 +367,6 @@
   /* Zug C — die Aufteilung der Füllmenge als Bild statt als drei Zahlen ohne
      erkennbare Beziehung. Gedämpft und mit Tilde, weil die Shot-Menge aus dem
      Standardprofil geschätzt ist (Herkunftsregel des Projekts). */
-  .aufteilung {
-    padding: var(--r3) 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--r2);
-  }
-  .balken {
-    display: flex;
-    height: 8px;
-    border-radius: 999px;
-    overflow: hidden;
-    background: var(--fuellung-leicht);
-  }
-  .balken-kaffee {
-    display: block;
-    height: 100%;
-    background: var(--fuellung);
-  }
-  .aufteilung-text {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-    margin: 0;
-  }
 
   .falte {
     width: 100%;
