@@ -41,7 +41,7 @@
     border: none;
     background: none;
     padding: 0;
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     cursor: pointer;
     text-align: left;
   }

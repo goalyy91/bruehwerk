@@ -389,7 +389,16 @@ h2 {
    AuswahlListe.svelte (siehe docs/design/offene-punkte-redesign.md,
    Punkt 2). */
 .eingabefeld-text {
-  font-family: var(--schrift);
+  /* Zug A (2026-09-07): Sans. Die Projektregel lautet "Serif traegt den
+     Inhalt, Sans nur den Apparat" — bisher war sie nur auf Apparat-*Groessen*
+     angewandt (Meta, Label), nicht auf Apparat-*Rollen*. Ein Eingabefeld ist
+     Bedienung, egal wie gross seine Schrift ist.
+     Der Grund dahinter: Source Serif ist eine schoene Anzeigenschrift und
+     eine mittelmaessige Bedienschrift. Sie wirkt bei 14-19 px wie ein
+     gedrucktes Formular, nicht wie eine App. Sie bleibt deshalb da, wo sie
+     stark ist — Namen, Titel, Zahlen —, und wird dort *groesser* statt
+     ueberall kleiner (Rueckmeldung 2026-09-07: "nicht schoen, nicht premium"). */
+  font-family: var(--schrift-sans);
   font-size: var(--fs-bedienwort);
   background: var(--vertiefung);
   border: none;

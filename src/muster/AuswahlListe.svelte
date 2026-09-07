@@ -106,7 +106,7 @@
     border: none;
     border-radius: var(--r-wertfeld);
     background: var(--vertiefung);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;
@@ -171,7 +171,7 @@
     border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--satz);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;

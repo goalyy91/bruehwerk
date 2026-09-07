@@ -56,7 +56,7 @@
     min-width: 0;
     border: none;
     background: none;
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: 16.5px;
     color: var(--tinte);
   }

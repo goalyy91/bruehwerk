@@ -51,7 +51,7 @@
     border-radius: var(--r-pille);
     background: transparent;
     color: var(--satz);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     /* Etappe 9, Block D: eine Stufe unter dem Satz. Die Leiste ist Apparat,
        kein Fliesstext — sie darf schmaler wirken als das, was sie umschaltet. */
     font-size: var(--fs-segment);

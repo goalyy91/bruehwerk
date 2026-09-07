@@ -45,7 +45,17 @@
   .knopf {
     min-height: var(--treffer);
     padding: 0 var(--r4);
-    font-family: var(--schrift);
+    /* ACHTUNG — hier wird ein frueherer Geraete-Befund bewusst ueberstimmt.
+       Etappe 1 hatte Sans probiert und am echten Geraet zurueckgedreht (siehe
+       Kommentar oben). Der Befund galt in einem anderen Umfeld: damals war
+       *alles* Serif, und ein Sans-Knopf war das einzige fremde Element im
+       Bild. Seit Zug A sind Eingabefeld, Segment, Auswahl und Schalter auf
+       Sans — jetzt ist umgekehrt der Serif-Knopf der einzige Fremdkoerper.
+       Dieselbe Regel, umgedrehtes Ergebnis, weil sich die Umgebung gedreht
+       hat.
+       Falls Julian am Geraet erneut zum alten Urteil kommt: genau diese eine
+       Zeile zuruecksetzen, nicht Zug A insgesamt. */
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     cursor: pointer;
     border-radius: var(--r-pille);

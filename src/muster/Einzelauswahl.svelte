@@ -61,7 +61,7 @@
     border-radius: var(--r-pille);
     background: var(--vertiefung);
     color: var(--satz);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     cursor: pointer;
     transition: background var(--t-auswahl) var(--e-rein);
