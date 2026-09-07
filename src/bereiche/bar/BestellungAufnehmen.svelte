@@ -473,7 +473,7 @@
     border: none;
     background: none;
     color: var(--kritisch);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }
@@ -502,7 +502,7 @@
     border: none;
     background: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }

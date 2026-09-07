@@ -452,7 +452,7 @@
     border: none;
     background: transparent;
     color: var(--gedaempft);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     text-align: left;
     cursor: pointer;

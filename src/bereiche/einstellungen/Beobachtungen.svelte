@@ -295,7 +295,7 @@
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     min-height: var(--treffer);
     padding: 0;

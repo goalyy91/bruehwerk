@@ -142,7 +142,7 @@
     /* Wie oben — hier zusaetzlich wichtig, weil die Falte ein antippbares
        Bedienelement in Meta-Groesse (12px) ist. */
     color: var(--gedaempft-tief);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     text-align: left;
     cursor: pointer;

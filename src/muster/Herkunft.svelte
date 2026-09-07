@@ -129,7 +129,7 @@
     border: 1px solid var(--linie);
     border-radius: 50%;
     color: var(--gedaempft);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-label);
   }
   .legende {

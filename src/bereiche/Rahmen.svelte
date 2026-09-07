@@ -340,7 +340,12 @@
     min-height: var(--fusszeile);
     border: none;
     background: transparent;
-    font-family: var(--schrift);
+    /* Sans, nicht Serif. Eine Tab-Leiste ist reiner Apparat — kein
+       Betriebssystem setzt sie in einer Buchschrift, und genau daran erkennt
+       man sonst am unteren Bildrand, dass hier keine App laeuft. Dieselbe
+       Korrektur wie im Kontextmenue (Etappe 9, Block D); die Projektregel
+       "Serif traegt den Inhalt, Sans nur den Apparat" galt hier schon immer. */
+    font-family: var(--schrift-sans);
     font-size: var(--fs-label);
     color: var(--gedaempft);
     cursor: pointer;

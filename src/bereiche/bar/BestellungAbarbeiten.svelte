@@ -237,7 +237,7 @@
     /* Antippbare Falte in Meta-Größe auf der tieferen Vertiefung —
        --gedaempft käme dort nur auf 2,38:1. */
     color: var(--gedaempft-tief);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     text-align: left;
     padding: 0 var(--r3);

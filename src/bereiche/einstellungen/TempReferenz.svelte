@@ -165,7 +165,7 @@
     background: none;
     border: none;
     color: var(--gedaempft);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }

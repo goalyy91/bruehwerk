@@ -368,6 +368,12 @@ h2 {
 .formularzeile-label {
   width: var(--eigenschaftslabel);
   flex-shrink: 0;
+  /* Sans, nicht Serif: der Name eines Feldes ist Apparat, nicht Inhalt.
+     Die Leseansicht macht das laengst richtig — Kaffeeblatt zeigt
+     "HERKUNFT" als Sans-Versalie —, nur die Bearbeiten-Ansicht setzte
+     dieselbe Information in der Buchschrift. Dieselbe Angabe zweimal
+     verschieden gesetzt liest sich wie zwei verschiedene Dinge. */
+  font-family: var(--schrift-sans);
   font-size: var(--fs-bedienwort);
   color: var(--satz);
 }

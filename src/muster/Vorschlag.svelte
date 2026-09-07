@@ -209,7 +209,7 @@
     border-radius: var(--r-pille);
     background: var(--fuellung);
     color: var(--auf-fuellung);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }
