@@ -415,20 +415,24 @@
        gemacht worden. Das Abbrechen steht hier klein neben „Fortsetzen“,
        weil hier auffällt, dass etwas liegen geblieben ist. Als Zeichen statt
        als Wort, damit es die Primäraktion nicht bedrängt. -->
-  <div class="bestellzeile">
-    <Knopf stufe="primaer" onKlick={getraenkWaehlen}>
-      {offeneBestellung ? 'Fortsetzen' : 'Getränk wählen'}
-    </Knopf>
+  <div class="bestellzeile" class:geteilt={!!offeneBestellung}>
+    <div class="hauptknopf">
+      <Knopf stufe="primaer" onKlick={getraenkWaehlen}>
+        {offeneBestellung ? 'Fortsetzen' : 'Getränk wählen'}
+      </Knopf>
+    </div>
     {#if offeneBestellung}
-      <button
-        type="button"
-        class="abbrechen"
-        class:bestaetigen={abbrechenBestaetigen}
-        onclick={() => void bestellungAbbrechen()}
-        aria-label={abbrechenBestaetigen ? 'Bestellung wirklich verwerfen' : 'Bestellung verwerfen'}
-      >
-        {abbrechenBestaetigen ? 'wirklich?' : '×'}
-      </button>
+      <div class="abbrechen-feld">
+        <button
+          type="button"
+          class="abbrechen"
+          class:bestaetigen={abbrechenBestaetigen}
+          onclick={() => void bestellungAbbrechen()}
+          aria-label={abbrechenBestaetigen ? 'Bestellung wirklich verwerfen' : 'Bestellung verwerfen'}
+        >
+          {abbrechenBestaetigen ? 'wirklich?' : '×'}
+        </button>
+      </div>
     {/if}
   </div>
 </div>
@@ -500,12 +504,35 @@
   .bestellzeile {
     display: flex;
     align-items: center;
-    gap: var(--r2);
+  }
+  /* Spalte statt Zeile: darin streckt sich der Knopf von selbst auf die
+     volle Breite des Felds — genau das, was er vorher als direktes Kind der
+     Spalte .jetzt-zone tat. Ohne das schrumpft er auf die Wortbreite. */
+  .hauptknopf {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Rueckmeldung 2026-09-08: ohne Abbrechen bleibt der Knopf so breit wie
+     vorher — volle Blattbreite. Erst wenn abgebrochen werden kann, teilt sich
+     die Zeile, und zwar in genau demselben Verhaeltnis wie die zwei
+     Getraenkekacheln darueber (1.7 : 1, gleicher Abstand): der Hauptknopf
+     steht unter der ersten Kachel, das Abbrechen mittig unter der zweiten.
+     Zwei Kanten uebereinander statt vier. */
+  .bestellzeile.geteilt {
+    gap: var(--r-kachelabstand);
+  }
+  .bestellzeile.geteilt .hauptknopf {
+    flex: 1.7;
+  }
+  .abbrechen-feld {
+    flex: 1;
+    display: flex;
+    justify-content: center;
   }
   /* Nahezu quadratisch, nur ein Zeichen — die Primaeraktion daneben soll die
      Zeile fuehren, nicht der Rueckzug. Trefferflaeche trotzdem 48 px. */
   .abbrechen {
-    flex: none;
     width: var(--treffer);
     height: var(--treffer);
     display: flex;

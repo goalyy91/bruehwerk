@@ -20,6 +20,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'shot', kaffeeId: 'k1', profilId: 'p1' },
   { name: 'einstellungen' },
   { name: 'geraete' },
+  { name: 'verhalten' },
   { name: 'musterblatt' },
   { name: 'beobachtungen' },
   { name: 'muehle', id: 'm1' },

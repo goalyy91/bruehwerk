@@ -335,7 +335,16 @@
         <button type="button" class="wechseln" onclick={() => (personWechselnOffen = !personWechselnOffen)}>wechseln</button>
       </p>
     {:else}
-      <button type="button" class="fuer-andere" onclick={() => (personWechselnOffen = true)}>für jemand anderen</button>
+      <!-- Rueckmeldung 2026-09-08: der stille Link allein liess offen, fuer wen
+           die Bestellung eigentlich laeuft — man sah nur den Ausweg, nicht den
+           Zustand. Jetzt steht der Zustand da und der Ausweg daneben. Bewusst
+           "mich" statt des eigenen Namens: kuerzer, und den eigenen Namen bei
+           jedem Kaffee vorgesetzt zu bekommen war genau der Grund, aus dem die
+           Zeile damals verschwunden ist. -->
+      <p class="fuer-mich">
+        <span class="wer">Für mich</span>
+        <button type="button" class="fuer-andere" onclick={() => (personWechselnOffen = true)}>für jemand anderen</button>
+      </p>
     {/if}
     {#if personWechselnOffen}
       <Einzelauswahl
@@ -488,6 +497,17 @@
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
+  }
+  .fuer-mich {
+    display: flex;
+    align-items: baseline;
+    gap: var(--r3);
+    margin: 0;
+  }
+  .fuer-mich .wer {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
+    color: var(--tinte);
   }
   .fuer-andere {
     border: none;

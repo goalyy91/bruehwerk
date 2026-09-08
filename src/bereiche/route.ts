@@ -30,6 +30,7 @@ export type Route =
   | { name: 'shot'; kaffeeId: string; profilId: string }
   | { name: 'einstellungen' }
   | { name: 'geraete' }
+  | { name: 'verhalten' }
   | { name: 'musterblatt' }
   | { name: 'beobachtungen' }
   | { name: 'muehle'; id: string }
@@ -85,6 +86,8 @@ export function zuPfad(route: Route): string {
       return '/einstellungen';
     case 'geraete':
       return '/einstellungen/geraete';
+    case 'verhalten':
+      return '/einstellungen/verhalten';
     case 'musterblatt':
       return '/einstellungen/musterblatt';
     case 'beobachtungen':
@@ -159,6 +162,7 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 2 && t[1] === 'uebung') return { name: 'uebung' };
     if (t.length === 2 && t[1] === 'personen') return { name: 'personen' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
+    if (t.length === 2 && t[1] === 'verhalten') return { name: 'verhalten' };
     if (t.length === 4 && t[1] === 'geraete' && t[2] === 'bruehgeraet' && t[3] === 'temperatur') {
       return { name: 'tempReferenz' };
     }
@@ -220,6 +224,7 @@ export function elternVon(route: Route): Route | undefined {
     case 'shot':
       return { name: 'profil', kaffeeId: route.kaffeeId, profilId: route.profilId };
     case 'geraete':
+    case 'verhalten':
     case 'musterblatt':
     case 'beobachtungen':
     case 'uebung':
@@ -272,6 +277,7 @@ export function tabVon(route: Route): Bereich {
       return 'kaffees';
     case 'einstellungen':
     case 'geraete':
+    case 'verhalten':
     case 'musterblatt':
     case 'beobachtungen':
     case 'muehle':

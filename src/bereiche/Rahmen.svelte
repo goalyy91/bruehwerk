@@ -28,6 +28,7 @@
   import ShotErfassung from './shot/ShotErfassung.svelte';
   import Einstellungen from './einstellungen/Einstellungen.svelte';
   import Geraete from './einstellungen/Geraete.svelte';
+  import Verhalten from './einstellungen/Verhalten.svelte';
   import MuehleAnsicht from './einstellungen/MuehleAnsicht.svelte';
   import Muehleblatt from './einstellungen/Muehleblatt.svelte';
   import BruehgeraetAnsicht from './einstellungen/BruehgeraetAnsicht.svelte';
@@ -178,10 +179,13 @@
     {:else if route.name === 'einstellungen'}
       <Einstellungen
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
+        onOeffnenVerhalten={() => navigation.gehe({ name: 'verhalten' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
         onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
       />
+    {:else if route.name === 'verhalten'}
+      <Verhalten onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'uebung'}
