@@ -10,6 +10,7 @@
  */
 import { alle, schreiben as ablageSchreiben, loeschen as ablageLoeschen, type SammlungWert } from '../daten/ablage';
 import { seedFallsLeer } from '../daten/seed';
+import { speicherSichern, type SpeicherZustand } from '../daten/speicher';
 import type { Sammlung } from '../daten/db';
 import { chargeAusgeschieden, naechsteAktiveCharge, benoetigtProBezug } from '../domain/vorrat';
 
@@ -41,9 +42,19 @@ class Bestand {
   geladen = $state(false);
   ladeFehler = $state<Error | undefined>(undefined);
 
+  /**
+   * Darf der Browser die Datenbank bei Speicherdruck raeumen? Wird beim Start
+   * einmal angefragt (daten/speicher.ts) und in den Einstellungen angezeigt —
+   * "nicht dauerhaft" soll ein sichtbarer Zustand sein, keine stille Annahme.
+   */
+  speicher = $state<SpeicherZustand>('unbekannt');
+
   async laden(): Promise<void> {
     this.ladeFehler = undefined;
     try {
+      // Vor dem ersten Schreiben um dauerhaften Speicher bitten: ohne das
+      // gilt die Datenbank dem Browser als verzichtbar (daten/speicher.ts).
+      this.speicher = await speicherSichern();
       // Beim allerersten Start ist die DB leer — dann traegt seedFallsLeer
       // den Geraetepark aus stammdaten.ts ein, bevor gelesen wird.
       await seedFallsLeer();

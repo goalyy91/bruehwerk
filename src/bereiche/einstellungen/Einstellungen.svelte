@@ -89,6 +89,23 @@
 <h2>Daten</h2>
 <Migration />
 <Backup />
+<!-- Fund 2026-09-08: ohne ausdrückliche Anforderung darf der Browser die
+     Datenbank bei Speicherdruck räumen. Angefragt wird beim Start
+     (daten/speicher.ts); zugesagt wird sie nicht immer. Der Satz steht
+     hier, weil „nicht dauerhaft" eine Nachricht ist, die man gesehen
+     haben muss — solange es kein Cloud-Backup gibt, hängt dann alles am
+     Datei-Export darüber. -->
+<p class="erklaerung ausserhalb">
+  {#if bestand.speicher === 'dauerhaft'}
+    Der Browser hat zugesagt, die Daten dauerhaft zu behalten.
+  {:else if bestand.speicher === 'nicht-dauerhaft'}
+    Der Browser behält sich vor, die Daten bei Speichermangel zu löschen —
+    exportiere regelmäßig eine Datei.
+  {:else}
+    Dieser Browser sagt nicht, ob er die Daten dauerhaft behält —
+    exportiere regelmäßig eine Datei.
+  {/if}
+</p>
 
 <style>
   .erklaerung {
