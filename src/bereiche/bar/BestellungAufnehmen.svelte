@@ -11,7 +11,7 @@
   import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { rangiereGetraenke, vorbelegung, begruendung } from '../../domain/ranking';
-  import { bohnenSchnittmenge, milchAusFuellmenge, extraShotErlaubt } from '../../domain/getraenk';
+  import { bohnenSchnittmenge } from '../../domain/getraenk';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import VorbelegteFrage from '../../muster/VorbelegteFrage.svelte';
@@ -125,19 +125,15 @@
   );
   const bohnenGesamt = $derived(bestand.kaffees.filter((k) => k.aktiv).length);
 
-  // Extra Shot — nur anbieten, wenn die Ausgleichszutat nicht unter ihre
-  // Mindestmenge faellt (konzept.md:923).
+  // Extra Shot — nur anbieten, wenn das Getraenk ihn zulaesst.
   let extraShot = $state(false);
-  const profilFuerPosition = $derived(
-    kaffeeId && getraenkGewaehlt ? bestand.profilFuerZubereitung(kaffeeId, getraenkGewaehlt.zubereitung) : undefined,
-  );
-  const extraShotMoeglich = $derived.by(() => {
-    if (!getraenkGewaehlt) return false;
-    if (getraenkGewaehlt.ausgleich === null) return true;
-    if (!profilFuerPosition) return false;
-    const ausgleichOhneExtra = milchAusFuellmenge(getraenkGewaehlt.fuellmenge, profilFuerPosition.ziel.output);
-    return extraShotErlaubt(ausgleichOhneExtra, getraenkGewaehlt.mindestAusgleich);
-  });
+  /**
+   * Das Getraenk sagt es jetzt selbst (2026-09-07). Vorher wurde es aus
+   * Fuellmenge, Profil-Output und Mindestmenge gerechnet — drei Felder, deren
+   * Zweck man der Beschriftung nicht ansah, fuer eine Entscheidung, die man
+   * am Getraenk direkt setzen kann. Siehe daten/schema/getraenk.ts.
+   */
+  const extraShotMoeglich = $derived(getraenkGewaehlt?.extraShotMoeglich ?? false);
 
   function zuruecksetzenFuerNaechste() {
     getraenkId = '';

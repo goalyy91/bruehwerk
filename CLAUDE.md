@@ -82,6 +82,20 @@ der Arbeit war.
 die Import-Spezifizierer und bricht den Build. Nachweislich — die Gegenprobe
 mit einem eingeschmuggelten `import { mount } from 'svelte'` schlägt fehl.
 
+**Dasselbe gilt seit dem 07.09.2026 für die Bildsprache.**
+`tests/bildsprache.test.ts` schlägt an, sobald ein Bildschirm lokal nachbaut,
+was es zentral gibt — eigenes `.panel` statt `muster/Blattliste.svelte`,
+eigener Gruppenkopf statt des globalen `h2`, eigene Feldkopie statt
+`.eingabefeld-text`, Formularzeilen ohne Karte, Serif auf einem Bedienelement.
+
+Der Test führt die noch nicht aufgeräumten Dateien namentlich als
+`ALTLASTEN` und wirkt als **Sperrklinke**: eine Verletzung außerhalb der Liste
+lässt ihn scheitern, und eine Datei *auf* der Liste, die inzwischen sauber
+ist, ebenfalls. Die Zahl kann damit nur fallen — sie ist die ehrliche Auskunft
+darüber, wie viele Bildschirme noch fehlen. Anlass war der Befund, dass drei
+nacheinander gemeldete Optikfehler allesamt lokale Kopien waren, keine
+Gestaltungsfehler.
+
 Passend dazu: die Domäne weiß nichts von einem Nutzer, nichts von einem Gerät,
 nichts von Chrome. Das ist keine Zukunftsplanung, sondern eine Liste von
 Dingen, die man *unterlässt* (siehe *Zwei Türen* unten).
@@ -171,19 +185,29 @@ und der Diagnosevorschlag haben keine Voreinstellung. Eine vorbelegte
 Rezepturänderung ist eine, die man versehentlich bestätigt und Wochen später
 als unerklärliche Drift wiederfindet.
 
-### Füllmenge ist die Konstante, nicht die Milchmenge
+### Ein Getränk ist ein Rezept, keine Mengenrechnung
 
-```
-Milch  =  Füllmenge  −  Σ Shots
-```
+Hier stand bis zum 07.09.2026 die Regel **„Füllmenge ist die Konstante, nicht
+die Milchmenge"** (`Milch = Füllmenge − Σ Shots`), samt einer Mindestmenge je
+Ausgleichszutat, aus der die App errechnete, wann ein Extra Shot verschwinden
+muss. **Beides ist entfallen** — auf ausdrückliche Entscheidung: *„ich habe
+meine Standardtassen und weiß, was worein kommt, und alles was Kaffeemenge ist
+richtet sich immer nach dem Kaffeerezept."*
 
-Eingegeben wird trotzdem die Milchmenge; die App merkt sich die Füllmenge
-daraus. Damit passt sich die Milch von selbst an, wenn sich ein Extra Shot
-oder ein geänderter Profil-Output dazwischenschiebt.
+Weggefallen sind damit `fuellmenge`, `mindestAusgleich`, `gefaess` und
+`reihenfolge`. Die ersten beiden trugen ausschließlich die
+Extra-Shot-Entscheidung, die das Getränk jetzt mit
+**`extraShotMoeglich`** direkt beantwortet; die letzten beiden hat
+nachweislich nie jemand gelesen.
 
-Jedes Getränk hat eine **Mindestmenge** für seine ausgleichende Zutat. Wird sie
-unterschritten, wird der Extra Shot dort gar nicht erst angeboten (Espresso
-Macchiato: 30 ml Milch minus 20 ml wäre kein Macchiato mehr).
+**Die Folge gehört gekannt, bevor jemand sie zurückbaut:** die App kennt keine
+Getränkemengen mehr. Sie kann daher weder eine Milchmenge rechnen noch vor
+einer zu kleinen Tasse warnen — und ohne Neuerfassung aller Getränke ist das
+nicht umkehrbar. Wer die Rechnung wiederhaben will, führt nicht ein Feld
+zurück, sondern eine Datenerhebung.
+
+Geblieben sind Milch und Heißwasser mit Textur und Temperatur: das stellt man
+an der Maschine tatsächlich ein, das ist keine Abstraktion.
 
 ### Herkunft — drei Zeichen, nicht vier (K54, K13)
 
@@ -340,7 +364,7 @@ Er läuft in drei Stufen, schnellste zuerst, und bricht bei der ersten ab:
 
 | Stufe | Befehl | Was sie fängt |
 | --- | --- | --- |
-| 1 | `vitest run` | Business-Logik **und** die Schichtentrennung |
+| 1 | `vitest run` | Business-Logik, die Schichtentrennung **und** die Bildsprache |
 | 2 | `svelte-check` | Typfehler in `.ts` und `.svelte` |
 | 3 | `vite build` | alles, was erst beim Bündeln auffällt |
 

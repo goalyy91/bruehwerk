@@ -439,6 +439,14 @@
     <h2>Bohne</h2>
     <Blattliste>
       <div class="wertzeile">
+        <!-- Art: zwei Bohnen — eine für Single Origin, zwei für Blend, als
+             Zeichen für "eine Herkunft oder mehrere". -->
+        <span class="wz-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <ellipse cx="9" cy="9" rx="5" ry="6.5" transform="rotate(-20 9 9)" />
+            <ellipse cx="15" cy="15" rx="5" ry="6.5" transform="rotate(-20 15 15)" />
+          </svg>
+        </span>
         <span class="wz-label">Art</span>
         <span class="wz-wert">{bohneArt}</span>
       </div>
@@ -488,6 +496,14 @@
       {/if}
       {#if kaffee.botanik}
         <div class="wertzeile">
+          <!-- Botanik: ein geteilter Kreis — Arabica gegen Robusta ist ein
+               Verhältnis, und das zeichnet man als Anteil. -->
+          <span class="wz-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="8.5" />
+              <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
           <span class="wz-label">Botanik</span>
           <span class="wz-wert">{botanikSatz(kaffee.botanik)}</span>
         </div>

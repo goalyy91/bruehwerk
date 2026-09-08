@@ -2,45 +2,20 @@
  * Getraenke-Rechnerei — "Getraenke" in docs/konzept.md.
  *
  * Reine Rechnerei, kein idb, kein Svelte (tests/schichten.test.ts erzwingt
- * das). Drei Dinge, die das Konzept ausdruecklich vorschreibt:
+ * das).
  *
- * 1. Die Fuellmenge ist die Konstante, nicht die Milchmenge (konzept.md:903-913):
- *    Milch = Fuellmenge - Summe Shots. Eingegeben wird die Milchmenge, die
- *    App merkt sich daraus die Fuellmenge — beide Richtungen stehen hier.
- * 2. Ein Extra Shot verdraengt die Ausgleichszutat, addiert sie nicht. Jedes
- *    Getraenk hat dafuer eine Mindestmenge; wird sie unterschritten, wird der
- *    Extra Shot dort gar nicht erst angeboten (konzept.md:923).
- * 3. Die Bohnenliste in der Bestellung ist eine Schnittmenge aus
- *    geeignetFuer x Koffein x aktiv (K45 K46), kein Vorschlag.
- */
-
-/** Milch = Fuellmenge - Summe Shots (konzept.md:908). */
-export function milchAusFuellmenge(fuellmengeMl: number, shotsGesamtMl: number): number {
-  return fuellmengeMl - shotsGesamtMl;
-}
-
-/** Die Umkehrung — beim Eintragen der Milchmenge merkt sich die App die Fuellmenge daraus. */
-export function fuellmengeAusMilch(milchMl: number, shotsGesamtMl: number): number {
-  return milchMl + shotsGesamtMl;
-}
-
-/**
- * Ob ein Extra Shot an diesem Getraenk angeboten wird — die Ausgleichszutat
- * darf dabei nicht unter die Mindestmenge fallen (Espresso Macchiato:
- * 30 ml Milch minus 20 ml Extra Shot waeren 10 ml, kein Macchiato mehr).
+ * **Hier stand bis 2026-09-07 mehr.** `milchAusFuellmenge`,
+ * `fuellmengeAusMilch` und `extraShotErlaubt` sind entfallen: sie rechneten
+ * aus Fuellmenge und Mindestmenge aus, wann der Extra Shot verschwinden
+ * muss. Julian braucht die Rechnung nicht ("ich habe meine Standardtassen
+ * und weiss was worein kommt"); ob ein Extra Shot moeglich ist, sagt das
+ * Getraenk jetzt direkt (`Getraenk.extraShotMoeglich`). Damit sind auch
+ * `fuellmenge` und `mindestAusgleich` aus dem Schema verschwunden — siehe
+ * daten/schema/getraenk.ts fuer die Folgen.
  *
- * Getraenke ohne Mindestmenge (typischerweise ohne Ausgleich ueberhaupt,
- * z. B. Espresso/Doppio) erlauben den Extra Shot immer — die einzige Grenze
- * dort ist das Tassenvolumen, das ist nicht Aufgabe dieser Funktion.
+ * Was bleibt: die Bohnenliste in der Bestellung ist eine Schnittmenge aus
+ * geeignetFuer x Koffein x aktiv (K45 K46), kein Vorschlag.
  */
-export function extraShotErlaubt(
-  ausgleichOhneExtraMl: number,
-  mindestAusgleichMl: number | undefined,
-  extraShotMl = 20,
-): boolean {
-  if (mindestAusgleichMl === undefined) return true;
-  return ausgleichOhneExtraMl - extraShotMl >= mindestAusgleichMl;
-}
 
 export interface KaffeeFuerSchnittmenge {
   readonly id: string;

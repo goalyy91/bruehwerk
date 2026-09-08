@@ -70,7 +70,6 @@
       e.ausgleich = null;
       e.milch = undefined;
       e.heisswasser = undefined;
-      e.mindestAusgleich = undefined;
     } else if (wahl === 'milch') {
       e.ausgleich = 'milch';
       e.heisswasser = undefined;
@@ -82,14 +81,22 @@
     }
   }
 
-  function reihenfolgeText(e: Getraenk): string {
-    return e.reihenfolge.join(', ');
-  }
-  function reihenfolgeAendern(e: Getraenk, text: string) {
-    e.reihenfolge = text
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+  /**
+   * Empfindlichkeit als drei benannte Stufen statt als Zahl 0-10
+   * ("dafür brauchen wir ein selbsterklärenderes Wording"). Gespeichert wird
+   * weiter eine Zahl — domain/ablauf.ts sortiert danach, die Sortierung
+   * bleibt unveraendert.
+   *
+   * Gelesen wird in Baendern, nicht auf exakte Werte: die Startbelegung der
+   * neun Getraenke traegt 1, 3, 4, 5, 6, 7 und 9, und keiner davon soll beim
+   * Oeffnen ohne Auswahl dastehen.
+   */
+  const FRISCHE_WERT = { lange: 0, normal: 5, sofort: 10 } as const;
+  const frischeStufe = $derived(
+    entwurf === undefined ? 'normal' : entwurf.empfindlichkeit <= 3 ? 'lange' : entwurf.empfindlichkeit <= 7 ? 'normal' : 'sofort',
+  );
+  function frischeAendern(wahl: string) {
+    if (entwurf) entwurf.empfindlichkeit = FRISCHE_WERT[wahl as keyof typeof FRISCHE_WERT];
   }
 
   function zahl(e: Event): number {
@@ -199,38 +206,6 @@
   </section>
 
   <section class="gruppe">
-    <h2>Menge</h2>
-    <Blattliste>
-      <div class="formularzeile">
-        <span class="formularzeile-label">Füllmenge</span>
-        <input
-          class="eingabefeld-text zahl"
-          type="text"
-          inputmode="decimal"
-          value={entwurf.fuellmenge}
-          onchange={(e) => (entwurf!.fuellmenge = zahl(e))}
-        />
-        <span class="einheit">ml</span>
-      </div>
-      <div class="formularzeile">
-        <span class="formularzeile-label">Gefäß</span>
-        <input class="eingabefeld-text" type="text" bind:value={entwurf.gefaess.name} />
-      </div>
-      <div class="formularzeile">
-        <span class="formularzeile-label">Volumen</span>
-        <input
-          class="eingabefeld-text zahl"
-          type="text"
-          inputmode="decimal"
-          value={entwurf.gefaess.volumen}
-          onchange={(e) => (entwurf!.gefaess.volumen = zahl(e))}
-        />
-        <span class="einheit">ml</span>
-      </div>
-    </Blattliste>
-  </section>
-
-  <section class="gruppe">
     <h2>{ausgleichTitel}</h2>
     <Blattliste>
       <div class="formularzeile spalte">
@@ -278,64 +253,45 @@
         </div>
       {/if}
 
-      {#if entwurf.ausgleich !== null}
-        <div class="formularzeile">
-          <span class="formularzeile-label">Mindestens</span>
-          <input
-            class="eingabefeld-text zahl"
-            type="text"
-            inputmode="decimal"
-            value={entwurf.mindestAusgleich ?? ''}
-            placeholder="—"
-            onchange={(e) => (entwurf!.mindestAusgleich = e.currentTarget.value === '' ? undefined : zahl(e))}
-          />
-          <span class="einheit">ml</span>
-        </div>
-      {/if}
     </Blattliste>
-    {#if entwurf.ausgleich !== null}
-      <!-- Der einzige Erklärsatz, der bleibt: er beschreibt eine echte
-           Nebenwirkung (ein Extra Shot verschwindet), die man dem Feld nicht
-           ansieht. Die anderen vier sagten, was jetzt der Gruppenkopf sagt. -->
-      <p class="erklaerung">Darunter wird ein Extra Shot gar nicht erst angeboten. Leer heißt: immer erlaubt.</p>
-    {/if}
   </section>
 
-  <!-- Reihenfolge und Empfindlichkeit stellt man einmal beim Anlegen ein und
-       danach nie wieder. Empfindlichkeit wirkt ausschließlich auf die
-       Planer-Reihenfolge und erscheint nirgends in der Bedienung (K48).
-       Eingeklappt, nicht gelöscht — beide bleiben einen Tap entfernt. -->
+  <!-- Beides stellt man einmal beim Anlegen ein und danach nie wieder,
+       deshalb eingeklappt statt im Hauptfluss. Die Beschriftungen sagen
+       jetzt, was sie bewirken — "Empfindlichkeit 0-10" war eine Zahl, die
+       man nicht kalibrieren kann ("dafür brauchen wir ein
+       selbsterklärenderes Wording"). -->
   <section class="gruppe">
     <button type="button" class="falte" onclick={() => (feinheitenOffen = !feinheitenOffen)}>
-      <span>Feinheiten · Reihenfolge, Empfindlichkeit</span>
+      <span>Beim Bestellen</span>
       <span class="falte-zeichen" aria-hidden="true">{feinheitenOffen ? '−' : '+'}</span>
     </button>
     {#if feinheitenOffen}
       <Blattliste>
         <div class="formularzeile">
-          <span class="formularzeile-label">Reihenfolge</span>
-          <input
-            class="eingabefeld-text"
-            type="text"
-            placeholder="z. B. wasser, shot"
-            value={reihenfolgeText(entwurf)}
-            onchange={(e) => reihenfolgeAendern(entwurf!, e.currentTarget.value)}
+          <Schalter
+            label="Extra Shot möglich"
+            an={entwurf.extraShotMoeglich}
+            onWahl={(a) => (entwurf!.extraShotMoeglich = a)}
           />
         </div>
-        <div class="formularzeile">
-          <span class="formularzeile-label">Empfindlichkeit</span>
-          <input
-            class="eingabefeld-text zahl"
-            type="text"
-            inputmode="numeric"
-            value={entwurf.empfindlichkeit}
-            onchange={(e) => (entwurf!.empfindlichkeit = Math.max(0, Math.min(10, Math.round(zahl(e)))))}
+        <div class="formularzeile spalte">
+          <span class="formularzeile-label">Wie lange es steht</span>
+          <Segment
+            optionen={[
+              { wert: 'lange', label: 'hält lange' },
+              { wert: 'normal', label: 'normal' },
+              { wert: 'sofort', label: 'sofort trinken' },
+            ]}
+            wert={frischeStufe}
+            onWahl={frischeAendern}
           />
         </div>
       </Blattliste>
       <p class="erklaerung">
-        Reihenfolge trägt z. B. den Unterschied zwischen Long Black (Wasser zuerst) und Americano.
-        Empfindlichkeit: 0 = verfällt kaum (Cold Brew), 10 = verfällt sofort (Espresso pur).
+        „Extra Shot möglich“ entscheidet, ob beim Bestellen ein zweiter Shot angeboten wird —
+        beim Espresso Macchiato wäre danach kein Macchiato mehr übrig.
+        „Wie lange es steht“ bestimmt, was in einer Bestellung zuletzt gemacht wird.
       </p>
     {/if}
   </section>

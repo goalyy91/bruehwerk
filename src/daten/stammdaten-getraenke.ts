@@ -39,10 +39,10 @@ export const GETRAENK_ESPRESSO: Getraenk = {
   // gemeinsamen Bezug ("Doppelbezug"), 0 g Verschnitt statt 9 g. Doppio
   // bleibt bewusst 'ganz' — zwei Shots, die volle Bezugsmenge.
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'halb', ausVorrat: false },
-  fuellmenge: 80,
   ausgleich: null,
-  gefaess: { name: 'Espressotasse', volumen: 80 },
-  reihenfolge: ['shot'],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 9, // verfaellt am schnellsten (konzept.md:739 "Empfindlichstes zuletzt")
 };
 
@@ -53,10 +53,10 @@ export const GETRAENK_DOPPIO: Getraenk = {
   kategorie: 'schwarz',
   zubereitung: 'espresso',
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'ganz', ausVorrat: false },
-  fuellmenge: 100,
   ausgleich: null,
-  gefaess: { name: 'Doppio-Glas', volumen: 100 },
-  reihenfolge: ['shot'],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 9,
 };
 
@@ -67,14 +67,13 @@ export const GETRAENK_ESPRESSO_MACCHIATO: Getraenk = {
   kategorie: 'milch',
   zubereitung: 'espresso',
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'halb', ausVorrat: false },
-  fuellmenge: 50, // konzept.md:920
   ausgleich: 'milch',
   // Darunter waere es kein Macchiato mehr — 30 ml minus 20 ml Extra Shot
   // waeren 10 ml (konzept.md:923).
-  mindestAusgleich: 20,
   milch: { textur: 'Tupfer Schaum', temperatur: 60 },
-  gefaess: { name: 'Macchiato-Glas', volumen: 80 },
-  reihenfolge: ['shot', 'milch'],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: false,
   empfindlichkeit: 7,
 };
 
@@ -85,12 +84,11 @@ export const GETRAENK_CAPPUCCINO: Getraenk = {
   kategorie: 'milch',
   zubereitung: 'espresso',
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'halb', ausVorrat: false },
-  fuellmenge: 150, // konzept.md:917
   ausgleich: 'milch',
-  mindestAusgleich: 20,
   milch: { textur: 'mikrogeschäumt', temperatur: 60 },
-  gefaess: { name: 'Cappuccino-Tasse', volumen: 180 },
-  reihenfolge: ['shot', 'milch'],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 5,
 };
 
@@ -101,12 +99,11 @@ export const GETRAENK_LATTE_MACCHIATO: Getraenk = {
   kategorie: 'milch',
   zubereitung: 'espresso',
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'halb', ausVorrat: false },
-  fuellmenge: 240, // konzept.md:918
   ausgleich: 'milch',
-  mindestAusgleich: 20,
   milch: { textur: 'leicht geschäumt, geschichtet', temperatur: 65 },
-  gefaess: { name: 'Latte-Glas', volumen: 300 },
-  reihenfolge: ['milch', 'shot'], // Schicht: Milch zuerst, der Shot sinkt durch
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 4,
 };
 
@@ -117,13 +114,13 @@ export const GETRAENK_LONG_BLACK: Getraenk = {
   kategorie: 'schwarz',
   zubereitung: 'espresso',
   basis: { bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id, anteilBezug: 'ganz', ausVorrat: false },
-  fuellmenge: 160, // konzept.md:919
   ausgleich: 'heisswasser',
   heisswasser: { temperatur: 90 },
-  gefaess: { name: 'Long-Black-Glas', volumen: 200 },
   // Traegt den Unterschied zu einem Americano (konzept.md:325): Wasser
   // zuerst, der Shot obendrauf erhaelt die Crema.
-  reihenfolge: ['wasser', 'shot'],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 6,
 };
 
@@ -134,10 +131,10 @@ export const GETRAENK_POUR_OVER: Getraenk = {
   kategorie: 'filter',
   zubereitung: 'pourover',
   basis: { bruehgeraetId: BRUEHGERAET_HARIO_V60.id, anteilBezug: 'ganz', ausVorrat: false },
-  fuellmenge: 350,
   ausgleich: null,
-  gefaess: { name: 'Karaffe/Becher', volumen: 350 },
-  reihenfolge: [],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 3,
 };
 
@@ -148,10 +145,10 @@ export const GETRAENK_MOKA: Getraenk = {
   kategorie: 'moka',
   zubereitung: 'moka',
   basis: { bruehgeraetId: BRUEHGERAET_BIALETTI_1.id, anteilBezug: 'ganz', ausVorrat: false },
-  fuellmenge: 60, // 1er-Kanne; die 3er liefert 130 ml auf drei Tassen (konzept.md:845)
   ausgleich: null,
-  gefaess: { name: 'Espressotasse', volumen: 60 },
-  reihenfolge: [],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 3,
 };
 
@@ -162,10 +159,10 @@ export const GETRAENK_COLD_BREW: Getraenk = {
   kategorie: 'coldbrew',
   zubereitung: 'coldbrew',
   basis: { bruehgeraetId: BRUEHGERAET_COLDBREW_KARAFFE.id, anteilBezug: 'ganz', ausVorrat: true },
-  fuellmenge: 300,
   ausgleich: null,
-  gefaess: { name: 'Cold-Brew-Glas', volumen: 300 },
-  reihenfolge: [],
+  // Extra Shot: nur der Macchiato verbietet ihn — 30 ml Milch minus 20 ml
+  // Extra Shot waeren 10 ml, das ist keiner mehr (konzept.md:923).
+  extraShotMoeglich: true,
   empfindlichkeit: 1, // verfaellt am langsamsten — kalt, fertig aus dem Vorrat
 };
 
