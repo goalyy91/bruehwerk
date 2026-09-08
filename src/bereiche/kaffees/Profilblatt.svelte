@@ -223,6 +223,20 @@
 
   let setupWahlOffen = $state(false);
 
+  /**
+   * Kompatibilitätsfilter (offene-punkte-ux.md Punkt 1, zurückgestellt bis
+   * Paket 06 — jetzt gebaut). Ohne Filter zeigte "Setup ändern" jedes Setup,
+   * unabhängig vom Gerätetyp — ein Pour-Over-Profil liess sich versehentlich
+   * an ein Espresso-Setup haengen. Dieselbe Zuordnung, die
+   * bestand.profilFuerZubereitung() schon nutzt: der Gerätetyp hinter dem
+   * Setup (Bruehgeraet.typ) entscheidet, nicht der Setup-Name. Ohne bekannten
+   * aktuellen Gerätetyp (sollte nicht vorkommen — profil.setupId zeigt immer
+   * auf ein Setup) keine Einschraenkung, statt aus fehlenden Daten zu raten.
+   */
+  const kompatibleSetups = $derived(
+    bruehgeraet ? bestand.setups.filter((s) => bestand.bruehgeraetVon(s.id)?.typ === bruehgeraet.typ) : bestand.setups,
+  );
+
   async function setupWechseln(neueSetupId: string) {
     if (!profil) return;
     speicherFehler = undefined;
@@ -395,7 +409,7 @@
     </button>
     {#if setupWahlOffen}
       <AuswahlListe
-        optionen={bestand.setups.map((s) => ({ wert: s.id, label: s.name }))}
+        optionen={kompatibleSetups.map((s) => ({ wert: s.id, label: s.name }))}
         wert={profil.setupId}
         onWahl={setupWechseln}
       />
