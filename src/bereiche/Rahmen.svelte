@@ -84,6 +84,24 @@
     const thema = bestand.einstellungen?.thema ?? 'system';
     if (thema === 'system') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', thema);
+
+    // Die Systemleisten mitfaerben (2026-09-08, mit der PWA-Huelle): als
+    // installierte App faerbt Android Status- und Navigationsleiste nach
+    // theme-color. Die zwei Angaben in index.html decken nur die
+    // Systemeinstellung ab — eine ausdrueckliche Wahl in den Einstellungen
+    // muss hier nachgezogen werden, sonst steht ein heller Bildschirm unter
+    // einer dunklen Leiste.
+    // Die Farbe wird aus dem Token gelesen, nicht hier wiederholt: eine
+    // zweite Fassung von --grund waere genau die Rohfarbe, die
+    // tests/tokens.test.ts verbietet — und sie wuerde beim naechsten
+    // Farbwechsel stillschweigend falsch.
+    const grund = getComputedStyle(document.documentElement).getPropertyValue('--grund').trim();
+    if (grund) {
+      for (const marke of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+        marke.removeAttribute('media');
+        marke.content = grund;
+      }
+    }
   });
 
   const route = $derived(navigation.aktuell);

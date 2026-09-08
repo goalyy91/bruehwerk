@@ -37,6 +37,12 @@ Es gibt **keine API und kein Backend als Wahrheit.**
   es merkt. Der Backend-Anbieter ist noch nicht gewählt (Kandidaten: Supabase,
   Cloudflare D1, Firebase). Auswahlkriterium neben den Freikontingenten: manche
   pausieren Projekte bei Inaktivität.
+- **Der Speicher wird angefordert, nicht angenommen.** `daten/speicher.ts` bittet
+  beim Start um `navigator.storage.persist()`. Ohne das gilt IndexedDB dem
+  Browser als *best effort* — bei Speicherdruck darf Chrome die Datenbank
+  räumen, ohne Rückfrage. Chrome kann die Bitte ablehnen, deshalb steht die
+  Antwort als Satz in den Einstellungen unter „Daten": „nicht dauerhaft" soll
+  ein sichtbarer Zustand sein und keine stille Annahme.
 - **Manueller Datei-Export** ist der zweite, anbieterfreie Backup-Weg. Er muss
   auch dann noch funktionieren, wenn der Cloud-Dienst eingestellt wird.
 - **Notion fließt genau einmal hinein** (Paket 02) und wird danach nicht mehr
@@ -45,6 +51,19 @@ Es gibt **keine API und kein Backend als Wahrheit.**
 
 Das Velora-Repo ist reine Rezept-Referenz. Nichts wird geteilt, nichts
 transplantiert — außer den Daten, einmalig.
+
+### Die PWA-Hülle
+
+Seit dem 08.09.2026 gibt es sie überhaupt erst: Manifest, Service Worker und
+Icon kamen über `vite-plugin-pwa` (`vite.config.ts`), das Icon baut
+`werkzeuge/icon-bauen.cjs` ohne Bildwerkzeug aus den Farben von `tokens.css`.
+Davor war Brühwerk trotz des eigenen Untertitels keine PWA — die *Daten* lagen
+offline, die *App* nicht, und ohne Netz blieb der Bildschirm leer.
+
+`registerType: 'autoUpdate'` mit `skipWaiting`/`clientsClaim` ist Absicht.
+Ein Service Worker, der eine alte Fassung festhält, bis jemand „neu laden"
+drückt, ist schlimmer als keiner: eine App für eine Person auf einem Telefon
+steckt dann monatelang auf einem Stand fest, ohne dass man sieht, warum.
 
 ### Was die Migration reparieren muss
 
