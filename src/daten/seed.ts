@@ -81,6 +81,8 @@ export async function seedFallsLeer(): Promise<void> {
       bestandKnappBezuege: 2,
       bestandFrischWochen: 8,
       bestandEingefrorenMonate: 8,
+      // Ohne Festlegung entscheidet das Telefon (siehe schema/einstellungen.ts).
+      thema: 'system',
     });
   }
 }

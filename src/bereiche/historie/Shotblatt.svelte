@@ -194,6 +194,13 @@
     color: var(--gedaempft);
     margin: 0 0 var(--r3);
   }
+  /* Rückmeldung 2026-09-08: „das Grau gehört da nicht hin". Stimmt — und es
+     kam von mir: beim Umbau auf Blattliste (Runde 4) habe ich die
+     Kartenfläche aus dieser Regel genommen, ohne `background: transparent`
+     zu setzen. Ein <button> ohne eigene Fläche bekommt die des Browsers
+     (ButtonFace, hellgrau).
+     Das Polster ist ebenfalls raus: die Karte bringt ihr eigenes mit, die
+     Zeile war doppelt eingerückt. */
   .verkostung-zeile {
     width: 100%;
     display: flex;
@@ -201,8 +208,9 @@
     justify-content: space-between;
     gap: var(--r3);
     min-height: 56px;
-    padding: 0 var(--r4);
+    padding: 0;
     border: none;
+    background: transparent;
     color: var(--akzent);
     font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);

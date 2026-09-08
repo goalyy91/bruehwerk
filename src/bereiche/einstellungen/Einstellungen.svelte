@@ -25,6 +25,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Migration from './Migration.svelte';
@@ -48,6 +49,7 @@
       bestandKnappBezuege: 2,
       bestandFrischWochen: 8,
       bestandEingefrorenMonate: 8,
+      thema: 'system' as const,
     };
     await schreiben('einstellungen', { ...basis, [feld]: wert });
   }
@@ -85,6 +87,25 @@
   <Blattzeile label="Offene Beobachtungen" akzent onKlick={onOeffnenBeobachtungen} />
   <Blattzeile label="Übungsmodus" akzent onKlick={onOeffnenUebung} />
 </Blattliste>
+
+<h2>Darstellung</h2>
+{#if bestand.einstellungen}
+  <Blattliste>
+    <div class="formularzeile spalte">
+      <span class="formularzeile-label">Erscheinungsbild</span>
+      <Segment
+        optionen={[
+          { wert: 'system', label: 'System' },
+          { wert: 'hell', label: 'Hell' },
+          { wert: 'dunkel', label: 'Dunkel' },
+        ]}
+        wert={bestand.einstellungen.thema}
+        onWahl={(w) => einstellungAendern('thema', w as 'system' | 'hell' | 'dunkel')}
+      />
+    </div>
+  </Blattliste>
+  <p class="erklaerung ausserhalb">„System" folgt der Einstellung des Telefons und wechselt mit ihr.</p>
+{/if}
 
 <h2>Verhalten</h2>
 {#if bestand.einstellungen}

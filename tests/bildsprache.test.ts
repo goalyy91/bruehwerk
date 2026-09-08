@@ -52,6 +52,28 @@ const REGELN = [
       ),
   },
   {
+    /**
+     * Ein <button>, dem die Umrandung genommen wird, aber keine Flaeche
+     * gegeben, bekommt die des Browsers — hellgrau (ButtonFace). Genau so
+     * entstand 2026-09-08 das graue Kaestchen im Verkostungs-Block: beim
+     * Umbau auf Blattliste fiel `background: var(--blatt)` weg, ohne dass
+     * `transparent` nachrueckte. Im Code sieht das aus wie nichts.
+     */
+    name: 'Knopf ohne Fläche — der Browser malt dann seine eigene (grau)',
+    pruefen: (s: string) => {
+      const knopfKlassen = new Set<string>();
+      for (const m of s.matchAll(/<button[^>]*class="([^"]+)"/g)) {
+        for (const k of m[1]!.split(/\s+/)) if (!k.startsWith('{')) knopfKlassen.add(k);
+      }
+      if (knopfKlassen.size === 0) return false;
+      return (s.match(/\n  \.[^{]*\{[^{}]*\}/g) ?? []).some((block) => {
+        const sel = block.match(/\n  ([^{]*)\{/)![1]!.trim();
+        const klasse = sel.replace(/^\./, '').split(/[\s.:,]/)[0]!;
+        return knopfKlassen.has(klasse) && /border:\s*none/.test(block) && !/background/.test(block);
+      });
+    },
+  },
+  {
     name: 'eigener Gruppenkopf statt des globalen h2 aus tokens.css',
     pruefen: (s: string) => /^\s*\.gruppenkopf\s*\{/m.test(s),
   },

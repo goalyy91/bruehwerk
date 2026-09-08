@@ -69,6 +69,22 @@
     navigation.scrollContainer = inhaltElement;
   });
 
+  /**
+   * Hell/dunkel/System (2026-09-08). Der Rahmen ist der einzige Ort, der die
+   * ganze App umschliesst — deshalb steht die Zuweisung hier und nicht in den
+   * Einstellungen, die sie nur setzen.
+   *
+   * `system` entfernt das Attribut, statt einen dritten Wert zu schreiben:
+   * muster/tokens.css schaltet ueber `:root:not([data-theme])` auf die
+   * Media-Abfrage zurueck, und die Systemeinstellung ist damit kein
+   * gespeicherter Zustand, sondern die Abwesenheit einer Festlegung.
+   */
+  $effect(() => {
+    const thema = bestand.einstellungen?.thema ?? 'system';
+    if (thema === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', thema);
+  });
+
   const route = $derived(navigation.aktuell);
 </script>
 

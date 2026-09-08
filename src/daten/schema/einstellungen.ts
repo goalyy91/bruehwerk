@@ -33,6 +33,16 @@ export const AppEinstellungen = z.object({
   bestandKnappBezuege: z.number().int().positive().default(2),
   bestandFrischWochen: z.number().positive().default(8),
   bestandEingefrorenMonate: z.number().positive().default(8),
+  /**
+   * Hell, dunkel oder wie das Telefon (2026-09-08).
+   *
+   * Die Werte heissen genau wie die Selektoren in muster/tokens.css
+   * (`[data-theme='hell']` / `[data-theme='dunkel']`), damit die Einstellung
+   * ohne Uebersetzungsschritt an das Wurzelelement geschrieben werden kann.
+   * `system` setzt gar kein Attribut — dann greift die Media-Abfrage
+   * `:root:not([data-theme])`, und das Telefon entscheidet.
+   */
+  thema: z.enum(['system', 'hell', 'dunkel']).default('system'),
 });
 export type AppEinstellungen = z.infer<typeof AppEinstellungen>;
 
