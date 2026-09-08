@@ -63,7 +63,7 @@
             <rect width="2" height="4" class="schraffur-strich" />
           </pattern>
         </defs>
-        {#each totzonen as zone (zone.wort)}
+        {#each totzonen as zone}
           <rect
             x="0"
             y={HOEHE - zone.bisY * HOEHE}
@@ -73,7 +73,7 @@
             fill="url(#schraffur)"
           />
         {/each}
-        {#each ereignisse as x (x)}
+        {#each ereignisse as x}
           <line x1={x * BREITE} y1="0" x2={x * BREITE} y2={HOEHE} class="ereignis" />
         {/each}
         {#if pfad}
@@ -81,14 +81,18 @@
         {/if}
       </svg>
       <div class="totzone-woerter">
-        {#each totzonen as zone (zone.wort)}
+        {#each totzonen as zone}
           <div class="totzone-wort">
             <span class="totzone-muster" aria-hidden="true"></span>
             {zone.wort}
           </div>
         {/each}
       </div>
-      {#each punkte as p (p.x)}
+      <!-- Ohne Schluessel: die Listen sind rein positionell, und ein
+           Schluessel auf einer berechneten Fliesskommazahl liess Svelte bei
+           zwei gleich weit zusammengeruckten Punkten mit "duplicate keys"
+           abbrechen. -->
+      {#each punkte as p}
         <span
           class="punkt"
           class:achtung={p.zustand === 'achtung'}

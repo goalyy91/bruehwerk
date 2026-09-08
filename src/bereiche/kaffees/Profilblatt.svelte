@@ -26,7 +26,7 @@
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
   import { GROESSEN } from '../../domain/tasting';
-  import { normiereZeitreihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
+  import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
@@ -68,9 +68,9 @@
 
   // Verlauf — K40 (Totzonen als schraffierter Streifen in der Kurve, keine
   // eigene Karte), Chargenwechsel als gestrichelte Senkrechte. Die Shots
-  // dieses Profils, chronologisch — x normalisiert ueber die Zeitspanne,
-  // y ueber die Mahlgrad-Spannweite. Bei einem einzigen Shot gibt es keine
-  // Zeitspanne zu normalisieren; er landet mittig.
+  // dieses Profils, chronologisch — x ueber die Reihenfolge, y ueber die
+  // Mahlgrad-Spannweite. Bei einem einzigen Shot gibt es keine Reihe zu
+  // normalisieren; er landet mittig.
   const verlaufShots = $derived(
     bestand.shots.filter((s) => s.profilId === profilId).sort((a, b) => a.ts - b.ts),
   );
@@ -81,20 +81,22 @@
     const max = Math.max(...werte);
     return { min, max };
   });
-  const zeitSpanne = $derived.by(() => {
-    if (verlaufShots.length === 0) return undefined;
-    return { von: verlaufShots[0]!.ts, bis: verlaufShots[verlaufShots.length - 1]!.ts };
-  });
+  /**
+   * x kommt aus der **Reihenfolge**, nicht aus der verstrichenen Zeit
+   * (Fund 2026-09-08, Begruendung ausfuehrlich in domain/auswertung.ts).
+   * Kurz: die importierten Shots tragen synthetische Zeitstempel im
+   * Minutenabstand, der erste echte Shot danach sprengte die Spanne und
+   * schob den ganzen Import in die ersten 0,45 % der Breite.
+   */
+  function normiereFolge(index: number): number {
+    if (verlaufShots.length < 2) return 0.5;
+    return index / (verlaufShots.length - 1);
+  }
 
   function normiereMg(mg: number): number {
     const spanne = mgSpanne;
     if (!spanne || spanne.max === spanne.min) return 0.5;
     return (mg - spanne.min) / (spanne.max - spanne.min);
-  }
-  function normiereZeit(ts: number): number {
-    const spanne = zeitSpanne;
-    if (!spanne || spanne.bis === spanne.von) return 0.5;
-    return (ts - spanne.von) / (spanne.bis - spanne.von);
   }
   // Auf die Muehlen-Schrittweite runden, statt den rohen Mittelwert zu
   // zeigen: die Beschriftung soll ein Wert sein, den man an der Muehle
@@ -110,8 +112,8 @@
   }
 
   const verlaufPunkte = $derived(
-    verlaufShots.map((s) => ({
-      x: normiereZeit(s.ts),
+    verlaufShots.map((s, i) => ({
+      x: normiereFolge(i),
       y: normiereMg(s.ist.mg),
       zustand:
         s.urteil === 'daneben' ? ('kritisch' as const) : s.urteil === 'okay' ? ('achtung' as const) : ('gut' as const),
@@ -136,8 +138,9 @@
   });
   const verlaufEreignisse = $derived(
     verlaufShots
-      .filter((s, i) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
-      .map((s) => normiereZeit(s.ts)),
+      .map((s, i) => ({ s, i }))
+      .filter(({ s, i }) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
+      .map(({ i }) => normiereFolge(i)),
   );
 
   const gruppenTemperatur = $derived(
@@ -180,7 +183,7 @@
 
   const BIPOLARE_GROESSEN = GROESSEN.filter((g) => g.art === 'bipolar');
   function verlaufFuerGroesse(groesse: (typeof GROESSEN)[number]['id']) {
-    return normiereZeitreihe(verkostungenChronologisch.map((e) => ({ ts: e.ts, wert: e.tasting.groessen[groesse] })));
+    return normiereReihe(verkostungenChronologisch.map((e) => ({ wert: e.tasting.groessen[groesse] })));
   }
 
   const haeufigeAromen = $derived(haeufigsteAromen(verkostungenChronologisch.flatMap((e) => e.tasting.aromen)));

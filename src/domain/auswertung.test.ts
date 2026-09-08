@@ -1,22 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { normiereZeitreihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from './auswertung';
+import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from './auswertung';
 
-describe('normiereZeitreihe', () => {
+describe('normiereReihe', () => {
   it('leer bleibt leer', () => {
-    expect(normiereZeitreihe([])).toEqual([]);
+    expect(normiereReihe([])).toEqual([]);
   });
 
   it('ein einzelner Punkt landet mittig', () => {
-    expect(normiereZeitreihe([{ ts: 100, wert: 2 }])).toEqual([{ x: 0.5, wert: 2 }]);
+    expect(normiereReihe([{ wert: 2 }])).toEqual([{ x: 0.5, wert: 2 }]);
   });
 
-  it('mehrere Punkte normalisieren auf 0..1', () => {
-    const ergebnis = normiereZeitreihe([
-      { ts: 0, wert: 1 },
-      { ts: 50, wert: 2 },
-      { ts: 100, wert: 3 },
-    ]);
+  it('mehrere Punkte verteilen sich gleichmaessig auf 0..1', () => {
+    const ergebnis = normiereReihe([{ wert: 1 }, { wert: 2 }, { wert: 3 }]);
     expect(ergebnis.map((p) => p.x)).toEqual([0, 0.5, 1]);
+  });
+
+  /**
+   * Der Fall, der die Kurve am 08.09.2026 zerlegt hat: 14 importierte Shots
+   * im Minutenabstand, dann ein echter zwei Tage spaeter. Ueber die Zeit
+   * gerechnet lagen die ersten 14 in den ersten 0,45 % der Breite.
+   */
+  it('ein spaeter Nachzuegler quetscht die frueheren nicht zusammen', () => {
+    const ergebnis = normiereReihe([...Array(15)].map((_, i) => ({ wert: i })));
+    expect(ergebnis[1]!.x).toBeCloseTo(1 / 14);
+    expect(ergebnis[13]!.x).toBeCloseTo(13 / 14);
+    expect(ergebnis[14]!.x).toBe(1);
   });
 });
 

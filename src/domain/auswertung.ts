@@ -16,16 +16,29 @@ export interface ZeitWert {
 }
 
 /**
- * Normalisiert eine chronologische Reihe auf x in [0, 1] — dieselbe Technik,
- * die Profilblatt.svelte fuer den Mahlgrad-Verlauf schon inline verwendet
- * (normiereZeit), hier fuer beliebige Groessen wiederverwendbar. Ein
- * einzelner Punkt hat keine Zeitspanne zu normalisieren und landet mittig.
+ * Normalisiert eine chronologische Reihe auf x in [0, 1] — ueber die
+ * **Reihenfolge**, nicht ueber die verstrichene Zeit.
+ *
+ * Bis 2026-09-08 war es die Zeit, und das ging kaputt, sobald nach dem
+ * Notion-Import der erste echte Shot dazukam: die importierten Shots tragen
+ * synthetische Zeitstempel im Minutenabstand (migrieren.ts — Notion hat pro
+ * Shot nie ein Datum gefuehrt), der neue Shot einen echten von Stunden oder
+ * Tagen spaeter. Die Spanne sprang von 13 Minuten auf zwei Tage, und der
+ * gesamte Import lag danach in den ersten 0,45 % der Breite: ein senkrechter
+ * Klumpen links, ein einzelner Punkt rechts.
+ *
+ * Die Kurve beantwortet ohnehin "wie hat sich der Wert ueber die Versuche
+ * entwickelt" — das ist eine Reihenfolge. Eine Achse auf erfundenen
+ * Zeitstempeln zu bauen, war die eigentliche Falschaussage. Der Preis ist
+ * bekannt und akzeptiert: eine dreimonatige Pause sieht aus wie eine von
+ * fuenf Minuten.
+ *
+ * Ein einzelner Punkt hat keine Reihe zu normalisieren und landet mittig.
  */
-export function normiereZeitreihe(punkte: readonly ZeitWert[]): readonly { x: number; wert: number }[] {
+export function normiereReihe(punkte: readonly { readonly wert: number }[]): readonly { x: number; wert: number }[] {
   if (punkte.length === 0) return [];
-  const von = punkte[0]!.ts;
-  const bis = punkte[punkte.length - 1]!.ts;
-  return punkte.map((p) => ({ x: bis === von ? 0.5 : (p.ts - von) / (bis - von), wert: p.wert }));
+  if (punkte.length === 1) return [{ x: 0.5, wert: punkte[0]!.wert }];
+  return punkte.map((p, i) => ({ x: i / (punkte.length - 1), wert: p.wert }));
 }
 
 export interface AromaPfad {
