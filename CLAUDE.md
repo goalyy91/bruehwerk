@@ -2,6 +2,8 @@
 
 Ein Laborbuch für Kaffee. PWA, offline-first, für ein Telefon, für einen Menschen.
 
+Live: **https://bruehwerk.vercel.app** — Vercel baut aus `master`.
+
 Dieses Dokument enthält nur, was man dem Projekt nicht ansieht. Allgemeine
 Arbeitsregeln stehen in `~/.claude/CLAUDE.md` und werden hier nicht wiederholt.
 
