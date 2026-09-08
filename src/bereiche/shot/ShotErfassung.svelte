@@ -24,13 +24,14 @@
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
   import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
-  import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
+  import IstGegenZiel, { type IstGegenZielZeile } from '../../muster/IstGegenZiel.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Chips from '../../muster/Chips.svelte';
   import Vorschlag from '../../muster/Vorschlag.svelte';
+  import Gussplanansicht from '../../muster/Gussplanansicht.svelte';
   import type { Shot, Urteil as UrteilTyp } from '../../daten/schema';
 
   // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jeder Bildschirm selbst
@@ -41,6 +42,9 @@
   const kaffee = $derived(profil ? bestand.kaffees.find((k) => k.id === profil.kaffeeId) : undefined);
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
+  // Nur ansehbar hier (K7 "Was je Gerät gilt") — bearbeitet wird der Plan
+  // ausschliesslich im Profilblatt (GussplanEditor.svelte).
+  const gussplan = $derived(bestand.gusslpaene.find((g) => g.id === profil?.gussplanId));
 
   // Messreihe je Groesse, ueber alle Shots DIESES Profils (nicht des ganzen
   // Kaffees) — Espresso-Output und Pour-Over-Durchlaufzeit sind keine
@@ -58,7 +62,46 @@
   let mg = $state(0);
   let rpm = $state<number | undefined>(undefined);
   let kt = $state<number | undefined>(undefined);
-  let istWerte = $state<readonly number[]>([]);
+
+  /**
+   * Fehler von vor dem 2026-09-08 (gefunden beim Preinfusion-Ausblenden):
+   * `istWerte` war ein `readonly number[]`, gelesen ueber feste Positionen
+   * (`istWerte[0]`, `istWerte[2]`). Faellt eine Zeile weg — Preinfusion nur
+   * noch am Siebtraeger —, rutscht "Zeit" auf Position 1 und die App haette
+   * eine falsche Zahl geschrieben. `istZeilen` unten ist die einzige Quelle
+   * fuer Reihenfolge UND Zuordnung; `onAenderung` zippt ihre Werte gegen
+   * dieselbe Liste, keine zweite, separat gepflegte Positionsliste mehr.
+   */
+  // 'pre' wird zwar erfasst und angezeigt, aber wie schon vor diesem Umbau
+  // NICHT in den Shot geschrieben (siehe urteilGewaehlt: `pre: profil.ziel.pre`)
+  // — reine Bestandsaufnahme des bisherigen Verhaltens, keine neue Regel.
+  type IstZeileKey = 'output' | 'pre' | 'zeit';
+  let istWerte = $state<Partial<Record<IstZeileKey, number>>>({});
+
+  const istZeilen = $derived.by((): { key: IstZeileKey; zeile: IstGegenZielZeile }[] => {
+    if (!profil) return [];
+    const zeilen: { key: IstZeileKey; zeile: IstGegenZielZeile }[] = [
+      { key: 'output', zeile: { label: 'Output', einheit: 'g', ziel: profil.ziel.output, spielraum: profil.spielraum.output, messreihe: messreiheOutput } },
+    ];
+    // Preinfusion nur am Siebtraeger (Rueckmeldung 2026-09-08) — am V60/
+    // Moka/Cold Brew steht sie nicht, das Feld war dort immer leer.
+    if (bruehgeraet?.typ === 'espresso') {
+      zeilen.push({ key: 'pre', zeile: { label: 'Preinfusion', einheit: 's', ziel: profil.ziel.pre ?? 0, spielraum: profil.spielraum.zeit } });
+    }
+    const durchlaufzeit = bruehgeraet?.fuehrungswert === 'durchlaufzeit';
+    zeilen.push({
+      key: 'zeit',
+      zeile: {
+        label: durchlaufzeit ? 'Durchlaufzeit' : 'Zeit',
+        einheit: 's',
+        ziel: profil.ziel.zeit,
+        spielraum: durchlaufzeit ? profil.spielraum.durchlaufzeit : profil.spielraum.zeit,
+        messreihe: messreiheZeit,
+        mmss: durchlaufzeit,
+      },
+    });
+    return zeilen;
+  });
 
   let vorherigeProfilId: string | undefined;
   $effect(() => {
@@ -220,9 +263,9 @@
         mg,
         rpm,
         kt,
-        output: istWerte[0] ?? profil.ziel.output,
+        output: istWerte.output ?? profil.ziel.output,
         pre: profil.ziel.pre,
-        zeit: istWerte[2] ?? profil.ziel.zeit,
+        zeit: istWerte.zeit ?? profil.ziel.zeit,
       },
       istHerkunft: {},
       portionen: 1,
@@ -388,6 +431,15 @@
     <p class="hinweis charge-hinweis">{chargenHinweisText}</p>
   {/if}
 
+  <!-- Vor den Einstellwerten, nicht danach: man liest den Plan, bevor man
+       zu giessen anfaengt, nicht danach (K7 "Der Gussplan ist im
+       Zubereitungsweg erreichbar, aber nur ansehbar"). -->
+  {#if bruehgeraet?.typ === 'pourover' && gussplan}
+    <div class="gussplan-block">
+      <Gussplanansicht bausteine={gussplan.bausteine} lesart={gussplan.lesart} />
+    </div>
+  {/if}
+
   <div class="eingestellt">
     <h2>Parameter</h2>
     <div class="parameter-raster">
@@ -418,18 +470,12 @@
        auch bei Espresso-Geraeten ohne Durchlaufzeit-Fuehrungswert). -->
   <IstGegenZiel
     titel="Ziel"
-    zeilen={[
-      { label: 'Output', einheit: 'g', ziel: profil.ziel.output, spielraum: profil.spielraum.output, messreihe: messreiheOutput },
-      { label: 'Preinfusion', einheit: 's', ziel: profil.ziel.pre ?? 0, spielraum: profil.spielraum.zeit },
-      {
-        label: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit',
-        einheit: 's',
-        ziel: profil.ziel.zeit,
-        spielraum: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? profil.spielraum.durchlaufzeit : profil.spielraum.zeit,
-        messreihe: messreiheZeit,
-      },
-    ]}
-    onAenderung={(werte) => (istWerte = werte)}
+    zeilen={istZeilen.map((z) => z.zeile)}
+    onAenderung={(werte) => {
+      const neu: Partial<Record<IstZeileKey, number>> = {};
+      istZeilen.forEach((z, i) => (neu[z.key] = werte[i]));
+      istWerte = neu;
+    }}
   />
 
   <div class="urteil-block">
@@ -453,6 +499,9 @@
      eine wortgleiche Kopie und sind entfallen. */
   h2 {
     margin-top: 0;
+  }
+  .gussplan-block {
+    margin-bottom: var(--r4);
   }
   .eingestellt {
     margin-bottom: var(--r4);

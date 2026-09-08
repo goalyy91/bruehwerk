@@ -16,7 +16,7 @@
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
-  import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
+  import { gesamtwasser, verhaeltnis, umrechnen, bausteinZeile, BAUSTEIN_LABEL, type Lesart } from '../../domain/gussplan';
   import Blattliste from '../../muster/Blattliste.svelte';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
@@ -33,17 +33,6 @@
   let offeneZeile = $state<number | undefined>(undefined);
   let loeschenBestaetigen = $state<number | undefined>(undefined);
   let neuOffen = $state(false);
-
-  // Regel 8/Sprache: lesbare Labels statt der rohen Enum-Werte im Zeilenkopf.
-  const TYP_LABEL: Record<GussBaustein['typ'], string> = {
-    vorbereiten: 'Vorbereiten',
-    bloom: 'Bloom',
-    guss: 'Guss',
-    agitation: 'Agitation',
-    warten: 'Warten',
-    bypass: 'Bypass',
-    frei: 'Frei (Migration)',
-  };
 
   const NEU_OPTIONEN: { wert: GussBaustein['typ']; label: string }[] = [
     { wert: 'bloom', label: 'Bloom' },
@@ -162,23 +151,10 @@
     void planSpeichern(bausteine);
   }
 
+  // Formatierung geteilt mit der reinen Ansicht beim Shot-Loggen
+  // (Gussplanansicht.svelte) — domain/gussplan.ts::bausteinZeile().
   function kopfzeile(b: GussBaustein): string {
-    switch (b.typ) {
-      case 'vorbereiten':
-        return [b.filterSpuelen && 'Filter spülen', b.gefaessVorwaermen && 'Gefäß vorwärmen'].filter(Boolean).join(' · ') || '—';
-      case 'bloom':
-        return `${b.menge} g · ${b.dauer} s`;
-      case 'guss':
-        return `${gussplan?.lesart === 'kumulativ' ? 'auf' : '+'} ${b.zielmenge} g${b.dauer ? ` · ${b.dauer} s` : ''}${b.muster ? ` · ${b.muster}` : ''}`;
-      case 'agitation':
-        return b.art;
-      case 'warten':
-        return b.modus === 'bis-durchgelaufen' ? 'bis durchgelaufen' : `${b.dauer ?? 0} s`;
-      case 'bypass':
-        return `${b.menge} g${b.temperatur ? ` · ${b.temperatur} °C` : ''}`;
-      case 'frei':
-        return `${b.rolle}${b.menge ? ` · ${b.menge} g` : ''}${b.dauer ? ` · ${b.dauer} s` : ''}`;
-    }
+    return bausteinZeile(b, gussplan?.lesart ?? 'kumulativ');
   }
 </script>
 
@@ -202,9 +178,16 @@
   <div class="kartenblock">
     <Blattliste>
     {#each gussplan.bausteine as baustein, i (i)}
-      <button type="button" class="zeile" onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}>
-        <span class="typ">{TYP_LABEL[baustein.typ]}</span>
+      <button
+        type="button"
+        class="zeile"
+        class:offen={offeneZeile === i}
+        aria-expanded={offeneZeile === i}
+        onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}
+      >
+        <span class="typ">{BAUSTEIN_LABEL[baustein.typ]}</span>
         <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
+        <span class="chevron" class:offen={offeneZeile === i} aria-hidden="true">▾</span>
       </button>
       {#if offeneZeile === i}
         <div class="formular">
@@ -266,8 +249,19 @@
             <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
           {/if}
           {#if baustein.typ !== 'frei'}
-            <label class="notiz">Notiz <input class="eingabefeld-text" type="text" value={baustein.notiz ?? ''}
-              onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })} /></label>
+            <!-- Beim Warten-Baustein ist die Notiz der eigentliche Wert der
+                 Zeile ("Warten bis der Rand trocken ist") — Label und
+                 Platzhalter sagen das, statt "Notiz" zu heissen wie ueberall
+                 sonst (bausteinZeile() in domain/gussplan.ts liest sie so). -->
+            <label class="notiz">{baustein.typ === 'warten' ? 'bis' : 'Notiz'}
+              <input
+                class="eingabefeld-text"
+                type="text"
+                placeholder={baustein.typ === 'warten' ? 'durchgelaufen' : undefined}
+                value={baustein.notiz ?? ''}
+                onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })}
+              />
+            </label>
           {/if}
 
           <div class="werkzeuge">
@@ -333,16 +327,17 @@
     color: var(--gedaempft);
   }
   /* Blatt mit Zeilen (Bausteine) + aufgeklapptem Formular in Vertiefung
-     (offener Zustand) — kein zentrales Muster fuer diese Form vorhanden
-  /* Nur noch der Abstand — Fläche, Radius, Schatten und die Haarlinien
-     zwischen den Zeilen kommen aus muster/Blattliste.svelte. Die lokale
-     .panel-Kopie ist entfallen (tests/bildsprache.test.ts). */
+     (offener Zustand) — kein zentrales Muster fuer diese Form vorhanden.
+     Fläche, Radius, Schatten und die Haarlinien zwischen den Zeilen kommen
+     aus muster/Blattliste.svelte; die lokale .panel-Kopie ist entfallen
+     (tests/bildsprache.test.ts). */
   .kartenblock {
     margin-bottom: var(--r5);
   }
   .zeile {
     width: 100%;
     display: flex;
+    align-items: center;
     justify-content: space-between;
     min-height: var(--treffer);
     border: none;
@@ -352,6 +347,22 @@
     color: var(--tinte);
     text-align: left;
     cursor: pointer;
+  }
+  /* Offener Zustand erkennbar (Befund 2026-09-08: Formular und Zeile sahen
+     im geschlossenen wie im geoeffneten Zustand identisch aus). Dieselbe
+     Vertiefungsflaeche wie das Formular direkt darunter — beide zusammen
+     lesen sich als ein Block, nicht als zwei zufaellig benachbarte. */
+  .zeile.offen {
+    background: var(--vertiefung);
+  }
+  .zeile .chevron {
+    flex: none;
+    margin-left: var(--r2);
+    color: var(--spur);
+    transition: transform var(--t-auswahl) var(--e-rein);
+  }
+  .zeile .chevron.offen {
+    transform: rotate(180deg);
   }
   .zeile .typ {
     width: var(--typspalte);
@@ -376,6 +387,10 @@
     flex-direction: column;
     gap: var(--r2);
     padding: var(--r3) 0 var(--r4);
+    /* Bewusst KEINE Vertiefungsflaeche hier (anders als .zeile.offen oben):
+       .eingabefeld-text darin ist selbst var(--vertiefung) — auf derselben
+       Flaeche waeren die Felder unsichtbar. Die offene Zeile traegt die
+       Kennzeichnung allein, das Formular bleibt auf der Blattliste-Flaeche. */
   }
   .formular label {
     display: flex;

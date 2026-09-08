@@ -942,3 +942,62 @@ Verifikation: `npm test` nach jedem Block A–F, durchgehend grün (Domain-Tests
   „output"), aktiver Tab bekommt eine Badge-Fläche + etwas mehr Größe.
   Zwei Rückfragen offen (Punkt 20). Drei Punkte bewusst nicht umgesetzt, weil
   Funktion/Datenmodell bzw. reine UX-Nachzug-Ideen (Punkte 15–17).
+
+## 31 · Pour Over: Gussplan sichtbar, Zielblock gerätegerecht (2026-09-08)
+
+Sechs Befunde aus dem Livebetrieb, gebündelt behoben.
+
+- **Gussplan-Editor, offener Zustand erkennbar.** Der Kommentar in
+  `GussplanEditor.svelte` behauptete seit Paket 4 „aufgeklapptes Formular in
+  Vertiefung" — im CSS fehlte die Fläche, offen und zu sahen identisch aus.
+  Jetzt: Chevron dreht sich beim Öffnen (dieselbe Mechanik wie
+  `Profilblatt.svelte`s `.aufklappbar`/`.pfeil`), die offene Zeile selbst
+  trägt `var(--vertiefung)`. Das Formular darunter bewusst nicht mit derselben
+  Fläche — seine `.eingabefeld-text`-Felder sind selbst `var(--vertiefung)`
+  und wären darauf unsichtbar geworden (beim Bauen gefunden, vor dem
+  Ausliefern korrigiert).
+- **Gussplan direkt unter „Ziel"** in `Profilblatt.svelte`, statt ganz unten
+  hinter Spielraum/Verlauf/Verkostungen.
+- **Preinfusion nur noch am Siebträger** (`Profilblatt.svelte`,
+  `ShotErfassung.svelte`) — am V60/Moka/Cold Brew stand das Feld immer leer.
+- **Durchlaufzeit als m:ss.** Neu `domain/zeit.ts`
+  (`alsMinutenSekunden`/`ausMinutenSekunden`, eigene Tests) — gespeichert
+  bleiben Sekunden, nur `Parameterkachel.svelte` und `IstGegenZiel.svelte`
+  bekamen dafür einen optionalen `mmss`-Schalter, gesetzt nur wo
+  `bruehgeraet.fuehrungswert === 'durchlaufzeit'`.
+  **Dabei gefundener und mitbehobener Fehler:** `ShotErfassung.svelte` las
+  die Ist-Werte über feste Array-Positionen (`istWerte[0]`/`istWerte[2]`) —
+  fiel die Preinfusions-Zeile weg, wäre die Zeit auf die falsche Position
+  gerutscht und eine falsche Zahl geschrieben worden. `istZeilen` ist jetzt
+  die einzige Quelle für Reihenfolge und Zuordnung (benannte Schlüssel statt
+  Indizes); `IstGegenZiel.svelte` exportiert seinen Zeilen-Typ dafür jetzt
+  (`IstGegenZielZeile`, `<script module>`, wie `Parameterkachel.svelte`s
+  `ParameterSymbol`).
+- **Gussplan steht beim Shot-Loggen**, mit Notizen, vor den Einstellwerten.
+  Neues Muster `Gussplanansicht.svelte` — nur lesend (K7: im
+  Zubereitungsweg „nur ansehbar"), teilt sich die Formatierung mit dem
+  Editor über `domain/gussplan.ts::bausteinZeile()`/`BAUSTEIN_LABEL`
+  (dorthin gewandert aus `GussplanEditor.svelte`, damit beide Bildschirme
+  dieselbe Zeile lesen, nicht zwei eigene Nachbauten).
+- **„Warten" liest sich als Satz.** Julians Entscheidung: der Umschalter
+  *bis durchgelaufen/feste Dauer* bleibt im Editor bestehen, aber die Zeile
+  zeigt bei vorhandener Notiz immer „bis <Notiz>" statt des Modus-Texts
+  (`bausteinZeile()`). Das Notizfeld heißt beim Warten-Baustein „bis" statt
+  „Notiz", Platzhalter „durchgelaufen".
+- **Schwarze Statusleiste im hellen Modus — kein Code-Fehler.** Das live
+  ausgelieferte Manifest trägt bereits die helle `theme_color`
+  (`bruehwerk.vercel.app/manifest.webmanifest`, geprüft). Android brennt
+  diese Farbe aber beim **Installieren** in die App ein; eine bereits
+  installierte Fassung trägt die alte dunkle Farbe weiter, bis neu
+  installiert wird oder Chromes eigener Update-Check (frühestens nach
+  einem Tag, nur bei geschlossener App/Strom/WLAN) sie nachzieht. Deinstallieren
+  und neu installieren behebt es sofort. **Grenze, die bleibt:** das
+  Manifest kennt nur eine Farbe — wählt man in den Einstellungen „dunkel",
+  kann die Systemleiste der installierten App auf manchen Chrome-Fassungen
+  trotzdem hell bleiben, weil die Laufzeit-Nachführung
+  (`Rahmen.svelte:101-107`) dort ignoriert wird. Plattformgrenze, kein
+  Brühwerk-Bug.
+
+Verifikation: `npm test` grün (610 Tests, davon neu `domain/zeit.test.ts` und
+erweitertes `domain/gussplan.test.ts` für `bausteinZeile()`; 0
+svelte-check-Fehler; Build ok).
