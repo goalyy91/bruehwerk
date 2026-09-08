@@ -162,7 +162,6 @@
     {:else if route.name === 'einstellungen'}
       <Einstellungen
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
-        onOeffnenMusterblatt={() => navigation.gehe({ name: 'musterblatt' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
         onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}

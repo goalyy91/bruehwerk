@@ -409,6 +409,16 @@ h2 {
   flex: 1;
   min-width: var(--feld-min);
 }
+/* Zahlenfeld, das nur wenige Stellen aufnimmt (Min/Max/Schritt, Schwellen,
+   Prozentanteile). Ohne das dehnt `flex: 1` jedes Zahlenfeld auf die halbe
+   Zeilenbreite — ein dreistelliger Wert in einem 200-px-Feld sieht aus, als
+   fehle etwas. Stand bis 2026-09-08 lokal in KaffeeBearbeiten; andere
+   Bildschirme benutzten die Klasse, ohne dass sie dort galt. */
+.eingabefeld-text.schmal {
+  flex: 0 0 var(--feld-schmal);
+  min-width: 0;
+  text-align: right;
+}
 .eingabefeld-text::placeholder {
   /* War --spur und damit auf der tieferen Feldflaeche bei 1,07:1 — praktisch
      unsichtbar. --gedaempft-tief liegt bei 3,20:1 und bleibt trotzdem klar

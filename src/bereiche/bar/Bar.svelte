@@ -334,8 +334,10 @@
   }
 </script>
 
-{#if begruessungsText.label}<p class="tageszeit-label">{begruessungsText.label}</p>{/if}
-<p class="begruessung">{begruessungsText.satz}</p>
+<header class="begruessungsblock">
+  {#if begruessungsText.label}<p class="tageszeit-label">{begruessungsText.label}</p>{/if}
+  <p class="begruessung">{begruessungsText.satz}</p>
+</header>
 
 {#if letzterShot && kaffeeName}
   <p class="quittung">{kaffeeName} · {letzterShot.urteil}</p>
@@ -451,6 +453,11 @@
 {/if}
 
 <style>
+  /* Luft nach oben, damit der Satz auf der Fläche steht statt an ihr zu
+     hängen — der eigentliche Grund für "sieht oben hängend aus". */
+  .begruessungsblock {
+    padding: var(--r5) 0 var(--r3);
+  }
   .tageszeit-label {
     font-family: var(--schrift-sans);
     font-size: var(--fs-label);
@@ -459,11 +466,21 @@
     color: var(--akzent);
     margin: 0 0 6px;
   }
+  /* Rückmeldung 2026-09-08: "sieht bisschen oben hängend aus … etwas
+     präsenter gestalten ohne größer zu machen". Der Satz klebte ohne Luft am
+     oberen Rand und lief auf 26 px ins Nichts.
+     Präsenz kommt hier aus Raum und Umbruch, nicht aus Punkten: Abstand
+     darüber, damit er auf der Fläche steht statt an ihr zu hängen; engere
+     Zeilen, damit er als ein Block liest; `text-wrap: balance`, damit zwei
+     Zeilen etwa gleich lang brechen statt als lange Zeile plus Rest. Die
+     Schriftgröße bleibt unverändert. */
   .begruessung {
     font-size: var(--fs-titel);
     font-weight: var(--gw-titel);
     letter-spacing: -0.02em;
-    line-height: 1.25;
+    line-height: 1.15;
+    text-wrap: balance;
+    max-width: 22ch;
     margin: 0;
   }
   .quittung {
@@ -628,7 +645,7 @@
     background: var(--blatt);
     border-radius: var(--r-kachel);
     padding: 16px 16px 15px;
-    min-height: 96px;
+    min-height: 76px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -641,8 +658,12 @@
     color: var(--gedaempft);
     line-height: 1.35;
   }
+  /* Rückmeldung 2026-09-08: „finde die KPIs noch arg plakativ". 26 px war
+     größer als jede andere Zahl der App (--fs-wert ist 19). Die zwei Kacheln
+     sind Beiwerk am Fuß des Bildschirms, nicht seine Aussage — sie stehen
+     jetzt auf derselben Zahlengröße wie überall sonst. */
   .kennzahl-zahl {
-    font-size: 26px;
+    font-size: var(--fs-wert);
     line-height: 1;
     color: var(--tinte);
   }

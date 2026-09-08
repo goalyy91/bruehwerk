@@ -32,9 +32,8 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenMusterblatt, onOeffnenBeobachtungen, onOeffnenUebung, onOeffnenPersonen }: {
+  let { onOeffnenGeraete, onOeffnenBeobachtungen, onOeffnenUebung, onOeffnenPersonen }: {
     onOeffnenGeraete: () => void;
-    onOeffnenMusterblatt: () => void;
     onOeffnenBeobachtungen: () => void;
     onOeffnenUebung: () => void;
     onOeffnenPersonen: () => void;
@@ -84,7 +83,6 @@
   <Blattzeile label="Geräte verwalten" akzent onKlick={onOeffnenGeraete} />
   <Blattzeile label="Personen verwalten" akzent onKlick={onOeffnenPersonen} />
   <Blattzeile label="Offene Beobachtungen" akzent onKlick={onOeffnenBeobachtungen} />
-  <Blattzeile label="Musterblatt ansehen" akzent onKlick={onOeffnenMusterblatt} />
   <Blattzeile label="Übungsmodus" akzent onKlick={onOeffnenUebung} />
 </Blattliste>
 
@@ -119,12 +117,18 @@
 {/if}
 
 {#if bestand.einstellungen}
+  <!-- Rückmeldung 2026-09-08: die Beschriftungen hießen „Knapp" ab,
+       „Alt" ab (frisch) und „Alt" ab (eingefroren) — in Anführungszeichen
+       gesetzte Systemzustände mit einer Klammer dahinter. Sie beschreiben
+       jetzt die Bohne selbst, und das Zahlenfeld ist so breit wie die Zahl,
+       nicht wie die halbe Zeile. „Dashboard" hieß nirgends so; der Bereich
+       heißt Bar. -->
   <h2>Bestand</h2>
   <Blattliste>
     <div class="formularzeile">
-      <span class="formularzeile-label">„Knapp" ab</span>
+      <span class="formularzeile-label">Knapp</span>
       <input
-        class="eingabefeld-text zahl"
+        class="eingabefeld-text zahl schmal"
         type="text"
         inputmode="numeric"
         value={bestand.einstellungen.bestandKnappBezuege}
@@ -133,9 +137,9 @@
       <span class="einheit">Bezüge übrig</span>
     </div>
     <div class="formularzeile">
-      <span class="formularzeile-label">„Alt" ab (frisch)</span>
+      <span class="formularzeile-label">Angebrochen</span>
       <input
-        class="eingabefeld-text zahl"
+        class="eingabefeld-text zahl schmal"
         type="text"
         inputmode="numeric"
         value={bestand.einstellungen.bestandFrischWochen}
@@ -144,9 +148,9 @@
       <span class="einheit">Wochen</span>
     </div>
     <div class="formularzeile">
-      <span class="formularzeile-label">„Alt" ab (eingefroren)</span>
+      <span class="formularzeile-label">Eingefroren</span>
       <input
-        class="eingabefeld-text zahl"
+        class="eingabefeld-text zahl schmal"
         type="text"
         inputmode="numeric"
         value={bestand.einstellungen.bestandEingefrorenMonate}
@@ -155,7 +159,10 @@
       <span class="einheit">Monate</span>
     </div>
   </Blattliste>
-  <p class="erklaerung ausserhalb">Steuert, wann eine Bohne im Dashboard als „knapp" oder „sollte bald raus" markiert wird.</p>
+  <p class="erklaerung ausserhalb">
+    Ab wann eine Bohne auf der Bar auffällt: „knapp“, wenn weniger Bezüge übrig sind,
+    „sollte bald raus“, wenn sie länger offen oder eingefroren liegt.
+  </p>
 {/if}
 
 <h2>Daten</h2>

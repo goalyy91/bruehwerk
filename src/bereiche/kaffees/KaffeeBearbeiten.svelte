@@ -299,9 +299,6 @@
     flex: 0 0 auto;
     width: 80px;
   }
-  .eingabefeld-text.schmal {
-    width: 48px;
-  }
   .botanik {
     display: flex;
     align-items: center;
