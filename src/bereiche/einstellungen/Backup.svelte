@@ -19,6 +19,7 @@
   // fuer Migration und Backup (vier Gruppen statt sieben).
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
+  import { cloudVerfuegbar } from '../../daten/cloud';
   import {
     schnappschuesse,
     schnappschussZurueckspielen,
@@ -32,6 +33,36 @@
   let importFehler = $state<string[] | undefined>(undefined);
   let importErfolg = $state(false);
   let dateiEingabe = $state<HTMLInputElement | undefined>();
+
+  // Cloud-Backup (2026-09-08) — die eigentliche Logik (an-/abmelden, hoch-/
+  // herunterladen, der Debounce nach jedem Schreiben) sitzt im reaktiven
+  // Bestand (bereiche/bestand.svelte.ts), hier nur die Bedienung.
+  // cloudVerfuegbar() ist false, solange kein Firebase-Projekt eingerichtet
+  // ist — der ganze Abschnitt bleibt dann weg, keine halbe Funktion im Bild.
+  let cloudWiederherstellenBestaetigen = $state(false);
+  let cloudWiederherstellenFehler = $state<string | undefined>(undefined);
+  let cloudWiederherstellenErfolg = $state(false);
+
+  /** Zweiter Tap bestaetigt — dasselbe Muster wie bei den lokalen Sicherungen unten. */
+  async function cloudWiederherstellen() {
+    if (!cloudWiederherstellenBestaetigen) {
+      cloudWiederherstellenBestaetigen = true;
+      return;
+    }
+    cloudWiederherstellenBestaetigen = false;
+    cloudWiederherstellenFehler = undefined;
+    cloudWiederherstellenErfolg = false;
+    try {
+      await bestand.cloudWiederherstellen();
+      cloudWiederherstellenErfolg = true;
+    } catch (fehler) {
+      if (fehler instanceof ImportFehler) {
+        cloudWiederherstellenFehler = fehler.einzelfehler.map((e) => `${e.sammlung}[${e.index}]`).join(', ');
+      } else {
+        cloudWiederherstellenFehler = fehler instanceof Error ? fehler.message : String(fehler);
+      }
+    }
+  }
 
   // Die Sicherungen, die die App vor einer Aktualisierung selbst anlegt
   // (daten/schnappschuss.ts). Sie liegen bewusst nicht im reaktiven Bestand:
@@ -63,6 +94,11 @@
     try {
       await schnappschussZurueckspielen(eintrag.id);
       await bestand.laden();
+      // Der lokale Bestand hat sich gerade komplett geaendert — der
+      // Cloud-Spiegel soll das nachziehen, nicht erst beim naechsten
+      // regulaeren Schreiben (still im Hintergrund, kein await: ein
+      // Cloud-Fehlschlag darf das lokale Zurueckspielen nicht trueben).
+      void bestand.cloudJetztSichern();
       zurueckErfolg = true;
     } catch (fehler) {
       if (fehler instanceof ImportFehler) {
@@ -102,6 +138,9 @@
       await importiere(JSON.parse(text));
       importErfolg = true;
       await bestand.laden();
+      // Wie beim Zurueckspielen einer lokalen Sicherung: der Cloud-Spiegel
+      // zieht den neuen Stand nach, still im Hintergrund.
+      void bestand.cloudJetztSichern();
     } catch (fehler) {
       if (fehler instanceof ImportFehler) {
         importFehler = fehler.einzelfehler.map((e2) => `${e2.sammlung}[${e2.index}]: ${e2.ursache.issues.map((i) => i.message).join('; ')}`);
@@ -136,6 +175,52 @@
   <ul class="fehlerliste">
     {#each importFehler as f (f)}<li>{f}</li>{/each}
   </ul>
+{/if}
+
+<!-- Cloud-Backup (2026-09-08) — nur sichtbar, wenn ein Firebase-Projekt
+     eingerichtet ist. Abgemeldet: ein Knopf. Angemeldet: Konto, Status,
+     zwei Handlungen. Kein automatisches Wiederherstellen beim Anmelden —
+     immer ein bewusster, zweifach bestätigter Tap, aus demselben Grund wie
+     beim lokalen Zurückspielen unten: es ersetzt den gesamten Bestand. -->
+{#if cloudVerfuegbar()}
+  <h2>Cloud</h2>
+  {#if !bestand.cloudNutzer}
+    <div class="aktionen">
+      <Blattliste>
+        <Blattzeile label="Mit Google anmelden" akzent chevron={false} onKlick={() => void bestand.cloudAnmelden()} />
+      </Blattliste>
+    </div>
+  {:else}
+    <Blattliste>
+      <div class="cloud-status">
+        <span class="cloud-konto">{bestand.cloudNutzer.email ?? 'Angemeldet'}</span>
+        <span class="cloud-zeile hinweis">
+          {#if bestand.cloudSichertGerade}Sichert …
+          {:else if bestand.cloudLetzteSicherung}zuletzt gesichert: {wann(bestand.cloudLetzteSicherung)}
+          {:else}noch nicht gesichert
+          {/if}
+        </span>
+      </div>
+      <button type="button" class="sicherung" onclick={() => void cloudWiederherstellen()}>
+        <span class="haupt">
+          <span class="wann">Cloud-Sicherung</span>
+        </span>
+        <span class="tat" class:scharf={cloudWiederherstellenBestaetigen}>
+          {cloudWiederherstellenBestaetigen ? 'wirklich?' : 'laden'}
+        </span>
+      </button>
+      <button type="button" class="sicherung" onclick={() => void bestand.cloudAbmelden()}>
+        <span class="haupt"><span class="wann">Konto</span></span>
+        <span class="tat">abmelden</span>
+      </button>
+    </Blattliste>
+    <p class="hinweis nachsatz">
+      Aus der Cloud laden ersetzt den gesamten Bestand durch die Cloud-Sicherung — exportiere im Zweifel vorher eine Datei.
+    </p>
+    {#if cloudWiederherstellenErfolg}<p class="hinweis">Cloud-Sicherung geladen.</p>{/if}
+    {#if cloudWiederherstellenFehler}<p class="fehler">Nicht geladen: {cloudWiederherstellenFehler}</p>{/if}
+    {#if bestand.cloudFehler}<p class="fehler">Cloud-Sicherung: {bestand.cloudFehler}</p>{/if}
+  {/if}
 {/if}
 
 <!-- Rückmeldung 2026-09-08: vor jeder Aktualisierung sichert die App selbst.
@@ -184,6 +269,21 @@
   }
   .nachsatz {
     margin-top: var(--r2);
+  }
+  .cloud-status {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: var(--blattzeile);
+    justify-content: center;
+  }
+  .cloud-konto {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .cloud-zeile {
+    margin: 0;
   }
   .sicherung {
     width: 100%;

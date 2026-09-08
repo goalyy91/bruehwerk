@@ -64,7 +64,14 @@
   onMount(() => {
     void bestand.laden();
     const stopNavigation = navigation.starten();
-    return stopNavigation;
+    // Cloud-Backup (2026-09-08) — haelt bestand.cloudNutzer synchron mit dem
+    // tatsaechlichen Firebase-Anmeldestatus, auch nach einem Neuladen der
+    // Seite. Ohne konfiguriertes Firebase-Projekt ein No-Op (daten/cloud.ts).
+    const stopCloud = bestand.cloudUeberwachen();
+    return () => {
+      stopNavigation();
+      stopCloud();
+    };
   });
 
   $effect(() => {

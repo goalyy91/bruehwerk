@@ -13,6 +13,17 @@ import { seedFallsLeer } from '../daten/seed';
 import { speicherSichern, type SpeicherZustand } from '../daten/speicher';
 import type { Sammlung } from '../daten/db';
 import { chargeAusgeschieden, naechsteAktiveCharge, benoetigtProBezug } from '../domain/vorrat';
+import { exportiere, importiere } from '../daten/export';
+import {
+  cloudVerfuegbar,
+  aufAnmeldungHoeren,
+  anmelden as cloudSdkAnmelden,
+  abmelden as cloudSdkAbmelden,
+  hochladen as cloudSdkHochladen,
+  herunterladen as cloudSdkHerunterladen,
+  debounce,
+  type CloudNutzer,
+} from '../daten/cloud';
 
 class Bestand {
   kaffees = $state<SammlungWert['kaffee'][]>([]);
@@ -48,6 +59,81 @@ class Bestand {
    * "nicht dauerhaft" soll ein sichtbarer Zustand sein, keine stille Annahme.
    */
   speicher = $state<SpeicherZustand>('unbekannt');
+
+  /**
+   * Cloud-Backup (2026-09-08) — der zweite, entkoppelte Sicherungsweg neben
+   * der lokalen Datei (daten/cloud.ts). `cloudNutzer` bleibt undefined,
+   * solange kein Firebase-Projekt eingerichtet oder niemand angemeldet ist —
+   * die Backup.svelte-Oberfläche zeigt dann nur "Mit Google anmelden" bzw.
+   * gar nichts, wenn cloudVerfuegbar() false ist.
+   */
+  cloudNutzer = $state<CloudNutzer | undefined>(undefined);
+  cloudLetzteSicherung = $state<number | undefined>(undefined);
+  cloudSichertGerade = $state(false);
+  cloudFehler = $state<string | undefined>(undefined);
+
+  /**
+   * Einmal aus Rahmen.svelte aufgerufen (wie navigation.starten()) — haelt
+   * cloudNutzer synchron mit dem tatsaechlichen Firebase-Anmeldestatus,
+   * auch nach einem Neuladen der Seite. Gibt die Abmelde-Funktion zurueck.
+   */
+  cloudUeberwachen(): () => void {
+    return aufAnmeldungHoeren((nutzer) => {
+      this.cloudNutzer = nutzer;
+    });
+  }
+
+  async cloudAnmelden(): Promise<void> {
+    this.cloudFehler = undefined;
+    try {
+      await cloudSdkAnmelden();
+    } catch (fehler) {
+      this.cloudFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  async cloudAbmelden(): Promise<void> {
+    this.cloudFehler = undefined;
+    try {
+      await cloudSdkAbmelden();
+    } catch (fehler) {
+      this.cloudFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    }
+  }
+
+  /**
+   * Exportiert den kompletten Bestand (dieselbe Funktion, die auch die
+   * manuelle Datei baut) und laedt ihn hoch. Bleibt still bei jedem Fehler
+   * (kein Netz, kein Konto, Firebase-Ausfall) — ein Cloud-Fehlschlag darf
+   * nie irgendetwas am lokalen Schreiben blockieren oder unterbrechen. Der
+   * Fehler landet nur in cloudFehler, fuer eine ruhige Statuszeile.
+   */
+  async cloudJetztSichern(): Promise<void> {
+    if (!this.cloudNutzer) return;
+    this.cloudSichertGerade = true;
+    this.cloudFehler = undefined;
+    try {
+      const datei = await exportiere();
+      await cloudSdkHochladen(this.cloudNutzer.uid, JSON.stringify(datei));
+      this.cloudLetzteSicherung = Date.now();
+    } catch (fehler) {
+      this.cloudFehler = fehler instanceof Error ? fehler.message : String(fehler);
+    } finally {
+      this.cloudSichertGerade = false;
+    }
+  }
+
+  /**
+   * Ersetzt den gesamten lokalen Bestand durch die Cloud-Sicherung — immer
+   * ein bewusster Tap von Backup.svelte aus (Zwei-Tap-Bestaetigung wie beim
+   * lokalen Zurueckspielen), nie automatisch beim Anmelden.
+   */
+  async cloudWiederherstellen(): Promise<void> {
+    if (!this.cloudNutzer) return;
+    const inhalt = await cloudSdkHerunterladen(this.cloudNutzer.uid);
+    await importiere(JSON.parse(inhalt));
+    await this.laden();
+  }
 
   async laden(): Promise<void> {
     this.ladeFehler = undefined;
@@ -177,14 +263,26 @@ class Bestand {
 
 export const bestand = new Bestand();
 
+/**
+ * Fasst mehrere Schreibvorgänge kurz hintereinander (z. B. ein Shot plus die
+ * FIFO-Chargenrotation danach) zu einem einzigen Cloud-Upload zusammen,
+ * statt bei jedem einzelnen hochzuladen — es wird ohnehin immer der ganze
+ * Bestand neu exportiert, nicht einzelne Datensätze verfolgt. Wartet 5s
+ * nach dem letzten Schreiben/Löschen. cloudVerfuegbar() spart den Timer
+ * komplett, solange gar kein Firebase-Projekt eingerichtet ist.
+ */
+const cloudSichernVerzoegert = debounce(() => void bestand.cloudJetztSichern(), 5000);
+
 /** Schreibt einen Datensatz und haelt den Speicher synchron — wirft SchreibFehler weiter (K66). */
 export async function schreiben<S extends Sammlung>(sammlung: S, wert: SammlungWert[S]): Promise<void> {
   await ablageSchreiben(sammlung, wert);
   if (sammlung === 'einstellungen') {
     bestand.einstellungen = wert as SammlungWert['einstellungen'];
+    if (cloudVerfuegbar()) cloudSichernVerzoegert();
     return;
   }
   const liste = listeFuer(sammlung);
+  if (cloudVerfuegbar()) cloudSichernVerzoegert();
   if (!liste) return;
   const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === (wert as { id: string }).id);
   if (index === -1) liste.push(wert as never);
@@ -231,6 +329,7 @@ export async function chargeStatusAktualisieren(kaffeeId: string, benoetigtFallb
 /** Loescht einen Datensatz und haelt den Speicher synchron. Kein Kaskadenloeschen — wer abhaengige Datensaetze schuetzen will, prueft vorher selbst (siehe Geraete.svelte). */
 export async function loeschen(sammlung: Sammlung, id: string): Promise<void> {
   await ablageLoeschen(sammlung, id);
+  if (cloudVerfuegbar()) cloudSichernVerzoegert();
   const liste = listeFuer(sammlung);
   if (!liste) return;
   const index = liste.findIndex((eintrag) => (eintrag as { id: string }).id === id);
