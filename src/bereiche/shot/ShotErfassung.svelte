@@ -303,7 +303,11 @@
   }
 </script>
 
-<Kopfzeile titel="Shot loggen" {onZurueck} />
+<!-- Rueckmeldung 2026-09-08: der Kopf traegt den Kaffeenamen, nicht die
+     Gattung. Vorher stand "Shot loggen" in 26/600 ueber dem Namen in
+     20/400 — das nichtssagende Wort war das groesste im Bild. Fehlt der
+     Kaffee (Nichtgefunden-Fall), bleibt die Aufgabe als Titel. -->
+<Kopfzeile titel={kaffee?.name ?? 'Shot loggen'} {onZurueck} gross={!!kaffee} />
 
 {#if !profil || !kaffee}
   <p class="hinweis">Profil nicht gefunden.</p>
@@ -378,7 +382,6 @@
     <Knopf stufe="primaer" onKlick={driftAbschliessen}>fertig</Knopf>
   </div>
 {:else}
-  <h1>{kaffee.name}</h1>
   <p class="setup">{profil.name}</p>
 
   {#if chargenHinweisText}
@@ -438,13 +441,6 @@
 <style>
   /* Objektname (Handoff 3.2: 20-21/400/-.01em) statt Screentitel-Groesse —
      der Kaffeename ist hier Inhalt, keine Ueberschrift mit Rueckweg
-     daneben (der steht schon in der Kopfzeile darueber). */
-  h1 {
-    font-size: var(--fs-objekt);
-    font-weight: var(--gw-text);
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
   .setup {
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);

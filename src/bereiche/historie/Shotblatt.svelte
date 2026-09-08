@@ -52,12 +52,13 @@
   }
 </script>
 
-<Kopfzeile titel="Shot" {onZurueck} />
+<!-- Der Kopf traegt den Kaffeenamen, nicht die Gattung (Rueckmeldung
+     2026-09-08) — wie im Kaffeeblatt. -->
+<Kopfzeile titel={kaffee?.name ?? 'Shot'} {onZurueck} gross />
 
 {#if !shot}
   <p class="hinweis">Shot nicht gefunden.</p>
 {:else}
-  <h1>{kaffee?.name ?? 'Unbekannter Kaffee'}</h1>
   <p class="meta">{profil?.name} · {new Date(shot.ts).toLocaleDateString('de-DE')} {new Date(shot.ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</p>
 
   <div class="urteil-block">
@@ -139,12 +140,6 @@
 {/if}
 
 <style>
-  h1 {
-    font-size: var(--fs-objekt);
-    font-weight: var(--gw-text);
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
   .meta {
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);

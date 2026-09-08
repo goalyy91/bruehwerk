@@ -41,20 +41,27 @@
 </div>
 
 <style>
+  /* Rückmeldung 2026-09-08 zum Mockup: „die wie war er chips aber gerne
+     kleiner". Aus dem 2×2-Raster mit vier 58-px-Feldern wird eine Reihe
+     Pillen, die umbricht — dieselben vier Wörter, deutlich weniger Fläche.
+     Die Höhe bleibt bei --treffer (48 px): das Urteil ist der zweite Tap des
+     Alltagspfads, und die Trefferfläche ist laut tokens.css nicht
+     verhandelbar. Kleiner *wirken* darf es, kleiner *getroffen* werden nicht. */
   .urteil {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--r2);
   }
   .kachel {
     position: relative;
-    min-height: var(--urteilskachel-hoehe);
+    min-height: var(--treffer);
+    padding: 0 var(--r4);
     border: none;
-    border-radius: var(--r-kachel);
+    border-radius: var(--r-pille);
     background: var(--vertiefung);
     color: var(--satz);
-    font-family: var(--schrift);
-    font-size: var(--fs-urteil);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
     font-weight: var(--gw-text);
     cursor: pointer;
     transition: background var(--t-auswahl) var(--e-rein);

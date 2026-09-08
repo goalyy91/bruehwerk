@@ -8,8 +8,16 @@
   // Werteliste-Zeilen — gleiche Felder, gleiche Reihenfolge, gleiche
   // Einheiten, gleiches onAendern-Verhalten (zielSpeichern). Kein Wert wird
   // groesser dargestellt als ein anderer — der Fuehrungswert (K7) hat hier
-  // wie ueberall sonst im Rezept keine visuelle Sonderrolle (das war schon
-  // vor dem Redesign so, siehe Kommentar an der alten Werteliste unten).
+  // keine visuelle Sonderrolle.
+  //
+  // Der Satz stand hier bis 2026-09-08 mit dem Zusatz, die Groessenbetonung
+  // gehoere "ausschliesslich in den Live-Kontext (ShotErfassung.svelte, dort
+  // ueber IstGegenZiel)". Das stimmte nie: IstGegenZiel hatte nie eine, alle
+  // Zeilen standen immer auf --fs-wert. Als es zur Entscheidung kam, sie dort
+  // nachzubauen, fiel sie negativ aus — Julian: "den Fuehrungswert
+  // keinesfalls groesser". Kein Wert wird also *irgendwo* groesser gesetzt,
+  // weder im Rezept noch beim Loggen. Der Verweis ist entfernt, damit er
+  // niemanden mehr auf eine Fahrte schickt, die es nicht gibt.
   // Werteliste.svelte bleibt fuer "Spielraum" zustaendig (echte Zeilenliste,
   // kein Kachel-Raster laut Handoff).
 
@@ -244,7 +252,7 @@
   <Kopfzeile titel="Profil" onZurueck={onZurueck} />
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else}
-  <Kopfzeile titel={profil.name} {onZurueck} />
+  <Kopfzeile titel={profil.name} {onZurueck} gross />
   <!-- Reihenfolge Titel -> Setup-Kette -> Primäraktion laut Handoff-
        Screen-Mapping ("Profil/Espresso-Setup"): vorher stand die Pille vor
        der Setup-Kette. -->
