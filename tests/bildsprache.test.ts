@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
  * Dieselbe Antwort wie bei der Architekturregel (tests/schichten.test.ts):
  * die Regel bricht den Build, statt in einem Dokument zu stehen.
  *
- * **Sperrklinke, kein grosser Knall.** Die 17 heute noch betroffenen Dateien
+ * **Sperrklinke, kein grosser Knall.** Die noch betroffenen Dateien
  * stehen unten namentlich. Der Test schlaegt an, wenn
  *
  *   - eine Datei **ausserhalb** der Liste etwas kopiert  -> nichts Neues
@@ -72,15 +72,12 @@ const REGELN = [
 ] as const;
 
 /**
- * Stand 2026-09-07 nach Runde 1. Diese Dateien duerfen noch, alle anderen
+ * Stand 2026-09-08 nach Runde 2. Diese Dateien duerfen noch, alle anderen
  * nicht. **Wer eine davon aufraeumt, traegt sie hier aus** — sonst schlaegt
  * der Test an.
  */
 const ALTLASTEN: readonly string[] = [
   'Musterblatt.svelte',
-  'bar/BestellungAbarbeiten.svelte',
-  'bar/BestellungAufnehmen.svelte',
-  'bar/BestellungPlan.svelte',
   'einstellungen/Aromadatenblatt.svelte',
   'einstellungen/Bruehgeraetblatt.svelte',
   'einstellungen/Migration.svelte',

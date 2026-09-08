@@ -12,6 +12,7 @@
   import { neueId } from '../../daten/id';
   import { rangiereGetraenke, vorbelegung, begruendung } from '../../domain/ranking';
   import { bohnenSchnittmenge } from '../../domain/getraenk';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import VorbelegteFrage from '../../muster/VorbelegteFrage.svelte';
@@ -230,7 +231,8 @@
   <p class="hinweis">Keine offene Bestellung.</p>
 {:else}
   {#if positionen.length > 0}
-    <div class="panel">
+    <div class="kartenblock">
+      <Blattliste>
       {#each positionen as pos (pos.id)}
         <div class="position-zeile">
           <span class="haupt">
@@ -247,6 +249,7 @@
           <button type="button" class="entfernen" onclick={() => positionEntfernen(pos)}>entfernen</button>
         </div>
       {/each}
+    </Blattliste>
     </div>
   {/if}
 
@@ -263,7 +266,7 @@
 
   {#if modus === 'mengen'}
     <div class="block">
-      <p class="gruppenkopf">Getränk</p>
+      <h2>Getränk</h2>
       <Einzelauswahl
         optionen={mengenGetraenkeSortiert.map((g) => ({ wert: g.id, label: g.name }))}
         wert={mengenGetraenkId}
@@ -273,7 +276,7 @@
 
     {#if mengenGetraenkId}
       <div class="block">
-        <p class="gruppenkopf">Menge</p>
+        <h2>Menge</h2>
         <div class="mengensteller">
           <button type="button" class="mengenknopf" onclick={() => (mengenAnzahl = Math.max(1, mengenAnzahl - 1))} aria-label="weniger" disabled={mengenAnzahl <= 1}>−</button>
           <span class="mengenwert">{mengenAnzahl}</span>
@@ -282,7 +285,7 @@
       </div>
 
       <div class="block">
-        <p class="gruppenkopf">Koffein</p>
+        <h2>Koffein</h2>
         <Segment
           optionen={[{ wert: 'normal', label: 'normal' }, { wert: 'entkoffeiniert', label: 'entkoffeiniert' }]}
           wert={mengenKoffein}
@@ -294,7 +297,7 @@
       </div>
 
       <div class="block">
-        <p class="gruppenkopf">Bohne · {mengenBohnenOptionen.length} von {mengenBohnenGesamt}</p>
+        <h2>Bohne · {mengenBohnenOptionen.length} von {mengenBohnenGesamt}</h2>
         {#if mengenBohnenOptionen.length === 0}
           <p class="hinweis">Keine passende Bohne aktiv — bei einem Kaffee unter „bearbeiten" fehlt „Geeignet für" für diese Zubereitung, oder Koffein passt nicht.</p>
         {:else}
@@ -323,7 +326,7 @@
          oder schon fuer jemand anderen gilt — sonst nur ein kleiner Link,
          statt bei jedem eigenen Kaffee erneut den eigenen Namen zu zeigen. -->
     {#if personWechselnOffen || !istStandardPerson}
-      <p class="gruppenkopf">Person</p>
+      <h2>Person</h2>
       <p class="person-zeile">
         <!-- personName() liefert bei unbekannter Id "unbekannt" (truthy) zurueck,
              nicht leer — die ||-Alternative griff deshalb nie. Explizit auf
@@ -369,7 +372,7 @@
 
   {#if personId}
     <div class="block">
-      <p class="gruppenkopf">Getränk</p>
+      <h2>Getränk</h2>
       <Einzelauswahl optionen={getraenkeSortiert.map((g) => ({ wert: g.id, label: g.name }))} wert={getraenkId} onWahl={(w) => (getraenkId = w)} />
     </div>
   {/if}
@@ -399,7 +402,7 @@
 
   {#if getraenkId && koffein}
     <div class="block">
-      <p class="gruppenkopf">Bohne · {bohnenOptionen.length} von {bohnenGesamt}</p>
+      <h2>Bohne · {bohnenOptionen.length} von {bohnenGesamt}</h2>
       {#if bohnenOptionen.length === 0}
         <p class="hinweis">Keine passende Bohne aktiv.</p>
       {:else}
@@ -429,19 +432,11 @@
 {/if}
 
 <style>
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    /* Redesign v2, Rückmeldung 2026-09-04 — Karten-Schatten wie Kaffeeblatt
-       .identitaet, sonst kaum vom Papier-Hintergrund abgesetzt. */
-    box-shadow: 0 8px 22px -14px var(--schatten);
-    padding: 0 var(--r4);
+  /* Nur noch der Abstand — Fläche, Radius, Schatten und die Haarlinien
+     zwischen den Zeilen kommen aus muster/Blattliste.svelte. Die lokale
+     .panel-Kopie ist entfallen (tests/bildsprache.test.ts). */
+  .kartenblock {
     margin-bottom: var(--r5);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
   }
   .position-zeile {
     display: flex;
@@ -475,14 +470,6 @@
   }
   .block {
     margin-bottom: var(--r5);
-  }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
   }
   .person-zeile {
     display: flex;
@@ -525,7 +512,7 @@
     border: none;
     background: transparent;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;

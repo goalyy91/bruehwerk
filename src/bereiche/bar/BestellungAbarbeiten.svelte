@@ -13,6 +13,7 @@
 
   import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
@@ -122,10 +123,12 @@
       erledigt · {erledigte.length}
     </button>
     {#if erledigtFalteOffen}
-      <div class="panel">
+      <div class="kartenblock">
+        <Blattliste>
         {#each erledigte as d (d.id)}
           <p class="erledigt-zeile">{kaffeeName(d.kaffeeId)} · {getraenkNamen(d.positionIds)}</p>
         {/each}
+      </Blattliste>
       </div>
     {/if}
   {/if}
@@ -141,7 +144,7 @@
     <p class="meta">{kaffeeName(aktiv.kaffeeId)} · {profil.name}</p>
 
     <div class="block">
-      <p class="gruppenkopf">Ziel</p>
+      <h2>Ziel</h2>
       <div class="parameter-raster">
         <Parameterkachel symbol="input" label="Input" wert={input} einheit="g" onAendern={(w) => (input = w)} />
         <Parameterkachel
@@ -161,7 +164,7 @@
     </div>
 
     <div class="block">
-      <p class="gruppenkopf">Ergebnis</p>
+      <h2>Ergebnis</h2>
       <Werteliste
         zeilen={[
           { label: 'Output', wert: output, einheit: 'g', onAendern: (w) => (output = w) },
@@ -184,7 +187,7 @@
 
     {#if offene.length > 1}
       <div class="block danach">
-        <p class="gruppenkopf">Danach</p>
+        <h2>Danach</h2>
         {#each offene.slice(1) as d (d.id)}
           <p class="danach-zeile">{kaffeeName(d.kaffeeId)} · {getraenkNamen(d.positionIds)}</p>
         {/each}
@@ -215,14 +218,6 @@
   .block {
     margin-bottom: var(--r5);
   }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
-  }
   .parameter-raster {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -244,11 +239,11 @@
     cursor: pointer;
     margin-bottom: var(--r3);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: var(--r3) var(--r4);
-    margin-bottom: var(--r4);
+  /* Nur noch der Abstand — Fläche, Radius, Schatten und die Haarlinien
+     zwischen den Zeilen kommen aus muster/Blattliste.svelte. Die lokale
+     .panel-Kopie ist entfallen (tests/bildsprache.test.ts). */
+  .kartenblock {
+    margin-bottom: var(--r5);
   }
   .erledigt-zeile,
   .danach-zeile {

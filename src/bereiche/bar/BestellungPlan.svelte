@@ -13,6 +13,7 @@
   import { planeBezuege, verschnittAngebotSichtbar, bohnenwechselKandidaten, type Position as PlanPosition } from '../../domain/plan';
   import { geschaetzteDauer, reihenfolge, type ReihenfolgeDurchgang, type SetupNutzung } from '../../domain/ablauf';
   import { bohnenSchnittmenge } from '../../domain/getraenk';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Herkunft from '../../muster/Herkunft.svelte';
   import Knopf from '../../muster/Knopf.svelte';
@@ -269,7 +270,8 @@
     </p>
   {/if}
 
-  <div class="panel">
+  <div class="kartenblock">
+    <Blattliste>
     {#each geordnet as eintrag, i (eintrag.id)}
       {@const d = eintrag.durchgang}
       {@const beteiligtePositionen = positionenVon(d.positionIds)}
@@ -298,6 +300,7 @@
         {/if}
       </div>
     {/each}
+  </Blattliste>
   </div>
 
   {#if verschnittSichtbar}
@@ -334,19 +337,11 @@
   .dauer-block {
     margin-bottom: var(--r5);
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    /* Redesign v2, Rückmeldung 2026-09-04 — Karten-Schatten wie Kaffeeblatt
-       .identitaet, sonst kaum vom Papier-Hintergrund abgesetzt. */
-    box-shadow: 0 8px 22px -14px var(--schatten);
-    padding: 0 var(--r4);
-    margin-bottom: var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
+  /* Nur noch der Abstand — Fläche, Radius, Schatten und die Haarlinien
+     zwischen den Zeilen kommen aus muster/Blattliste.svelte. Die lokale
+     .panel-Kopie ist entfallen (tests/bildsprache.test.ts). */
+  .kartenblock {
+    margin-bottom: var(--r5);
   }
   .bezug-zeile {
     display: flex;
@@ -361,6 +356,7 @@
     min-height: 64px;
     border: none;
     background: transparent;
+    /* Serif bewusst: der Kopf traegt Kaffee- und Getraenkenamen. */
     font-family: var(--schrift);
     text-align: left;
     cursor: pointer;
