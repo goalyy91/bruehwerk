@@ -55,10 +55,15 @@ transplantiert — außer den Daten, einmalig.
 ### Die PWA-Hülle
 
 Seit dem 08.09.2026 gibt es sie überhaupt erst: Manifest, Service Worker und
-Icon kamen über `vite-plugin-pwa` (`vite.config.ts`), das Icon baut
-`werkzeuge/icon-bauen.cjs` ohne Bildwerkzeug aus den Farben von `tokens.css`.
-Davor war Brühwerk trotz des eigenen Untertitels keine PWA — die *Daten* lagen
-offline, die *App* nicht, und ohne Netz blieb der Bildschirm leer.
+Icon kamen über `vite-plugin-pwa` (`vite.config.ts`). Davor war Brühwerk trotz
+des eigenen Untertitels keine PWA — die *Daten* lagen offline, die *App* nicht,
+und ohne Netz blieb der Bildschirm leer.
+
+Die Icons liegen als Paket in `public/icons` (mit eigener `README.txt`) und
+kommen von Julian, nicht aus dem Code. Zwei Fassungen, und der Unterschied ist
+kein Zufall: die `any`-Icons tragen den Schriftzug, das `maskable` nur die
+Tasse. Android schneidet das Icon in seine eigene Form, und ein Wort am Rand
+wäre das erste, was dabei wegfällt.
 
 **Die App fragt, bevor sie sich austauscht** (`registerType: 'prompt'`).
 `Aktualisierung.svelte` zeigt zwischen Inhalt und Tab-Leiste einen Hinweis mit

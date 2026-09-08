@@ -24,7 +24,15 @@ export default defineConfig({
     svelte(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icon-192.png', 'icon-512.png'],
+      // Favicons und das Apple-Icon werden aus dem HTML verlinkt, nicht aus
+      // dem Code importiert — ohne diese Liste kennt der Service Worker sie
+      // nicht und sie fehlten offline.
+      includeAssets: [
+        'icons/favicon.ico',
+        'icons/favicon-16x16.png',
+        'icons/favicon-32x32.png',
+        'icons/apple-touch-icon.png',
+      ],
       manifest: {
         name: 'Brühwerk',
         short_name: 'Brühwerk',
@@ -33,18 +41,21 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        // Die Grundfläche des dunklen Themes (tokens.css --d-grund): der
-        // Startbildschirm soll nicht weiß aufblitzen, bevor die App steht.
-        background_color: '#17140f',
+        // Die Fläche des Icons selbst (dessen Eckpixel, gemessen), damit der
+        // Startbildschirm keine sichtbare Kante um das Icon zeigt. Die App
+        // dahinter steht auf --d-grund (#17140f) — der Unterschied ist drei
+        // Stufen und fällt nur genau an dieser Kante auf.
+        background_color: '#1a1713',
         theme_color: '#17140f',
         orientation: 'portrait',
+        // Julians Icon-Paket aus public/icons (README.txt dort). "any" trägt
+        // den Schriftzug, "maskable" nur die Tasse: Android schneidet das
+        // Icon in seine eigene Form, und ein Wort am Rand wäre das erste,
+        // was dabei wegfällt.
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-          // maskable: Android schneidet das Icon in seine eigene Form. Das
-          // Zeichen sitzt mit 60 % Durchmesser mittig, also innerhalb der
-          // Schutzzone — dieselbe Datei taugt für beides.
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/bruehwerk-app-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icons/bruehwerk-app-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icons/bruehwerk-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
@@ -56,6 +67,11 @@ export default defineConfig({
         // offline gebraucht — ohne sie fällt die Anzeigenschrift zurück und
         // die App sieht ohne Netz anders aus als mit.
         globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
+        // Was nur im Ordner liegt, muss nicht mit aufs Telefon: die
+        // 1024er-Fassung verlinkt nichts (sie ist die Quelle für die
+        // kleineren), und die README ist Papier für Menschen. Zusammen
+        // 172 kB, die sonst bei jedem Update mit heruntergeladen würden.
+        globIgnores: ['**/icons/bruehwerk-app-icon-1024.png', '**/icons/README.txt'],
         // Jeder Pfad, den die App kennt, ist eine Route ohne eigene Datei
         // (vercel.json rewritet alles auf index.html). Ohne diesen Fallback
         // wäre offline nur "/" erreichbar, ein Neuladen auf
