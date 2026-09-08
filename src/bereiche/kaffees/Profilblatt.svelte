@@ -56,9 +56,9 @@
    * geändert — die Dashboard-Meldung "Dial-in offen" (domain/hinweise.ts)
    * wäre ohne das hier unabstellbar.
    */
-  async function alsEingefahrenMarkieren() {
+  async function dialinUmschalten() {
     if (!profil) return;
-    await schreiben('profil', { ...profil, modus: 'eingefahren' });
+    await schreiben('profil', { ...profil, modus: profil.modus === 'dialin' ? 'eingefahren' : 'dialin' });
   }
 
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
@@ -256,7 +256,7 @@
   <!-- Reihenfolge Titel -> Setup-Kette -> Primäraktion laut Handoff-
        Screen-Mapping ("Profil/Espresso-Setup"): vorher stand die Pille vor
        der Setup-Kette. -->
-  <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
+  <p class="setup">{setup?.name ?? 'Setup unbekannt'}{profil.modus === 'dialin' ? ' · Dial-in' : ''}</p>
   <div class="knopfreihe">
     <Knopf stufe="primaer" onKlick={onOeffnenShot}>Shot loggen</Knopf>
   </div>
@@ -318,9 +318,12 @@
     {/if}
   </section>
 
-  {#if profil.modus === 'dialin'}
-    <button type="button" class="link" onclick={() => void alsEingefahrenMarkieren()}>als eingefahren markieren</button>
-  {/if}
+  <!-- Rueckmeldung 2026-09-08: "eingestellt und eingefahren klingt schrecklich".
+       Der Knopf schaltet jetzt in beide Richtungen und nennt beim Namen, was er
+       tut. Vorher gab es nur den Weg hinaus aus dem Dial-in und kein Zurueck. -->
+  <button type="button" class="link" onclick={() => void dialinUmschalten()}>
+    {profil.modus === 'dialin' ? 'Dial-in beenden' : 'Dial-in starten'}
+  </button>
 
   <section class="verlauf">
     <h2>Verlauf</h2>

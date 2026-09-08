@@ -64,6 +64,12 @@ export const Bestellung = z.object({
   dauerGeschaetzt: z.number().nonnegative(),
   /** Gramm. Wird mitgerechnet, nicht als Warnung dargestellt. */
   verschnitt: z.number().nonnegative(),
-  status: z.enum(['offen', 'abgeschlossen']),
+  /**
+   * 'abgebrochen' kam 2026-09-08 dazu: eine Bestellung, die liegen bleibt,
+   * war vorher nur loszuwerden, indem man sie abschloss — was behauptet
+   * haette, sie sei gemacht worden. Bereits geloggte Shots bleiben davon
+   * unberuehrt: sie sind passiert, egal was mit der Bestellung geschieht.
+   */
+  status: z.enum(['offen', 'abgeschlossen', 'abgebrochen']),
 });
 export type Bestellung = z.infer<typeof Bestellung>;

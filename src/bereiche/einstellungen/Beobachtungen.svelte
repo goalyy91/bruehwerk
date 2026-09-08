@@ -241,7 +241,7 @@
   {#if berichtStatus === 'kopiert'}
     <p class="quittung">kopiert</p>
   {:else if berichtStatus === 'fehler'}
-    <p class="fehler">Kopieren nicht möglich — Text manuell markieren.</p>
+    <p class="fehler">Kopieren hat nicht geklappt — Text von Hand auswählen.</p>
   {/if}
 </section>
 

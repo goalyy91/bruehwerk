@@ -101,6 +101,30 @@
     }
   }
 
+  /**
+   * Abbrechen statt Abschliessen: eine Bestellung, die liegen bleibt, war
+   * vorher nur loszuwerden, indem man sie abschloss — was behauptet haette,
+   * sie sei gemacht worden. Bereits geloggte Shots bleiben unberuehrt.
+   * Zweiter Tap bestaetigt, wie in Kontextmenue.svelte.
+   */
+  let abbrechenBestaetigen = $state(false);
+
+  async function bestellungAbbrechen() {
+    if (!bestellung) return;
+    if (!abbrechenBestaetigen) {
+      abbrechenBestaetigen = true;
+      return;
+    }
+    abbrechenBestaetigen = false;
+    fehler = '';
+    try {
+      await schreiben('bestellung', { ...bestellung, status: 'abgebrochen' });
+      onAbgeschlossen();
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
   async function bestellungAbschliessen() {
     if (!bestellung) return;
     fehler = '';
@@ -183,6 +207,9 @@
 
     <div class="knopfreihe">
       <Knopf stufe="primaer" onKlick={weiter}>weiter · {offene[1] ? getraenkNamen(offene[1].positionIds) : 'fertig'}</Knopf>
+      <Knopf stufe="still" onKlick={() => void bestellungAbbrechen()}>
+        {abbrechenBestaetigen ? 'Bestellung wirklich verwerfen?' : 'Bestellung abbrechen'}
+      </Knopf>
     </div>
 
     {#if offene.length > 1}
@@ -266,5 +293,8 @@
   }
   .knopfreihe {
     margin-top: var(--r4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--r2);
   }
 </style>

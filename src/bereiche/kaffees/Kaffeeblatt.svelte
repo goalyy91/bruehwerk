@@ -592,9 +592,9 @@
               </div>
               <span class="meta">Rest {Math.round(ansatz.rest)} von {Math.round(ansatz.menge)} ml</span>
               {#if ansatz.status === 'ziehend'}
-                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'fertig')}>als fertig markieren</button>
+                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'fertig')}>ist fertig</button>
               {:else if ansatz.status === 'fertig' && ansatz.rest <= 0}
-                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'aufgebraucht')}>als aufgebraucht markieren</button>
+                <button type="button" class="anlegen-zeile schmal" onclick={() => ansatzStatusSetzen(ansatz, 'aufgebraucht')}>ist aufgebraucht</button>
               {/if}
             </div>
           {/each}
@@ -664,7 +664,7 @@
                 {#if !korrekturOffen}
                   <span class="bestand-aktionen">
                     <button type="button" class="korrigieren-link" onclick={() => (korrekturOffen = true)}>korrigieren</button>
-                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>als leer markieren</button>
+                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>ist leer</button>
                   </span>
                 {/if}
               </div>

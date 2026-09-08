@@ -68,6 +68,30 @@
   // Compiler explizit (gleiches Muster wie Chips.svelte fuer `start`).
   const begruessungsText = begruessung(new Date(), { offeneBestellung: untrack(() => !!offeneBestellung) });
 
+  /**
+   * Eine liegengebliebene Bestellung abbrechen. Der Status wird auf
+   * 'abgebrochen' gesetzt, nicht auf 'abgeschlossen' — sie wurde ja nicht
+   * gemacht. Bereits geloggte Shots bleiben unberuehrt: die sind passiert.
+   */
+  /** Zweiter Tap bestaetigt — dieselbe Mechanik wie Kontextmenue.svelte. */
+  let abbrechenBestaetigen = $state(false);
+
+  async function bestellungAbbrechen() {
+    const b = offeneBestellung;
+    if (!b) return;
+    if (!abbrechenBestaetigen) {
+      abbrechenBestaetigen = true;
+      return;
+    }
+    abbrechenBestaetigen = false;
+    fehler = '';
+    try {
+      await schreiben('bestellung', { ...b, status: 'abgebrochen' });
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
   const standardPerson = $derived(bestand.personen.find((p) => p.standard));
 
   /** Bis zu zwei Kacheln — kein Karussell, kein Ranking-Wert im Bild. */
@@ -386,9 +410,27 @@
 
   {#if fehler}<p class="fehler">{fehler}</p>{/if}
 
-  <Knopf stufe="primaer" onKlick={getraenkWaehlen}>
-    {offeneBestellung ? 'Fortsetzen' : 'Getränk wählen'}
-  </Knopf>
+  <!-- Rückmeldung 2026-09-08: eine liegengebliebene Bestellung war nur
+       loszuwerden, indem man sie abschloss — was behauptet hätte, sie sei
+       gemacht worden. Das Abbrechen steht hier klein neben „Fortsetzen“,
+       weil hier auffällt, dass etwas liegen geblieben ist. Als Zeichen statt
+       als Wort, damit es die Primäraktion nicht bedrängt. -->
+  <div class="bestellzeile">
+    <Knopf stufe="primaer" onKlick={getraenkWaehlen}>
+      {offeneBestellung ? 'Fortsetzen' : 'Getränk wählen'}
+    </Knopf>
+    {#if offeneBestellung}
+      <button
+        type="button"
+        class="abbrechen"
+        class:bestaetigen={abbrechenBestaetigen}
+        onclick={() => void bestellungAbbrechen()}
+        aria-label={abbrechenBestaetigen ? 'Bestellung wirklich verwerfen' : 'Bestellung verwerfen'}
+      >
+        {abbrechenBestaetigen ? 'wirklich?' : '×'}
+      </button>
+    {/if}
+  </div>
 </div>
 
 <!-- Zone "Bestand" — feste Zone statt Alles-oder-nichts (Etappe 8 Block A):
@@ -455,6 +497,37 @@
 <style>
   /* Luft nach oben, damit der Satz auf der Fläche steht statt an ihr zu
      hängen — der eigentliche Grund für "sieht oben hängend aus". */
+  .bestellzeile {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+  }
+  /* Nahezu quadratisch, nur ein Zeichen — die Primaeraktion daneben soll die
+     Zeile fuehren, nicht der Rueckzug. Trefferflaeche trotzdem 48 px. */
+  .abbrechen {
+    flex: none;
+    width: var(--treffer);
+    height: var(--treffer);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--r-kachel);
+    background: var(--vertiefung);
+    color: var(--gedaempft-tief);
+    font-family: var(--schrift-sans);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  /* Der zweite Tap braucht ein Wort — ein Zeichen allein sagt nicht, dass
+     jetzt scharf geschaltet ist. Nur dafuer wird der Knopf breiter. */
+  .abbrechen.bestaetigen {
+    width: auto;
+    padding: 0 var(--r3);
+    color: var(--kritisch);
+    font-size: var(--fs-meta);
+  }
   .begruessungsblock {
     padding: var(--r5) 0 var(--r3);
   }
