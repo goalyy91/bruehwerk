@@ -92,11 +92,13 @@
     // Systemeinstellung ab — eine ausdrueckliche Wahl in den Einstellungen
     // muss hier nachgezogen werden, sonst steht ein heller Bildschirm unter
     // einer dunklen Leiste.
-    // Die Farbe wird aus dem Token gelesen, nicht hier wiederholt: eine
-    // zweite Fassung von --grund waere genau die Rohfarbe, die
-    // tests/tokens.test.ts verbietet — und sie wuerde beim naechsten
-    // Farbwechsel stillschweigend falsch.
-    const grund = getComputedStyle(document.documentElement).getPropertyValue('--grund').trim();
+    // Gelesen wird die tatsaechlich gemalte Flaeche des body, nicht das Token
+    // dahinter: eine Custom Property kann als unaufgeloeste var()-Kette
+    // zurueckkommen, und eine ungueltige theme-color faellt bei Android auf
+    // Schwarz zurueck — genau das gemeldete Bild. backgroundColor liefert
+    // immer ein fertiges rgb(). Wiederholt wird die Farbe damit auch nicht,
+    // was tests/tokens.test.ts ohnehin verbieten wuerde.
+    const grund = getComputedStyle(document.body).backgroundColor;
     if (grund) {
       for (const marke of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
         marke.removeAttribute('media');
@@ -307,10 +309,18 @@
 </div>
 
 <style>
+  /* Rueckmeldung 2026-09-08 aus dem Livebetrieb (S25): auf den Einstellungen
+     scrollte die Tab-Leiste unten aus dem Bild. Mit `height: 100dvh` haengt
+     der Rahmen daran, dass die Seite darunter nicht auch noch scrollt — und
+     genau das kann sie, sobald irgendetwas die Dokumenthoehe erhoeht.
+     `position: fixed; inset: 0` nagelt den Rahmen ans Bildfenster: die
+     Leiste kann jetzt gar nicht mehr wegwandern, egal wie hoch ein
+     Bildschirm wird. Gescrollt wird ausschliesslich innen in .inhalt. */
   .rahmen {
+    position: fixed;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
     overflow: hidden;
   }
   .inhalt {

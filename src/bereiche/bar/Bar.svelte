@@ -555,8 +555,14 @@
     color: var(--kritisch);
     font-size: var(--fs-meta);
   }
+  /* Rueckmeldung 2026-09-08 aus dem Livebetrieb: das Dashboard passte nicht
+     mehr aufs Bild. Gespart wird an den Abstaenden zwischen den Zonen, nicht
+     an den Zonen selbst — vier Gruppenabstaende von 24 auf 18 und der Kopf
+     dichter an die Oberkante ("den Kopf bisschen hoeher nehmen") ergeben
+     zusammen rund 50 px, und genau so viel fehlte bei zwei Bestandsmeldungen.
+     Schriftgroessen und Trefferflaechen bleiben unangetastet. */
   .begruessungsblock {
-    padding: var(--r5) 0 var(--r3);
+    padding: var(--r3) 0 var(--r3);
   }
   .tageszeit-label {
     font-family: var(--schrift-sans);
@@ -598,7 +604,7 @@
     font-size: var(--fs-satz);
   }
   .abschnitt {
-    margin-top: var(--r5);
+    margin-top: var(--r4);
   }
   /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): dieser
      Gruppenkopf steht direkt unter der Kopfzeile und braucht deshalb
@@ -647,7 +653,7 @@
     margin-top: 3px;
   }
   .jetzt-zone {
-    margin-top: var(--r5);
+    margin-top: var(--r4);
     display: flex;
     flex-direction: column;
     gap: var(--r3);
@@ -667,7 +673,7 @@
     align-items: center;
     gap: 14px;
     width: 100%;
-    padding: 16px 18px;
+    padding: 12px 18px;
     border: none;
     border-radius: 18px;
     background: var(--blatt);
@@ -733,7 +739,7 @@
      statt der normalen 19px-Wertgröße — Rückmeldung 2026-09-06: "höher,
      dafür nicht so breit" statt einer einzelnen breiten Zeile. */
   .kennzahl-raster {
-    margin-top: var(--r5);
+    margin-top: var(--r4);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--r-kachelabstand);
@@ -744,8 +750,8 @@
   .kennzahl-kachel {
     background: var(--blatt);
     border-radius: var(--r-kachel);
-    padding: 16px 16px 15px;
-    min-height: 76px;
+    padding: 12px 16px 11px;
+    min-height: 68px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
