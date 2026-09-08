@@ -27,6 +27,7 @@
   import Profilblatt from './kaffees/Profilblatt.svelte';
   import ShotErfassung from './shot/ShotErfassung.svelte';
   import Einstellungen from './einstellungen/Einstellungen.svelte';
+  import Aktualisierung from './Aktualisierung.svelte';
   import Geraete from './einstellungen/Geraete.svelte';
   import Verhalten from './einstellungen/Verhalten.svelte';
   import MuehleAnsicht from './einstellungen/MuehleAnsicht.svelte';
@@ -265,6 +266,11 @@
       </div>
     {/key}
   </main>
+
+  <!-- Zwischen Inhalt und Leiste: sichtbar, ohne die untere Zeile des
+       Bildschirms zu verdecken. Zeigt sich nur, wenn es etwas zu melden
+       gibt (Aktualisierung.svelte). -->
+  <Aktualisierung />
 
   <nav class="leiste" aria-label="Bereiche">
     {#each BEREICHE as bereich (bereich.id)}

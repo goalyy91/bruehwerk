@@ -9,17 +9,21 @@ import { VitePWA } from 'vite-plugin-pwa';
  * blieb der Bildschirm leer, was in einer Küche ohne Empfang genau der Fall
  * ist, für den sie gebaut ist.
  *
- * `registerType: 'autoUpdate'` mit skipWaiting/clientsClaim ist Absicht: ein
- * Service Worker, der eine alte Fassung festhält, bis der Nutzer irgendwo
- * "neu laden" drückt, ist schlimmer als keiner — dann steckt eine App für
- * eine Person auf einem Telefon monatelang auf einem Stand fest, ohne dass
- * man sieht, warum.
+ * `registerType: 'prompt'` (Rückmeldung 2026-09-08): die App fragt, statt
+ * im Hintergrund zu tauschen. Zwei Gründe, und der zweite ist der wichtige.
+ * Erstens tauscht ein stilles Update den Boden unter einer halb ausgefüllten
+ * Shot-Erfassung. Zweitens legt Brühwerk vor jeder Aktualisierung eine
+ * Sicherung an (daten/schnappschuss.ts) — dafür braucht es einen Moment, in
+ * dem feststeht, dass gleich aktualisiert wird.
+ *
+ * Nicht verwechseln mit "eine alte Fassung festhalten": lehnt man ab, fragt
+ * die App beim nächsten Start wieder. Steckenbleiben kann sie nicht.
  */
 export default defineConfig({
   plugins: [
     svelte(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'Brühwerk',
@@ -44,7 +48,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        skipWaiting: true,
+        // Kein skipWaiting: die neue Fassung wartet, bis sie bestätigt wird —
+        // genau darum geht es beim Prompt. updateSW(true) im
+        // Aktualisierung.svelte schickt das SKIP_WAITING dann von Hand.
         clientsClaim: true,
         // Die Schriften sind mit ~300 kB der größte Brocken und werden
         // offline gebraucht — ohne sie fällt die Anzeigenschrift zurück und

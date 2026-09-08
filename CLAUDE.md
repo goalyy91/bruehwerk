@@ -60,10 +60,24 @@ Icon kamen über `vite-plugin-pwa` (`vite.config.ts`), das Icon baut
 Davor war Brühwerk trotz des eigenen Untertitels keine PWA — die *Daten* lagen
 offline, die *App* nicht, und ohne Netz blieb der Bildschirm leer.
 
-`registerType: 'autoUpdate'` mit `skipWaiting`/`clientsClaim` ist Absicht.
-Ein Service Worker, der eine alte Fassung festhält, bis jemand „neu laden"
-drückt, ist schlimmer als keiner: eine App für eine Person auf einem Telefon
-steckt dann monatelang auf einem Stand fest, ohne dass man sieht, warum.
+**Die App fragt, bevor sie sich austauscht** (`registerType: 'prompt'`).
+`Aktualisierung.svelte` zeigt zwischen Inhalt und Tab-Leiste einen Hinweis mit
+„Jetzt aktualisieren“ und „später“ und sieht stündlich selbst nach. Ein
+stilles Update zöge den Boden unter einer halb ausgefüllten Shot-Erfassung
+weg — und vor allem gäbe es keinen Moment, in dem feststeht, dass gleich
+aktualisiert wird. Genau den braucht die Sicherung:
+
+**Vor jeder Aktualisierung legt die App eine Sicherung an**
+(`daten/schnappschuss.ts`) — denselben vollständigen Bestand, den auch der
+Datei-Export schreibt, nur im Gerät, ohne Dialog. Die letzten drei bleiben
+liegen und stehen in den Einstellungen unter „Daten“ zum Zurückspielen.
+Schlägt das Sichern fehl, wird **nicht** aktualisiert.
+
+Der Store `schnappschuss` liegt bewusst **außerhalb von `SAMMLUNGEN`**. Läge
+er drin, wäre er Teil des Exports (Sicherungen in Sicherungen) und würde beim
+Zurückspielen überschrieben — ausgerechnet das, was man dann noch braucht,
+wenn auch der erste Versuch danebenging. `daten/schnappschuss.test.ts` hält
+beides fest.
 
 ### Was die Migration reparieren muss
 
