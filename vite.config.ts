@@ -42,11 +42,21 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         // Die Fläche des Icons selbst (dessen Eckpixel, gemessen), damit der
-        // Startbildschirm keine sichtbare Kante um das Icon zeigt. Die App
-        // dahinter steht auf --d-grund (#17140f) — der Unterschied ist drei
-        // Stufen und fällt nur genau an dieser Kante auf.
-        background_color: '#1a1713',
-        theme_color: '#17140f',
+        // Startbildschirm keine sichtbare Kante um das Icon zeigt.
+        background_color: '#23140d',
+        // Rückmeldung 2026-09-08: im hellen Modus war die Systemleiste
+        // schwarz. Als installierte App nimmt Android die Farbe beim Start
+        // aus dem Manifest — und die kann nur einen Wert haben, während
+        // Brühwerk hell und dunkel kennt. Deshalb steht hier die helle
+        // Grundfläche (tokens.css --h-grund): sie passt zum Systemthema,
+        // in dem die App meistens läuft. Den Rest erledigt
+        // <meta name="theme-color">, das Rahmen.svelte bei jedem
+        // Themenwechsel auf die tatsächlich gemalte Fläche nachzieht.
+        //
+        // Weglassen ist keine Option: vite-plugin-pwa setzt dann seine
+        // eigene Vorgabe ein (#42b883, ein Grün) — nachgesehen im gebauten
+        // Manifest, nicht vermutet.
+        theme_color: '#f1ebe1',
         orientation: 'portrait',
         // Julians Icon-Paket aus public/icons (README.txt dort). "any" trägt
         // den Schriftzug, "maskable" nur die Tasse: Android schneidet das
@@ -71,7 +81,7 @@ export default defineConfig({
         // 1024er-Fassung verlinkt nichts (sie ist die Quelle für die
         // kleineren), und die README ist Papier für Menschen. Zusammen
         // 172 kB, die sonst bei jedem Update mit heruntergeladen würden.
-        globIgnores: ['**/icons/bruehwerk-app-icon-1024.png', '**/icons/README.txt'],
+        globIgnores: ['**/icons/*-1024.png', '**/icons/README.txt'],
         // Jeder Pfad, den die App kennt, ist eine Route ohne eigene Datei
         // (vercel.json rewritet alles auf index.html). Ohne diesen Fallback
         // wäre offline nur "/" erreichbar, ein Neuladen auf

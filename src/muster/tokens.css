@@ -280,6 +280,11 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* Gescrollt wird ausschliesslich innerhalb des Rahmens (Rahmen.svelte).
+     Ohne das konnte das Dokument selbst mitscrollen und die Tab-Leiste aus
+     dem Bild schieben — Befund aus dem Livebetrieb am S25, 08.09.2026. */
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
