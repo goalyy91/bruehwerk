@@ -93,9 +93,9 @@ describe('bausteinZeile — dieselbe Formatierung fuer Editor und Ansicht', () =
     );
   });
 
-  it('warten: Notiz ersetzt den Wert komplett, sonst der Modus-Text', () => {
-    expect(bausteinZeile({ typ: 'warten', modus: 'bis-durchgelaufen' }, 'kumulativ')).toBe('bis durchgelaufen');
-    expect(bausteinZeile({ typ: 'warten', modus: 'feste-dauer', dauer: 45 }, 'kumulativ')).toBe('45 s');
+  it('warten: immer "bis", Modus-Text nie mehr als Rueckfall (Rueckmeldung 2026-09-08)', () => {
+    expect(bausteinZeile({ typ: 'warten', modus: 'bis-durchgelaufen' }, 'kumulativ')).toBe('bis');
+    expect(bausteinZeile({ typ: 'warten', modus: 'feste-dauer', dauer: 45 }, 'kumulativ')).toBe('bis');
     expect(
       bausteinZeile({ typ: 'warten', modus: 'feste-dauer', dauer: 45, notiz: 'der Rand trocken ist' }, 'kumulativ'),
     ).toBe('bis der Rand trocken ist');

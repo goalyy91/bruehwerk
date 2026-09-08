@@ -46,7 +46,8 @@
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import AktivKnopf from '../../muster/AktivKnopf.svelte';
+  import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
   import ProfilIcon, { type ProfilIconTyp } from '../../muster/ProfilIcon.svelte';
   import type { Charge, Profil, Ansatz, Aufbereitung } from '../../daten/schema';
 
@@ -368,12 +369,16 @@
 {:else}
   <Kopfzeile titel={kaffee.name} onZurueck={onZurueck} gross>
     {#snippet aktion()}
-      <Kontextmenue
-        eintraege={[
-          { text: 'bearbeiten', onWahl: onBearbeiten },
-          { text: kaffee.aktiv ? 'ausblenden' : 'wieder einblenden', onWahl: () => void sichtbarkeitUmschalten() },
-        ]}
-      />
+      <!-- Rückmeldung 2026-09-08: zwei direkte Icons statt Kontextmenü —
+           ux-regeln.md Regel 4 sieht das Menü erst vor "sobald ein
+           Bildschirm mehr als eine Sekundäraktion braucht"; bei genau zwei
+           regelmäßig gebrauchten (bearbeiten, aktiv/inaktiv) ist ein
+           direktes Icon je Aktion die konsequente Fortsetzung derselben
+           Regel, kein Bruch damit. -->
+      <div class="kopf-aktionen">
+        <AktivKnopf aktiv={kaffee.aktiv} onKlick={() => void sichtbarkeitUmschalten()} />
+        <BearbeitenKnopf onKlick={onBearbeiten} />
+      </div>
     {/snippet}
   </Kopfzeile>
   <!-- Zug B (2026-09-07): Der Kopfbereich steht frei auf dem Grund, ohne
@@ -715,6 +720,11 @@
 {/if}
 
 <style>
+  .kopf-aktionen {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+  }
   /* Redesign v2 — jetzt die erste Zeile der Identitaets-Karte statt eigene
      Zeile ueber dem Panel, daher kleinerer Abstand nach unten (der grosse
      --seitenrand-Abstand kommt jetzt von der Karte selbst). */

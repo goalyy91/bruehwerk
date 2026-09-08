@@ -63,8 +63,15 @@
     font-size: var(--fs-bedienwort);
     color: var(--tinte);
   }
+  /* Rückmeldung 2026-09-08: jeder akzent-Aufruf ist eine Handlung oder ein
+     Einstieg in einen Bereich ("Datei exportieren", "Geräte verwalten",
+     "+ Setup"), nie ein Objektname — nach der Projektregel "Serif trägt
+     den Inhalt, Sans nur den Apparat" (bisher hier nicht befolgt, geerbt
+     von .zeile). Nicht-akzent-Zeilen (Objektnamen wie "Mühle X") bleiben
+     serif, .zeile setzt sie weiterhin. */
   .label.akzent {
     color: var(--akzent);
+    font-family: var(--schrift-sans);
   }
   .label.betont {
     font-weight: var(--gw-titel);

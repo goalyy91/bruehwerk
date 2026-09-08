@@ -16,6 +16,7 @@
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import AktivKnopf from '../../muster/AktivKnopf.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
@@ -142,12 +143,15 @@
   <Kopfzeile titel={bestehend ? entwurf.name : 'Neues Getränk'} {onZurueck} gross>
     {#snippet aktion()}
       {#if bestehend}
-        <Kontextmenue
-          eintraege={[
-            { text: 'neu als Kopie', onWahl: () => onNeuAlsKopie(bestehend.id) },
-            { text: bestehend.aktiv ? 'ausblenden' : 'einblenden', onWahl: () => void sichtbarkeitUmschalten() },
-          ]}
-        />
+        <!-- Rückmeldung 2026-09-08: aktiv/inaktiv als direktes Icon statt
+             Menüpunkt, wie beim Kaffeeblatt. "Neu als Kopie" ist keine
+             Bearbeiten-Aktion (dieser Bildschirm IST schon der Editor) und
+             seltener gebraucht als das Umschalten — bleibt deshalb im
+             Kontextmenü, jetzt mit nur noch einem Eintrag. -->
+        <div class="kopf-aktionen">
+          <AktivKnopf aktiv={bestehend.aktiv} onKlick={() => void sichtbarkeitUmschalten()} />
+          <Kontextmenue eintraege={[{ text: 'neu als Kopie', onWahl: () => onNeuAlsKopie(bestehend.id) }]} />
+        </div>
       {/if}
     {/snippet}
   </Kopfzeile>
@@ -306,6 +310,11 @@
 {/if}
 
 <style>
+  .kopf-aktionen {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+  }
   /* Die Formularzeilen liegen jetzt in Blattliste-Karten, und die Karte zieht
      die Trennlinien zwischen ihren Kindern selbst. Die eigene Unterlinie der
      globalen .formularzeile würde sich damit verdoppeln.

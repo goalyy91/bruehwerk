@@ -86,15 +86,23 @@
     font-size: var(--fs-bedienwort);
     color: var(--satz);
   }
-  .wert,
-  .wert-text {
+  .wert {
     justify-self: end;
     font-variant-numeric: var(--zahl-features);
     font-weight: var(--gw-zahl);
     color: var(--tinte);
   }
+  /* Rückmeldung 2026-09-08 (Setup-Blatt): teilte sich bisher die Zahlen-
+     Optik (19 px, fett, tabular-nums) mit dem editierbaren .wert — passend
+     für eine gemessene Größe (Spielraum), falsch für einen Gerätenamen wie
+     "Sculptor 076S". Eigene, leichtere Regel: Labelgröße, normales
+     Gewicht, kein tabular-nums (an Text ohnehin wirkungslos).
+     Rechtsbündig (justify-self: end) bleibt bestehen. */
   .wert-text {
-    font-size: var(--fs-wert);
+    justify-self: end;
+    font-size: var(--fs-bedienwort);
+    font-weight: var(--gw-text);
+    color: var(--tinte);
   }
   .wert {
     width: 76px;

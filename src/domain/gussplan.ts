@@ -55,11 +55,12 @@ export const BAUSTEIN_LABEL: Record<GussplanBaustein['typ'], string> = {
 
 /**
  * Die Kopfzeile eines Bausteins — "50 g · 30 s", "auf 150 g · Spirale". Bei
- * `warten` ersetzt eine vorhandene Notiz den Wert ganz ("bis der Rand
- * trocken ist" statt "bis durchgelaufen") — deine Entscheidung 2026-09-08:
- * der Umschalter bis-durchgelaufen/feste-dauer bleibt im Modell, aber die
- * Zeile liest sich als Satz, nicht als Zustand. Ohne Notiz bleibt der alte
- * Text. Die Notiz ist damit bei `warten` der Wert selbst — ein Aufrufer
+ * `warten` steht immer nur "bis" (+ Notiz, wenn vorhanden) — deine
+ * Entscheidung 2026-09-08, zweite Runde: erst blieb der Modus-Text
+ * ("bis durchgelaufen"/"45 s") als Rueckfall ohne Notiz, das war noch zu
+ * viel Zustand in der Zeile. Der Umschalter bis-durchgelaufen/feste-Dauer
+ * bleibt im Editor-Formular bestehen, steuert aber nicht mehr, was hier
+ * steht. Die Notiz ist damit bei `warten` der Wert selbst — ein Aufrufer
  * zeigt sie deshalb nicht zusaetzlich als eigene Notizzeile an.
  */
 export function bausteinZeile(b: GussplanBaustein, lesart: Lesart): string {
@@ -73,8 +74,12 @@ export function bausteinZeile(b: GussplanBaustein, lesart: Lesart): string {
     case 'agitation':
       return b.art ?? '—';
     case 'warten':
-      if (b.notiz) return `bis ${b.notiz}`;
-      return b.modus === 'feste-dauer' ? `${b.dauer ?? 0} s` : 'bis durchgelaufen';
+      // Rueckmeldung 2026-09-08: nie mehr der Modus-Text ("bis durchgelaufen"/
+      // "45 s") als Rueckfall — die Zeile heisst immer "bis", die Notiz haengt
+      // sich nur an, wenn sie da ist. Der Umschalter bis-durchgelaufen/
+      // feste-Dauer bleibt im Editor-Formular bestehen, steuert aber nicht
+      // mehr, was hier steht.
+      return b.notiz ? `bis ${b.notiz}` : 'bis';
     case 'bypass':
       return `${b.menge} g${b.temperatur ? ` · ${b.temperatur} °C` : ''}`;
     case 'frei':

@@ -79,6 +79,13 @@
   .hinweis {
     flex-shrink: 0;
     margin: 0 var(--r4) var(--r3);
+    /* Rückmeldung 2026-09-08: die Karte teilt sich Fläche und Schatten mit
+       den Bestandkarten aus Bar.svelte (beide var(--blatt) + derselbe
+       Schatten) — ohne eigene Kante liest sie sich wie ein Teil davon statt
+       als eigener System-Hinweis. */
+  }
+  .hinweis :global(.blattliste) {
+    border: 1px solid var(--akzent);
   }
   .innen {
     display: flex;

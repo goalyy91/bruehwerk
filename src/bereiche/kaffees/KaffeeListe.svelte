@@ -19,7 +19,7 @@
   // ohne Rueckweg explizit "Titel 32/600", nicht die 26-px-Groesse fuer
   // Screens mit Rueckweg).
 
-  import { bestand } from '../bestand.svelte';
+  import { bestand, schreiben } from '../bestand.svelte';
   import { filtereKaffees, sortiereKaffees, zaehlform, type KaffeeSortierung } from '../../domain/bestand';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
@@ -36,6 +36,13 @@
   const gefiltert = $derived(
     sortiereKaffees(filtereKaffees(bestand.kaffees, { suchtext, nurAktive }), sortierung),
   );
+
+  /** Dieselbe Umschalt-Logik wie Kaffeeblatt.svelte::sichtbarkeitUmschalten(). */
+  async function aktivWechseln(kaffeeId: string) {
+    const kaffee = bestand.kaffees.find((k) => k.id === kaffeeId);
+    if (!kaffee) return;
+    await schreiben('kaffee', { ...kaffee, aktiv: !kaffee.aktiv });
+  }
 </script>
 
 <Kopfzeile titel="Kaffees" gross />
@@ -72,7 +79,9 @@
           roester={kaffee.roester}
           roestgrad={kaffee.roestgrad}
           bewertung={kaffee.bewertung}
+          aktiv={kaffee.aktiv}
           onOeffnen={() => onOeffnen(kaffee.id)}
+          onAktivWechseln={() => void aktivWechseln(kaffee.id)}
         />
       </li>
     {/each}

@@ -69,9 +69,13 @@
 
 <h2>Darstellung</h2>
 {#if bestand.einstellungen}
+  <!-- Rückmeldung 2026-09-08: das Feldlabel "Erscheinungsbild" wiederholte
+       nur die Gruppenüberschrift direkt darüber — weg damit, und mit ihm
+       der .formularzeile-Rahmen (Label+Feld-Zeile mit Trennlinie), der ohne
+       ein zweites Feld nur noch eine Linie ins Leere gezogen hätte. Das
+       Segment steht jetzt direkt im Blatt-Polster. -->
   <Blattliste>
-    <div class="formularzeile spalte">
-      <span class="formularzeile-label">Erscheinungsbild</span>
+    <div class="darstellung-feld">
       <Segment
         optionen={[
           { wert: 'system', label: 'System' },
@@ -108,6 +112,12 @@
 </p>
 
 <style>
+  /* Blattliste polstert nur horizontal (padding: 0 var(--r4)) — das direkte
+     Kind bringt seine eigene vertikale Luft mit, wie es .formularzeile
+     vorher tat. */
+  .darstellung-feld {
+    padding: var(--r3) 0;
+  }
   .erklaerung {
     font-family: var(--schrift-sans);
     font-size: var(--fs-erklaerung);
