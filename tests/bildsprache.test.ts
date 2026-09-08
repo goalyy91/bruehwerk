@@ -16,8 +16,8 @@ import { fileURLToPath } from 'node:url';
  * Dieselbe Antwort wie bei der Architekturregel (tests/schichten.test.ts):
  * die Regel bricht den Build, statt in einem Dokument zu stehen.
  *
- * **Sperrklinke, kein grosser Knall.** Die noch betroffenen Dateien
- * stehen unten namentlich. Der Test schlaegt an, wenn
+ * **Sperrklinke.** ALTLASTEN nennt die Dateien, die noch duerfen (heute:
+ * keine). Der Test schlaegt an, wenn
  *
  *   - eine Datei **ausserhalb** der Liste etwas kopiert  -> nichts Neues
  *     kann hinzukommen;
@@ -91,14 +91,12 @@ const REGELN = [
  * der Test an.
  */
 const ALTLASTEN: readonly string[] = [
-  'Musterblatt.svelte',
-  'einstellungen/Aromadatenblatt.svelte',
-  'einstellungen/Bruehgeraetblatt.svelte',
-  'einstellungen/Migration.svelte',
-  'einstellungen/Muehleblatt.svelte',
-  'einstellungen/Personen.svelte',
-  'einstellungen/Setupblatt.svelte',
-  'einstellungen/TempReferenz.svelte',
+  // Leer, seit dem 08.09.2026. Fuenf Runden, 19 Bildschirme, keiner vergessen.
+  //
+  // Die Liste bleibt bestehen: sie ist der vorgesehene Weg fuer einen
+  // begruendeten Einzelfall, nicht ein Rest zum Wegraeumen. Wer hier etwas
+  // eintraegt, schreibt den Grund dazu — sonst waere sie wieder das, wogegen
+  // sie gebaut wurde.
 ];
 
 function alleBildschirme(verzeichnis: string): string[] {

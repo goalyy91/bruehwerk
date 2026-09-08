@@ -177,7 +177,7 @@
     border: none;
     background: transparent;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;

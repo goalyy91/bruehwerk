@@ -20,10 +20,10 @@
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Schalter from '../../muster/Schalter.svelte';
-  import Werteliste from '../../muster/Werteliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Muehle } from '../../daten/schema';
 
@@ -60,10 +60,15 @@
       fehler = e instanceof Error ? e.message : String(e);
     }
   }
+
+  function zahl(e: Event): number {
+    return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
+  }
 </script>
 
 <Kopfzeile titel={bestehend ? 'Mühle bearbeiten' : 'Neue Mühle'} {onZurueck} />
 
+<Blattliste>
 <div class="formularzeile">
   <span class="formularzeile-label">Name</span>
   <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
@@ -76,37 +81,46 @@
     onWahl={(w) => (entwurf.skala = { ...entwurf.skala, typ: w as 'numerisch' | 'klicks' })}
   />
 </div>
-<Werteliste
-  zeilen={[
-    { label: 'Min', wert: entwurf.skala.min, onAendern: (w) => (entwurf.skala = { ...entwurf.skala, min: w }) },
-    { label: 'Max', wert: entwurf.skala.max, onAendern: (w) => (entwurf.skala = { ...entwurf.skala, max: w }) },
-    { label: 'Schritt', wert: entwurf.skala.schritt, onAendern: (w) => (entwurf.skala = { ...entwurf.skala, schritt: w }) },
-  ]}
-/>
+<!-- Rueckmeldung 2026-09-07 ("Kaesten in Kaesten"): Werteliste bringt ihre
+     eigene Karte mit und steckte deshalb als Karte *in* der Karte — genau der
+     weisse Kasten um Min/Max/Schritt aus Julians Screenshot. Dieselben Werte
+     jetzt als normale Formularzeilen in derselben einen Karte. -->
+<div class="formularzeile">
+  <span class="formularzeile-label">Min</span>
+  <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal"
+    value={entwurf.skala.min} onchange={(e) => (entwurf.skala = { ...entwurf.skala, min: zahl(e) })} />
+</div>
+<div class="formularzeile">
+  <span class="formularzeile-label">Max</span>
+  <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal"
+    value={entwurf.skala.max} onchange={(e) => (entwurf.skala = { ...entwurf.skala, max: zahl(e) })} />
+</div>
+<div class="formularzeile">
+  <span class="formularzeile-label">Schritt</span>
+  <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal"
+    value={entwurf.skala.schritt} onchange={(e) => (entwurf.skala = { ...entwurf.skala, schritt: zahl(e) })} />
+</div>
 <div class="formularzeile">
   <Schalter label="Drehzahl einstellbar" an={entwurf.rpmEinstellbar} onWahl={(a) => (entwurf.rpmEinstellbar = a)} />
 </div>
 {#if entwurf.rpmEinstellbar}
-  <Werteliste
-    zeilen={[
-      {
-        label: 'RPM Min',
-        wert: entwurf.rpmBereich?.min ?? 0,
-        onAendern: (w) => (entwurf.rpmBereich = { min: w, max: entwurf.rpmBereich?.max ?? 0, schritt: entwurf.rpmBereich?.schritt ?? 1 }),
-      },
-      {
-        label: 'RPM Max',
-        wert: entwurf.rpmBereich?.max ?? 0,
-        onAendern: (w) => (entwurf.rpmBereich = { min: entwurf.rpmBereich?.min ?? 0, max: w, schritt: entwurf.rpmBereich?.schritt ?? 1 }),
-      },
-      {
-        label: 'RPM Schritt',
-        wert: entwurf.rpmBereich?.schritt ?? 1,
-        onAendern: (w) => (entwurf.rpmBereich = { min: entwurf.rpmBereich?.min ?? 0, max: entwurf.rpmBereich?.max ?? 0, schritt: w }),
-      },
-    ]}
-  />
+  <div class="formularzeile">
+    <span class="formularzeile-label">Drehzahl Min</span>
+    <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal" value={entwurf.rpmBereich?.min ?? 0}
+      onchange={(e) => (entwurf.rpmBereich = { min: zahl(e), max: entwurf.rpmBereich?.max ?? 0, schritt: entwurf.rpmBereich?.schritt ?? 1 })} />
+  </div>
+  <div class="formularzeile">
+    <span class="formularzeile-label">Drehzahl Max</span>
+    <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal" value={entwurf.rpmBereich?.max ?? 0}
+      onchange={(e) => (entwurf.rpmBereich = { min: entwurf.rpmBereich?.min ?? 0, max: zahl(e), schritt: entwurf.rpmBereich?.schritt ?? 1 })} />
+  </div>
+  <div class="formularzeile">
+    <span class="formularzeile-label">Drehzahl Schritt</span>
+    <input class="eingabefeld-text zahl schmal" type="text" inputmode="decimal" value={entwurf.rpmBereich?.schritt ?? 1}
+      onchange={(e) => (entwurf.rpmBereich = { min: entwurf.rpmBereich?.min ?? 0, max: entwurf.rpmBereich?.max ?? 0, schritt: zahl(e) })} />
+  </div>
 {/if}
+</Blattliste>
 
 <div class="knopfreihe">
   <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === ''}>
@@ -119,6 +133,12 @@
 {/if}
 
 <style>
+  /* Die Karte (Blattliste) zieht die Trennlinien zwischen ihren Kindern
+     selbst — die eigene Unterlinie der globalen .formularzeile wuerde sich
+     sonst verdoppeln. */
+  :global(.formularzeile) {
+    border-bottom: none;
+  }
   .knopfreihe {
     margin-top: var(--r4);
   }

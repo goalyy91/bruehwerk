@@ -14,6 +14,7 @@
   // eckig umrandeter Liste, "Bericht anzeigen" als Blattzeile im Akzent.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import { migriereSeiten } from '../../daten/migration/migrieren';
   import seedDatei from '../../../daten/seed/notion-2026-08-20.json';
@@ -78,11 +79,13 @@
   </button>
 
   {#if offenSichtbar}
-    <div class="berichtliste">
-      {#each vorschau.bericht.offen as punkt, i (i)}
-        <div class="berichtzeile"><span class="quelle">{punkt.quelle}</span> — {punkt.was} <span class="warum">({punkt.warum})</span></div>
-      {/each}
-    </div>
+    <Blattliste>
+      <div class="berichtliste">
+        {#each vorschau.bericht.offen as punkt, i (i)}
+          <div class="berichtzeile"><span class="quelle">{punkt.quelle}</span> — {punkt.was} <span class="warum">({punkt.warum})</span></div>
+        {/each}
+      </div>
+    </Blattliste>
   {/if}
 {/if}
 
@@ -106,22 +109,21 @@
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     min-height: var(--treffer);
     padding: 0;
     margin-top: var(--r3);
     cursor: pointer;
   }
+  /* Nur noch Hoehe und Scrollen — Flaeche, Radius und Polster kommen aus
+     muster/Blattliste.svelte. */
   .berichtliste {
     display: flex;
     flex-direction: column;
     margin-top: var(--r3);
     max-height: var(--max-liste);
     overflow-y: auto;
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
   }
   .berichtzeile {
     padding: var(--r2) 0;

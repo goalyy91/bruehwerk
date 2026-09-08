@@ -157,6 +157,7 @@
     min-height: 60px;
     border: none;
     background: transparent;
+    /* Serif bewusst: die Zeile traegt einen Personennamen. */
     font-family: var(--schrift);
     text-align: left;
     cursor: pointer;
@@ -195,7 +196,7 @@
     border: none;
     background: transparent;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;

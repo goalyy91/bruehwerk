@@ -21,6 +21,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { ABLAUF_LEER } from '../../daten/stammdaten';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Knopf from '../../muster/Knopf.svelte';
@@ -70,6 +71,7 @@
 {#if bestand.muehlen.length === 0 || bestand.bruehgeraete.length === 0}
   <p class="hinweis">Erst eine Mühle und ein Brühgerät anlegen.</p>
 {:else}
+<Blattliste>
   <div class="formularzeile">
     <span class="formularzeile-label">Name</span>
     <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
@@ -91,6 +93,8 @@
     />
   </div>
 
+</Blattliste>
+
   <div class="knopfreihe">
     <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === ''}>
       {bestehend ? 'speichern' : 'anlegen'}
@@ -103,6 +107,12 @@
 {/if}
 
 <style>
+  /* Die Karte (Blattliste) zieht die Trennlinien zwischen ihren Kindern
+     selbst — die eigene Unterlinie der globalen .formularzeile wuerde sich
+     sonst verdoppeln. */
+  :global(.formularzeile) {
+    border-bottom: none;
+  }
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-satz);

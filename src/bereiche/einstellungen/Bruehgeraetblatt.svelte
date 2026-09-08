@@ -36,6 +36,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { bruehgeraetEntwurf } from './bruehgeraetEntwurf.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
@@ -168,6 +169,7 @@
   </p>
 {/if}
 
+<Blattliste>
 <div class="formularzeile">
   <span class="formularzeile-label">Name</span>
   <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
@@ -266,6 +268,7 @@
   </div>
   <p class="erklaerung">Wie viele Portionen sich gleichzeitig zubereiten lassen.</p>
 {/if}
+</Blattliste>
 
 <div class="knopfreihe">
   <Knopf stufe="primaer" onKlick={speichern} deaktiviert={entwurf.name.trim() === ''}>
@@ -278,6 +281,12 @@
 {/if}
 
 <style>
+  /* Die Karte (Blattliste) zieht die Trennlinien zwischen ihren Kindern
+     selbst — die eigene Unterlinie der globalen .formularzeile wuerde sich
+     sonst verdoppeln. */
+  :global(.formularzeile) {
+    border-bottom: none;
+  }
   .erklaerung {
     font-family: var(--schrift-sans);
     font-size: var(--fs-erklaerung);
@@ -301,7 +310,7 @@
     border-bottom: 1px solid var(--linie);
     background: transparent;
     color: var(--tinte);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
@@ -329,7 +338,7 @@
     border: none;
     padding: 0;
     color: inherit;
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: inherit;
     text-decoration: underline;
     cursor: pointer;

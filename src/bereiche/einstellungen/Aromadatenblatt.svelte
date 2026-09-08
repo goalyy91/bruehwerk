@@ -199,6 +199,7 @@
     border-radius: var(--r-pille);
     background: var(--vertiefung);
     color: var(--akzent);
+    /* Serif bewusst: der Verweis traegt einen Aromanamen. */
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;

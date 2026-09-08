@@ -621,7 +621,7 @@
     border-radius: var(--r-wertfeld);
     background: var(--vertiefung);
     color: var(--tinte);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     cursor: pointer;
   }
