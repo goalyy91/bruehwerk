@@ -756,6 +756,17 @@
     flex-direction: column;
     justify-content: space-between;
   }
+  /* Befund 2026-09-08 (Livebetrieb, S25): "Meistgenutzte Bohne, letzte 30
+     Tage" ist das mit Abstand längste Label im Fakten-Pool
+     (domain/hinweise.ts::kennzahlenPool), sein Wert ein freier Kaffeename
+     ohne Längenbegrenzung. Genau diese Kombination liess eine Kachel auf
+     drei Zeilen Label + zwei Zeilen Name wachsen — mehr als das Doppelte
+     der anderen sechs Kennzahlen, und genug, um das Dashboard übers Bild
+     hinauszuschieben. Kein Abstandsproblem (das war beim letzten Befund
+     schon behoben), sondern eine Kachel ohne Höhenbegrenzung, deren
+     tatsächliche Höhe vom Zufall abhing, welche zwei Fakten gerade gezogen
+     wurden. Zeilenklammerung auf beiden Zeilen macht jede Kachel unabhängig
+     vom Inhalt gleich hoch. */
   .kennzahl-label {
     font-family: var(--schrift-sans);
     font-size: var(--fs-kachel-label);
@@ -763,6 +774,11 @@
     text-transform: uppercase;
     color: var(--gedaempft);
     line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   /* Rückmeldung 2026-09-08: „finde die KPIs noch arg plakativ". 26 px war
      größer als jede andere Zahl der App (--fs-wert ist 19). Die zwei Kacheln
@@ -772,5 +788,9 @@
     font-size: var(--fs-wert);
     line-height: 1;
     color: var(--tinte);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
