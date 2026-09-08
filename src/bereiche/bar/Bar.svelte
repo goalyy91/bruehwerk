@@ -348,7 +348,7 @@
      dafür nötig gewesen — siehe Mockup-Anmerkung, Etappe 8 Block A). -->
 <div class="jetzt-zone">
   {#if eigeneKacheln.length > 0}
-    <p class="gruppenkopf">Dein Espresso</p>
+    <h2>Dein Espresso</h2>
     <div class="kachelreihe">
       {#each eigeneKacheln as getraenk, i (getraenk.id)}
         <button type="button" class="kachel" class:primaer={i === 0} onclick={() => kachelWaehlen(getraenk.id)}>
@@ -373,7 +373,7 @@
     </div>
   {:else if fastway?.phase === 'bohne' && fastway.bohnenOptionen}
     <div class="fastway-frage">
-      <p class="gruppenkopf">Bohne</p>
+      <h2>Bohne</h2>
       <Einzelauswahl
         optionen={fastway.bohnenOptionen.map((k) => ({ wert: k.id, label: k.name }))}
         wert=""
@@ -394,7 +394,7 @@
      wird. Ganz ohne Daten (frische Installation) bleibt die Zone weg. -->
 {#if meldungen.sichtbar.length > 0 || ruhezustandBohne}
   <div class="abschnitt">
-    <p class="gruppenkopf">Bestand</p>
+    <h2>Bestand</h2>
     <div class="bestandliste">
       {#if meldungen.sichtbar.length > 0}
         {#each meldungen.sichtbar as eintrag (eintrag.art + eintrag.name)}
@@ -483,13 +483,12 @@
   .abschnitt {
     margin-top: var(--r5);
   }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
+  /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): dieser
+     Gruppenkopf steht direkt unter der Kopfzeile und braucht deshalb
+     keinen Abstand nach oben. Die uebrigen sechs Eigenschaften waren
+     eine wortgleiche Kopie und sind entfallen. */
+  h2 {
+    margin-top: 0;
   }
   .kachelreihe {
     display: flex;
@@ -509,6 +508,8 @@
     align-items: flex-start;
     text-align: left;
     cursor: pointer;
+    /* Serif bewusst: die Kachel traegt einen Getraenkenamen, keinen
+       Bedienbegriff — Namen bleiben in der Anzeigenschrift. */
     font-family: var(--schrift);
   }
   .kachel.primaer {
@@ -557,6 +558,7 @@
     border-left: 3px solid transparent;
     cursor: pointer;
     text-align: left;
+    /* Serif bewusst: die Karte traegt einen Kaffeenamen und eine Menge. */
     font-family: var(--schrift);
   }
   .bestandkarte.achtung {

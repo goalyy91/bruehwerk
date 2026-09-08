@@ -386,7 +386,7 @@
   {/if}
 
   <div class="eingestellt">
-    <p class="gruppenkopf">Parameter</p>
+    <h2>Parameter</h2>
     <div class="parameter-raster">
       <Parameterkachel symbol="input" label="Input" wert={input} einheit="g" onAendern={(w) => (input = w)} />
       <Parameterkachel
@@ -451,13 +451,12 @@
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
   }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
+  /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): dieser
+     Gruppenkopf steht direkt unter der Kopfzeile und braucht deshalb
+     keinen Abstand nach oben. Die uebrigen sechs Eigenschaften waren
+     eine wortgleiche Kopie und sind entfallen. */
+  h2 {
+    margin-top: 0;
   }
   .eingestellt {
     margin-bottom: var(--r4);
