@@ -86,7 +86,7 @@ const REGELN = [
 ] as const;
 
 /**
- * Stand 2026-09-08 nach Runde 3. Diese Dateien duerfen noch, alle anderen
+ * Stand 2026-09-08 nach Runde 4. Diese Dateien duerfen noch, alle anderen
  * nicht. **Wer eine davon aufraeumt, traegt sie hier aus** — sonst schlaegt
  * der Test an.
  */
@@ -99,9 +99,6 @@ const ALTLASTEN: readonly string[] = [
   'einstellungen/Personen.svelte',
   'einstellungen/Setupblatt.svelte',
   'einstellungen/TempReferenz.svelte',
-  'historie/Historie.svelte',
-  'historie/Shotblatt.svelte',
-  'tasting/Verkostungsbogen.svelte',
 ];
 
 function alleBildschirme(verzeichnis: string): string[] {

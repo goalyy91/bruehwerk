@@ -14,6 +14,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { GROESSEN, zusammenfassung } from '../../domain/tasting';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Treppe from '../../muster/Treppe.svelte';
   import Chips from '../../muster/Chips.svelte';
@@ -150,7 +151,7 @@
   </div>
 
   <div class="block">
-    <p class="gruppenkopf">Aromen</p>
+    <h2>Aromen</h2>
     {#if aromasets.length > 1}
       <LesartUmschalter
         optionA={aromasets[0]?.name ?? ''}
@@ -167,10 +168,14 @@
     {/key}
   </div>
 
-  <div class="block gerechnet">
-    <p class="gruppenkopf">Zusammenfassung</p>
-    <p class="zusammenfassung">{zusammenfassungssatz}</p>
-  </div>
+  <section class="block">
+    <h2>Zusammenfassung</h2>
+    <Blattliste>
+      <div class="gerechnet">
+        <p class="zusammenfassung">{zusammenfassungssatz}</p>
+      </div>
+    </Blattliste>
+  </section>
 
   {#if speicherFehler}
     <p class="fehler">{speicherFehler}</p>
@@ -218,29 +223,25 @@
   .block {
     margin-bottom: var(--r5);
   }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
+  /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): kein
+     Abstand nach oben, weil der Kopf direkt an seinem Block klebt.
+     Die uebrigen Eigenschaften waren eine wortgleiche Kopie. */
+  h2 {
+    margin-top: 0;
   }
   .quelle {
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r3);
   }
+  /* Der Gruppenkopf steht jetzt über der Karte statt darin (wie überall
+     sonst), deshalb braucht es hier nur noch das Innenpolster. Fläche,
+     Radius und Schatten kommen aus Blattliste. */
   .gerechnet {
     display: flex;
     flex-direction: column;
     gap: var(--r3);
-    padding: var(--r4);
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-  }
-  .gerechnet .gruppenkopf {
-    margin: 0;
+    padding: var(--r4) 0;
   }
   .zusammenfassung {
     font-size: var(--fs-satz);

@@ -10,6 +10,7 @@
 
   import { bestand } from '../bestand.svelte';
   import { zaehlform } from '../../domain/bestand';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Suchfeld from '../../muster/Suchfeld.svelte';
 
@@ -63,7 +64,7 @@
 {:else}
   {#each tage as tag (tag.label)}
     <h2>{tag.label}</h2>
-    <div class="panel">
+    <Blattliste>
       {#each tag.shots as shot (shot.id)}
         <button type="button" class="zeile" onclick={() => onOeffnen(shot.id)}>
           <span class="haupt">
@@ -73,7 +74,7 @@
           <span class="urteil">{urteilLabel(shot.urteil)}</span>
         </button>
       {/each}
-    </div>
+    </Blattliste>
   {/each}
 {/if}
 
@@ -103,16 +104,6 @@
   h2:first-of-type {
     margin-top: 0;
   }
-  .panel {
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
-  }
   .zeile {
     width: 100%;
     display: flex;
@@ -122,6 +113,7 @@
     min-height: 60px;
     border: none;
     background: transparent;
+    /* Serif bewusst: die Zeile traegt einen Kaffeenamen. */
     font-family: var(--schrift);
     text-align: left;
     cursor: pointer;

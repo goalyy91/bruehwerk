@@ -10,6 +10,7 @@
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { berechneGesamt, zusammenfassung } from '../../domain/tasting';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
@@ -66,7 +67,7 @@
   </div>
 
   <div class="block">
-    <p class="gruppenkopf">Parameter</p>
+    <h2>Parameter</h2>
     <div class="parameter-raster">
       <Parameterkachel symbol="input" label="Input" wert={shot.ist.input} einheit="g" />
       <Parameterkachel symbol="mahlgrad" label="Mahlgrad" wert={shot.ist.mg} einheit={muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined} />
@@ -80,7 +81,7 @@
   </div>
 
   <div class="block">
-    <p class="gruppenkopf">Ergebnis</p>
+    <h2>Ergebnis</h2>
     <Werteliste
       zeilen={[
         { label: 'Output', wert: shot.ist.output, einheit: 'g' },
@@ -92,7 +93,7 @@
 
   {#if shot.befunde.length > 0 || shot.vorschlag}
     <div class="block gedaempft-block">
-      <p class="gruppenkopf">Dial-in</p>
+      <h2>Dial-in</h2>
       {#if shot.befunde.length > 0}
         <p class="befunde">{shot.befunde.map((b) => `${b.staerke} ${befundLabel(b.symptomId)}`).join(' · ')}</p>
       {/if}
@@ -106,7 +107,7 @@
   {/if}
 
   <div class="block">
-    <p class="gruppenkopf">Verkostung</p>
+    <h2>Verkostung</h2>
     {#if tasting}
       <!-- Rueckmeldung 2026-08-26: Ergebnis und erkannte Aromen stehen
            direkt hier, ohne dass man dafuer erst in den vollen Bogen
@@ -116,15 +117,19 @@
       {#if tastingAromen}
         <p class="tasting-aromen">{tastingAromen}</p>
       {/if}
-      <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
+      <Blattliste>
+        <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
         <span>Bogen ansehen</span>
-        <span class="chevron" aria-hidden="true">›</span>
-      </button>
+          <span class="chevron" aria-hidden="true">›</span>
+        </button>
+      </Blattliste>
     {:else}
-      <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
+      <Blattliste>
+        <button type="button" class="verkostung-zeile" onclick={onOeffnenVerkostung}>
         <span>Verkostungsbogen ausfüllen</span>
-        <span class="chevron" aria-hidden="true">›</span>
-      </button>
+          <span class="chevron" aria-hidden="true">›</span>
+        </button>
+      </Blattliste>
     {/if}
   </div>
 
@@ -158,13 +163,11 @@
   .block {
     margin-bottom: var(--r5);
   }
-  .gruppenkopf {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-gruppenkopf);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    margin: 0 0 var(--r-kachelabstand);
+  /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): kein
+     Abstand nach oben, weil der Kopf direkt an seinem Block klebt.
+     Die uebrigen Eigenschaften waren eine wortgleiche Kopie. */
+  h2 {
+    margin-top: 0;
   }
   .parameter-raster {
     display: grid;
@@ -200,10 +203,8 @@
     min-height: 56px;
     padding: 0 var(--r4);
     border: none;
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;
