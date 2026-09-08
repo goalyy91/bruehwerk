@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gesamtwasser, verhaeltnis, umrechnen, type GussplanBaustein } from './gussplan';
+import { gesamtwasser, verhaeltnis, umrechnen, bausteinZeile, type GussplanBaustein } from './gussplan';
 
 // Das Beispiel aus der Bildschirm-Skizze in docs/konzept.md,
 // "Pour Over: der Gussplan": Bloom 50 g, dann kumulativ auf 150 g,
@@ -70,5 +70,47 @@ describe('umrechnen — dieselbe Wassermenge, andere Sprache', () => {
   it('Gesamtwasser ist in beiden Lesarten identisch', () => {
     const inkrementell = umrechnen(KUMULATIV, 'kumulativ', 'inkrementell');
     expect(gesamtwasser(inkrementell, 'inkrementell')).toBe(gesamtwasser(KUMULATIV, 'kumulativ'));
+  });
+});
+
+describe('bausteinZeile — dieselbe Formatierung fuer Editor und Ansicht', () => {
+  it('vorbereiten: die angehakten Schritte, oder ein Platzhalter', () => {
+    expect(bausteinZeile({ typ: 'vorbereiten', filterSpuelen: true, gefaessVorwaermen: true }, 'kumulativ')).toBe(
+      'Filter spülen · Gefäß vorwärmen',
+    );
+    expect(bausteinZeile({ typ: 'vorbereiten', filterSpuelen: false, gefaessVorwaermen: false }, 'kumulativ')).toBe('—');
+  });
+
+  it('bloom: Menge und Dauer', () => {
+    expect(bausteinZeile({ typ: 'bloom', menge: 50, dauer: 30 }, 'kumulativ')).toBe('50 g · 30 s');
+  });
+
+  it('guss: "auf" kumulativ, "+" inkrementell, Muster nur wenn gesetzt', () => {
+    expect(bausteinZeile({ typ: 'guss', zielmenge: 150 }, 'kumulativ')).toBe('auf 150 g');
+    expect(bausteinZeile({ typ: 'guss', zielmenge: 50 }, 'inkrementell')).toBe('+ 50 g');
+    expect(bausteinZeile({ typ: 'guss', zielmenge: 150, dauer: 30, muster: 'spirale' }, 'kumulativ')).toBe(
+      'auf 150 g · 30 s · spirale',
+    );
+  });
+
+  it('warten: Notiz ersetzt den Wert komplett, sonst der Modus-Text', () => {
+    expect(bausteinZeile({ typ: 'warten', modus: 'bis-durchgelaufen' }, 'kumulativ')).toBe('bis durchgelaufen');
+    expect(bausteinZeile({ typ: 'warten', modus: 'feste-dauer', dauer: 45 }, 'kumulativ')).toBe('45 s');
+    expect(
+      bausteinZeile({ typ: 'warten', modus: 'feste-dauer', dauer: 45, notiz: 'der Rand trocken ist' }, 'kumulativ'),
+    ).toBe('bis der Rand trocken ist');
+    expect(bausteinZeile({ typ: 'warten', modus: 'bis-durchgelaufen', notiz: 'der Rand trocken ist' }, 'kumulativ')).toBe(
+      'bis der Rand trocken ist',
+    );
+  });
+
+  it('bypass: Menge, Temperatur nur wenn gesetzt', () => {
+    expect(bausteinZeile({ typ: 'bypass', menge: 20 }, 'kumulativ')).toBe('20 g');
+    expect(bausteinZeile({ typ: 'bypass', menge: 20, temperatur: 90 }, 'kumulativ')).toBe('20 g · 90 °C');
+  });
+
+  it('frei (Migration): Rolle, Menge und Dauer nur wenn gesetzt', () => {
+    expect(bausteinZeile({ typ: 'frei', menge: 0, rolle: 'Bloom' }, 'kumulativ')).toBe('Bloom');
+    expect(bausteinZeile({ typ: 'frei', menge: 50, dauer: 30, rolle: 'Bloom' }, 'kumulativ')).toBe('Bloom · 50 g · 30 s');
   });
 });

@@ -1,3 +1,21 @@
+<script module lang="ts">
+  // Exportiert (Aufrufer: ShotErfassung.svelte), damit dort dieselbe Form
+  // benutzt statt ein zweites Mal abgetippt wird — dieselbe Loesung wie
+  // Parameterkachel.svelte's exportiertes ParameterSymbol.
+  export type IstGegenZielZeile = {
+    // 'Durchlaufzeit' ergaenzt fuer Pour-Over-Geraete mit Fuehrungswert
+    // 'durchlaufzeit' (K7) — ShotErfassung.svelte beschriftet die dritte
+    // Zeile je nach Bruehgeraet, dieselbe Logik wie Profilblatt.svelte.
+    label: 'Output' | 'Preinfusion' | 'Zeit' | 'Durchlaufzeit';
+    einheit: string;
+    ziel: number;
+    spielraum: number;
+    messreihe?: { min: number; max: number };
+    /** Zeigt/liest diese Zeile als m:ss statt Sekunden (K7, Durchlaufzeit). */
+    mmss?: boolean;
+  };
+</script>
+
 <script lang="ts">
   // Muster 5 · Ist gegen Ziel (Übergabe, Abschnitt 2 · K3 K5 K6).
   // Ziel im Gruppenkopf (11 px Versalien), Ist-Werte mit dem Ziel vorbelegt.
@@ -16,23 +34,13 @@
   // Messreihe (halbes Zeichen, kein Vorschlag) K67 K75.
 
   import { untrack } from 'svelte';
-
-  type Zeile = {
-    // 'Durchlaufzeit' ergaenzt fuer Pour-Over-Geraete mit Fuehrungswert
-    // 'durchlaufzeit' (K7) — ShotErfassung.svelte beschriftet die dritte
-    // Zeile je nach Bruehgeraet, dieselbe Logik wie Profilblatt.svelte.
-    label: 'Output' | 'Preinfusion' | 'Zeit' | 'Durchlaufzeit';
-    einheit: string;
-    ziel: number;
-    spielraum: number;
-    messreihe?: { min: number; max: number };
-  };
+  import { alsMinutenSekunden, ausMinutenSekunden } from '../domain/zeit';
 
   let {
     titel,
     zeilen,
     onAenderung,
-  }: { titel: string; zeilen: Zeile[]; onAenderung?: (werte: readonly number[]) => void } = $props();
+  }: { titel: string; zeilen: IstGegenZielZeile[]; onAenderung?: (werte: readonly number[]) => void } = $props();
 
   // zeilen liefert nur die Startbelegung (K3: Ist mit dem Ziel vorbelegt);
   // danach lebt der Zustand in der Komponente. untrack() macht das
@@ -47,18 +55,18 @@
     onAenderung?.(ist);
   });
 
-  function aendern(i: number, wert: string) {
-    const zahl = Number(wert.replace(',', '.'));
+  function aendern(i: number, roh: string) {
+    const zahl = zeilen[i]?.mmss ? ausMinutenSekunden(roh) : Number(roh.replace(',', '.'));
     if (Number.isNaN(zahl)) return;
     ist[i] = zahl;
     beruehrt[i] = true;
   }
 
-  function ausserhalbSpielraum(zeile: Zeile, wert: number): boolean {
+  function ausserhalbSpielraum(zeile: IstGegenZielZeile, wert: number): boolean {
     return Math.abs(wert - zeile.ziel) > zeile.spielraum;
   }
 
-  function ausserhalbMessreihe(zeile: Zeile, wert: number): boolean {
+  function ausserhalbMessreihe(zeile: IstGegenZielZeile, wert: number): boolean {
     if (!zeile.messreihe) return false;
     return wert < zeile.messreihe.min || wert > zeile.messreihe.max;
   }
@@ -80,12 +88,14 @@
       <span class="label">{zeile.label}</span>
       <input
         class="wert zahl"
+        class:mmss={zeile.mmss}
         type="text"
-        inputmode="decimal"
-        value={wert}
+        inputmode={zeile.mmss ? 'text' : 'decimal'}
+        value={zeile.mmss ? alsMinutenSekunden(wert) : wert}
         onchange={(e) => aendern(i, e.currentTarget.value)}
       />
-      <span class="einheit">{zeile.einheit}</span>
+      <!-- m:ss traegt die Einheit schon im Doppelpunkt — "3:05 s" waere doppelt. -->
+      {#if !zeile.mmss}<span class="einheit">{zeile.einheit}</span>{/if}
     </div>
     {#if ausserMessreihe}
       <div class="satz">
@@ -139,6 +149,9 @@
     font-family: var(--schrift);
     font-size: var(--fs-wert);
     color: var(--tinte);
+  }
+  .wert.mmss {
+    width: 5ch;
   }
   .einheit {
     justify-self: end;

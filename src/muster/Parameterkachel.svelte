@@ -37,11 +37,20 @@
   // "output" bekam ein eigenes Tassen-Icon statt des mit "preinfusion"
   // geteilten Tropfens (Rückmeldung nach Paket 3).
 
+  import { alsMinutenSekunden, ausMinutenSekunden } from '../domain/zeit';
+
   let {
     symbol,
     label,
     wert,
     einheit,
+    /**
+     * Zeigt/liest `wert` als m:ss statt als Sekundenzahl — fuer die
+     * Pour-Over-Durchlaufzeit (K7), die man beim Lesen sonst im Kopf
+     * umrechnet ("185 s" statt "3:05"). Gespeichert bleiben immer Sekunden;
+     * das ist reine Anzeige (domain/zeit.ts).
+     */
+    mmss = false,
     onAendern,
   }: {
     symbol: ParameterSymbol;
@@ -49,13 +58,16 @@
     /** '' oder undefined => "—" (Handoff 3.9, "Fehlender Wert"). */
     wert: number | string | undefined;
     einheit?: string;
+    mmss?: boolean;
     onAendern?: (wert: number) => void;
   } = $props();
 
   const leer = $derived(wert === undefined || wert === '');
+  const angezeigterWert = $derived(leer ? '' : mmss && typeof wert === 'number' ? alsMinutenSekunden(wert) : wert);
 
   function zahl(e: Event): number {
-    return Number((e.currentTarget as HTMLInputElement).value.replace(',', '.'));
+    const roh = (e.currentTarget as HTMLInputElement).value;
+    return mmss ? ausMinutenSekunden(roh) : Number(roh.replace(',', '.'));
   }
 </script>
 
@@ -91,13 +103,13 @@
       <input
         class="wert eingabe zahl"
         type="text"
-        inputmode="decimal"
+        inputmode={mmss ? 'text' : 'decimal'}
         placeholder="—"
-        value={leer ? '' : wert}
+        value={angezeigterWert}
         onchange={(e) => onAendern(zahl(e))}
       />
     {:else}
-      <span class="wert zahl" class:leer>{leer ? '—' : wert}</span>
+      <span class="wert zahl" class:leer>{leer ? '—' : angezeigterWert}</span>
     {/if}
     {#if einheit}<span class="einheit">{einheit}</span>{/if}
   </div>

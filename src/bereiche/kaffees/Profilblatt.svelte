@@ -1,7 +1,9 @@
 <script lang="ts">
   // Profilblatt — K7 (Fuehrungswert je Geraet), Setup-Bindung (Befund 2:
   // "MG 65" ist nur mit Muehle eindeutig), K54 (Kessel/Gruppe als doppelte
-  // Einheit), Spielraum je Groesse. Gussplan-Editor folgt in Etappe C.
+  // Einheit), Spielraum je Groesse. Gussplan-Editor (Pour Over) steht direkt
+  // unter "Ziel" (Rueckmeldung 2026-09-08) — Rezept und Gussplan gehoeren
+  // beim Lesen zusammen.
   //
   // Visueller Redesign-Reset, Paket 3 (Handoff Abschnitt 6 "Profil/
   // Espresso-Setup"): "Ziel" steht jetzt als Parameterkachel-Raster statt
@@ -275,7 +277,12 @@
          eigener 2×2-Block nach Input/Mahlgrad/[Drehzahl]/[Kessel]. Die
          Brühgruppe (umgerechnete Temperatur, K54) ist jetzt eine eigene
          Kachel mit eigenem Symbol statt eines Text-Hinweises unter "Kessel"
-         — "Kessel" bezeichnet nur noch den eingestellten Maschinenwert. -->
+         — "Kessel" bezeichnet nur noch den eingestellten Maschinenwert.
+         Preinfusion nur am Siebträger (Rückmeldung 2026-09-08): am V60/Moka/
+         Cold Brew gibt es sie nicht, das Feld stand dort immer leer. Die
+         Zeit-Kachel liest sich als m:ss, wenn der Führungswert (K7) die
+         Durchlaufzeit ist — gespeichert bleiben Sekunden (Parameterkachel
+         `mmss`-Prop, domain/zeit.ts). -->
     <div class="parameter-raster">
       <Parameterkachel symbol="input" label="Input" wert={profil.ziel.input} einheit="g" onAendern={(w) => zielSpeichern('input', w)} />
       <Parameterkachel
@@ -291,7 +298,9 @@
       {#if bruehgeraet?.ktEinstellbar}
         <Parameterkachel symbol="kessel" label="Kessel" wert={profil.ziel.kt ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('kt', w)} />
       {/if}
-      <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />
+      {#if bruehgeraet?.typ === 'espresso'}
+        <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />
+      {/if}
       {#if bruehgruppeWert}
         <Parameterkachel symbol="bruehgruppe" label="Brühgruppe" wert={bruehgruppeWert} einheit="°C" />
       {:else if bruehgruppeAusserhalbMessreihe}
@@ -306,10 +315,15 @@
         label={bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}
         wert={profil.ziel.zeit}
         einheit="s"
+        mmss={bruehgeraet?.fuehrungswert === 'durchlaufzeit'}
         onAendern={(w) => zielSpeichern('zeit', w)}
       />
     </div>
   </section>
+
+  {#if bruehgeraet?.typ === 'pourover'}
+    <GussplanEditor {profilId} />
+  {/if}
 
   <section class="spielraum">
     <button type="button" class="aufklappbar spielraum-kopf" aria-expanded={spielraumOffen} onclick={() => (spielraumOffen = !spielraumOffen)}>
@@ -362,10 +376,6 @@
         <p class="verschwunden">Zuletzt nicht mehr aufgefallen: {verschwundene.join(' · ')}.</p>
       {/if}
     </section>
-  {/if}
-
-  {#if bruehgeraet?.typ === 'pourover'}
-    <GussplanEditor {profilId} />
   {/if}
 
   <!-- Tiefer gelegt (Regel 2/4): reine Korrekturfunktion fuer eine falsch
