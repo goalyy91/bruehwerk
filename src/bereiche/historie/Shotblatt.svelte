@@ -41,9 +41,8 @@
 
   let fehler = $state('');
 
-  async function urteilGeaendert(stufe: 'daneben' | 'okay' | 'sehr gut' | 'Referenz') {
+  async function urteilGeaendert(urteil: 'daneben' | 'okay' | 'sehr gut') {
     if (!shot) return;
-    const urteil = stufe === 'Referenz' ? 'referenz' : stufe;
     try {
       await schreiben('shot', { ...shot, urteil });
     } catch (e) {
@@ -63,7 +62,7 @@
 
   <div class="urteil-block">
     <p class="frage-objekt">Wie war er?</p>
-    <Urteil start={berechneGesamt(shot.urteil) as 'daneben' | 'okay' | 'sehr gut' | 'Referenz'} onWahl={(s) => void urteilGeaendert(s)} />
+    <Urteil start={berechneGesamt(shot.urteil) as 'daneben' | 'okay' | 'sehr gut'} onWahl={(s) => void urteilGeaendert(s)} />
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   </div>
 

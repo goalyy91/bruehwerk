@@ -58,8 +58,8 @@ describe('Gesamt — kommt aus dem Shot-Urteil, keine zweite Note (K38)', () => 
     expect(berechneGesamt('sehr gut')).toBe('sehr gut');
   });
 
-  it('referenz wird fuer die Anzeige grossgeschrieben, wie in Urteil.svelte', () => {
-    expect(berechneGesamt('referenz')).toBe('Referenz');
+  it("altes 'referenz' erscheint als 'sehr gut' — die Stufe gibt es in der Bedienung nicht mehr", () => {
+    expect(berechneGesamt('referenz')).toBe('sehr gut');
   });
 });
 

@@ -199,7 +199,7 @@
     return parameter === 'mg' && muehle ? muehle.skala.schritt : 1;
   }
 
-  async function urteilGewaehlt(stufe: 'daneben' | 'okay' | 'sehr gut' | 'Referenz') {
+  async function urteilGewaehlt(stufe: 'daneben' | 'okay' | 'sehr gut') {
     if (!profil || !kaffee) return;
     if (!kaffee.aktuelleChargeId) {
       schreibFehlerText = 'keine aktuelle Charge am Kaffee hinterlegt';
@@ -207,7 +207,7 @@
       return;
     }
 
-    const urteil: UrteilTyp = stufe === 'Referenz' ? 'referenz' : stufe;
+    const urteil: UrteilTyp = stufe;
     const shot: Shot = {
       id: neueId(),
       ts: Date.now(),
@@ -256,8 +256,8 @@
         true,
       );
 
-      if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
-        // K12 — Alltagskorrektur nur bei sehr gut/Referenz UND abweichendem
+      if (shot.urteil === 'sehr gut' && profil && mg !== profil.ziel.mg) {
+        // K12 — Alltagskorrektur nur bei 'sehr gut' UND abweichendem
         // Mahlgrad, und ausdruecklich ohne Vorbelegung. Der Drift-Hinweis
         // erscheint, falls vorhanden, im selben Zug als zusaetzliche Zeile.
         mgAbweichung = { alt: profil.ziel.mg, neu: mg };
@@ -361,7 +361,7 @@
   {/if}
 {:else if phase === 'alltagskorrektur' && mgAbweichung}
   <p class="frage-titel">
-    {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war {entwurf?.urteil === 'referenz' ? 'Referenz' : 'sehr gut'}.
+    {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war sehr gut.
   </p>
   <p class="frage">Als neuen Ausgangswert übernehmen?</p>
   <!-- K12: eine Rezepturaenderung wird nie vorbelegt — deshalb kein

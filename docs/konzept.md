@@ -374,11 +374,13 @@ Du hast den Kern selbst benannt: ein Dial-in ist eine *Suche* — ein neuer Kaff
 >
 > Wie war er?
 >
-> [daneben] · **[okay]** · [sehr gut] · [Referenz]
+> [daneben] · **[okay]** · [sehr gut]
 
 Ein Tap. Damit ist der Shot geloggt — mit Ist-Werten, Zeitstempel, Profil, Setup und Kaffee. Bei *okay* oder besser ist hier Schluss.
 
-Hast du vor dem Bezug am Mahlgrad gedreht, steht der neue Wert ohnehin schon im Shot. Ist das Urteil *sehr gut* oder *Referenz* und weicht der Ist-Wert vom Profil ab, fragt die App genau eine Sache nach:
+**Drei Stufen, nicht vier** (08.09.2026). Bis dahin stand hier noch *Referenz* als vierte. Sie hing an keiner eigenen Funktion — nur *daneben* löst die Diagnose aus — und war damit eine Unterscheidung, die man im Alltag treffen musste, ohne dass sie etwas bewirkte. Im Datenmodell bleibt der Wert erhalten, damit bereits geloggte Shots gültig bleiben; angezeigt werden sie als *sehr gut*.
+
+Hast du vor dem Bezug am Mahlgrad gedreht, steht der neue Wert ohnehin schon im Shot. Ist das Urteil *sehr gut* und weicht der Ist-Wert vom Profil ab, fragt die App genau eine Sache nach:
 
 > **Bildschirm-Skizze**
 >
@@ -826,7 +828,7 @@ Balance, Komplexität und Gesamteindruck werden nicht gefragt. Sie stehen am End
 
 - **Balance** aus dem mittleren Abstand der drei bipolaren Größen zu ihrer Mitte.
 - **Komplexität** aus der Zahl der gefundenen Aromen.
-- **Gesamt** aus dem Shot-Urteil — *daneben · okay · sehr gut · Referenz*. Es gibt keine zweite Note.
+- **Gesamt** aus dem Shot-Urteil — *daneben · okay · sehr gut*. Es gibt keine zweite Note.
 
 Ein gerechneter Wert braucht dafür **kein eigenes Herkunftszeichen**. Er trägt den gefüllten Punkt wie ein gemessener, weil er genau so sicher ist wie seine Eingaben. Ein viertes Zeichen hätte eine Unsicherheit behauptet, die es nicht gibt — es bleibt bei dreien: gefüllt für gemessen oder gerechnet, Ring für übernommen, gestrichelter Ring für geschätzt.
 
@@ -858,7 +860,7 @@ Der Kopf nennt den Shot — *„Dial-in, Shot 3 von 5"*. Das ist kein Schmuck: i
 
 > **Zwei Tiefen, unverändert**
 >
-> Der volle Bogen ist für echte Verkostungen. Für den Alltag reicht das Urteil aus der Shot-Erfassung — *daneben · okay · sehr gut · Referenz* — plus bei Bedarf die Symptom-Chips. Derselbe Datensatz, nur flacher gefüllt, und beides landet in derselben Auswertung. Ein voller Bogen, den du nach dem dritten Tag nicht mehr ausfüllst, wäre der eigentliche Verlust.
+> Der volle Bogen ist für echte Verkostungen. Für den Alltag reicht das Urteil aus der Shot-Erfassung — *daneben · okay · sehr gut* — plus bei Bedarf die Symptom-Chips. Derselbe Datensatz, nur flacher gefüllt, und beides landet in derselben Auswertung. Ein voller Bogen, den du nach dem dritten Tag nicht mehr ausfüllst, wäre der eigentliche Verlust.
 
 #### Übungsmodus  ·  *bestätigt · Paket 05*
 

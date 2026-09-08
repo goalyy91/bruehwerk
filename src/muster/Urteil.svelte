@@ -12,7 +12,13 @@
 
   import { untrack } from 'svelte';
 
-  const STUFEN = ['daneben', 'okay', 'sehr gut', 'Referenz'] as const;
+  // Rueckmeldung 2026-09-08: 'Referenz' ist raus — drei Stufen reichen.
+  // Die vierte hing an keiner eigenen Funktion (nur 'daneben' loest die
+  // Diagnose aus) und war damit eine Unterscheidung, die man beim Tippen
+  // treffen musste, ohne dass sie etwas bewirkt haette. Im Datenmodell
+  // bleibt 'referenz' erhalten (daten/schema/common.ts) — alte Shots
+  // werden als 'sehr gut' angezeigt, nichts geht verloren.
+  const STUFEN = ['daneben', 'okay', 'sehr gut'] as const;
   type Stufe = (typeof STUFEN)[number];
 
   let { start, onWahl }: { start?: Stufe; onWahl?: (stufe: Stufe) => void } = $props();

@@ -87,8 +87,12 @@ export function berechneKomplexitaet(anzahlAromen: number): string {
 
 /**
  * Gesamt kommt aus dem Shot-Urteil, es gibt keine zweite Note (K38) — diese
- * Funktion tut nur, was Urteil.svelte fuer die Anzeige ohnehin braucht:
- * 'referenz' -> 'Referenz', der Rest bleibt wie er ist.
+ * Funktion uebersetzt das gespeicherte Urteil in das Wort, das im Bild steht.
+ *
+ * Seit 2026-09-08 kennt die Bedienung nur noch drei Stufen. 'referenz' kann
+ * nicht mehr neu entstehen, steht aber in aelteren Shots — und wird hier auf
+ * 'sehr gut' abgebildet. Ein Wort anzuzeigen, das es im Umschalter nicht mehr
+ * gibt, waere eine Stufe, die man sieht und nicht mehr treffen kann.
  *
  * Wird NICHT mehr im Verkostungsbogen selbst gezeigt (Rueckmeldung
  * 2026-08-26 — das Urteil ist keine Ausgabe des Bogens, sondern eine eigene
@@ -97,7 +101,7 @@ export function berechneKomplexitaet(anzahlAromen: number): string {
  * braucht.
  */
 export function berechneGesamt(urteil: Urteil): string {
-  return urteil === 'referenz' ? 'Referenz' : urteil;
+  return urteil === 'referenz' ? 'sehr gut' : urteil;
 }
 
 /**

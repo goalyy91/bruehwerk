@@ -117,7 +117,7 @@ unnötigen Formulare — stattdessen die vorhandenen Auswahl-Muster:
 | --- | --- |
 | `Segment.svelte` | gleich breite Auswahl-Leiste, z. B. Stärke `leicht · deutlich` |
 | `Einzelauswahl.svelte` | einzelne Option aus wenigen |
-| `Urteil.svelte` | Shot-Urteil `daneben · okay · sehr gut · Referenz` |
+| `Urteil.svelte` | Shot-Urteil `daneben · okay · sehr gut` |
 | `Schalter.svelte` | Ein/Aus, z. B. Koffein `normal · entkoffeiniert` |
 | `AuswahlListe.svelte` | zuklappbares Auswahlfeld für längere Listen, **kein** offenes `<select>`-Äquivalent |
 

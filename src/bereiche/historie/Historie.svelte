@@ -24,8 +24,9 @@
   function profilName(profilId: string): string {
     return bestand.profile.find((p) => p.id === profilId)?.name ?? '';
   }
+  /** Alte Shots mit 'referenz' erscheinen als 'sehr gut' — siehe domain/tasting.ts. */
   function urteilLabel(urteil: string): string {
-    return urteil === 'referenz' ? 'Referenz' : urteil;
+    return urteil === 'referenz' ? 'sehr gut' : urteil;
   }
 
   const gefiltert = $derived(
