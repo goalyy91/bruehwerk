@@ -34,8 +34,22 @@ const BEREICHE = join(WURZEL, 'src', 'bereiche');
 /** Was zentral existiert und deshalb nicht lokal nachgebaut werden darf. */
 const REGELN = [
   {
-    name: 'eigenes .panel statt muster/Blattliste.svelte',
-    pruefen: (s: string) => /^\s*\.panel\s*\{/m.test(s),
+    /**
+     * Nicht am Klassennamen festmachen, sondern an der Signatur: eine
+     * Blattflaeche mit Blatt-Radius *ist* eine Karte, egal wie sie heisst.
+     *
+     * Beim Aufraeumen von KaffeeBearbeiten (Runde 3) tauchte genau das auf —
+     * `.blick-zeile` war dieselbe Karte wie `.panel`, nur anders benannt, und
+     * rutschte deshalb durch. Die alte Regel hiess `/\.panel \{/` und haette
+     * sie nie gefunden.
+     */
+    name: 'eigene Karte (Blattfläche + Blatt-Radius) statt muster/Blattliste.svelte',
+    pruefen: (s: string) =>
+      (s.match(/\{[^{}]*\}/g) ?? []).some(
+        (block) =>
+          block.includes('background: var(--blatt);') &&
+          block.includes('border-radius: var(--r-blatt);'),
+      ),
   },
   {
     name: 'eigener Gruppenkopf statt des globalen h2 aus tokens.css',
@@ -72,7 +86,7 @@ const REGELN = [
 ] as const;
 
 /**
- * Stand 2026-09-08 nach Runde 2. Diese Dateien duerfen noch, alle anderen
+ * Stand 2026-09-08 nach Runde 3. Diese Dateien duerfen noch, alle anderen
  * nicht. **Wer eine davon aufraeumt, traegt sie hier aus** — sonst schlaegt
  * der Test an.
  */
@@ -87,9 +101,6 @@ const ALTLASTEN: readonly string[] = [
   'einstellungen/TempReferenz.svelte',
   'historie/Historie.svelte',
   'historie/Shotblatt.svelte',
-  'kaffees/GussplanEditor.svelte',
-  'kaffees/KaffeeBearbeiten.svelte',
-  'kaffees/Profilblatt.svelte',
   'tasting/Verkostungsbogen.svelte',
 ];
 

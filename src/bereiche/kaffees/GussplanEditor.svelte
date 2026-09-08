@@ -17,6 +17,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { gesamtwasser, verhaeltnis, umrechnen, type Lesart } from '../../domain/gussplan';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -198,7 +199,8 @@
     onWahl={lesartWechseln}
   />
 
-  <div class="panel">
+  <div class="kartenblock">
+    <Blattliste>
     {#each gussplan.bausteine as baustein, i (i)}
       <button type="button" class="zeile" onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}>
         <span class="typ">{TYP_LABEL[baustein.typ]}</span>
@@ -278,6 +280,7 @@
         </div>
       {/if}
     {/each}
+  </Blattliste>
   </div>
 
   <!-- Regel 3/5: eine Auswahl statt eines Knopfteppichs aus fuenf
@@ -309,7 +312,7 @@
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     cursor: pointer;
     padding: 0;
@@ -331,18 +334,11 @@
   }
   /* Blatt mit Zeilen (Bausteine) + aufgeklapptem Formular in Vertiefung
      (offener Zustand) — kein zentrales Muster fuer diese Form vorhanden
-     (siehe docs/design/offene-punkte-redesign.md, Punkt 8). */
-  .panel {
-    margin-top: var(--r3);
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
-    padding: 0 var(--r4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .panel > :not(:first-child) {
-    border-top: 1px solid var(--linie);
+  /* Nur noch der Abstand — Fläche, Radius, Schatten und die Haarlinien
+     zwischen den Zeilen kommen aus muster/Blattliste.svelte. Die lokale
+     .panel-Kopie ist entfallen (tests/bildsprache.test.ts). */
+  .kartenblock {
+    margin-bottom: var(--r5);
   }
   .zeile {
     width: 100%;
@@ -351,7 +347,7 @@
     min-height: var(--treffer);
     border: none;
     background: transparent;
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     color: var(--tinte);
     text-align: left;
@@ -366,7 +362,10 @@
     display: flex;
     align-items: center;
   }
+  /* Serif bewusst: die Zahl ist Inhalt. Die Zeile drumherum traegt einen
+     Bedienbegriff ("Bloom", "Guss") und ist deshalb Sans. */
   .zeile .kopfwert {
+    font-family: var(--schrift);
     display: flex;
     align-items: center;
     flex: 1;
@@ -411,7 +410,7 @@
     background: none;
     border: none;
     color: var(--satz);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     cursor: pointer;
   }
@@ -435,7 +434,7 @@
     background: transparent;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     text-align: left;
     cursor: pointer;

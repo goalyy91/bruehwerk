@@ -14,6 +14,7 @@
 
   import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
   import Segment from '../../muster/Segment.svelte';
@@ -111,6 +112,7 @@
 
   <section class="gruppe">
     <h2>Grunddaten</h2>
+    <Blattliste>
     <div class="formularzeile">
       <span class="formularzeile-label">Name</span>
       <input class="eingabefeld-text" type="text" bind:value={entwurf.name} />
@@ -149,10 +151,12 @@
         <p class="hinweis">Noch keine Getränke angelegt.</p>
       {/if}
     </div>
+    </Blattliste>
   </section>
 
   <section class="gruppe">
     <h2>Röstung &amp; Bewertung</h2>
+    <Blattliste>
     <div class="blick-zeile">
       <div class="blick-eintrag">
         <span class="blick-label">Röstgrad</span>
@@ -164,6 +168,7 @@
         <Sterne wert={entwurf.bewertung} onWahl={(w) => (entwurf!.bewertung = w)} />
       </div>
     </div>
+    </Blattliste>
     <!-- Rückmeldung 2026-09-04: "Röstgrad (Röster)" entfernt — ein
          Röstgrad-Zeichen (oben) reicht. Schema-Feld bleibt (unbenutzt),
          damit alte Werte gültig bleiben. -->
@@ -171,6 +176,7 @@
 
   <section class="gruppe">
     <h2>Herkunft &amp; Botanik</h2>
+    <Blattliste>
     <div class="formularzeile">
       <span class="formularzeile-label">Herkunft</span>
       <input class="eingabefeld-text" type="text" placeholder="Land, Land …"
@@ -194,19 +200,28 @@
         onWahl={(w) => (entwurf!.aufbereitung = w as Aufbereitung)}
       />
     </div>
+    <!-- Rückmeldung 2026-09-07: das Trennzeichen zwischen den beiden Zahlen
+         landete beim Umbruch allein am Zeilenende ("% Arabica ·"), während
+         "% Robusta" in die nächste Zeile rutschte. Beide Anteile stehen
+         jetzt als je eine geschlossene Einheit, die als Ganzes umbricht. -->
     <div class="formularzeile">
       <span class="formularzeile-label">Botanik</span>
       <div class="botanik">
-        <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
-          value={entwurf.botanik?.arabicaProzent ?? ''}
-          onchange={(e) => botanikAendern('arabicaProzent', zahl(e))} />
-        % Arabica ·
-        <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
-          value={entwurf.botanik?.robustaProzent ?? ''}
-          onchange={(e) => botanikAendern('robustaProzent', zahl(e))} />
-        % Robusta
+        <span class="anteil">
+          <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
+            value={entwurf.botanik?.arabicaProzent ?? ''}
+            onchange={(e) => botanikAendern('arabicaProzent', zahl(e))} />
+          <span class="anteil-name">% Arabica</span>
+        </span>
+        <span class="anteil">
+          <input class="eingabefeld-text zahl schmal" type="text" inputmode="numeric"
+            value={entwurf.botanik?.robustaProzent ?? ''}
+            onchange={(e) => botanikAendern('robustaProzent', zahl(e))} />
+          <span class="anteil-name">% Robusta</span>
+        </span>
       </div>
     </div>
+    </Blattliste>
   </section>
 
   <div class="knopfreihe">
@@ -222,6 +237,23 @@
 {/if}
 
 <style>
+  .gruppe :global(.formularzeile) {
+    border-bottom: none;
+  }
+
+  /* Beide Anteile als geschlossene Einheit, damit das Trennzeichen nicht
+     allein am Zeilenende landet (Rueckmeldung 2026-09-07). */
+  .anteil {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--r1);
+    white-space: nowrap;
+  }
+  .anteil-name {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
   h2 {
     margin: 0 0 var(--r-kachelabstand);
   }
@@ -234,14 +266,15 @@
   /* Roestgrad + Bewertung als Blattzeile mit senkrechter Haarlinie, wie in
      der Leseansicht (Kaffeeblatt.svelte ".blick", Paket 2) — dieselbe
      Komposition in Lese- und Bearbeiten-Ansicht. */
+  /* War eine weitere Kartenkopie (Blattfläche + Radius, nur ohne Schatten),
+     unter anderem Namen als .panel — deshalb vom Wächter zunächst nicht
+     gefunden. Fläche, Radius und Schatten kommen jetzt aus Blattliste, hier
+     bleibt die Anordnung der zwei Einträge. */
   .blick-zeile {
     display: flex;
     align-items: center;
     gap: var(--seitenrand);
-    padding: var(--r4);
-    margin-bottom: var(--r3);
-    background: var(--blatt);
-    border-radius: var(--r-blatt);
+    padding: var(--r4) 0;
   }
   .blick-eintrag {
     display: flex;

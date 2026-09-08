@@ -480,7 +480,7 @@
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-bedienwort);
     min-height: var(--treffer);
     padding: 0;
