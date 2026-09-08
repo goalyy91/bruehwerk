@@ -391,16 +391,22 @@
       {#if !kaffee.aktiv}<span class="flagge">· inaktiv</span>{/if}
     </p>
 
+    <!-- Beschriftung über dem Wert, nicht darunter (Befund 2026-09-07,
+         letzter offener Punkt). Der Einwand galt den alten Steckbrief-Kacheln
+         — „—" stand über „HERKUNFT", man las die Antwort vor der Frage. Diese
+         Kennzahlen hatten dasselbe Muster von mir neu bekommen. Jetzt dieselbe
+         Reihenfolge wie in Parameterkachel.svelte und in den Kennzahl-Kacheln
+         der Bar: eine Ordnung für dieselbe Sache, nicht zwei. -->
     {#if aktuellerRest !== undefined}
       <div class="kennzahlen">
         <div class="kennzahl">
-          <span class="kennzahl-wert">{aktuellerRest}<span class="kennzahl-einheit">g</span></span>
           <span class="kennzahl-label">Bestand</span>
+          <span class="kennzahl-wert">{aktuellerRest}<span class="kennzahl-einheit">g</span></span>
         </div>
         {#if aktuelleBezuege !== undefined}
           <div class="kennzahl">
-            <span class="kennzahl-wert">{aktuelleBezuege}</span>
             <span class="kennzahl-label">Bezüge</span>
+            <span class="kennzahl-wert">{aktuelleBezuege}</span>
           </div>
         {/if}
       </div>
@@ -863,11 +869,20 @@
     padding: var(--r3) 0;
     margin: 0;
   }
+  /* Rückmeldung 2026-09-08: „der Button für die Charge hat kein Design".
+     Im CSS stand kein Rahmen — der Kasten kam daher, dass die Zeile als
+     letztes Kind der Karte ohne Polster direkt an deren gerundeter Unterkante
+     klebte. Die Trennlinie darüber und die Kartenkante darunter lasen sich
+     zusammen als Rahmen.
+     Jetzt dasselbe Polster wie die Chargenzeilen darüber, und die Breite
+     nicht mehr über die ganze Karte: der Knopf ist so breit wie sein Wort,
+     wie „Korrigieren" und „Als leer markieren" daneben auch. */
   .anlegen-zeile {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    min-height: 56px;
-    padding: 0;
+    align-self: flex-start;
+    min-height: var(--treffer);
+    padding: var(--r3) 0;
     border: none;
     background: transparent;
     color: var(--akzent);
