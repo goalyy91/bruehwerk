@@ -5,3 +5,8 @@ dist/
 .vite/
 
 .vercel
+
+# Firebase-Konfiguration (daten/cloud.ts) — keine Geheimnisse (Firebase-Web-
+# Konfigurationswerte sind oeffentlich einsehbar), aber projekteigen und
+# nicht Teil des Repos. Siehe .env.example fuer die erwartete Form.
+.env
