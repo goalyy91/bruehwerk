@@ -752,6 +752,13 @@
     border-radius: var(--r-kachel);
     padding: 12px 16px 11px;
     min-height: 68px;
+    /* Regression aus dem vorigen Fix: Grid-Zellen sind standardmaessig
+       min-width:auto — ein "white-space: nowrap"-Kind (.kennzahl-zahl,
+       unten) zwingt die Spalte dann auf die volle Textbreite statt zu
+       kuerzen, und die ganze Seite bekam horizontales Scrollen. min-width:0
+       erlaubt der Zelle, unter ihren Inhalt zu schrumpfen — text-overflow:
+       ellipsis auf .kennzahl-zahl greift erst dadurch ueberhaupt. */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

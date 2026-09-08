@@ -15,35 +15,57 @@
 
   import Bohnen from './Bohnen.svelte';
   import Sterne from './Sterne.svelte';
+  import AktivKnopf from './AktivKnopf.svelte';
 
   let {
     name,
     roester,
     roestgrad,
     bewertung,
+    aktiv = true,
     onOeffnen,
+    onAktivWechseln,
   }: {
     name: string;
     roester: string;
     roestgrad?: number;
     bewertung?: number;
+    /** Fehlt onAktivWechseln, erscheint kein Augen-Symbol (Musterblatt-Demo braucht keins). */
+    aktiv?: boolean;
     onOeffnen: () => void;
+    onAktivWechseln?: () => void;
   } = $props();
 </script>
 
-<button type="button" class="karte" onclick={onOeffnen}>
-  <span class="kopf">
-    <span class="name">{name}</span>
-    <span class="roester">{roester}</span>
-  </span>
-  <span class="meta">
-    <Bohnen stufe={roestgrad} mitWort={false} />
-    <span class="fuell"></span>
-    <Sterne wert={bewertung} />
-  </span>
-</button>
+<div class="karte-huelle">
+  <button type="button" class="karte" onclick={onOeffnen}>
+    <span class="kopf">
+      <span class="name">{name}</span>
+      <span class="roester">{roester}</span>
+    </span>
+    <span class="meta">
+      <Bohnen stufe={roestgrad} mitWort={false} />
+      <span class="fuell"></span>
+      <Sterne wert={bewertung} />
+    </span>
+  </button>
+  {#if onAktivWechseln}
+    <!-- Rückmeldung 2026-09-08: aktiv/inaktiv direkt von der Liste aus,
+         ohne erst die Karte zu öffnen. Absolut positioniert als
+         Geschwister von .karte, nicht darin verschachtelt — ein Tap aufs
+         Auge trifft damit nie den darunterliegenden Karten-Button, kein
+         stopPropagation nötig. Bewusst kein Wischen (ux-regeln.md, K44) —
+         ein stilles, immer sichtbares Symbol statt einer Geste. -->
+    <div class="auge">
+      <AktivKnopf {aktiv} onKlick={() => onAktivWechseln()} />
+    </div>
+  {/if}
+</div>
 
 <style>
+  .karte-huelle {
+    position: relative;
+  }
   .karte {
     display: flex;
     flex-direction: column;
@@ -57,10 +79,18 @@
     font-family: var(--schrift);
     cursor: pointer;
   }
+  .auge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+  }
   .kopf {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    /* Platz fuer das Auge-Symbol in der Ecke, damit der Name nicht darunter
+       verschwindet. */
+    padding-right: calc(var(--r-knopf-rund) + var(--r1));
   }
   .name {
     font-size: var(--fs-bedienwort);

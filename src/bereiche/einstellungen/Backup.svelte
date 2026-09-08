@@ -114,8 +114,9 @@
   }
 </script>
 
-<p class="hinweis">Alles, was in der App steht, als Datei zum Mitnehmen.</p>
-
+<!-- Rückmeldung 2026-09-08: der Satz "Alles, was in der App steht, als
+     Datei zum Mitnehmen." erklärte nichts, was "Datei exportieren"/"Datei
+     importieren" nicht schon selbst sagen — ersatzlos entfernt. -->
 <div class="aktionen">
   <Blattliste>
     <Blattzeile label="Datei exportieren" akzent chevron={false} onKlick={datenExportieren} />

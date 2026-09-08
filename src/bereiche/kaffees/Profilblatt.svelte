@@ -242,9 +242,17 @@
   // Regel 6/12: zweite Werteliste statt eigenem Grid-CSS (wie schon fuer
   // "Ziel" oben) — und ausgeschriebene Labels statt der rohen Enum-Schluessel
   // ("zeit", "durchlaufzeit").
+  //
+  // Rueckmeldung 2026-09-08: "zeit" und "durchlaufzeit" standen immer beide
+  // da, unabhaengig vom Geraet — bei einem Pour-Over-Profil zwei Zeit-Zeilen
+  // nebeneinander, obwohl K7 pro Geraet genau einen Fuehrungswert kennt.
+  // Dieselbe Bedingung wie bei der Ziel-Kachel/IstGegenZiel (Zeile weiter
+  // oben) waehlt jetzt nur die passende.
   const spielraumZeilen = $derived.by((): WertelisteZeile[] => {
     if (!profil) return [];
-    return (['zeit', 'output', 'durchlaufzeit'] as const).map((groesse) => ({
+    const durchlaufzeit = bruehgeraet?.fuehrungswert === 'durchlaufzeit';
+    const groessen: readonly GemesseneGroesse[] = durchlaufzeit ? ['durchlaufzeit', 'output'] : ['zeit', 'output'];
+    return groessen.map((groesse) => ({
       label: GROESSE_LABEL[groesse],
       wert: profil.spielraum[groesse],
       einheit: EINHEIT[groesse],
