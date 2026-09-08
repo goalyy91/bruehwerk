@@ -9,6 +9,9 @@
   // abgelehnt (gedämpfte Zeile mit Datum und Ring, „doch übernehmen“
   // bleibt; kehrt nicht ohne neue Daten zurück K68 K76) · fehlt mit
   // Begründung (außerhalb der Messreihe K67 K75).
+  //
+  // Visueller Redesign-Reset: Panel auf Blattfläche, „Übernehmen“ als
+  // Füllflächen-Knopf statt hartem Akzent-Button mit fest hellem Text.
 
   import { untrack } from 'svelte';
 
@@ -104,12 +107,15 @@
     flex-direction: column;
     gap: var(--r2);
     padding: var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--blatt);
+    border-radius: var(--r-kachel);
   }
   .voll.abgelehnt {
-    background: var(--ruhig);
-    color: var(--gedaempft);
+    background: var(--vertiefung);
+    /* Abgelehnt heißt zurückgenommen, nicht unleserlich: --gedaempft läge auf
+       der tieferen Vertiefung bei 2,38:1. Ein abgelehnter Vorschlag muss man
+       noch lesen können, sonst kann man ihn nicht überdenken. */
+    color: var(--gedaempft-tief);
   }
   .titel-zeile {
     display: flex;
@@ -143,14 +149,14 @@
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: none;
-    border-radius: var(--radius-chip);
+    border-radius: var(--r-pille);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
   }
   .uebernehmen {
-    background: var(--akzent);
-    color: var(--h-papier);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .spaeter {
     background: none;
@@ -183,12 +189,15 @@
     gap: var(--r2);
     min-height: var(--angebot-duenn);
     padding: 0 var(--r3);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    border-radius: var(--r-kachel);
+    background: var(--blatt);
   }
   .duenn.abgelehnt {
-    background: var(--ruhig);
-    color: var(--gedaempft);
+    background: var(--vertiefung);
+    /* Abgelehnt heißt zurückgenommen, nicht unleserlich: --gedaempft läge auf
+       der tieferen Vertiefung bei 2,38:1. Ein abgelehnter Vorschlag muss man
+       noch lesen können, sonst kann man ihn nicht überdenken. */
+    color: var(--gedaempft-tief);
   }
   .duenn .satz {
     flex: 1;
@@ -197,10 +206,10 @@
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: none;
-    border-radius: var(--radius-chip);
-    background: var(--akzent);
-    color: var(--h-papier);
-    font-family: var(--schrift);
+    border-radius: var(--r-pille);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }

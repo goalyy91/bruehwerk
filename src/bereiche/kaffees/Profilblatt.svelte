@@ -2,16 +2,38 @@
   // Profilblatt — K7 (Fuehrungswert je Geraet), Setup-Bindung (Befund 2:
   // "MG 65" ist nur mit Muehle eindeutig), K54 (Kessel/Gruppe als doppelte
   // Einheit), Spielraum je Groesse. Gussplan-Editor folgt in Etappe C.
+  //
+  // Visueller Redesign-Reset, Paket 3 (Handoff Abschnitt 6 "Profil/
+  // Espresso-Setup"): "Ziel" steht jetzt als Parameterkachel-Raster statt
+  // Werteliste-Zeilen — gleiche Felder, gleiche Reihenfolge, gleiche
+  // Einheiten, gleiches onAendern-Verhalten (zielSpeichern). Kein Wert wird
+  // groesser dargestellt als ein anderer — der Fuehrungswert (K7) hat hier
+  // keine visuelle Sonderrolle.
+  //
+  // Der Satz stand hier bis 2026-09-08 mit dem Zusatz, die Groessenbetonung
+  // gehoere "ausschliesslich in den Live-Kontext (ShotErfassung.svelte, dort
+  // ueber IstGegenZiel)". Das stimmte nie: IstGegenZiel hatte nie eine, alle
+  // Zeilen standen immer auf --fs-wert. Als es zur Entscheidung kam, sie dort
+  // nachzubauen, fiel sie negativ aus — Julian: "den Fuehrungswert
+  // keinesfalls groesser". Kein Wert wird also *irgendwo* groesser gesetzt,
+  // weder im Rezept noch beim Loggen. Der Verweis ist entfernt, damit er
+  // niemanden mehr auf eine Fahrte schickt, die es nicht gibt.
+  // Werteliste.svelte bleibt fuer "Spielraum" zustaendig (echte Zeilenliste,
+  // kein Kachel-Raster laut Handoff).
 
   import { bestand, schreiben } from '../bestand.svelte';
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
+  import { GROESSEN } from '../../domain/tasting';
+  import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
+  import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
+  import Rangliste from '../../muster/Rangliste.svelte';
   import GussplanEditor from './GussplanEditor.svelte';
   import type { Profil } from '../../daten/schema';
 
@@ -25,6 +47,20 @@
     onOeffnenShot: () => void;
   } = $props();
 
+  /** Etappe 8, Block C: Spielraum ist Einstellsache, keine Alltagsinformation — eingeklappter Start. */
+  let spielraumOffen = $state(false);
+
+  /**
+   * Fehlender Umschalter (Fund 2026-09-06): `profil.modus` wird bei "+ Profil"
+   * auf 'dialin' gesetzt (Kaffeeblatt.svelte) und danach nirgends mehr
+   * geändert — die Dashboard-Meldung "Dial-in offen" (domain/hinweise.ts)
+   * wäre ohne das hier unabstellbar.
+   */
+  async function dialinUmschalten() {
+    if (!profil) return;
+    await schreiben('profil', { ...profil, modus: profil.modus === 'dialin' ? 'eingefahren' : 'dialin' });
+  }
+
   const profil = $derived(bestand.profile.find((p) => p.id === profilId));
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
@@ -32,9 +68,9 @@
 
   // Verlauf — K40 (Totzonen als schraffierter Streifen in der Kurve, keine
   // eigene Karte), Chargenwechsel als gestrichelte Senkrechte. Die Shots
-  // dieses Profils, chronologisch — x normalisiert ueber die Zeitspanne,
-  // y ueber die Mahlgrad-Spannweite. Bei einem einzigen Shot gibt es keine
-  // Zeitspanne zu normalisieren; er landet mittig.
+  // dieses Profils, chronologisch — x ueber die Reihenfolge, y ueber die
+  // Mahlgrad-Spannweite. Bei einem einzigen Shot gibt es keine Reihe zu
+  // normalisieren; er landet mittig.
   const verlaufShots = $derived(
     bestand.shots.filter((s) => s.profilId === profilId).sort((a, b) => a.ts - b.ts),
   );
@@ -45,20 +81,22 @@
     const max = Math.max(...werte);
     return { min, max };
   });
-  const zeitSpanne = $derived.by(() => {
-    if (verlaufShots.length === 0) return undefined;
-    return { von: verlaufShots[0]!.ts, bis: verlaufShots[verlaufShots.length - 1]!.ts };
-  });
+  /**
+   * x kommt aus der **Reihenfolge**, nicht aus der verstrichenen Zeit
+   * (Fund 2026-09-08, Begruendung ausfuehrlich in domain/auswertung.ts).
+   * Kurz: die importierten Shots tragen synthetische Zeitstempel im
+   * Minutenabstand, der erste echte Shot danach sprengte die Spanne und
+   * schob den ganzen Import in die ersten 0,45 % der Breite.
+   */
+  function normiereFolge(index: number): number {
+    if (verlaufShots.length < 2) return 0.5;
+    return index / (verlaufShots.length - 1);
+  }
 
   function normiereMg(mg: number): number {
     const spanne = mgSpanne;
     if (!spanne || spanne.max === spanne.min) return 0.5;
     return (mg - spanne.min) / (spanne.max - spanne.min);
-  }
-  function normiereZeit(ts: number): number {
-    const spanne = zeitSpanne;
-    if (!spanne || spanne.bis === spanne.von) return 0.5;
-    return (ts - spanne.von) / (spanne.bis - spanne.von);
   }
   // Auf die Muehlen-Schrittweite runden, statt den rohen Mittelwert zu
   // zeigen: die Beschriftung soll ein Wert sein, den man an der Muehle
@@ -74,8 +112,8 @@
   }
 
   const verlaufPunkte = $derived(
-    verlaufShots.map((s) => ({
-      x: normiereZeit(s.ts),
+    verlaufShots.map((s, i) => ({
+      x: normiereFolge(i),
       y: normiereMg(s.ist.mg),
       zustand:
         s.urteil === 'daneben' ? ('kritisch' as const) : s.urteil === 'okay' ? ('achtung' as const) : ('gut' as const),
@@ -100,8 +138,9 @@
   });
   const verlaufEreignisse = $derived(
     verlaufShots
-      .filter((s, i) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
-      .map((s) => normiereZeit(s.ts)),
+      .map((s, i) => ({ s, i }))
+      .filter(({ s, i }) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
+      .map(({ i }) => normiereFolge(i)),
   );
 
   const gruppenTemperatur = $derived(
@@ -110,19 +149,53 @@
       : undefined,
   );
 
-  // Kesseltemperatur-Hinweis als fertiger Text statt DoppelteEinheit: die
-  // Komponente zeigt ihren "fuehrendWert" selbst nochmal gross an — neben
-  // einem Eingabefeld fuer denselben Wert waere das derselbe Wert doppelt
-  // auf dem Bildschirm (gefundener Bug, offene-punkte-ux.md Nachzug).
-  const ktHinweis = $derived.by(() => {
-    if (gruppenTemperatur?.bekannt) {
-      const wert = gruppenTemperatur.herkunft === 'geschaetzt'
-        ? Math.round(gruppenTemperatur.wert).toString()
-        : gruppenTemperatur.wert.toFixed(1);
-      return `≈ ${wert} °C Gruppe`;
-    }
-    return profil?.ziel.kt !== undefined ? 'außerhalb der Messreihe' : undefined;
+  // Brühgruppe-Kachel (Anpassung nach Paket 3): eigene Kachel mit eigenem
+  // Symbol statt Text-Hinweis unter "Kessel" — die Komponente zeigt ihren
+  // "fuehrendWert" selbst nochmal gross an, neben einem Eingabefeld fuer
+  // denselben Wert waere das derselbe Wert doppelt auf dem Bildschirm
+  // (gefundener Bug, offene-punkte-ux.md Nachzug). Zwei Zustaende: bekannt
+  // -> echte Werte-Kachel; kt gesetzt, aber ausserhalb der Messreihe -> Satz
+  // mit Halbzeichen statt Wert (K67/K75, kein Vorschlag ohne Beleg).
+  const bruehgruppeWert = $derived.by(() => {
+    if (!gruppenTemperatur?.bekannt) return undefined;
+    const wert = gruppenTemperatur.herkunft === 'geschaetzt'
+      ? Math.round(gruppenTemperatur.wert).toString()
+      : gruppenTemperatur.wert.toFixed(1);
+    return `≈${wert}`;
   });
+  const bruehgruppeAusserhalbMessreihe = $derived(
+    profil?.ziel.kt !== undefined && !gruppenTemperatur?.bekannt,
+  );
+
+  // Auswertung, schmal (Paket 05, Rueckfrage 2026-08-26) — beschreibt, was
+  // in den eigenen Verkostungen dieses Profils steht, ohne Ursachen oder
+  // Korrelationen zu behaupten. Tasting traegt keine eigene Zeit (K38 —
+  // Gerechnetes wird nie gespeichert), deshalb die Zeit ueber den Shot dazu.
+  const verkostungenChronologisch = $derived(
+    bestand.tastings
+      .map((t) => {
+        const shot = bestand.shots.find((s) => s.id === t.shotId);
+        return shot && shot.profilId === profilId ? { tasting: t, ts: shot.ts } : undefined;
+      })
+      .filter((e): e is { tasting: (typeof bestand.tastings)[number]; ts: number } => e !== undefined)
+      .sort((a, b) => a.ts - b.ts),
+  );
+
+  const BIPOLARE_GROESSEN = GROESSEN.filter((g) => g.art === 'bipolar');
+  function verlaufFuerGroesse(groesse: (typeof GROESSEN)[number]['id']) {
+    return normiereReihe(verkostungenChronologisch.map((e) => ({ wert: e.tasting.groessen[groesse] })));
+  }
+
+  const haeufigeAromen = $derived(haeufigsteAromen(verkostungenChronologisch.flatMap((e) => e.tasting.aromen)));
+
+  function symptomLabel(id: string): string {
+    return bestand.symptome.find((s) => s.id === id)?.label ?? id;
+  }
+  const verschwundene = $derived(
+    verschwundeneAuffaelligkeiten(
+      verkostungenChronologisch.map((e) => ({ ts: e.ts, auffaelligkeitIds: e.tasting.auffaelligkeiten.map((a) => a.id) })),
+    ).map(symptomLabel),
+  );
 
   let speicherFehler = $state<string | undefined>(undefined);
 
@@ -158,45 +231,6 @@
     }
   }
 
-  // Punkt 6 der Korrekturrunde: Werteliste statt handgebautem Grid — alle
-  // Werte gleich gross, kein Herkunftszeichen (hier wird nichts gemessen,
-  // nur das Rezept gepflegt).
-  const zielZeilen = $derived.by((): WertelisteZeile[] => {
-    if (!profil) return [];
-    const zeilen: WertelisteZeile[] = [
-      { label: 'Input', wert: profil.ziel.input, einheit: 'g', onAendern: (w) => zielSpeichern('input', w) },
-      {
-        label: 'Mahlgrad',
-        wert: profil.ziel.mg,
-        einheit: muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined,
-        onAendern: (w) => zielSpeichern('mg', w),
-      },
-    ];
-    if (muehle?.rpmEinstellbar) {
-      zeilen.push({ label: 'Drehzahl', wert: profil.ziel.rpm ?? '', einheit: 'rpm', onAendern: (w) => zielSpeichern('rpm', w) });
-    }
-    if (bruehgeraet?.ktEinstellbar) {
-      zeilen.push({
-        label: 'Kesseltemperatur',
-        wert: profil.ziel.kt ?? '',
-        einheit: '°C',
-        onAendern: (w) => zielSpeichern('kt', w),
-        hinweis: ktHinweis,
-      });
-    }
-    zeilen.push(
-      { label: 'Output', wert: profil.ziel.output, einheit: 'g', onAendern: (w) => zielSpeichern('output', w) },
-      { label: 'Preinfusion', wert: profil.ziel.pre ?? '', einheit: 's', onAendern: (w) => zielSpeichern('pre', w) },
-      {
-        label: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit',
-        wert: profil.ziel.zeit,
-        einheit: 's',
-        onAendern: (w) => zielSpeichern('zeit', w),
-      },
-    );
-    return zeilen;
-  });
-
   const GROESSE_LABEL: Record<GemesseneGroesse, string> = {
     zeit: 'Zeit ±',
     output: 'Output ±',
@@ -221,29 +255,78 @@
   <Kopfzeile titel="Profil" onZurueck={onZurueck} />
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else}
-  <Kopfzeile titel={profil.name} {onZurueck} />
+  <Kopfzeile titel={profil.name} {onZurueck} gross />
+  <!-- Reihenfolge Titel -> Setup-Kette -> Primäraktion laut Handoff-
+       Screen-Mapping ("Profil/Espresso-Setup"): vorher stand die Pille vor
+       der Setup-Kette. -->
+  <p class="setup">{setup?.name ?? 'Setup unbekannt'}{profil.modus === 'dialin' ? ' · Dial-in' : ''}</p>
   <div class="knopfreihe">
     <Knopf stufe="primaer" onKlick={onOeffnenShot}>Shot loggen</Knopf>
   </div>
 
-  <p class="setup">{setup?.name ?? 'Setup unbekannt'} · {profil.modus === 'dialin' ? 'Dial-in' : 'eingefahren'}</p>
-
   <section class="ziel">
     <h2>Ziel</h2>
-    <!-- Punkt 6 der Korrekturrunde: geteiltes Muster statt handgebautem
-         Grid (muster/Werteliste.svelte) — kein Herkunftszeichen (hier wird
-         nichts gemessen, nur das Rezept gepflegt) und keine
-         Führungswert-Emphase: das Rezept zeigt alle Werte gleich groß, die
-         Größenbetonung gehört ausschließlich in den Live-Kontext
-         (ShotErfassung.svelte, dort über IstGegenZiel bereits vorhanden). -->
-    <Werteliste zeilen={zielZeilen} />
+    <!-- Parameterkachel-Raster statt Werteliste (Handoff Abschnitt 6) — kein
+         Herkunftszeichen (hier wird nichts gemessen, nur das Rezept
+         gepflegt) und keine Führungswert-Emphase: das Rezept zeigt alle
+         Werte gleich groß, die Größenbetonung gehört ausschließlich in den
+         Live-Kontext (ShotErfassung.svelte, dort über IstGegenZiel).
+         Anordnung nach Rückmeldung: Preinfusion/Brühgruppe/Output/Zeit als
+         eigener 2×2-Block nach Input/Mahlgrad/[Drehzahl]/[Kessel]. Die
+         Brühgruppe (umgerechnete Temperatur, K54) ist jetzt eine eigene
+         Kachel mit eigenem Symbol statt eines Text-Hinweises unter "Kessel"
+         — "Kessel" bezeichnet nur noch den eingestellten Maschinenwert. -->
+    <div class="parameter-raster">
+      <Parameterkachel symbol="input" label="Input" wert={profil.ziel.input} einheit="g" onAendern={(w) => zielSpeichern('input', w)} />
+      <Parameterkachel
+        symbol="mahlgrad"
+        label="Mahlgrad"
+        wert={profil.ziel.mg}
+        einheit={muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined}
+        onAendern={(w) => zielSpeichern('mg', w)}
+      />
+      {#if muehle?.rpmEinstellbar}
+        <Parameterkachel symbol="drehzahl" label="Drehzahl" wert={profil.ziel.rpm ?? ''} einheit="rpm" onAendern={(w) => zielSpeichern('rpm', w)} />
+      {/if}
+      {#if bruehgeraet?.ktEinstellbar}
+        <Parameterkachel symbol="kessel" label="Kessel" wert={profil.ziel.kt ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('kt', w)} />
+      {/if}
+      <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />
+      {#if bruehgruppeWert}
+        <Parameterkachel symbol="bruehgruppe" label="Brühgruppe" wert={bruehgruppeWert} einheit="°C" />
+      {:else if bruehgruppeAusserhalbMessreihe}
+        <div class="hinweis-kachel">
+          <span class="halbzeichen" aria-hidden="true"></span>
+          <span class="hinweis-text">Brühgruppe außerhalb der Messreihe</span>
+        </div>
+      {/if}
+      <Parameterkachel symbol="output" label="Output" wert={profil.ziel.output} einheit="g" onAendern={(w) => zielSpeichern('output', w)} />
+      <Parameterkachel
+        symbol="zeit"
+        label={bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit'}
+        wert={profil.ziel.zeit}
+        einheit="s"
+        onAendern={(w) => zielSpeichern('zeit', w)}
+      />
+    </div>
   </section>
 
   <section class="spielraum">
-    <h2>Spielraum</h2>
-    <p class="hinweis-klein">Input und Mahlgrad haben keinen — dort ist jede Änderung Absicht.</p>
-    <Werteliste zeilen={spielraumZeilen} />
+    <button type="button" class="aufklappbar spielraum-kopf" aria-expanded={spielraumOffen} onclick={() => (spielraumOffen = !spielraumOffen)}>
+      <span>Spielraum</span>
+      <span class="pfeil" class:offen={spielraumOffen} aria-hidden="true">▾</span>
+    </button>
+    {#if spielraumOffen}
+      <Werteliste zeilen={spielraumZeilen} />
+    {/if}
   </section>
+
+  <!-- Rueckmeldung 2026-09-08: "eingestellt und eingefahren klingt schrecklich".
+       Der Knopf schaltet jetzt in beide Richtungen und nennt beim Namen, was er
+       tut. Vorher gab es nur den Weg hinaus aus dem Dial-in und kein Zurueck. -->
+  <button type="button" class="link" onclick={() => void dialinUmschalten()}>
+    {profil.modus === 'dialin' ? 'Dial-in beenden' : 'Dial-in starten'}
+  </button>
 
   <section class="verlauf">
     <h2>Verlauf</h2>
@@ -254,6 +337,32 @@
       ereignisse={verlaufEreignisse}
     />
   </section>
+
+  {#if verkostungenChronologisch.length > 0}
+    <section class="verkostungen">
+      <h2>Verkostungen</h2>
+      {#each BIPOLARE_GROESSEN as g (g.id)}
+        <p class="teiltitel">{g.titel}</p>
+        <Verlaufskurve
+          punkte={verlaufFuerGroesse(g.id).map((p) => ({ x: p.x, y: p.wert / 4 }))}
+          achsMarken={[g.woerter[0], g.woerter[2], g.woerter[4]]}
+        />
+      {/each}
+
+      {#if haeufigeAromen.length > 0}
+        <p class="teiltitel">Häufigste Aromen</p>
+        <Rangliste
+          person={profil.name}
+          eintraege={haeufigeAromen.map((a) => ({ id: a.label, name: a.label, wert: a.anzahl }))}
+          mitBalken
+        />
+      {/if}
+
+      {#if verschwundene.length > 0}
+        <p class="verschwunden">Zuletzt nicht mehr aufgefallen: {verschwundene.join(' · ')}.</p>
+      {/if}
+    </section>
+  {/if}
 
   {#if bruehgeraet?.typ === 'pourover'}
     <GussplanEditor {profilId} />
@@ -285,20 +394,64 @@
     margin-bottom: var(--r4);
   }
   .setup {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
   }
   h2 {
-    font-size: var(--fs-label);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
     color: var(--gedaempft);
     font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
+    margin: var(--r5) 0 var(--r-kachelabstand);
+  }
+  .hinweis-kachel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blatt);
+    border-radius: var(--r-kachel);
+    padding: 13px 15px;
+  }
+  .halbzeichen {
+    flex: none;
+    width: var(--zeichen-fuehrung);
+    height: var(--zeichen-fuehrung);
+    border-radius: 50%;
+    border: 1.5px solid var(--achtung);
+    background: linear-gradient(90deg, var(--achtung) 50%, transparent 50%);
+  }
+  .hinweis-text {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    line-height: 1.4;
+    color: var(--gedaempft);
+  }
+  .spielraum {
+    margin-top: var(--r5);
   }
   .verlauf {
     margin-top: var(--r5);
+  }
+  .verkostungen {
+    margin-top: var(--r5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--r3);
+  }
+  .teiltitel {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: var(--r3) 0 0;
+  }
+  .verschwunden {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    margin: var(--r2) 0 0;
   }
   .setup-wahl {
     margin-top: var(--r5);
@@ -313,7 +466,7 @@
     border: none;
     background: transparent;
     color: var(--gedaempft);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     text-align: left;
     cursor: pointer;
@@ -324,8 +477,31 @@
   .aufklappbar .pfeil.offen {
     transform: rotate(180deg);
   }
-  .hinweis,
-  .hinweis-klein {
+  /* Spielraum-Falte: derselbe Gruppenkopf-Look wie das globale <h2> (Sans-
+     Versalien, gedämpft) statt der leiseren Meta-Zeile von "Setup ändern" —
+     Spielraum bleibt eine Abschnittsüberschrift, nur zuklappbar. Reihenfolge
+     nach ".aufklappbar", damit diese Deklarationen die dortigen (Farbe,
+     Schriftgröße) überschreiben. */
+  .spielraum-kopf {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-gruppenkopf);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .link {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--akzent);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
+    min-height: var(--treffer);
+    padding: 0;
+    margin-top: var(--r2);
+    cursor: pointer;
+  }
+  .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-meta);
   }

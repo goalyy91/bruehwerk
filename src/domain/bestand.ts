@@ -24,7 +24,7 @@ export interface KaffeeFilter {
   koffein?: 'beide' | 'koffeinhaltig' | 'entkoffeiniert';
 }
 
-export type KaffeeSortierung = 'name' | 'bewertung' | 'roestgrad';
+export type KaffeeSortierung = 'name' | 'bewertung' | 'roester';
 
 function passtSuchtext(kaffee: KaffeeEintrag, suchtext: string): boolean {
   const ziel = suchtext.trim().toLowerCase();
@@ -48,10 +48,15 @@ export function filtereKaffees<T extends KaffeeEintrag>(kaffees: readonly T[], f
 }
 
 /**
- * Bewertung und Roestgrad fehlen bei einem frisch migrierten oder neu
- * angelegten Kaffee oft noch (K51 — das Kaffeeblatt traegt sie nach). Wer
- * nichts hat, steht hinten, nicht vorne — sonst gewinnt eine leere Zeile
- * gegen eine fuenf-Sterne-Bewertung.
+ * Bewertung fehlt bei einem frisch migrierten oder neu angelegten Kaffee oft
+ * noch (K51 — das Kaffeeblatt traegt sie nach). Wer nichts hat, steht
+ * hinten, nicht vorne — sonst gewinnt eine leere Zeile gegen eine
+ * fuenf-Sterne-Bewertung.
+ *
+ * Dritte Sortierung ist "roester" (Rueckmeldung 2026-08-24), nicht
+ * "roestgrad" — Roestgrad ist ein Merkmal des einzelnen Kaffees, kein
+ * Ordnungskriterium fuer eine Liste (fuenf Bohnen erzeugen fuenf grobe
+ * Haeufungen statt einer echten Reihenfolge).
  */
 export function sortiereKaffees<T extends KaffeeEintrag>(kaffees: readonly T[], sortierung: KaffeeSortierung): T[] {
   const sortiert = [...kaffees];
@@ -60,8 +65,8 @@ export function sortiereKaffees<T extends KaffeeEintrag>(kaffees: readonly T[], 
       return sortiert.sort((a, b) => a.name.localeCompare(b.name, 'de'));
     case 'bewertung':
       return sortiert.sort((a, b) => (b.bewertung ?? -1) - (a.bewertung ?? -1));
-    case 'roestgrad':
-      return sortiert.sort((a, b) => (b.roestgrad ?? -1) - (a.roestgrad ?? -1));
+    case 'roester':
+      return sortiert.sort((a, b) => a.roester.localeCompare(b.roester, 'de'));
   }
 }
 

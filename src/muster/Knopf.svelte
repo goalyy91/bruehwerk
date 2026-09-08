@@ -4,13 +4,19 @@
   // wortgleich kopiert war (Kaffeeblatt, KaffeeNeu, KaffeeBearbeiten,
   // Profilblatt, ShotErfassung, KaffeeListe, Geraete-Blaetter, Migration).
   //
-  // "primaer" ist bewusst NICHT akzentgefuellt — tokens.css/Regel 6: "kein
-  // Primaerfarbe-Konzept mit gefuellten Buttons, der Akzent ist zurueck-
-  // haltend eingesetzt". Betonung laeuft ueber eine --tinte-Flaeche statt
-  // --akzent; --tinte/--grund sind je Theme als Gegenpaar definiert, die
-  // Textfarbe stimmt also automatisch in hell und dunkel (kein eigenes
-  // Kontrast-Token noetig, anders als das vorherige hart codierte
-  // var(--h-papier), das im Dunkelmodus falsch war).
+  // Visueller Redesign-Reset (docs/design/redesign-v1-handoff.md, Abschnitt
+  // 3.8 "Primäraktion"): "primaer" ist jetzt die Pille mit der einen
+  // Füllfläche des Themes (--fuellung/--auf-fuellung) — das Handoff kennt
+  // kein zurückhaltendes Primaerkonzept mehr, sondern genau eine gefüllte
+  // Fläche für Auswahl UND Primäraktion. --fuellung/--auf-fuellung sind je
+  // Theme als Gegenpaar definiert, die Textfarbe stimmt automatisch in hell
+  // und dunkel.
+  //
+  // "sekundaer"/"still"/"kritisch" sind im Handoff nicht einzeln
+  // spezifiziert (dort nur "Sekundäraktion: Textzeile im Akzent, keine
+  // Fläche") — sie bleiben deshalb strukturell wie bisher (Rahmen bzw. reiner
+  // Text) und übernehmen nur die neue Radius-/Linienrolle, statt hier eine
+  // neue, vom Handoff nicht gedeckte Fläche zu erfinden.
   //
   // "kritisch" ist fuer destruktive Aktionen (loeschen) reserviert und
   // gehoert nicht in dieselbe Zeile wie "speichern" — siehe Kontextmenue.svelte.
@@ -39,10 +45,20 @@
   .knopf {
     min-height: var(--treffer);
     padding: 0 var(--r4);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
+    /* ACHTUNG — hier wird ein frueherer Geraete-Befund bewusst ueberstimmt.
+       Etappe 1 hatte Sans probiert und am echten Geraet zurueckgedreht (siehe
+       Kommentar oben). Der Befund galt in einem anderen Umfeld: damals war
+       *alles* Serif, und ein Sans-Knopf war das einzige fremde Element im
+       Bild. Seit Zug A sind Eingabefeld, Segment, Auswahl und Schalter auf
+       Sans — jetzt ist umgekehrt der Serif-Knopf der einzige Fremdkoerper.
+       Dieselbe Regel, umgedrehtes Ergebnis, weil sich die Umgebung gedreht
+       hat.
+       Falls Julian am Geraet erneut zum alten Urteil kommt: genau diese eine
+       Zeile zuruecksetzen, nicht Zug A insgesamt. */
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
     cursor: pointer;
-    border-radius: var(--radius-feld);
+    border-radius: var(--r-pille);
     transition:
       background var(--t-auswahl) var(--e-rein),
       border-color var(--t-auswahl) var(--e-rein);
@@ -51,15 +67,34 @@
     opacity: 0.5;
     cursor: default;
   }
+  /* Primäraktion: Pille, Füllfläche, Schrift auf Füllfläche (Handoff 3.8).
+     Redesign v2, Etappe 1 hatte hier kurzzeitig Sans probiert (Mockup-
+     Rückmeldung "Serif 600 wirkt klobig"), am echten Gerät ("Import
+     ausführen", Migration.svelte) war das Urteil umgekehrt: zurück auf
+     Serif, dieselbe Schriftart wie Kaffeeblatt Name/Röster — .knopf
+     liefert sie bereits (var(--schrift), fs-bedienwort), .primaer braucht
+     keine eigene Font-Deklaration mehr. */
   .primaer {
-    background: var(--tinte);
-    color: var(--grund);
+    min-height: var(--primaeraktion-hoehe);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
     border: none;
+    /* Einen Schritt kleiner als die Knopf-Grundschrift (17px) — die volle
+       50px-Pillenfläche traegt schon genug Gewicht, 600 gleicht die
+       kleinere Groesse aus (Handoff 3.2: Fett ausdruecklich auf der
+       Fuellflaeche erlaubt). */
+    font-size: var(--fs-satz);
+    font-weight: 600;
   }
+  /* Redesign v2, Rückmeldung 2026-09-04 — der 1px-Rand war auf der warmen
+     Papierfarbe kaum sichtbar ("sieht nur nach Text aus"). Jetzt dieselbe
+     --vertiefung-Fläche wie andere ruhige Bedienelemente (Segment,
+     Mengensteller) — bleibt klar unter --fuellung, ist aber eindeutig ein
+     Knopf statt eines Links. */
   .sekundaer {
-    background: transparent;
+    background: var(--vertiefung);
     color: var(--satz);
-    border: 1px solid var(--linie);
+    border: none;
   }
   .still {
     background: transparent;

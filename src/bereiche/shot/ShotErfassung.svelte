@@ -11,12 +11,21 @@
   // Zeitpunkt schon geschrieben; Chips/Vorschlag aktualisieren ihn per
   // zweitem schreiben('shot', ...).
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  // Visueller Redesign-Reset, Paket 3 (Handoff Abschnitt 6 "Shot-Logging"):
+  // Einstellwerte (Input/Mahlgrad/Drehzahl/Kessel) stehen jetzt als
+  // Parameterkachel-Raster statt Werteliste-Zeilen — gleiche Felder,
+  // gleiches onAendern-Verhalten. "Ziel" (Output/Preinfusion/Zeit) bleibt
+  // IstGegenZiel — das ist laut Handoff-Referenz weiterhin eine Zeilenliste
+  // mit Herkunftskreisen, kein Kachel-Raster (die beiden Blöcke haben
+  // unterschiedliche fachliche Bedeutung: eingestellt vs. gemessen).
+
+  import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
   import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
   import IstGegenZiel from '../../muster/IstGegenZiel.svelte';
-  import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
+  import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -59,25 +68,6 @@
     mg = profil.ziel.mg;
     rpm = profil.ziel.rpm;
     kt = profil.ziel.kt;
-  });
-
-  // Einstellwerte als Werteliste (docs/konzept.md:721 — "Ziel im
-  // Gruppenkopf, Führungswert groß, die Einstellwerte darunter"): stehen
-  // deshalb unterhalb der Ziel-Karte, nicht davor. Kein hinweis-Text hier
-  // (keine Gruppentemperatur-Anzeige) — anders als im Profilblatt war das
-  // hier nie vorgesehen, das bleibt ein reines Eingabefeld.
-  const einstellwerte = $derived.by((): WertelisteZeile[] => {
-    const zeilen: WertelisteZeile[] = [
-      { label: 'Input', wert: input, einheit: 'g', onAendern: (w) => (input = w) },
-      { label: 'Mahlgrad', wert: mg, einheit: muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined, onAendern: (w) => (mg = w) },
-    ];
-    if (muehle?.rpmEinstellbar) {
-      zeilen.push({ label: 'Drehzahl', wert: rpm ?? '', einheit: 'rpm', onAendern: (w) => (rpm = w) });
-    }
-    if (bruehgeraet?.ktEinstellbar) {
-      zeilen.push({ label: 'Kessel', wert: kt ?? '', einheit: '°C', onAendern: (w) => (kt = w) });
-    }
-    return zeilen;
   });
 
   type Phase = 'eingabe' | 'schreibfehler' | 'diagnose' | 'alltagskorrektur' | 'drift' | 'fertig';
@@ -209,7 +199,7 @@
     return parameter === 'mg' && muehle ? muehle.skala.schritt : 1;
   }
 
-  async function urteilGewaehlt(stufe: 'daneben' | 'okay' | 'sehr gut' | 'Referenz') {
+  async function urteilGewaehlt(stufe: 'daneben' | 'okay' | 'sehr gut') {
     if (!profil || !kaffee) return;
     if (!kaffee.aktuelleChargeId) {
       schreibFehlerText = 'keine aktuelle Charge am Kaffee hinterlegt';
@@ -217,9 +207,9 @@
       return;
     }
 
-    const urteil: UrteilTyp = stufe === 'Referenz' ? 'referenz' : stufe;
+    const urteil: UrteilTyp = stufe;
     const shot: Shot = {
-      id: crypto.randomUUID(),
+      id: neueId(),
       ts: Date.now(),
       kaffeeId: kaffee.id,
       chargeId: kaffee.aktuelleChargeId,
@@ -246,6 +236,10 @@
   async function schreibversuch(shot: Shot) {
     try {
       await schreiben('shot', shot);
+      // FIFO-Chargenrotation (Rückmeldung 2026-09-04): reicht der Rest der
+      // genutzten Charge nach diesem Bezug fuer keinen weiteren mehr,
+      // uebernimmt hier automatisch die naechste Charge.
+      await chargeStatusAktualisieren(shot.kaffeeId, profil?.ziel.input);
       if (shot.urteil === 'daneben') {
         // Paket 04, Etappe A — Diagnose statt direktem Abschluss.
         phase = 'diagnose';
@@ -262,8 +256,8 @@
         true,
       );
 
-      if ((shot.urteil === 'sehr gut' || shot.urteil === 'referenz') && profil && mg !== profil.ziel.mg) {
-        // K12 — Alltagskorrektur nur bei sehr gut/Referenz UND abweichendem
+      if (shot.urteil === 'sehr gut' && profil && mg !== profil.ziel.mg) {
+        // K12 — Alltagskorrektur nur bei 'sehr gut' UND abweichendem
         // Mahlgrad, und ausdruecklich ohne Vorbelegung. Der Drift-Hinweis
         // erscheint, falls vorhanden, im selben Zug als zusaetzliche Zeile.
         mgAbweichung = { alt: profil.ziel.mg, neu: mg };
@@ -309,7 +303,11 @@
   }
 </script>
 
-<Kopfzeile titel="Shot loggen" {onZurueck} />
+<!-- Rueckmeldung 2026-09-08: der Kopf traegt den Kaffeenamen, nicht die
+     Gattung. Vorher stand "Shot loggen" in 26/600 ueber dem Namen in
+     20/400 — das nichtssagende Wort war das groesste im Bild. Fehlt der
+     Kaffee (Nichtgefunden-Fall), bleibt die Aufgabe als Titel. -->
+<Kopfzeile titel={kaffee?.name ?? 'Shot loggen'} {onZurueck} gross={!!kaffee} />
 
 {#if !profil || !kaffee}
   <p class="hinweis">Profil nicht gefunden.</p>
@@ -335,12 +333,25 @@
       <Vorschlag
         diagnose={diagnoseErgebnis.diagnose}
         empfehlung={diagnoseErgebnis.empfehlungstext}
+        herkunft={diagnoseErgebnis.geschaetzt ? 'geschätzt aus Einzelbefund' : undefined}
         start={ausserhalbMessreihe ? 'fehlt' : 'offen'}
         begruendungFehlt={ausserhalbMessreihe}
         onUebernehmen={() => void diagnoseAbschliessen(true)}
         onSpaeter={() => void diagnoseAbschliessen(false)}
       />
     </div>
+  {:else if diagnoseErgebnis && diagnoseUnterdrueckt}
+    <!-- K68/K76 — es GIBT eine passende Regel, sie wurde aber schon beim
+         letzten Mal gezeigt und nicht uebernommen; sie kehrt erst zurueck,
+         wenn zwei aufeinanderfolgende Shots denselben Befund zeigen. Ohne
+         diesen Satz sah das aus wie eine Sackgasse: Chips ausgewaehlt,
+         nichts passiert. -->
+    <p class="hinweis">Diese Diagnose kam beim letzten Mal schon — sie erscheint erst wieder, wenn sich der Befund beim nächsten Shot wiederholt.</p>
+  {:else if diagnoseBefunde.length > 0}
+    <!-- Kein REGELN-Eintrag passt zu genau dieser Kombination — laut Konzept
+         (docs/konzept.md:459) bewusst keine erzwungene Diagnose. Ohne diesen
+         Satz blieb unklar, ob die App das ueberhaupt gesehen hat. -->
+    <p class="hinweis">Zu dieser Auswahl gibt es noch keinen Vorschlag. Die Befunde bleiben trotzdem am Shot.</p>
   {/if}
 
   {#if !diagnoseErgebnis || diagnoseUnterdrueckt || ausserhalbMessreihe}
@@ -350,7 +361,7 @@
   {/if}
 {:else if phase === 'alltagskorrektur' && mgAbweichung}
   <p class="frage-titel">
-    {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war {entwurf?.urteil === 'referenz' ? 'Referenz' : 'sehr gut'}.
+    {mgAbweichung.neu} statt {mgAbweichung.alt} — und er war sehr gut.
   </p>
   <p class="frage">Als neuen Ausgangswert übernehmen?</p>
   <!-- K12: eine Rezepturaenderung wird nie vorbelegt — deshalb kein
@@ -371,7 +382,6 @@
     <Knopf stufe="primaer" onKlick={driftAbschliessen}>fertig</Knopf>
   </div>
 {:else}
-  <h1>{kaffee.name}</h1>
   <p class="setup">{profil.name}</p>
 
   {#if chargenHinweisText}
@@ -379,12 +389,29 @@
   {/if}
 
   <div class="eingestellt">
-    <Werteliste zeilen={einstellwerte} />
+    <h2>Parameter</h2>
+    <div class="parameter-raster">
+      <Parameterkachel symbol="input" label="Input" wert={input} einheit="g" onAendern={(w) => (input = w)} />
+      <Parameterkachel
+        symbol="mahlgrad"
+        label="Mahlgrad"
+        wert={mg}
+        einheit={muehle?.skala.typ === 'klicks' ? 'Klicks' : undefined}
+        onAendern={(w) => (mg = w)}
+      />
+      {#if muehle?.rpmEinstellbar}
+        <Parameterkachel symbol="drehzahl" label="Drehzahl" wert={rpm ?? ''} einheit="rpm" onAendern={(w) => (rpm = w)} />
+      {/if}
+      {#if bruehgeraet?.ktEinstellbar}
+        <Parameterkachel symbol="kessel" label="Kessel" wert={kt ?? ''} einheit="°C" onAendern={(w) => (kt = w)} />
+      {/if}
+    </div>
   </div>
 
   <!-- Spielraum-Zuordnung Zeit/Durchlaufzeit gefolgt der Profilblatt-Logik
-       (Profilblatt.svelte zielZeilen): welches Spielraum-Feld gilt, haengt
-       am Fuehrungswert des Bruehgeraets (K7), nicht am Wortlaut "Zeit" allein
+       (Profilblatt.svelte, Ziel-Parameterkacheln): welches Spielraum-Feld
+       gilt, haengt am Fuehrungswert des Bruehgeraets (K7), nicht am
+       Wortlaut "Zeit" allein
        — vorher waren Preinfusion und Zeit vertauscht (Preinfusion bekam
        spielraum.zeit, was als Naeherung passt, weil es keinen eigenen
        Preinfusion-Spielraum gibt; Zeit bekam faelschlich spielraum.durchlaufzeit,
@@ -406,21 +433,26 @@
   />
 
   <div class="urteil-block">
-    <p class="frage">Wie war er?</p>
+    <p class="frage-objekt">Wie war er?</p>
     <Urteil onWahl={(stufe) => void urteilGewaehlt(stufe)} />
   </div>
 {/if}
 
 <style>
-  h1 {
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-    margin: 0;
-  }
+  /* Objektname (Handoff 3.2: 20-21/400/-.01em) statt Screentitel-Groesse —
+     der Kaffeename ist hier Inhalt, keine Ueberschrift mit Rueckweg
   .setup {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: 0 0 var(--r4);
+  }
+  /* Einzige erlaubte Abweichung vom globalen h2 (tokens.css): dieser
+     Gruppenkopf steht direkt unter der Kopfzeile und braucht deshalb
+     keinen Abstand nach oben. Die uebrigen sechs Eigenschaften waren
+     eine wortgleiche Kopie und sind entfallen. */
+  h2 {
+    margin-top: 0;
   }
   .eingestellt {
     margin-bottom: var(--r4);
@@ -440,6 +472,14 @@
   .frage {
     font-size: var(--fs-satz);
     color: var(--satz);
+    margin: 0 0 var(--r3);
+  }
+  /* "Wie war er?" ist der Objektname-Prompt der Handoff-Referenz C3
+     (20/400/-.01em), keine Meta-Rueckfrage wie die uebrigen .frage-Zeilen. */
+  .frage-objekt {
+    font-size: var(--fs-objekt);
+    letter-spacing: -0.01em;
+    color: var(--tinte);
     margin: 0 0 var(--r3);
   }
   .frage-titel {

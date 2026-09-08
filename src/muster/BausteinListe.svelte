@@ -7,8 +7,18 @@
   //
   // Ziehen ist im Musterblatt bewusst nicht nachgebildet (kein Drag & Drop
   // hier) — der Zustand „angehoben“ ist als Klick-Demo gezeigt, damit das
-  // Aussehen geprüft werden kann. Das echte Ziehen kommt mit dem ersten
-  // Bildschirm, der dieses Muster trägt (Gussplan-Editor, Paket 03).
+  // Aussehen geprüft werden kann. Das echte Ziehen entstand mit dem
+  // Gussplan-Editor (Paket 03) — der baute seine Bausteinliste aber am
+  // Ende lokal nach statt dieses Muster einzubinden (siehe dort), dieses
+  // Muster bleibt also weiterhin nur im Musterblatt sichtbar.
+  //
+  // Visueller Redesign-Reset, Paket 5: Blattliste mit Haarlinien statt
+  // eckig umrandeter --feld-Zeilen. "angehoben" (Zustand während des
+  // Ziehens, keine echte Auswahl) bekommt bewusst keine Füllfläche wie die
+  // übrigen Auswahlstrich-Migrationen, sondern einen linken Akzentstreifen
+  // auf Vertiefungsfläche — ein Schatten wäre die naheliegendere
+  // "angehoben"-Optik gewesen, ist aber Handoff 3.5 zufolge global
+  // verboten.
 
   type Zeile = { id: string; typ: string; kopfwert: string; notiz?: string; meta?: string };
   type Buendel = { titel: string; summe: string; zeilen: Zeile[] };
@@ -90,6 +100,8 @@
   .ebene {
     display: flex;
     flex-direction: column;
+    border-radius: var(--r-blatt);
+    overflow: hidden;
   }
   .buendelkopf {
     display: flex;
@@ -97,11 +109,14 @@
     gap: var(--r3);
     min-height: 56px;
     padding: 0 var(--r4);
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld);
+    border: none;
+    background: var(--blatt);
     color: var(--tinte);
     font-family: var(--schrift);
     cursor: pointer;
+  }
+  .buendelkopf:has(+ .liste) {
+    border-bottom: 1px solid var(--linie);
   }
   .buendelkopf .titel {
     flex: 1;
@@ -120,7 +135,8 @@
   .liste {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    border-radius: var(--r-blatt);
+    overflow: hidden;
   }
   .zeile {
     display: flex;
@@ -128,12 +144,20 @@
     gap: var(--r3);
     min-height: 56px;
     padding: 0 var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    border-left: 3px solid transparent;
+    background: var(--blatt);
     cursor: grab;
+    transition:
+      background var(--t-auswahl) var(--e-rein),
+      border-color var(--t-auswahl) var(--e-rein),
+      transform var(--t-auswahl) var(--e-rein);
+  }
+  .zeile + .zeile {
+    border-top: 1px solid var(--linie);
   }
   .zeile.angehoben {
-    box-shadow: inset 0 0 0 1px var(--akzent);
+    background: var(--vertiefung);
+    border-left-color: var(--akzent);
     transform: translateX(8px);
   }
   .typ {

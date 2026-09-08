@@ -1,0 +1,206 @@
+import { describe, it, expect } from 'vitest';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/**
+ * Die Bildsprache als Test, nicht als Absichtserklaerung.
+ *
+ * Julian, 2026-09-07: *"lass uns so vorgehen, dass wir ganz sicher keinen
+ * Screen vergessen und auch jeden Screen mit der gleichen Intensitaet
+ * bearbeiten."* Seine drei Funde davor — `.text-eingabe`, `.panel`, der alte
+ * Look beim Bestand-Korrigieren — waren allesamt **lokale Kopien** von etwas,
+ * das zentral laengst existiert. Kopien driften, und zwar unbemerkt, bis
+ * jemand sie am Geraet sieht.
+ *
+ * Dieselbe Antwort wie bei der Architekturregel (tests/schichten.test.ts):
+ * die Regel bricht den Build, statt in einem Dokument zu stehen.
+ *
+ * **Sperrklinke.** ALTLASTEN nennt die Dateien, die noch duerfen (heute:
+ * keine). Der Test schlaegt an, wenn
+ *
+ *   - eine Datei **ausserhalb** der Liste etwas kopiert  -> nichts Neues
+ *     kann hinzukommen;
+ *   - eine Datei **auf** der Liste sauber ist            -> die Liste kann
+ *     nicht verrotten, jede aufgeraeumte Datei muss ausgetragen werden.
+ *
+ * Damit kann die Zahl nur fallen. Sie ist die ehrliche Antwort auf "wie
+ * viele Bildschirme fehlen noch".
+ */
+
+const WURZEL = fileURLToPath(new URL('..', import.meta.url));
+const BEREICHE = join(WURZEL, 'src', 'bereiche');
+
+/** Was zentral existiert und deshalb nicht lokal nachgebaut werden darf. */
+const REGELN = [
+  {
+    /**
+     * Nicht am Klassennamen festmachen, sondern an der Signatur: eine
+     * Blattflaeche mit Blatt-Radius *ist* eine Karte, egal wie sie heisst.
+     *
+     * Beim Aufraeumen von KaffeeBearbeiten (Runde 3) tauchte genau das auf —
+     * `.blick-zeile` war dieselbe Karte wie `.panel`, nur anders benannt, und
+     * rutschte deshalb durch. Die alte Regel hiess `/\.panel \{/` und haette
+     * sie nie gefunden.
+     */
+    name: 'eigene Karte (Blattfläche + Blatt-Radius) statt muster/Blattliste.svelte',
+    pruefen: (s: string) =>
+      (s.match(/\{[^{}]*\}/g) ?? []).some(
+        (block) =>
+          block.includes('background: var(--blatt);') &&
+          block.includes('border-radius: var(--r-blatt);'),
+      ),
+  },
+  {
+    /**
+     * Ein <button>, dem die Umrandung genommen wird, aber keine Flaeche
+     * gegeben, bekommt die des Browsers — hellgrau (ButtonFace). Genau so
+     * entstand 2026-09-08 das graue Kaestchen im Verkostungs-Block: beim
+     * Umbau auf Blattliste fiel `background: var(--blatt)` weg, ohne dass
+     * `transparent` nachrueckte. Im Code sieht das aus wie nichts.
+     */
+    name: 'Knopf ohne Fläche — der Browser malt dann seine eigene (grau)',
+    pruefen: (s: string) => {
+      const knopfKlassen = new Set<string>();
+      for (const m of s.matchAll(/<button[^>]*class="([^"]+)"/g)) {
+        for (const k of m[1]!.split(/\s+/)) if (!k.startsWith('{')) knopfKlassen.add(k);
+      }
+      if (knopfKlassen.size === 0) return false;
+      return (s.match(/\n  \.[^{]*\{[^{}]*\}/g) ?? []).some((block) => {
+        const sel = block.match(/\n  ([^{]*)\{/)![1]!.trim();
+        const klasse = sel.replace(/^\./, '').split(/[\s.:,]/)[0]!;
+        return knopfKlassen.has(klasse) && /border:\s*none/.test(block) && !/background/.test(block);
+      });
+    },
+  },
+  {
+    name: 'eigener Gruppenkopf statt des globalen h2 aus tokens.css',
+    pruefen: (s: string) => /^\s*\.gruppenkopf\s*\{/m.test(s),
+  },
+  {
+    name: 'eigene Feldkopie statt der globalen .eingabefeld-text',
+    pruefen: (s: string) => /^\s*\.text-eingabe\s*\{/m.test(s),
+  },
+  {
+    name: 'Formularzeilen ohne Karte (Blattliste) drumherum',
+    pruefen: (s: string) => /class="formularzeile/.test(s) && !/Blattliste/.test(s),
+  },
+  {
+    /**
+     * Serif ist die Anzeigenschrift (Namen, Titel, Zahlen). Was man bedient,
+     * traegt Sans — siehe Commit "Zug A".
+     *
+     * Die Unterscheidung ist nicht immer mechanisch moeglich: eine antippbare
+     * Kachel, die einen *Getraenkenamen* zeigt, ist Inhalt und darf Serif
+     * behalten (Bar.svelte). Solche Faelle tragen den Vermerk
+     * `Serif bewusst` in derselben Regel — das erzwingt eine Entscheidung,
+     * statt sie stillschweigend durchzulassen.
+     */
+    name: 'Serif auf einem Bedienelement statt --schrift-sans',
+    pruefen: (s: string) =>
+      (s.match(/\{[^{}]*\}/g) ?? []).some(
+        (block) =>
+          block.includes('font-family: var(--schrift);') &&
+          !block.includes('Serif bewusst') &&
+          /cursor: pointer|background: var\(--vertiefung\)/.test(block),
+      ),
+  },
+  {
+    /**
+     * Knopfwoerter schreiben sich klein — ausser sie beginnen mit einem
+     * Hauptwort (Wording-Runde 2026-09-08).
+     *
+     * Vorher stand dieselbe Handlung in zwei Schreibungen im Bild: "Als leer
+     * markieren" neben "als fertig markieren", "Shot verwerfen" neben
+     * "verwerfen"; "uebernehmen" gab es sogar in beiden Fassungen. Ein Knopf
+     * soll wie eine Handlung klingen, nicht wie eine Ueberschrift.
+     *
+     * HAUPTWOERTER ist die Ausnahmeliste: sie nennt, womit ein Knopf gross
+     * beginnen darf. Wer ein neues braucht, traegt es dort ein — und merkt
+     * dabei, dass er eine Ausnahme macht.
+     */
+    name: 'Knopfwort gross geschrieben, ohne mit einem Hauptwort zu beginnen',
+    pruefen: (s: string) =>
+      [...s.matchAll(/>([A-ZÄÖÜ][^<>{}]{0,40})<\/(?:Knopf|button)>/g)].some(
+        (m) => !HAUPTWOERTER.some((w) => m[1]!.startsWith(w)),
+      ),
+  },
+] as const;
+
+/** Womit ein Knopf gross beginnen darf — siehe die Regel darueber. */
+const HAUPTWOERTER = [
+  'Shot', 'Verkostung', 'Bericht', 'Bestellung', 'Datenblatt', 'Regel',
+  'Zeile', 'Getränk', 'Extra', 'Bohne', 'Profil', 'Charge', 'Setup',
+  'Mühle', 'Brühgerät', 'Person', 'Import', 'Ja', 'Nein',
+] as const;
+
+/**
+ * Stand 2026-09-08 nach Runde 4. Diese Dateien duerfen noch, alle anderen
+ * nicht. **Wer eine davon aufraeumt, traegt sie hier aus** — sonst schlaegt
+ * der Test an.
+ */
+const ALTLASTEN: readonly string[] = [
+  // Leer, seit dem 08.09.2026. Fuenf Runden, 19 Bildschirme, keiner vergessen.
+  //
+  // Die Liste bleibt bestehen: sie ist der vorgesehene Weg fuer einen
+  // begruendeten Einzelfall, nicht ein Rest zum Wegraeumen. Wer hier etwas
+  // eintraegt, schreibt den Grund dazu — sonst waere sie wieder das, wogegen
+  // sie gebaut wurde.
+];
+
+function alleBildschirme(verzeichnis: string): string[] {
+  const gefunden: string[] = [];
+  for (const eintrag of readdirSync(verzeichnis)) {
+    const pfad = join(verzeichnis, eintrag);
+    if (statSync(pfad).isDirectory()) gefunden.push(...alleBildschirme(pfad));
+    else if (eintrag.endsWith('.svelte')) gefunden.push(pfad);
+  }
+  return gefunden;
+}
+
+/** Pfad relativ zu src/bereiche, mit Schrägstrichen — plattformunabhängig. */
+function kurzname(pfad: string): string {
+  return relative(BEREICHE, pfad).split('\\').join('/');
+}
+
+function verstoesse(pfad: string): string[] {
+  const inhalt = readFileSync(pfad, 'utf8');
+  return REGELN.filter((r) => r.pruefen(inhalt)).map((r) => r.name);
+}
+
+describe('Bildsprache — kein Bildschirm baut nach, was es zentral gibt', () => {
+  const bildschirme = alleBildschirme(BEREICHE);
+
+  it('findet ueberhaupt Bildschirme (sonst prueft der Test nichts)', () => {
+    expect(bildschirme.length).toBeGreaterThan(20);
+  });
+
+  it('kein Bildschirm ausserhalb der Altlasten-Liste kopiert etwas', () => {
+    const neu = bildschirme
+      .map((p) => ({ datei: kurzname(p), funde: verstoesse(p) }))
+      .filter((e) => e.funde.length > 0 && !ALTLASTEN.includes(e.datei));
+
+    expect(
+      neu,
+      `Neue lokale Kopie(n). Statt nachzubauen die zentrale Fassung nutzen:\n` +
+        neu.map((e) => `  ${e.datei}\n    - ${e.funde.join('\n    - ')}`).join('\n'),
+    ).toEqual([]);
+  });
+
+  it('die Altlasten-Liste enthaelt nichts, was laengst sauber ist', () => {
+    const bekannt = new Map(bildschirme.map((p) => [kurzname(p), verstoesse(p)]));
+    const erledigt = ALTLASTEN.filter((d) => (bekannt.get(d) ?? []).length === 0);
+
+    expect(
+      erledigt,
+      `Aufgeraeumt, aber noch als Altlast gefuehrt — bitte aus ALTLASTEN austragen:\n` +
+        erledigt.map((d) => `  ${d}`).join('\n'),
+    ).toEqual([]);
+  });
+
+  it('nennt jede Altlast auch wirklich (kein Eintrag zeigt ins Leere)', () => {
+    const vorhanden = new Set(bildschirme.map(kurzname));
+    const geister = ALTLASTEN.filter((d) => !vorhanden.has(d));
+    expect(geister, `Eintraege ohne Datei: ${geister.join(', ')}`).toEqual([]);
+  });
+});

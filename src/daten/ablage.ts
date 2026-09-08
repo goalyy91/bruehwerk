@@ -33,6 +33,7 @@ import {
   Bestellung,
   AppEinstellungen,
   Beobachtung,
+  Uebung,
 } from './schema';
 
 /** Wert-Typ je Sammlung, abgeleitet aus WertVon (db.ts) statt neu getippt. */
@@ -61,6 +62,7 @@ export const SCHEMA_FUER: { [S in Sammlung]: ZodType<SammlungWert[S]> } = {
   bestellung: Bestellung,
   einstellungen: AppEinstellungen,
   beobachtung: Beobachtung,
+  uebung: Uebung,
 };
 
 export class SchreibFehler extends Error {

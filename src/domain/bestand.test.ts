@@ -55,6 +55,11 @@ describe('sortiereKaffees', () => {
     expect(ergebnis.map((k) => k.id)).toEqual(['4', '1', '2', '3']);
   });
 
+  it('roester sortiert alphabetisch nach Roesterei, nicht nach Roestgrad', () => {
+    const ergebnis = sortiereKaffees(KAFFEES, 'roester');
+    expect(ergebnis.map((k) => k.roester)).toEqual(['Blackwood', 'Blackwood', 'Rösterei Nord', 'Rösterei Nord']);
+  });
+
   it('mutiert den Eingabe-Array nicht', () => {
     const original = [...KAFFEES];
     sortiereKaffees(KAFFEES, 'name');

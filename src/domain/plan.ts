@@ -122,6 +122,27 @@ export function verschnittAngebotSichtbar(plan: Bezugsplan): boolean {
   return plan.durchgaenge.some((d) => d.ungenutzterAnteil > 0);
 }
 
+/**
+ * Vierter Weg im Verschnitt-Angebot (Rueckmeldung 2026-09-04): andere
+ * Bohnen, die im selben Bezugsplan ebenfalls einen unpaarigen halben Bezug
+ * haben. Ein Bohnenwechsel bei einer der beiden betroffenen Positionen
+ * macht beide Rechnungen glatt — zwei Verschnitt-Reste werden zu keinem.
+ *
+ * Bewusst OHNE Filter nach Profil/Zubereitung/Koffein/Aktiv hier —
+ * profilId ist je Kaffee eigen (bestand.profilFuerZubereitung(kaffeeId,
+ * zubereitung) liefert selbst bei gleicher Zubereitung nie dieselbe Id fuer
+ * zwei verschiedene Bohnen), waere also als Filterkriterium immer leer
+ * (Fund vom 2026-09-04: genau dieser Fehler liess den Knopf nie
+ * erscheinen). Die eigentliche Eignungspruefung lebt beim Aufrufer
+ * (BestellungPlan.svelte), der dafuer domain/getraenk.ts::bohnenSchnittmenge
+ * hat — dieselbe Funktion, die auch die Bohnenauswahl beim Aufnehmen
+ * filtert, deckt Zubereitung/Koffein/Aktiv/geeignetFuer in einem Schritt ab.
+ * Diese Funktion liefert nur die Vorauswahl "hat selbst auch einen Rest".
+ */
+export function bohnenwechselKandidaten(plan: Bezugsplan, eigeneKaffeeId: string): readonly string[] {
+  return plan.durchgaenge.filter((d) => d.kaffeeId !== eigeneKaffeeId && d.ungenutzterAnteil > 0).map((d) => d.kaffeeId);
+}
+
 function runde(g: number): number {
   return Math.round(g * 100) / 100;
 }

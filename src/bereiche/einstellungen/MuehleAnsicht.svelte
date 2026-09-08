@@ -7,6 +7,9 @@
   // ueber Kontextmenue.svelte statt native alert()/confirm() (Regel 6). Die
   // Referenzpruefung (kein stilles Kaskadenloeschen, offene-punkte-ux.md
   // Punkt 1) bleibt inhaltlich unveraendert.
+  //
+  // Paket 4: h2-Typografie kommt jetzt aus tokens.css (global), hier nur
+  // noch der lokale margin.
 
   import { bestand, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -92,12 +95,7 @@
 
 <style>
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: 0 0 var(--r2);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .gruppe {
     margin-bottom: var(--r5);

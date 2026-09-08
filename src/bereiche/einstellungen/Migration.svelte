@@ -9,8 +9,12 @@
   //
   // "Nur einmal relevant" (Rueckmeldung): die ganze Komponente verschwindet
   // vollstaendig, sobald mindestens ein migrierter Kaffee im Bestand ist.
+  //
+  // Visueller Redesign-Reset, Paket 4: Bericht-Liste jetzt Blatt statt
+  // eckig umrandeter Liste, "Bericht anzeigen" als Blattzeile im Akzent.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import { migriereSeiten } from '../../daten/migration/migrieren';
   import seedDatei from '../../../daten/seed/notion-2026-08-20.json';
@@ -75,24 +79,19 @@
   </button>
 
   {#if offenSichtbar}
-    <ul class="berichtliste">
-      {#each vorschau.bericht.offen as punkt, i (i)}
-        <li><span class="quelle">{punkt.quelle}</span> — {punkt.was} <span class="warum">({punkt.warum})</span></li>
-      {/each}
-    </ul>
+    <Blattliste>
+      <div class="berichtliste">
+        {#each vorschau.bericht.offen as punkt, i (i)}
+          <div class="berichtzeile"><span class="quelle">{punkt.quelle}</span> — {punkt.was} <span class="warum">({punkt.warum})</span></div>
+        {/each}
+      </div>
+    </Blattliste>
   {/if}
 {/if}
 
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
-  }
   .hinweis {
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     margin: 0 0 var(--r3);
@@ -110,26 +109,30 @@
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-meta);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
     min-height: var(--treffer);
     padding: 0;
     margin-top: var(--r3);
     cursor: pointer;
   }
+  /* Nur noch Hoehe und Scrollen — Flaeche, Radius und Polster kommen aus
+     muster/Blattliste.svelte. */
   .berichtliste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--r3);
     max-height: var(--max-liste);
     overflow-y: auto;
-    border-top: 1px solid var(--linie);
   }
-  .berichtliste li {
+  .berichtzeile {
     padding: var(--r2) 0;
-    border-bottom: 1px solid var(--linie-zart);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--satz);
+  }
+  .berichtzeile + .berichtzeile {
+    border-top: 1px solid var(--linie);
   }
   .quelle {
     color: var(--gedaempft);

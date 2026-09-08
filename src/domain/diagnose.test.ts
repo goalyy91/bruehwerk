@@ -57,8 +57,7 @@ describe('Regelwerk aus dem Konzept', () => {
     expect(d?.aenderung).toEqual({ parameter: 'kt', richtung: 'weniger', schritte: 1 });
   });
 
-  it('keine passende Kombination -> keine Diagnose, keine erzwungene Regel', () => {
-    expect(diagnostiziere([befund('bitter')])).toBeUndefined();
+  it('keine Auswahl -> keine Diagnose, keine erzwungene Regel', () => {
     expect(diagnostiziere([])).toBeUndefined();
   });
 
@@ -67,6 +66,64 @@ describe('Regelwerk aus dem Konzept', () => {
     // beide Regeln passen dem Wortlaut nach, die dreiteilige ist spezifischer.
     const d = diagnostiziere([befund('sauer'), befund('duenn'), befund('schnell'), befund('salzig')]);
     expect(d?.diagnose).toBe('Unterextraktion');
+  });
+});
+
+/**
+ * Etappe 5, "Evidenz statt Konjunktion" (docs/design/redesign-v2-plan.md):
+ * greift erst, wenn keine exakte Konzept-Kombination passt. Vorher lieferte
+ * z. B. "bitter" allein gar nichts (siehe Git-Historie dieses Tests) — genau
+ * das war der gemeldete Fehler ("fuer viele realistisch auftretende
+ * Kombinationen keine Reaktionsvorschlaege").
+ */
+describe('Achsen-Scoring — greift, wenn keine exakte Regel passt', () => {
+  it('ein einzelnes Symptom ergibt einen geschaetzten Vorschlag auf seiner Achse', () => {
+    const d = diagnostiziere([befund('bitter')]);
+    expect(d?.diagnose).toBe('Überextraktion');
+    expect(d?.geschaetzt).toBe(true);
+    expect(d?.aenderung).toEqual({ parameter: 'mg', richtung: 'groeber', schritte: 1 });
+  });
+
+  it('Schrittweite folgt weiterhin der Staerke, nur auf der Unterextraktions-Achse', () => {
+    const leicht = diagnostiziere([befund('sauer', 'leicht')]);
+    expect(leicht?.aenderung).toEqual({ parameter: 'mg', richtung: 'feiner', schritte: 1 });
+    const deutlich = diagnostiziere([befund('sauer', 'deutlich')]);
+    expect(deutlich?.aenderung).toEqual({ parameter: 'mg', richtung: 'feiner', schritte: 2 });
+  });
+
+  it('zwei von drei Ueberextraktions-Symptomen ohne exakten Treffer -> trotzdem ein Vorschlag', () => {
+    const d = diagnostiziere([befund('bitter'), befund('langsam')]);
+    expect(d?.diagnose).toBe('Überextraktion');
+    expect(d?.geschaetzt).toBe(true);
+  });
+
+  it('ein einzelnes "salzig" bekommt die einfache Unterextraktion, NICHT die verschaerfte Variante', () => {
+    // "starke Unterextraktion" bleibt der exakten sauer+salzig-Kombination vorbehalten.
+    const d = diagnostiziere([befund('salzig')]);
+    expect(d?.diagnose).toBe('Unterextraktion');
+    expect(d?.regelId).toBe('achse-unterextraktion');
+  });
+
+  it('Gleichstand zwischen zwei Achsen -> die Prioritaetsreihenfolge entscheidet', () => {
+    // sauer (unterextraktion, 1 Treffer) vs. bitter (ueberextraktion, 1 Treffer) —
+    // unterextraktion steht in der Konzepttabelle zuerst.
+    const d = diagnostiziere([befund('sauer'), befund('bitter')]);
+    expect(d?.diagnose).toBe('Unterextraktion');
+  });
+
+  it('"stark" allein (ohne "brandig") ergibt trotzdem KT zu hoch, geschaetzt', () => {
+    const d = diagnostiziere([befund('stark')]);
+    expect(d?.diagnose).toBe('KT zu hoch für diese Röstung');
+    expect(d?.geschaetzt).toBe(true);
+  });
+
+  it('leere Auswahl bleibt ohne Diagnose, auch im Achsen-Fallback', () => {
+    expect(diagnostiziere([])).toBeUndefined();
+  });
+
+  it('ein exakter Treffer ist NICHT geschaetzt', () => {
+    const d = diagnostiziere([befund('sauer'), befund('duenn'), befund('schnell')]);
+    expect(d?.geschaetzt).toBeUndefined();
   });
 });
 

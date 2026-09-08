@@ -3,14 +3,77 @@
   // importiere) war fertig und getestet, aber an keiner Stelle verdrahtet.
   // CLAUDE.md nennt den manuellen Datei-Export ausdruecklich als zweiten,
   // anbieterfreien Backup-Weg neben dem noch nicht gewaehlten Cloud-Backend.
+  //
+  // Visueller Redesign-Reset, Paket 4: Sekundaer-Knoepfe (Vertiefung/
+  // Radius-Pille) statt eckig umrandeter Flaeche.
+  //
+  // Rueckmeldung (2026-08-24): als freistehende Knoepfe ohne Blattflaeche
+  // war nicht erkennbar, dass "Datei exportieren"/"Datei importieren"
+  // antippbar sind — jetzt dieselbe Blattzeile wie ueberall sonst auf der
+  // Einstellungen-Seite (Geraete verwalten, Beobachtungen, …), nur ohne
+  // Chevron: eine Blattzeile mit "›" verspricht einen Bildschirmwechsel,
+  // hier passiert die Aktion aber sofort an Ort und Stelle.
+  //
+  // Etappe 8, Block E (2026-09-06): die eigene "Backup"-Ueberschrift entfaellt
+  // — Einstellungen.svelte traegt jetzt "Daten" als gemeinsame Ueberschrift
+  // fuer Migration und Backup (vier Gruppen statt sieben).
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
+  import {
+    schnappschuesse,
+    schnappschussZurueckspielen,
+    type Schnappschuss,
+  } from '../../daten/schnappschuss';
   import { bestand } from '../bestand.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
 
   let exportFehler = $state<string | undefined>(undefined);
   let importFehler = $state<string[] | undefined>(undefined);
   let importErfolg = $state(false);
   let dateiEingabe = $state<HTMLInputElement | undefined>();
+
+  // Die Sicherungen, die die App vor einer Aktualisierung selbst anlegt
+  // (daten/schnappschuss.ts). Sie liegen bewusst nicht im reaktiven Bestand:
+  // sie tragen jeweils eine vollstaendige Kopie und haben auf jedem anderen
+  // Bildschirm nichts verloren. Deshalb einmal beim Oeffnen gelesen.
+  let sicherungen = $state<Schnappschuss[]>([]);
+  let zurueckBestaetigen = $state<string | undefined>(undefined);
+  let zurueckFehler = $state<string | undefined>(undefined);
+  let zurueckErfolg = $state(false);
+
+  $effect(() => {
+    void schnappschuesse().then((liste) => (sicherungen = liste));
+  });
+
+  function wann(ts: number): string {
+    const d = new Date(ts);
+    return `${d.toLocaleDateString('de-DE')} ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  /** Zweiter Tap bestaetigt — dasselbe Muster wie in Kontextmenue.svelte. */
+  async function zurueckspielen(eintrag: Schnappschuss) {
+    if (zurueckBestaetigen !== eintrag.id) {
+      zurueckBestaetigen = eintrag.id;
+      return;
+    }
+    zurueckBestaetigen = undefined;
+    zurueckFehler = undefined;
+    zurueckErfolg = false;
+    try {
+      await schnappschussZurueckspielen(eintrag.id);
+      await bestand.laden();
+      zurueckErfolg = true;
+    } catch (fehler) {
+      if (fehler instanceof ImportFehler) {
+        zurueckFehler = fehler.einzelfehler
+          .map((e) => `${e.sammlung}[${e.index}]`)
+          .join(', ');
+      } else {
+        zurueckFehler = fehler instanceof Error ? fehler.message : String(fehler);
+      }
+    }
+  }
 
   async function datenExportieren() {
     exportFehler = undefined;
@@ -51,14 +114,15 @@
   }
 </script>
 
-<h2>Backup</h2>
-<p class="hinweis">Vollständiger Bestand, kein Backend beteiligt — funktioniert auch, wenn ein späterer Cloud-Dienst ausfällt.</p>
+<p class="hinweis">Alles, was in der App steht, als Datei zum Mitnehmen.</p>
 
-<div class="knopfreihe">
-  <button type="button" onclick={datenExportieren}>Datei exportieren</button>
-  <button type="button" onclick={() => dateiEingabe?.click()}>Datei importieren</button>
-  <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
+<div class="aktionen">
+  <Blattliste>
+    <Blattzeile label="Datei exportieren" akzent chevron={false} onKlick={datenExportieren} />
+    <Blattzeile label="Datei importieren" akzent chevron={false} onKlick={() => dateiEingabe?.click()} />
+  </Blattliste>
 </div>
+<input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
 
 {#if exportFehler}
   <p class="fehler">Export fehlgeschlagen: {exportFehler}</p>
@@ -73,34 +137,89 @@
   </ul>
 {/if}
 
+<!-- Rückmeldung 2026-09-08: vor jeder Aktualisierung sichert die App selbst.
+     Hier steht, was dabei herauskam — und der Weg zurück, falls eine neue
+     Fassung etwas zerschossen hat. Die Liste erscheint erst, wenn es etwas
+     zu zeigen gibt: eine leere Überschrift „Sicherungen" auf einem frisch
+     eingerichteten Gerät wäre eine Frage ohne Antwort. -->
+{#if sicherungen.length > 0}
+  <h2>Sicherungen</h2>
+  <Blattliste>
+    {#each sicherungen as eintrag (eintrag.id)}
+      <button type="button" class="sicherung" onclick={() => void zurueckspielen(eintrag)}>
+        <span class="haupt">
+          <span class="wann">{wann(eintrag.erzeugtAm)}</span>
+          <span class="umfang">
+            {eintrag.anlass} · {eintrag.umfang.shots} Shots · {eintrag.umfang.kaffees} Kaffees
+          </span>
+        </span>
+        <span class="tat" class:scharf={zurueckBestaetigen === eintrag.id}>
+          {zurueckBestaetigen === eintrag.id ? 'wirklich?' : 'zurückspielen'}
+        </span>
+      </button>
+    {/each}
+  </Blattliste>
+  <p class="hinweis nachsatz">
+    Zurückspielen ersetzt den gesamten Bestand durch den Stand von damals. Was
+    seitdem dazugekommen ist, ist danach weg — exportiere im Zweifel vorher eine Datei.
+  </p>
+  {#if zurueckErfolg}<p class="hinweis">Sicherung zurückgespielt.</p>{/if}
+  {#if zurueckFehler}<p class="fehler">Zurückspielen abgelehnt — kein Datensatz wurde geschrieben: {zurueckFehler}</p>{/if}
+{/if}
+
 <style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
-  }
   .hinweis {
+    font-family: var(--schrift-sans);
     color: var(--gedaempft);
     font-size: var(--fs-meta);
     margin: 0 0 var(--r3);
   }
-  .knopfreihe {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--r3);
+  /* Blattliste.svelte traegt die Flaeche selbst, hier nur der Abstand zu den
+     Melde-Zeilen darunter (frueher .panel.schmal { margin-bottom }). Der
+     Wrapper ".aktionen" ist noetig, damit der :global()-Teil ausschliesslich
+     die Blattliste dieser Datei trifft, nicht jede andere auf der Seite. */
+  .aktionen :global(.blattliste) {
+    margin-bottom: var(--r3);
   }
-  button {
-    min-height: var(--treffer);
-    padding: 0 var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--linie);
-    color: var(--tinte);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
+  .nachsatz {
+    margin-top: var(--r2);
+  }
+  .sicherung {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--r3);
+    min-height: var(--blattzeile);
+    padding: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
     cursor: pointer;
+  }
+  .haupt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wann {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .umfang {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .tat {
+    flex: none;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--akzent);
+  }
+  .tat.scharf {
+    color: var(--kritisch);
   }
   .fehler {
     color: var(--kritisch);

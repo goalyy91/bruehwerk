@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { planeBezuege, effektiverAnteil, verschnittAngebotSichtbar, type Position } from './plan';
+import { planeBezuege, effektiverAnteil, verschnittAngebotSichtbar, bohnenwechselKandidaten, type Position } from './plan';
 
 const INPUT = new Map([['espresso-profil', 18]]);
 
@@ -140,6 +140,39 @@ describe('leere Bestellung', () => {
     const plan = planeBezuege([], INPUT);
     expect(plan.durchgaenge).toHaveLength(0);
     expect(plan.verschnittGramm).toBe(0);
+  });
+});
+
+describe('bohnenwechselKandidaten — vierter Weg im Verschnitt-Angebot', () => {
+  it('findet eine andere Bohne mit eigenem Rest', () => {
+    const plan = planeBezuege([cappuccino('entcoffeiniert'), cappuccino('manaresi')], INPUT);
+    expect(bohnenwechselKandidaten(plan, 'entcoffeiniert')).toEqual(['manaresi']);
+  });
+
+  it('findet auch bei unterschiedlicher profilId — die ist je Bohne eigen', () => {
+    // Fund vom 2026-09-04: profilFuerZubereitung() liefert je Kaffee eine
+    // eigene Profil-Id, auch bei derselben Zubereitung. Ein Filter danach
+    // haette hier faelschlich nichts gefunden — genau der Bug, der den
+    // Knopf nie erscheinen liess.
+    const plan: ReturnType<typeof planeBezuege> = {
+      durchgaenge: [
+        { kaffeeId: 'red-honey', profilId: 'red-honey-espresso-profil', positionIds: ['1'], ungenutzterAnteil: 0.5 },
+        { kaffeeId: 'fairlangen', profilId: 'fairlangen-espresso-profil', positionIds: ['2'], ungenutzterAnteil: 0.5 },
+      ],
+      verschnittGramm: 18,
+    };
+    expect(bohnenwechselKandidaten(plan, 'red-honey')).toEqual(['fairlangen']);
+  });
+
+  it('findet nichts, wenn kein zweiter Rest existiert', () => {
+    const plan = planeBezuege([cappuccino(), cappuccino()], INPUT);
+    expect(bohnenwechselKandidaten(plan, 'entcoffeiniert')).toEqual([]);
+  });
+
+  it('schlaegt die eigene Bohne nie als Kandidat vor', () => {
+    const plan = planeBezuege([cappuccino(), cappuccino(), cappuccino()], INPUT);
+    // 3x dieselbe Bohne: ein Rest, aber kein ANDERER Durchgang derselben Bohne zaehlt als Kandidat.
+    expect(bohnenwechselKandidaten(plan, 'entcoffeiniert')).toEqual([]);
   });
 });
 

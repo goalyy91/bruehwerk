@@ -12,6 +12,9 @@
   // Ausfuehren im selben Fluss nach — kein natives confirm()/alert(), das
   // faellt aus dem Laborbuch-Look (K44-Nachbarregel: keine Wischgeste, hier:
   // kein OS-Dialog). Ein zweiter Tap auf denselben Eintrag bestaetigt.
+  //
+  // Visueller Redesign-Reset, Paket 4: aufgeklapptes Menue als Blatt mit
+  // Radius/Haarlinien statt eckig umrandeter Box.
 
   type Eintrag = {
     text: string;
@@ -87,18 +90,35 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-width: 180px;
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld-blatt);
+    /* Etappe 9, Block D: keine Mindestbreite mehr — das Menü ist so breit wie
+       sein längster Eintrag. 180 px zwangen kurze Menüs ("Löschen") in eine
+       Fläche, die zur Hälfte leer war. */
+    width: max-content;
+    border-radius: var(--r-kachel);
+    overflow: hidden;
+    background: var(--blatt);
+    /* Das Menue liegt *ueber* der Seite — das erzaehlt man mit Hoehe, nicht
+       mit Farbe. Blatt auf Grund sind 1,14:1, es klebte deshalb als flacher
+       Block auf dem Bildschirm. Genau der Fall, den der Token-Kopfkommentar
+       fuer Schatten vorsieht: angehobene Flaeche, nicht generelle Elevation. */
+    box-shadow:
+      0 14px 30px -16px var(--schatten),
+      0 2px 6px -2px var(--schatten);
   }
   .zeile {
     min-height: var(--treffer);
     padding: 0 var(--r3);
     border: none;
-    border-top: 1px solid var(--linie-zart);
+    border-top: 1px solid var(--linie);
     background: transparent;
     color: var(--satz);
-    font-family: var(--schrift);
+    /* Etappe 9, Block D — der groesste einzelne Hebel der Etappe: Sans statt
+       Serif. Ein Aktionsmenue ist Apparat, kein Inhalt; die Projektregel
+       "Serif traegt den Inhalt, Sans nur den Apparat" gilt laengst und wurde
+       hier nie befolgt. Native Kontextmenues sind ausnahmslos Systemschrift,
+       nie eine Buchschrift — genau daran erkennt man an dieser Stelle, dass
+       die App keine App ist. Zeilenhoehe bleibt bei --treffer. */
+    font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
     text-align: left;
     cursor: pointer;

@@ -5,6 +5,14 @@
   // UX-Korrekturrunde: Loeschen sitzt jetzt hier statt im Formular (Regel 3)
   // und laeuft ueber Kontextmenue.svelte statt native alert()/confirm()
   // (Regel 6). Referenzpruefung inhaltlich unveraendert.
+  //
+  // Paket 4: h2-Typografie kommt jetzt aus tokens.css (global), hier nur
+  // noch der lokale margin.
+  //
+  // Rueckmeldung (2026-08-24): Zubehoer-Zeile entfernt — es gibt keinen
+  // Bildschirm, der Zubehoer anlegt (nur Setupblatt.svelte fuer Muehle/
+  // Bruehgeraet), das Feld `zubehoerIds` bleibt im Schema, wird hier nur
+  // nicht mehr angezeigt.
 
   import { bestand, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -26,9 +34,6 @@
   const setup = $derived(bestand.setups.find((s) => s.id === setupId));
   const muehle = $derived(setup ? bestand.muehleVon(setup.id) : undefined);
   const bruehgeraet = $derived(setup ? bestand.bruehgeraetVon(setup.id) : undefined);
-  const zubehoer = $derived(
-    setup ? setup.zubehoerIds.map((id) => bestand.zubehoer.find((z) => z.id === id)?.name ?? '?') : [],
-  );
 
   let fehler = $state<string | undefined>(undefined);
 
@@ -70,7 +75,6 @@
       zeilen={[
         { label: 'Mühle', wert: muehle?.name ?? '—' },
         { label: 'Brühgerät', wert: bruehgeraet?.name ?? '—' },
-        ...(zubehoer.length > 0 ? [{ label: 'Zubehör', wert: zubehoer.join(', ') }] : []),
       ]}
     />
   </section>
@@ -78,12 +82,7 @@
 
 <style>
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: 0 0 var(--r2);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .gruppe {
     margin-bottom: var(--r5);

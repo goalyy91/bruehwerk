@@ -16,9 +16,15 @@
   // Alltagseinheit — ein Setup bindet Muehle+Bruehgeraet zusammen und wird
   // spaeter am Getraenk ausgewaehlt, waehrend Muehle/Bruehgeraet fuer sich
   // genommen nur Bausteine dafuer sind.
+  //
+  // Visueller Redesign-Reset, Paket 4 (Handoff Abschnitt 6 "Geräte"):
+  // jede Gruppe als Blatt mit Zeilen 56 px, Haarlinien, "›", "+ X" als
+  // letzte Zeile im Akzent statt separatem Textlink darunter.
 
   import { bestand } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
 
   let {
     onZurueck,
@@ -36,80 +42,30 @@
 <Kopfzeile titel="Geräte" {onZurueck} />
 
 <h2>Setups</h2>
-<ul class="liste">
+<Blattliste>
   {#each bestand.setups as s (s.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenSetup(s.id)}>{s.name}</button></li>
+    <Blattzeile label={s.name} betont onKlick={() => onOeffnenSetup(s.id)} />
   {/each}
-</ul>
-<button type="button" class="fusszeile betont" onclick={() => onOeffnenSetup()}>+ Setup</button>
+  <Blattzeile label="+ Setup" akzent chevron={false} onKlick={() => onOeffnenSetup()} />
+</Blattliste>
 
 <h2>Mühlen</h2>
-<ul class="liste">
+<Blattliste>
   {#each bestand.muehlen as m (m.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenMuehle(m.id)}>{m.name}</button></li>
+    <Blattzeile label={m.name} onKlick={() => onOeffnenMuehle(m.id)} />
   {/each}
-</ul>
-<button type="button" class="fusszeile" onclick={() => onOeffnenMuehle()}>+ Mühle</button>
+  <Blattzeile label="+ Mühle" akzent chevron={false} onKlick={() => onOeffnenMuehle()} />
+</Blattliste>
 
 <h2>Brühgeräte</h2>
-<ul class="liste">
+<Blattliste>
   {#each bestand.bruehgeraete as b (b.id)}
-    <li><button type="button" class="zeile" onclick={() => onOeffnenBruehgeraet(b.id)}>{b.name}</button></li>
+    <Blattzeile label={b.name} onKlick={() => onOeffnenBruehgeraet(b.id)} />
   {/each}
-</ul>
-<button type="button" class="fusszeile" onclick={() => onOeffnenBruehgeraet()}>+ Brühgerät</button>
+  <Blattzeile label="+ Brühgerät" akzent chevron={false} onKlick={() => onOeffnenBruehgeraet()} />
+</Blattliste>
 
-<style>
-  h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: var(--r5) 0 var(--r2);
-  }
-  .liste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .zeile {
-    width: 100%;
-    display: block;
-    min-height: var(--treffer);
-    padding: var(--r2) 0;
-    border: none;
-    border-bottom: 1px solid var(--linie-zart);
-    background: transparent;
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    color: var(--tinte);
-    text-align: left;
-    cursor: pointer;
-    transition: background var(--t-auswahl) var(--e-rein);
-  }
-  .zeile:active {
-    background: var(--feld);
-  }
-  .fusszeile {
-    display: block;
-    width: 100%;
-    min-height: var(--treffer);
-    margin-top: var(--r2);
-    background: none;
-    border: none;
-    color: var(--akzent);
-    font-family: var(--schrift);
-    font-size: var(--fs-meta);
-    text-align: left;
-    cursor: pointer;
-  }
-  /* Setups sind die eigentliche Alltagseinheit (siehe Kopfkommentar) — eine
-     einzige, etwas staerker gesetzte Anlege-Zeile statt drei gleichrangiger
-     "+ X" (Regel 3). Immer noch kein gefuellter Akzentknopf (Regel 6). */
-  .fusszeile.betont {
-    color: var(--tinte);
-    font-size: var(--fs-satz);
-    font-weight: var(--gw-titel);
-  }
-</style>
+<!-- Kein lokales CSS mehr — Blattliste/Blattzeile.svelte (src/muster/)
+     tragen jetzt die gesamte Darstellung (Etappe 8, Block D). "Setup" bleibt
+     stärker gesetzt als Mühle/Brühgerät über den `betont`-Prop, dieselbe
+     Regel wie vorher (Setups sind die eigentliche Alltagseinheit). -->

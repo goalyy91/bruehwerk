@@ -62,23 +62,62 @@ export const Kaffee = z.object({
   /** K46 — die Bohnen-Seite der Kopplung an Getraenke.zubereitung. */
   geeignetFuer: z.array(z.string().min(1)).default([]),
   chargeIds: z.array(Id).default([]),
+  /**
+   * UX-2: kein eigener Kaffee-Status mehr (offen/angebrochen/leer) — doppelt
+   * gefuehrt neben Charge.leer, dafuer reicht dieser eine Zeiger.
+   *
+   * Redesign v2, Rueckmeldung 2026-09-04: urspruenglich ging dieses Feld von
+   * "in der Praxis nie zwei offene Chargen gleichzeitig" aus — eine neue
+   * Charge markierte die vorherige automatisch als leer. Das war falsch:
+   * Julian friert Kaffees portionsweise vor und legt die neue Charge an,
+   * BEVOR die alte aufgebraucht ist. Jetzt FIFO — welche Charge "aktuell"
+   * ist, wird ausschliesslich von
+   * `bereiche/bestand.svelte.ts::chargeStatusAktualisieren` bestimmt
+   * (Roestdatum, aelteste nicht ausgeschiedene Charge gewinnt,
+   * domain/vorrat.ts::naechsteAktiveCharge) — keine Bildschirm-Logik setzt
+   * dieses Feld sonst noch direkt.
+   */
   aktuelleChargeId: Id.optional(),
   bewertung: z.number().min(0).max(5).optional(),
-  // UX-2: kein eigener Kaffee-Status mehr (offen/angebrochen/leer) — doppelt
-  // gefuehrt neben Charge.leer und in der Praxis nie zwei offene Chargen
-  // gleichzeitig. Eine neue Charge markiert die vorherige automatisch als
-  // leer (Kaffeeblatt.svelte), das reicht.
   erkenntnisse: z.array(Erkenntnis).default([]),
 });
 export type Kaffee = z.infer<typeof Kaffee>;
 
-/** K61 — bewusst ohne Packungsgroesse, die wurde nie gepflegt. */
+/**
+ * K61 — bewusst ohne Packungsnummer als Pflichtfeld, die wurde nie gepflegt.
+ *
+ * Redesign v2, Etappe 2 — vier neue, bewusst optionale Felder fuer die
+ * Bestandsverwaltung (docs/design/offene-punkte-redesign.md). Optional, weil
+ * bestehende/migrierte Chargen (daten/migration/migrieren.ts) keinen Wert
+ * haben und das auch nicht nachtraeglich erfinden sollen — fehlende Einwaage
+ * bedeutet "kein Bestand anzeigen", nicht "0 g" oder ein geratener Wert.
+ *
+ * `korrektur` ist eine Restatement-Korrektur, kein additives Delta: "ich hab
+ * nachgewogen, es sind jetzt X Gramm" ersetzt die Rechenbasis vollstaendig,
+ * statt einen Betrag draufzuaddieren — intuitiver fuers manuelle Nachtragen
+ * und selbstkorrigierend (domain/vorrat.ts::restGramm).
+ */
 export const Charge = z.object({
   id: Id,
   kaffeeId: Id,
-  nummer: z.string().min(1),
+  /**
+   * Rückmeldung 2026-09-04: keine Bedienung mehr für die Nummer — „Röstdatum
+   * reicht komplett aus als Chargenbezeichnung". Optional statt entfernt,
+   * damit bestehende/migrierte Chargen mit Nummer gültig bleiben; kein
+   * Bildschirm fragt sie noch ab.
+   */
+  nummer: z.string().min(1).optional(),
   roestdatum: z.number().int().nonnegative(),
   leer: z.boolean(),
+  einwaage: z.number().positive().optional(),
+  eingefroren: z.boolean().default(false),
+  portionsgroesse: z.number().positive().optional(),
+  korrektur: z
+    .object({
+      gramm: z.number().nonnegative(),
+      ts: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 export type Charge = z.infer<typeof Charge>;
 
@@ -221,5 +260,13 @@ export const Profil = z.object({
   ansatz: AnsatzCold.optional(),
   modus: z.enum(['dialin', 'eingefahren']),
   hinweise: z.string().optional(),
+  /**
+   * Redesign v2 — Profil-Icon-Raster (Kaffeeblatt.svelte). Bleibt undefined,
+   * solange niemand aktiv ein Icon gewaehlt hat — die Oberflaeche leitet es
+   * dann live aus Bruehgeraet.typ her, statt einen Anfangswert
+   * einzufrieren. Nur eine bewusste, vom Geraet abweichende Wahl (z. B.
+   * Fuellstand statt Geraet) wird tatsaechlich gespeichert.
+   */
+  icon: z.enum(['siebtraeger', 'moka', 'pourover', 'coldbrew', 'ristretto', 'espresso', 'lungo']).optional(),
 });
 export type Profil = z.infer<typeof Profil>;

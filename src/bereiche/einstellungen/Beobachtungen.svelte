@@ -5,8 +5,12 @@
   // Werkstattbericht zum Herauskopieren. "gesammelt in den Einstellungen,
   // nicht als Stoerung mitten im Shot" (Konzept) — deshalb ein eigener
   // Bildschirm statt eines Hinweises im Alltagspfad.
+  //
+  // Visueller Redesign-Reset, Paket 4: Eintraege als Blatt-Zeilen statt
+  // eckig umrandeter Liste, Textfelder ueber .eingabefeld-text.
 
   import { bestand, schreiben } from '../bestand.svelte';
+  import { neueId } from '../../daten/id';
   import { offeneBeobachtungen, type Entscheidung } from '../../domain/beobachtungen';
   import { werkstattbericht, type BerichtShot } from '../../domain/bericht';
   import type { RegelParameter, Richtung } from '../../domain/diagnose';
@@ -14,6 +18,7 @@
   import Knopf from '../../muster/Knopf.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
   import type { Befund } from '../../daten/schema';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
@@ -44,7 +49,7 @@
   async function entscheidungSpeichern(begriff: string, entscheidung: Entscheidung['entscheidung'], zielBegriff?: string) {
     fehler = undefined;
     try {
-      await schreiben('beobachtung', { id: crypto.randomUUID(), begriff, entscheidung, zielBegriff, ts: Date.now() });
+      await schreiben('beobachtung', { id: neueId(), begriff, entscheidung, zielBegriff, ts: Date.now() });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -53,7 +58,7 @@
   /** Weg a — der Chip wirkt rueckwirkend: er wird an genau die Shots gehaengt, aus denen er entstanden ist (konzept.md:480), mit Staerke "deutlich". */
   async function alsChipAnlegen(begriff: string, shotIds: readonly string[]) {
     fehler = undefined;
-    const neu = { id: crypto.randomUUID(), label: begriff, gruppe: 'geschmack' as const, quelle: 'eigen' as const };
+    const neu = { id: neueId(), label: begriff, gruppe: 'geschmack' as const, quelle: 'eigen' as const };
     try {
       await schreiben('symptom', neu);
       for (const shot of shotsVon(shotIds)) {
@@ -164,9 +169,9 @@
   {#if offene.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <ul class="liste">
+    <Blattliste>
       {#each offene as b (b.begriff)}
-        <li class="eintrag">
+        <div class="eintrag">
           <div class="kopf">
             <span class="begriff">„{b.begriff}" · {b.anzahl}× seit {seitDatum(b.shotIds)}</span>
             <Kontextmenue
@@ -181,15 +186,15 @@
           </p>
           {#if zusammenfassenOffen === b.begriff}
             <div class="zusammenfassen">
-              <input type="text" placeholder="mit welchem Begriff?" bind:value={zusammenfassenWert} />
+              <input class="eingabefeld-text" type="text" placeholder="mit welchem Begriff?" bind:value={zusammenfassenWert} />
               <Knopf stufe="sekundaer" onKlick={() => zusammenfassenBestaetigen(b.begriff)}>übernehmen</Knopf>
             </div>
           {:else}
-            <Knopf stufe="primaer" onKlick={() => void alsChipAnlegen(b.begriff, b.shotIds)}>Als Chip anlegen</Knopf>
+            <Knopf stufe="primaer" onKlick={() => void alsChipAnlegen(b.begriff, b.shotIds)}>als Chip anlegen</Knopf>
           {/if}
-        </li>
+        </div>
       {/each}
-    </ul>
+    </Blattliste>
   {/if}
 </section>
 
@@ -198,9 +203,9 @@
   {#if eigeneChips.length === 0}
     <p class="hinweis">keine</p>
   {:else}
-    <ul class="liste">
+    <Blattliste>
       {#each eigeneChips as chip (chip.id)}
-        <li class="eintrag">
+        <div class="eintrag">
           <div class="kopf">
             <span class="begriff">{chip.label}</span>
             <button type="button" class="link" onclick={() => (regelEditorOffen === chip.id ? (regelEditorOffen = undefined) : regelEditorOeffnen(chip))}>
@@ -219,24 +224,24 @@
                 }}
               />
               <Einzelauswahl optionen={RICHTUNG_JE_PARAMETER[regelParameter]} wert={regelRichtung} onWahl={(w) => (regelRichtung = w as Richtung)} />
-              <input type="number" min="1" bind:value={regelSchritte} aria-label="Schritte" />
+              <input class="eingabefeld-text zahl" type="number" min="1" bind:value={regelSchritte} aria-label="Schritte" />
               <Knopf stufe="primaer" onKlick={() => void regelSpeichern(chip)}>Regel speichern</Knopf>
             </div>
           {/if}
-        </li>
+        </div>
       {/each}
-    </ul>
+    </Blattliste>
   {/if}
 </section>
 
 <section class="gruppe">
   <h2>Werkstattbericht</h2>
-  <p class="hinweis">Offene Begriffe, ihre Shots und der Chip-/Regelbestand — als Text, zum Weitergeben.</p>
+  <p class="hinweis">Alle offenen Begriffe mit ihren Shots — als Text zum Weitergeben.</p>
   <Knopf stufe="sekundaer" onKlick={() => void berichtKopieren()}>Bericht in die Zwischenablage</Knopf>
   {#if berichtStatus === 'kopiert'}
     <p class="quittung">kopiert</p>
   {:else if berichtStatus === 'fehler'}
-    <p class="fehler">Kopieren nicht möglich — Text manuell markieren.</p>
+    <p class="fehler">Kopieren hat nicht geklappt — Text von Hand auswählen.</p>
   {/if}
 </section>
 
@@ -246,24 +251,16 @@
 
 <style>
   h2 {
-    font-size: var(--fs-label);
-    letter-spacing: var(--label-spacing);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    font-weight: var(--gw-text);
-    margin: 0 0 var(--r2);
+    margin: 0 0 var(--r-kachelabstand);
   }
   .gruppe {
-    margin-bottom: var(--r6);
+    margin-bottom: var(--r5);
   }
-  .liste {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
+  /* Blattflaeche + Trennlinie kommen jetzt von Blattliste.svelte (Etappe 8,
+     Block D) — das Zeileninnenleben (Kontextmenü, Aufklapp-Formular) bleibt
+     lokal, kein Blattzeile-Kandidat. */
   .eintrag {
     padding: var(--r3) 0;
-    border-bottom: 1px solid var(--linie-zart);
   }
   .kopf {
     display: flex;
@@ -272,11 +269,11 @@
     gap: var(--r2);
   }
   .begriff {
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--tinte);
-    font-weight: var(--gw-titel);
   }
   .shots {
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
     margin: var(--r1) 0 var(--r3);
@@ -289,24 +286,16 @@
     gap: var(--r3);
     margin-top: var(--r2);
   }
-  .zusammenfassen input,
-  .regeleditor input {
-    min-height: var(--treffer);
-    padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    background: var(--feld);
-    color: var(--tinte);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-  }
-  .regeleditor input[type='number'] {
+  .regeleditor .eingabefeld-text {
     width: 72px;
+    flex: none;
+    text-align: right;
   }
   .link {
     background: none;
     border: none;
     color: var(--akzent);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     min-height: var(--treffer);
     padding: 0;

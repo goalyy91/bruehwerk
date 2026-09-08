@@ -37,6 +37,12 @@ Es gibt **keine API und kein Backend als Wahrheit.**
   es merkt. Der Backend-Anbieter ist noch nicht gewählt (Kandidaten: Supabase,
   Cloudflare D1, Firebase). Auswahlkriterium neben den Freikontingenten: manche
   pausieren Projekte bei Inaktivität.
+- **Der Speicher wird angefordert, nicht angenommen.** `daten/speicher.ts` bittet
+  beim Start um `navigator.storage.persist()`. Ohne das gilt IndexedDB dem
+  Browser als *best effort* — bei Speicherdruck darf Chrome die Datenbank
+  räumen, ohne Rückfrage. Chrome kann die Bitte ablehnen, deshalb steht die
+  Antwort als Satz in den Einstellungen unter „Daten": „nicht dauerhaft" soll
+  ein sichtbarer Zustand sein und keine stille Annahme.
 - **Manueller Datei-Export** ist der zweite, anbieterfreie Backup-Weg. Er muss
   auch dann noch funktionieren, wenn der Cloud-Dienst eingestellt wird.
 - **Notion fließt genau einmal hinein** (Paket 02) und wird danach nicht mehr
@@ -45,6 +51,38 @@ Es gibt **keine API und kein Backend als Wahrheit.**
 
 Das Velora-Repo ist reine Rezept-Referenz. Nichts wird geteilt, nichts
 transplantiert — außer den Daten, einmalig.
+
+### Die PWA-Hülle
+
+Seit dem 08.09.2026 gibt es sie überhaupt erst: Manifest, Service Worker und
+Icon kamen über `vite-plugin-pwa` (`vite.config.ts`). Davor war Brühwerk trotz
+des eigenen Untertitels keine PWA — die *Daten* lagen offline, die *App* nicht,
+und ohne Netz blieb der Bildschirm leer.
+
+Die Icons liegen als Paket in `public/icons` (mit eigener `README.txt`) und
+kommen von Julian, nicht aus dem Code. Zwei Fassungen, und der Unterschied ist
+kein Zufall: die `any`-Icons tragen den Schriftzug, das `maskable` nur die
+Tasse. Android schneidet das Icon in seine eigene Form, und ein Wort am Rand
+wäre das erste, was dabei wegfällt.
+
+**Die App fragt, bevor sie sich austauscht** (`registerType: 'prompt'`).
+`Aktualisierung.svelte` zeigt zwischen Inhalt und Tab-Leiste einen Hinweis mit
+„Jetzt aktualisieren“ und „später“ und sieht stündlich selbst nach. Ein
+stilles Update zöge den Boden unter einer halb ausgefüllten Shot-Erfassung
+weg — und vor allem gäbe es keinen Moment, in dem feststeht, dass gleich
+aktualisiert wird. Genau den braucht die Sicherung:
+
+**Vor jeder Aktualisierung legt die App eine Sicherung an**
+(`daten/schnappschuss.ts`) — denselben vollständigen Bestand, den auch der
+Datei-Export schreibt, nur im Gerät, ohne Dialog. Die letzten drei bleiben
+liegen und stehen in den Einstellungen unter „Daten“ zum Zurückspielen.
+Schlägt das Sichern fehl, wird **nicht** aktualisiert.
+
+Der Store `schnappschuss` liegt bewusst **außerhalb von `SAMMLUNGEN`**. Läge
+er drin, wäre er Teil des Exports (Sicherungen in Sicherungen) und würde beim
+Zurückspielen überschrieben — ausgerechnet das, was man dann noch braucht,
+wenn auch der erste Versuch danebenging. `daten/schnappschuss.test.ts` hält
+beides fest.
 
 ### Was die Migration reparieren muss
 
@@ -81,6 +119,20 @@ der Arbeit war.
 **Die Regel wird erzwungen, nicht angemahnt:** `tests/schichten.test.ts` liest
 die Import-Spezifizierer und bricht den Build. Nachweislich — die Gegenprobe
 mit einem eingeschmuggelten `import { mount } from 'svelte'` schlägt fehl.
+
+**Dasselbe gilt seit dem 07.09.2026 für die Bildsprache.**
+`tests/bildsprache.test.ts` schlägt an, sobald ein Bildschirm lokal nachbaut,
+was es zentral gibt — eigenes `.panel` statt `muster/Blattliste.svelte`,
+eigener Gruppenkopf statt des globalen `h2`, eigene Feldkopie statt
+`.eingabefeld-text`, Formularzeilen ohne Karte, Serif auf einem Bedienelement.
+
+Der Test führt die noch nicht aufgeräumten Dateien namentlich als
+`ALTLASTEN` und wirkt als **Sperrklinke**: eine Verletzung außerhalb der Liste
+lässt ihn scheitern, und eine Datei *auf* der Liste, die inzwischen sauber
+ist, ebenfalls. Die Zahl kann damit nur fallen — sie ist die ehrliche Auskunft
+darüber, wie viele Bildschirme noch fehlen. Anlass war der Befund, dass drei
+nacheinander gemeldete Optikfehler allesamt lokale Kopien waren, keine
+Gestaltungsfehler.
 
 Passend dazu: die Domäne weiß nichts von einem Nutzer, nichts von einem Gerät,
 nichts von Chrome. Das ist keine Zukunftsplanung, sondern eine Liste von
@@ -171,19 +223,29 @@ und der Diagnosevorschlag haben keine Voreinstellung. Eine vorbelegte
 Rezepturänderung ist eine, die man versehentlich bestätigt und Wochen später
 als unerklärliche Drift wiederfindet.
 
-### Füllmenge ist die Konstante, nicht die Milchmenge
+### Ein Getränk ist ein Rezept, keine Mengenrechnung
 
-```
-Milch  =  Füllmenge  −  Σ Shots
-```
+Hier stand bis zum 07.09.2026 die Regel **„Füllmenge ist die Konstante, nicht
+die Milchmenge"** (`Milch = Füllmenge − Σ Shots`), samt einer Mindestmenge je
+Ausgleichszutat, aus der die App errechnete, wann ein Extra Shot verschwinden
+muss. **Beides ist entfallen** — auf ausdrückliche Entscheidung: *„ich habe
+meine Standardtassen und weiß, was worein kommt, und alles was Kaffeemenge ist
+richtet sich immer nach dem Kaffeerezept."*
 
-Eingegeben wird trotzdem die Milchmenge; die App merkt sich die Füllmenge
-daraus. Damit passt sich die Milch von selbst an, wenn sich ein Extra Shot
-oder ein geänderter Profil-Output dazwischenschiebt.
+Weggefallen sind damit `fuellmenge`, `mindestAusgleich`, `gefaess` und
+`reihenfolge`. Die ersten beiden trugen ausschließlich die
+Extra-Shot-Entscheidung, die das Getränk jetzt mit
+**`extraShotMoeglich`** direkt beantwortet; die letzten beiden hat
+nachweislich nie jemand gelesen.
 
-Jedes Getränk hat eine **Mindestmenge** für seine ausgleichende Zutat. Wird sie
-unterschritten, wird der Extra Shot dort gar nicht erst angeboten (Espresso
-Macchiato: 30 ml Milch minus 20 ml wäre kein Macchiato mehr).
+**Die Folge gehört gekannt, bevor jemand sie zurückbaut:** die App kennt keine
+Getränkemengen mehr. Sie kann daher weder eine Milchmenge rechnen noch vor
+einer zu kleinen Tasse warnen — und ohne Neuerfassung aller Getränke ist das
+nicht umkehrbar. Wer die Rechnung wiederhaben will, führt nicht ein Feld
+zurück, sondern eine Datenerhebung.
+
+Geblieben sind Milch und Heißwasser mit Textur und Temperatur: das stellt man
+an der Maschine tatsächlich ein, das ist keine Abstraktion.
 
 ### Herkunft — drei Zeichen, nicht vier (K54, K13)
 
@@ -340,7 +402,7 @@ Er läuft in drei Stufen, schnellste zuerst, und bricht bei der ersten ab:
 
 | Stufe | Befehl | Was sie fängt |
 | --- | --- | --- |
-| 1 | `vitest run` | Business-Logik **und** die Schichtentrennung |
+| 1 | `vitest run` | Business-Logik, die Schichtentrennung **und** die Bildsprache |
 | 2 | `svelte-check` | Typfehler in `.ts` und `.svelte` |
 | 3 | `vite build` | alles, was erst beim Bündeln auffällt |
 
