@@ -8,6 +8,9 @@
   // eines dritten, nicht unterscheidbaren Taps auf denselben Chip trägt der
   // wieder geöffnete Chip ein eigenes „entfernen“ — eindeutiger zu bedienen,
   // gleiches Ergebnis.
+  //
+  // Visueller Redesign-Reset (Handoff 3.8 "Chip"): Radius 999, offen =
+  // Vertiefung, gewählt = Füllfläche. Der Akzentstrich entfällt.
 
   type Staerke = 'leicht' | 'deutlich';
   type Phase = 'aus' | 'offen' | 'gewaehlt';
@@ -15,17 +18,46 @@
   type Chip = { id: string; label: string };
   type ChipZustand = { phase: Phase; staerke?: Staerke };
 
+  // Paket 04: kontrollierte Fassung (ux-regeln R6, Anpassung statt neues
+  // Muster) — onAenderung meldet die gewaehlten Befunde nach aussen, damit
+  // ShotErfassung.svelte das Regelwerk (domain/diagnose.ts) danach fragen
+  // kann. Das Innenleben (Tap-Zyklus, Sortierung) bleibt unveraendert.
+  //
+  // Paket 05: `start` fuer den Wiedereinstieg — ein gespeicherter
+  // Verkostungsbogen (Verkostungsbogen.svelte) geht mit seinen Chips
+  // wieder auf, statt leer zu starten.
+  import { untrack } from 'svelte';
+
   let {
     gruppen,
     freitext = true,
+    start = [],
+    freitextStart = '',
+    onAenderung,
+    onFreitext,
   }: {
     gruppen: { titel: string; chips: Chip[] }[];
     freitext?: boolean;
+    start?: { symptomId: string; staerke: Staerke }[];
+    freitextStart?: string;
+    onAenderung?: (befunde: { symptomId: string; staerke: Staerke }[]) => void;
+    onFreitext?: (text: string) => void;
   } = $props();
 
-  const zustaende = $state<Record<string, ChipZustand>>({});
-  let freitextOffen = $state(false);
-  let freitextWert = $state('');
+  const zustaende = $state<Record<string, ChipZustand>>(
+    Object.fromEntries(
+      untrack(() => start).map((b): [string, ChipZustand] => [b.symptomId, { phase: 'gewaehlt', staerke: b.staerke }]),
+    ),
+  );
+  let freitextWert = $state(untrack(() => freitextStart));
+
+  function befundeMelden() {
+    onAenderung?.(
+      Object.entries(zustaende)
+        .filter(([, z]) => z.phase === 'gewaehlt' && z.staerke)
+        .map(([symptomId, z]) => ({ symptomId, staerke: z.staerke! })),
+    );
+  }
 
   function zustandVon(id: string): ChipZustand {
     return zustaende[id] ?? { phase: 'aus' };
@@ -44,10 +76,12 @@
 
   function waehleStaerke(id: string, staerke: Staerke) {
     zustaende[id] = { phase: 'gewaehlt', staerke };
+    befundeMelden();
   }
 
   function entfernen(id: string) {
     zustaende[id] = { phase: 'aus' };
+    befundeMelden();
   }
 
   function label(chip: Chip, z: ChipZustand): string {
@@ -61,6 +95,12 @@
       return ag - bg;
     });
   }
+
+  // Rueckmeldung 2026-08-26: "etwas anderes …" stand zunaechst nur als
+  // Textlink da, der erst nach einem Tap zu einem echten Feld wurde — man
+  // sah ihm also nicht an, dass man dort etwas eintippen kann, bevor man es
+  // ausprobiert hatte. Das Feld steht jetzt von Anfang an da wie jedes
+  // andere Eingabefeld auch.
 </script>
 
 <div class="chips">
@@ -76,6 +116,7 @@
                 type="button"
                 class="chip"
                 class:gewaehlt={z.phase === 'gewaehlt'}
+                class:leicht={z.phase === 'gewaehlt' && z.staerke === 'leicht'}
                 class:offen={z.phase === 'offen'}
                 onclick={() => klick(chip.id)}
               >
@@ -99,16 +140,13 @@
 
   {#if freitext}
     <div class="freitext">
-      {#if freitextOffen}
-        <input
-          type="text"
-          class="feld"
-          placeholder="etwas anderes …"
-          bind:value={freitextWert}
-        />
-      {:else}
-        <button type="button" class="ventil" onclick={() => (freitextOffen = true)}>etwas anderes …</button>
-      {/if}
+      <input
+        type="text"
+        class="feld"
+        placeholder="etwas anderes …"
+        bind:value={freitextWert}
+        oninput={() => onFreitext?.(freitextWert)}
+      />
     </div>
   {/if}
 </div>
@@ -143,29 +181,34 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    border-radius: var(--radius-chip);
+    border-radius: var(--r-kachel);
   }
   .offen-gruppe.sichtbar {
     padding: 6px;
-    background: var(--ruhig);
-    border: 1px solid var(--linie);
+    background: var(--vertiefung);
   }
   .chip {
     height: 44px;
     padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    border: none;
+    border-radius: var(--r-pille);
+    background: var(--vertiefung);
     color: var(--satz);
     font-family: var(--schrift);
     font-size: var(--fs-satz);
     cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
   }
   .chip.gewaehlt {
-    background: var(--feld);
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
+  }
+  /* Redesign v2, Etappe 1: "leicht" bekommt die hellere Füllfläche statt
+     Grün — Farbe war irreführend (suggerierte "gut"). Stärke steht ohnehin
+     schon im Chip-Text (label()), die Füllintensität verstärkt sie nur. */
+  .chip.gewaehlt.leicht {
+    background: var(--fuellung-leicht);
     color: var(--tinte);
-    font-weight: var(--gw-titel);
-    box-shadow: inset 0 -2px 0 0 var(--akzent);
   }
   .staerke-wahl {
     display: flex;
@@ -175,34 +218,24 @@
     height: var(--treffer);
     padding: 0 var(--r2);
     border: none;
-    border-radius: var(--radius-chip);
-    background: var(--ruhig);
+    border-radius: var(--r-pille);
+    background: var(--blatt);
     color: var(--satz);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     cursor: pointer;
   }
   .staerke-wahl .entfernen {
     color: var(--kritisch);
   }
-  .freitext .ventil {
-    border: none;
-    background: none;
-    color: var(--gedaempft);
-    font-family: var(--schrift);
-    font-size: var(--fs-satz);
-    font-style: normal;
-    cursor: pointer;
-    min-height: var(--treffer);
-  }
   .freitext .feld {
     height: var(--treffer);
     width: 100%;
     box-sizing: border-box;
     padding: 0 var(--r3);
-    border: 1px solid var(--feld-rahmen);
-    border-radius: var(--radius-chip);
-    background: var(--feld);
+    border: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
     color: var(--tinte);
     font-family: var(--schrift);
     font-size: var(--fs-satz);

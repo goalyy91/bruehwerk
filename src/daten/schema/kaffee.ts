@@ -13,6 +13,7 @@ export const Aufbereitung = z.enum([
   'wet-hulled',
   'sonstige',
 ]);
+export type Aufbereitung = z.infer<typeof Aufbereitung>;
 
 export const Entkoffeinierung = z.enum(['swiss-water', 'co2', 'ea', 'mc', 'unbekannt']);
 
@@ -61,20 +62,62 @@ export const Kaffee = z.object({
   /** K46 — die Bohnen-Seite der Kopplung an Getraenke.zubereitung. */
   geeignetFuer: z.array(z.string().min(1)).default([]),
   chargeIds: z.array(Id).default([]),
+  /**
+   * UX-2: kein eigener Kaffee-Status mehr (offen/angebrochen/leer) — doppelt
+   * gefuehrt neben Charge.leer, dafuer reicht dieser eine Zeiger.
+   *
+   * Redesign v2, Rueckmeldung 2026-09-04: urspruenglich ging dieses Feld von
+   * "in der Praxis nie zwei offene Chargen gleichzeitig" aus — eine neue
+   * Charge markierte die vorherige automatisch als leer. Das war falsch:
+   * Julian friert Kaffees portionsweise vor und legt die neue Charge an,
+   * BEVOR die alte aufgebraucht ist. Jetzt FIFO — welche Charge "aktuell"
+   * ist, wird ausschliesslich von
+   * `bereiche/bestand.svelte.ts::chargeStatusAktualisieren` bestimmt
+   * (Roestdatum, aelteste nicht ausgeschiedene Charge gewinnt,
+   * domain/vorrat.ts::naechsteAktiveCharge) — keine Bildschirm-Logik setzt
+   * dieses Feld sonst noch direkt.
+   */
   aktuelleChargeId: Id.optional(),
   bewertung: z.number().min(0).max(5).optional(),
-  status: z.enum(['offen', 'angebrochen', 'leer']).optional(),
   erkenntnisse: z.array(Erkenntnis).default([]),
 });
 export type Kaffee = z.infer<typeof Kaffee>;
 
-/** K61 — bewusst ohne Packungsgroesse, die wurde nie gepflegt. */
+/**
+ * K61 — bewusst ohne Packungsnummer als Pflichtfeld, die wurde nie gepflegt.
+ *
+ * Redesign v2, Etappe 2 — vier neue, bewusst optionale Felder fuer die
+ * Bestandsverwaltung (docs/design/offene-punkte-redesign.md). Optional, weil
+ * bestehende/migrierte Chargen (daten/migration/migrieren.ts) keinen Wert
+ * haben und das auch nicht nachtraeglich erfinden sollen — fehlende Einwaage
+ * bedeutet "kein Bestand anzeigen", nicht "0 g" oder ein geratener Wert.
+ *
+ * `korrektur` ist eine Restatement-Korrektur, kein additives Delta: "ich hab
+ * nachgewogen, es sind jetzt X Gramm" ersetzt die Rechenbasis vollstaendig,
+ * statt einen Betrag draufzuaddieren — intuitiver fuers manuelle Nachtragen
+ * und selbstkorrigierend (domain/vorrat.ts::restGramm).
+ */
 export const Charge = z.object({
   id: Id,
   kaffeeId: Id,
-  nummer: z.string().min(1),
+  /**
+   * Rückmeldung 2026-09-04: keine Bedienung mehr für die Nummer — „Röstdatum
+   * reicht komplett aus als Chargenbezeichnung". Optional statt entfernt,
+   * damit bestehende/migrierte Chargen mit Nummer gültig bleiben; kein
+   * Bildschirm fragt sie noch ab.
+   */
+  nummer: z.string().min(1).optional(),
   roestdatum: z.number().int().nonnegative(),
   leer: z.boolean(),
+  einwaage: z.number().positive().optional(),
+  eingefroren: z.boolean().default(false),
+  portionsgroesse: z.number().positive().optional(),
+  korrektur: z
+    .object({
+      gramm: z.number().nonnegative(),
+      ts: z.number().int().nonnegative(),
+    })
+    .optional(),
 });
 export type Charge = z.infer<typeof Charge>;
 
@@ -92,6 +135,7 @@ export const ZielWerte = z.object({
   pre: z.number().nonnegative().optional(),
   zeit: z.number().nonnegative(),
 });
+export type ZielWerte = z.infer<typeof ZielWerte>;
 
 /**
  * Deckungsgleich mit domain/spielraum.ts::Spielraum — importiert statt neu
@@ -109,12 +153,83 @@ function pruefeSpielraumTyp(s: z.infer<typeof SpielraumSchema>): Spielraum {
 }
 void pruefeSpielraumTyp;
 
-const GussBaustein = z.object({
+/**
+ * Sechs typisierte Bausteine — "Pour Over: der Gussplan" in docs/konzept.md,
+ * Abschnitt "Bausteine mit Notizzeile". Jeder traegt zusaetzlich `notiz`
+ * fuer das, was kein Feld abdeckt.
+ *
+ * `frei` ist die alte, generische Form (menge/dauer/rolle/text) und bleibt
+ * gueltig, weil das Notion-Format `[50g | 30s] Bloom: Beschreibung` genau
+ * diese Form hat — die Migration (Paket 02) uebersetzt eins zu eins dorthin.
+ * Kein importierter Plan wird durch die Typisierung ungueltig.
+ */
+const BausteinVorbereiten = z.object({
+  typ: z.literal('vorbereiten'),
+  filterSpuelen: z.boolean(),
+  gefaessVorwaermen: z.boolean(),
+  notiz: z.string().optional(),
+});
+
+const BausteinBloom = z.object({
+  typ: z.literal('bloom'),
+  menge: z.number().nonnegative(),
+  dauer: z.number().nonnegative(),
+  notiz: z.string().optional(),
+});
+
+export const GussMuster = z.enum(['zentrum', 'spirale', 'aussen']);
+
+const BausteinGuss = z.object({
+  typ: z.literal('guss'),
+  zielmenge: z.number().nonnegative(),
+  dauer: z.number().nonnegative().optional(),
+  muster: GussMuster.optional(),
+  /** Nur belegt, wenn dieser Guss von der Kannen-Temperatur abweicht. */
+  temperaturAbweichend: z.number().optional(),
+  notiz: z.string().optional(),
+});
+
+export const AgitationArt = z.enum(['schwenken', 'rao-spin', 'ruehren', 'klopfen']);
+
+const BausteinAgitation = z.object({
+  typ: z.literal('agitation'),
+  art: AgitationArt,
+  notiz: z.string().optional(),
+});
+
+const BausteinWarten = z.object({
+  typ: z.literal('warten'),
+  modus: z.enum(['bis-durchgelaufen', 'feste-dauer']),
+  dauer: z.number().nonnegative().optional(),
+  notiz: z.string().optional(),
+});
+
+const BausteinBypass = z.object({
+  typ: z.literal('bypass'),
+  menge: z.number().nonnegative(),
+  temperatur: z.number().optional(),
+  notiz: z.string().optional(),
+});
+
+/** Altbestand — Notion-Migration und alles vor der Typisierung. */
+const BausteinFrei = z.object({
+  typ: z.literal('frei'),
   menge: z.number().nonnegative(),
   dauer: z.number().nonnegative().optional(),
   rolle: z.string().min(1),
   text: z.string().optional(),
 });
+
+export const GussBaustein = z.discriminatedUnion('typ', [
+  BausteinVorbereiten,
+  BausteinBloom,
+  BausteinGuss,
+  BausteinAgitation,
+  BausteinWarten,
+  BausteinBypass,
+  BausteinFrei,
+]);
+export type GussBaustein = z.infer<typeof GussBaustein>;
 
 export const Gussplan = z.object({
   id: Id,
@@ -145,5 +260,13 @@ export const Profil = z.object({
   ansatz: AnsatzCold.optional(),
   modus: z.enum(['dialin', 'eingefahren']),
   hinweise: z.string().optional(),
+  /**
+   * Redesign v2 — Profil-Icon-Raster (Kaffeeblatt.svelte). Bleibt undefined,
+   * solange niemand aktiv ein Icon gewaehlt hat — die Oberflaeche leitet es
+   * dann live aus Bruehgeraet.typ her, statt einen Anfangswert
+   * einzufrieren. Nur eine bewusste, vom Geraet abweichende Wahl (z. B.
+   * Fuellstand statt Geraet) wird tatsaechlich gespeichert.
+   */
+  icon: z.enum(['siebtraeger', 'moka', 'pourover', 'coldbrew', 'ristretto', 'espresso', 'lungo']).optional(),
 });
 export type Profil = z.infer<typeof Profil>;

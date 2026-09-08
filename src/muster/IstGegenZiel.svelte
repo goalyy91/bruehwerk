@@ -1,10 +1,15 @@
 <script lang="ts">
   // Muster 5 · Ist gegen Ziel (Übergabe, Abschnitt 2 · K3 K5 K6).
   // Ziel im Gruppenkopf (11 px Versalien), Ist-Werte mit dem Ziel vorbelegt.
-  // Reihenfolge Output → Preinfusion → Zeit. Führungswert 44 px mit Einheit,
-  // weitere Werte 19 px rechtsbündig in fester Spalte — als CSS-Grid über
-  // alle Zeilen, damit die Spalte unabhängig von der Schriftgröße der
-  // Führungswert-Zeile bündig bleibt.
+  // Reihenfolge Output → Preinfusion → Zeit. Alle Werte 19 px rechtsbündig
+  // in fester Spalte — als CSS-Grid über alle Zeilen, damit die Spalte
+  // unabhängig von den einzelnen Zeileninhalten bündig bleibt.
+  //
+  // Visueller Redesign-Reset (Handoff 3.9, Fassung „Finalisierung"): der
+  // Führungswert bekommt keine Sonderauszeichnung mehr — kein 44-px-Sprung,
+  // kein gefüllter Kreis, kein Wort. Er steht als gewöhnlicher erster
+  // Zielwert da; fachlich bleibt er führend, visuell ist er es nicht mehr
+  // (Designprinzip 9 des Handoffs).
   //
   // Zustände je Zeile: vorbelegt (Ring) · überschrieben (gefüllter Punkt) ·
   // außerhalb des Spielraums (Abweichung als Satz) · außerhalb der
@@ -13,20 +18,34 @@
   import { untrack } from 'svelte';
 
   type Zeile = {
-    label: 'Output' | 'Preinfusion' | 'Zeit';
+    // 'Durchlaufzeit' ergaenzt fuer Pour-Over-Geraete mit Fuehrungswert
+    // 'durchlaufzeit' (K7) — ShotErfassung.svelte beschriftet die dritte
+    // Zeile je nach Bruehgeraet, dieselbe Logik wie Profilblatt.svelte.
+    label: 'Output' | 'Preinfusion' | 'Zeit' | 'Durchlaufzeit';
     einheit: string;
     ziel: number;
     spielraum: number;
     messreihe?: { min: number; max: number };
   };
 
-  let { titel, zeilen }: { titel: string; zeilen: Zeile[] } = $props();
+  let {
+    titel,
+    zeilen,
+    onAenderung,
+  }: { titel: string; zeilen: Zeile[]; onAenderung?: (werte: readonly number[]) => void } = $props();
 
   // zeilen liefert nur die Startbelegung (K3: Ist mit dem Ziel vorbelegt);
   // danach lebt der Zustand in der Komponente. untrack() macht das
   // Nur-einmal-lesen explizit.
   const ist = $state<number[]>(untrack(() => zeilen.map((z) => z.ziel)));
   const beruehrt = $state<boolean[]>(untrack(() => zeilen.map(() => false)));
+
+  // Optionaler Auswaertsweg fuer echte Bildschirme (Shot-Erfassung, Paket
+  // 03): die Musterblatt-Demo braucht ihn nicht, deshalb bleibt er ein Prop
+  // statt eines Pflichtfelds.
+  $effect(() => {
+    onAenderung?.(ist);
+  });
 
   function aendern(i: number, wert: string) {
     const zahl = Number(wert.replace(',', '.'));
@@ -61,7 +80,6 @@
       <span class="label">{zeile.label}</span>
       <input
         class="wert zahl"
-        class:fuehrung={i === 0}
         type="text"
         inputmode="decimal"
         value={wert}
@@ -90,11 +108,12 @@
     column-gap: var(--r2);
     row-gap: var(--r2);
     padding: var(--r4);
-    background: var(--feld);
-    border: 1px solid var(--feld-rahmen);
+    background: var(--blatt);
+    border-radius: var(--r-karte);
   }
   .gruppenkopf {
     grid-column: 1 / -1;
+    font-family: var(--schrift-sans);
     font-size: var(--fs-label);
     letter-spacing: var(--label-spacing);
     text-transform: uppercase;
@@ -105,7 +124,7 @@
   }
   .label {
     line-height: 1;
-    font-size: var(--fs-satz);
+    font-size: var(--fs-bedienwort);
     color: var(--satz);
   }
   .wert {
@@ -114,19 +133,18 @@
     line-height: 1;
     text-align: right;
     border: none;
-    background: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
+    padding: var(--r1) var(--r2);
     font-family: var(--schrift);
-    font-size: var(--fs-urteil);
+    font-size: var(--fs-wert);
     color: var(--tinte);
-  }
-  .wert.fuehrung {
-    width: 4ch;
-    font-size: var(--fs-fuehrung);
   }
   .einheit {
     justify-self: end;
     line-height: 1;
-    font-size: var(--fs-satz);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
     color: var(--gedaempft);
   }
   .satz {

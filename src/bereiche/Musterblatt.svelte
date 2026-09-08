@@ -22,6 +22,33 @@
   import VorbelegteFrage from '../muster/VorbelegteFrage.svelte';
   import Verlaufskurve from '../muster/Verlaufskurve.svelte';
   import LesartUmschalter from '../muster/LesartUmschalter.svelte';
+  import Bohnen from '../muster/Bohnen.svelte';
+  import Sterne from '../muster/Sterne.svelte';
+  import Einzelauswahl from '../muster/Einzelauswahl.svelte';
+  import Schalter from '../muster/Schalter.svelte';
+  import Kopfzeile from '../muster/Kopfzeile.svelte';
+  import Knopf from '../muster/Knopf.svelte';
+  import Kontextmenue from '../muster/Kontextmenue.svelte';
+  import Blattliste from '../muster/Blattliste.svelte';
+  import Blattzeile from '../muster/Blattzeile.svelte';
+  import Segment from '../muster/Segment.svelte';
+  import Werteliste from '../muster/Werteliste.svelte';
+  import AuswahlListe from '../muster/AuswahlListe.svelte';
+  import Suchfeld from '../muster/Suchfeld.svelte';
+  import Kaffeekarte from '../muster/Kaffeekarte.svelte';
+  import Parameterkachel from '../muster/Parameterkachel.svelte';
+
+  // UX-Korrekturrunde (Regel 12): Kopfzeile setzt jetzt jeder Bildschirm
+  // selbst, statt dass Rahmen.svelte sie fuer manche Routen von aussen
+  // aufsetzt — zwei Konventionen fuer dieselbe Sache war die Konstellation,
+  // aus der der fruehere doppelte "‹"-Bug entstand (siehe Kopfzeile.svelte).
+  let { onZurueck }: { onZurueck: () => void } = $props();
+
+  let einzelauswahlDemo = $state('b');
+  let schalterDemo = $state(true);
+  let segmentDemo = $state('single');
+  let auswahllisteDemo = $state('uebernommen');
+  let suchfeldDemo = $state('');
 
   const ZEICHEN_LEGENDE = [
     { klasse: 'gut', wort: 'gut' },
@@ -33,10 +60,8 @@
 </script>
 
 <div class="musterblatt">
-  <header class="kopf">
-    <h1>Musterblatt</h1>
-    <p>Paket 01b · die vierzehn gebauten Muster, hell und dunkel untereinander.</p>
-  </header>
+  <Kopfzeile titel="Musterblatt" {onZurueck} />
+  <p class="unterschrift">Paket 01b · die vierzehn gebauten Muster, hell und dunkel untereinander.</p>
 
   <section class="tokenbeleg" aria-label="Tokenbeleg">
     {#each ['hell', 'dunkel'] as const as theme (theme)}
@@ -45,8 +70,8 @@
           <div class="label">{theme.toUpperCase()} · FLÄCHEN, TINTEN, ZEICHEN</div>
           <div class="flaechen">
             <span class="swatch" style:background="var(--grund)">--grund</span>
-            <span class="swatch" style:background="var(--ruhig)">--ruhig</span>
-            <span class="swatch" style:background="var(--feld)">--feld</span>
+            <span class="swatch" style:background="var(--blatt)">--blatt</span>
+            <span class="swatch" style:background="var(--vertiefung)">--vertiefung</span>
             <span class="swatch" style:background="var(--spur)">--spur</span>
             <span class="swatch akzent" style:background="var(--akzent)">--akzent</span>
           </div>
@@ -59,8 +84,8 @@
             {/each}
           </div>
           <div class="skala">
-            <span class="zahl" style:font-size="var(--fs-fuehrung)">38,4 g</span>
-            <span class="zahl" style:font-size="var(--fs-urteil)" style:color="var(--gedaempft)">≈ 6:10 min</span>
+            <span class="zahl" style:font-size="var(--fs-wert)">38,4 g</span>
+            <span class="zahl" style:font-size="var(--fs-wert)" style:color="var(--gedaempft)">≈ 6:10 min</span>
           </div>
         </div>
       </div>
@@ -279,7 +304,7 @@
       <div class="thema stapel" data-theme={theme}>
         <VorbelegteFrage frage="Wieder entkoffeiniert?" anteil={70} begruendung="7 von 8 zuletzt" />
         <VorbelegteFrage frage="500er Kännchen?" anteil={50} begruendung="10 von 20 zuletzt" />
-        <p class="hinweis">≤ 40 % (hier nicht gezeigt): die Frage entfällt ganz.</p>
+        <p class="hinweis">≤ 40 %: der Aufrufer bindet das Bauteil dann gar nicht erst ein (Fund 2026-09-06 — das Bauteil selbst blendet sich nicht mehr aus).</p>
       </div>
     {/each}
   </section>
@@ -298,8 +323,8 @@
             { x: 0.95, y: 0.62 },
           ]}
           achsMarken={['3,60', '3,75', '3,90']}
-          totzone={{ vonY: 0.25, bisY: 0.4, wort: 'toter Bereich' }}
-          ereignisX={0.5}
+          totzonen={[{ vonY: 0.25, bisY: 0.4, wort: 'toter Bereich' }]}
+          ereignisse={[0.5]}
         />
         <Verlaufskurve punkte={[]} achsMarken={['3,60', '3,75', '3,90']} />
       </div>
@@ -322,6 +347,226 @@
       Vorgemerkt und bis heute nicht gebraucht (K41) — kein Bildschirm verlangt sie. Absichtlich nicht gebaut.
     </p>
   </section>
+
+  <!-- Röstgrad und Bewertung — Systemregel K79, kein Muster aus der Übergabe -->
+  <section class="muster">
+    <h2>Röstgrad & Bewertung · K79</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Bohnen stufe={4} />
+        <Bohnen stufe={undefined} />
+        <Sterne wert={3.5} />
+        <Sterne wert={undefined} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Einzelauswahl/Schalter — Ergaenzung fuer Verwaltungsformulare, kein natives select/checkbox -->
+  <section class="muster">
+    <h2>Einzelauswahl & Schalter · Formulare</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Einzelauswahl
+          optionen={[
+            { wert: 'a', label: 'Single' },
+            { wert: 'b', label: 'Blend' },
+          ]}
+          wert={einzelauswahlDemo}
+          onWahl={(w) => (einzelauswahlDemo = w)}
+        />
+        <Schalter label="entkoffeiniert" an={schalterDemo} onWahl={(a) => (schalterDemo = a)} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Segment — produktiv u. a. in KaffeeNeu.svelte (Single Origin/Blend) -->
+  <section class="muster">
+    <h2>Segment · Gleich breite Felder</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Segment
+          optionen={[
+            { wert: 'single', label: 'Single Origin' },
+            { wert: 'blend', label: 'Blend' },
+          ]}
+          wert={segmentDemo}
+          onWahl={(w) => (segmentDemo = w)}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- AuswahlListe — produktiv u. a. in TempReferenz.svelte (Herkunft-Auswahl) -->
+  <section class="muster">
+    <h2>AuswahlListe · Zuklappbares Auswahlfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <AuswahlListe
+          optionen={[
+            { wert: 'gemessen', label: 'gemessen', symbol: 'punkt' },
+            { wert: 'uebernommen', label: 'übernommen', symbol: 'ring' },
+            { wert: 'geschaetzt', label: 'geschätzt', symbol: 'gestrichelt' },
+          ]}
+          wert={auswahllisteDemo}
+          onWahl={(w) => (auswahllisteDemo = w)}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Suchfeld — produktiv einziger Aufrufer KaffeeListe.svelte -->
+  <section class="muster">
+    <h2>Suchfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Suchfeld wert={suchfeldDemo} onWert={(w) => (suchfeldDemo = w)} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kaffeekarte — Trägerform der Kaffeeliste (Handoff Abschnitt 5) -->
+  <section class="muster">
+    <h2>Kaffeekarte</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Kaffeekarte name="Espresso Entcoffeiniert" roester="Café Langen" roestgrad={4} bewertung={3.5} onOeffnen={() => {}} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Parameterkachel — zweispaltiges Raster, produktiv in Profilblatt/ShotErfassung -->
+  <section class="muster">
+    <h2>Parameterkachel · Raster</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <div class="parameter-raster">
+          <Parameterkachel symbol="input" label="Input" wert={18} einheit="g" onAendern={() => {}} />
+          <Parameterkachel symbol="mahlgrad" label="Mahlgrad" wert="3,65" onAendern={() => {}} />
+          <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={4} einheit="s" onAendern={() => {}} />
+          <Parameterkachel symbol="bruehgruppe" label="Brühgruppe" wert="≈94" einheit="°C" />
+          <Parameterkachel symbol="output" label="Output" wert={38.4} einheit="g" onAendern={() => {}} />
+          <Parameterkachel symbol="zeit" label="Zeit" wert={undefined} einheit="s" onAendern={() => {}} />
+        </div>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Werteliste — Spielraum-Editor in Profilblatt.svelte -->
+  <section class="muster">
+    <h2>Werteliste · Zeilen mit Wertfeld</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Werteliste
+          zeilen={[
+            { label: 'Zeit ±', wert: 2, einheit: 's', onAendern: () => {} },
+            { label: 'Output ±', wert: 0.4, einheit: 'g', onAendern: () => {} },
+            { label: 'Durchlaufzeit ±', wert: 5, einheit: 's', onAendern: () => {} },
+          ]}
+        />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Formularzeile/Eingabefeld-Text — globale Utility (tokens.css), produktiv
+       in allen Geräteformularen (Bruehgeraetblatt, Muehleblatt, Setupblatt, …) -->
+  <section class="muster">
+    <h2>Formularzeile · Eingabefeld Text</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Bezeichnung</span>
+          <input class="eingabefeld-text" type="text" value="Timemore Sculptor" />
+        </div>
+        <div class="formularzeile">
+          <span class="formularzeile-label">Nicht änderbar</span>
+          <input class="eingabefeld-text" type="text" value="gesperrt" disabled />
+        </div>
+      </div>
+    {/each}
+  </section>
+
+  <section class="muster">
+    <h2>Kopfzeile · Standard</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kopfzeile gross — Objektseiten (mit Rückweg, z. B. Kaffeeblatt) und
+       Root-Tab-Screens (ohne Rückweg, z. B. Kaffeeliste/Einstellungen) -->
+  <section class="muster">
+    <h2>Kopfzeile · Groß (32/600)</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Kopfzeile titel="Espresso Entcoffeiniert" onZurueck={() => {}} gross />
+        <Kopfzeile titel="Kaffees" gross />
+      </div>
+    {/each}
+  </section>
+
+  <!-- Fokuszustand — global in tokens.css (:focus-visible), keine eigene
+       Muster-Komponente. Mit Tab anspringen, um den Ring zu prüfen. -->
+  <section class="muster">
+    <h2>Fokuszustand · Tastatur/Screenreader</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <button type="button" class="fokus-demo">mit Tab anspringen</button>
+        <p class="hinweis">Ring in Akzentfarbe, 2 px, unabhängig von jeder Auswahlmarkierung (Handoff 3.7).</p>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Knopf — UX-Korrekturrunde, Regel 3/6: eine Hierarchie statt gefuellter Akzentknoepfe -->
+  <section class="muster">
+    <h2>Knopf · Hierarchie</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <Knopf stufe="primaer"><span>speichern</span></Knopf>
+        <Knopf stufe="sekundaer"><span>abbrechen</span></Knopf>
+        <Knopf stufe="still"><span>verwerfen</span></Knopf>
+        <Knopf stufe="kritisch"><span>löschen</span></Knopf>
+        <Knopf stufe="primaer" deaktiviert><span>speichern</span></Knopf>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Kontextmenue — UX-Korrekturrunde, Regel 4: ab zwei Sekundaeraktionen -->
+  <section class="muster">
+    <h2>Kontextmenü · Sekundäraktionen</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema reihe" data-theme={theme}>
+        <Kopfzeile titel="Timemore Sculptor" onZurueck={() => {}}>
+          {#snippet aktion()}
+            <Kontextmenue
+              eintraege={[
+                { text: 'bearbeiten', onWahl: () => {} },
+                { text: 'löschen', kritisch: true, onWahl: () => {} },
+              ]}
+            />
+          {/snippet}
+        </Kopfzeile>
+      </div>
+    {/each}
+  </section>
+
+  <!-- Blattliste/Blattzeile — Etappe 8, Block D. Ersetzt das siebenfach
+       wortgleich nachgebaute "Blatt mit Zeilen" (Einstellungen, Geräte,
+       Backup, Getränkeliste, Personen, Beobachtungen, Temperatur-Referenz). -->
+  <section class="muster">
+    <h2>Blattliste · Blattzeile</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema" data-theme={theme}>
+        <Blattliste>
+          <Blattzeile label="Timemore Sculptor" betont onKlick={() => {}} />
+          <Blattzeile label="Kaffeeklatsch, entkoffeiniert" meta="Espresso · ausgeblendet" gedaempft onKlick={() => {}} />
+          <Blattzeile label="Geräte verwalten" akzent onKlick={() => {}} />
+          <Blattzeile label="+ Setup" akzent chevron={false} onKlick={() => {}} />
+        </Blattliste>
+      </div>
+    {/each}
+  </section>
 </div>
 
 <style>
@@ -332,13 +577,8 @@
     max-width: 100%;
     padding: var(--seitenrand) var(--seitenrand) calc(var(--r7) + var(--safe-unten));
   }
-  .kopf h1 {
-    margin: 0 0 var(--r2);
-    font-size: var(--fs-titel);
-    font-weight: var(--gw-titel);
-  }
-  .kopf p {
-    margin: 0;
+  .unterschrift {
+    margin: calc(var(--r4) * -1) 0 0;
     color: var(--gedaempft);
     font-size: var(--fs-satz);
   }
@@ -374,6 +614,17 @@
     color: var(--gedaempft);
     font-size: var(--fs-meta);
   }
+  .fokus-demo {
+    min-height: var(--treffer);
+    padding: 0 var(--r3);
+    border: none;
+    border-radius: var(--r-wertfeld);
+    background: var(--vertiefung);
+    color: var(--tinte);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
+    cursor: pointer;
+  }
 
   .tokenbeleg {
     display: flex;
@@ -405,7 +656,7 @@
     border: 1px solid var(--linie);
   }
   .swatch.akzent {
-    color: var(--h-papier);
+    color: var(--auf-fuellung);
   }
   .zeichenreihe {
     display: flex;
@@ -426,7 +677,7 @@
     border-radius: 50%;
   }
   .zeichen.gut {
-    background: var(--marke-gut);
+    background: var(--tinte);
   }
   .zeichen.achtung {
     border: 1px solid var(--achtung);

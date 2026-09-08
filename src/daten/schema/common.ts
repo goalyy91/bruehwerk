@@ -23,7 +23,15 @@ export const Zeitpunkt = z.number().int().nonnegative();
 export const Herkunft = z.enum(['gemessen', 'uebernommen', 'geschaetzt']);
 export type Herkunft = z.infer<typeof Herkunft>;
 
-/** Bewertungsstufen am Shot. Kein numerischer Score — vier feste Woerter. */
+/**
+ * Bewertungsstufen am Shot. Kein numerischer Score — feste Woerter.
+ *
+ * Die Bedienung kennt seit 2026-09-08 nur noch drei ('daneben', 'okay',
+ * 'sehr gut'). 'referenz' bleibt hier stehen, weil bereits geloggte Shots es
+ * tragen — wer es aus dem Schema nimmt, macht diese Shots ungueltig. Neu
+ * vergeben wird es nicht mehr, angezeigt wird es als 'sehr gut'
+ * (domain/tasting.ts::berechneGesamt).
+ */
 export const Urteil = z.enum(['daneben', 'okay', 'sehr gut', 'referenz']);
 export type Urteil = z.infer<typeof Urteil>;
 

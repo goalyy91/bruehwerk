@@ -71,7 +71,8 @@ export interface PruefBericht {
  * (100+ Clicks, siehe "Art Kaffee") — ist per Zahlenbereich nicht
  * eindeutig und landet im Bericht statt geraten zu werden.
  */
-function erkenneMuehle(mgRoh: string | undefined): MuehlenBefund {
+/** Exportiert fuer migrieren.ts — dieselbe Zuordnungsregel, nicht dupliziert. */
+export function erkenneMuehle(mgRoh: string | undefined): MuehlenBefund {
   if (mgRoh === undefined) return { muehle: null, mgRoh: null };
   const zahl = ersteZahl(mgRoh);
   if (zahl === null) return { muehle: null, mgRoh };
@@ -80,20 +81,29 @@ function erkenneMuehle(mgRoh: string | undefined): MuehlenBefund {
   return { muehle: null, mgRoh };
 }
 
-/** Liest die fuehrende Zahl aus Text wie "3,9", "30", "~18g" oder "unbekannt/sehr fein (…)". */
-function ersteZahl(text: string): number | null {
+/**
+ * Liest die fuehrende Zahl aus Text wie "3,9", "30", "~18g" oder
+ * "unbekannt/sehr fein (…)". Exportiert fuer migrieren.ts.
+ */
+export function ersteZahl(text: string): number | null {
   const treffer = /-?\d+(?:[.,]\d+)?/.exec(text);
   if (!treffer) return null;
   const zahl = Number(treffer[0].replace(',', '.'));
   return Number.isFinite(zahl) ? zahl : null;
 }
 
-function sterneOderZahl(wert: unknown): number | undefined {
+/** Exportiert fuer migrieren.ts — liest "⭐⭐⭐⭐" oder eine reine Zahl. */
+export function sterneOderZahl(wert: unknown): number | undefined {
   if (typeof wert === 'number') return wert;
   if (typeof wert !== 'string' || wert.length === 0) return undefined;
   if (/^⭐+$/u.test(wert)) return [...wert].length;
   const zahl = Number(wert);
   return Number.isFinite(zahl) ? zahl : undefined;
+}
+
+/** Exportiert fuer migrieren.ts — dieselbe Titel-Heuristik, nicht dupliziert. */
+export function erkenneDecaf(titel: string): boolean {
+  return /decaf|entcoffeiniert/i.test(titel);
 }
 
 function profilBefund(e: ProfilEntwurf): ProfilBefund {
@@ -146,7 +156,7 @@ export function pruefeSeiten(seiten: readonly SeedSeite[]): PruefBericht {
     kaffees.push({
       titel: seite.titel,
       roester,
-      entkoffeiniert: /decaf|entcoffeiniert/i.test(seite.titel),
+      entkoffeiniert: erkenneDecaf(seite.titel),
       bewertung: sterneOderZahl(seite.properties['Bewertung']),
       profile,
       shots,

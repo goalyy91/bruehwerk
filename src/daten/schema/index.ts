@@ -7,5 +7,8 @@ export * from './common';
 export * from './geraete';
 export * from './kaffee';
 export * from './shot';
+export * from './beobachtung';
 export * from './getraenk';
 export * from './bestellung';
+export * from './einstellungen';
+export * from './uebung';

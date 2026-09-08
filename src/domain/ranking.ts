@@ -110,3 +110,44 @@ export function begruendung(v: Vorbelegung): string | null {
   if (!v.frage || v.von === 0) return null;
   return `${v.treffer} von ${v.von} zuletzt`;
 }
+
+/** Minimaler Ausschnitt einer Position, den das Ranking braucht — kein Import aus daten/schema (domain/ bleibt unabhaengig davon). */
+export interface PositionFuerRanking {
+  /** Fehlt bei Positionen aus dem Mengen-Modus (keine Personenzuordnung). */
+  readonly personId?: string;
+  readonly getraenkId: string;
+  readonly ts: number;
+}
+
+/**
+ * Getraenke einer Person nach Decay-Score sortiert, hoechster Score zuerst —
+ * die Reihenfolge fuer den Getraenk-Schritt der Bestellung (Paket 06) und
+ * fuer die Zwei-Tap-Kacheln auf dem Bar-Screen (Paket 07). Bisher stand das
+ * als $derived.by-Block inline in BestellungAufnehmen.svelte; hier einmal
+ * statt zweimal (ux-regeln.md Regel 6/12).
+ *
+ * `getraenke` traegt schon die gewuenschte Vorauswahl (z. B. nur aktive) —
+ * diese Funktion sortiert nur um, sie filtert nicht.
+ *
+ * `personId` ohne Wert (Redesign v2, Etappe 7 — Mengen-Modus) zaehlt alle
+ * Positionen ungefiltert statt je Person — dieselbe Rechnung, kein zweiter
+ * Code-Pfad.
+ */
+export function rangiereGetraenke<G extends { readonly id: string }>(
+  positionen: readonly PositionFuerRanking[],
+  getraenke: readonly G[],
+  personId: string | undefined,
+  jetzt: number,
+): G[] {
+  const zeitenJeGetraenk = new Map<string, number[]>();
+  for (const p of positionen) {
+    if (personId !== undefined && p.personId !== personId) continue;
+    const liste = zeitenJeGetraenk.get(p.getraenkId) ?? [];
+    liste.push(p.ts);
+    zeitenJeGetraenk.set(p.getraenkId, liste);
+  }
+  return [...getraenke]
+    .map((g) => ({ getraenk: g, score: score(zeitenJeGetraenk.get(g.id) ?? [], jetzt) }))
+    .sort((a, b) => b.score - a.score)
+    .map((e) => e.getraenk);
+}

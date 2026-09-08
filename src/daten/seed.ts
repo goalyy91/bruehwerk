@@ -1,0 +1,88 @@
+/**
+ * Startbelegung des Geraeteparks in die leere IndexedDB schreiben —
+ * einmalig, beim allerersten Start. stammdaten.ts traegt nur, was das
+ * Konzept tatsaechlich beziffert (siehe dort); diese Datei schreibt es in
+ * die Ablage, mehr nicht.
+ *
+ * Erkennung "leer" laeuft ueber die Sammlung 'bruehgeraet': gibt es dort
+ * schon einen Datensatz, hat entweder die Migration (Paket 02) oder ein
+ * vorheriger Start bereits geschrieben — dann wird nichts ueberschrieben.
+ */
+import { alle, lesen, schreiben } from './ablage';
+import { MUEHLEN, BRUEHGERAETE, ZUBEHOER, SETUPS, ABLAUF_LEER, SYMPTOME_STAMM, AUFFAELLIGKEITEN_STAMM, PERSON_JULIAN } from './stammdaten';
+import { AROMASETS } from './aromen';
+import { GETRAENKE } from './stammdaten-getraenke';
+import { EINSTELLUNGEN_ID } from './schema';
+
+export async function seedFallsLeer(): Promise<void> {
+  // Paket 06 haengt die Cold-Brew-Karaffe (BRUEHGERAET_COLDBREW_KARAFFE) und
+  // ihr Setup an dieselben Listen — auf einem frischen Profil kommen sie
+  // automatisch mit. Auf einer bereits befuellten DB (dieses Gate greift
+  // nur bei komplett leerem 'bruehgeraet') muessten sie einmalig von Hand
+  // nachgetragen werden; bei einem einzigen Nutzer ohne echte Migrations-
+  // Infrastruktur ist das der bewusst einfachere Weg (siehe CLAUDE.md,
+  // Entscheidungsregel "einfachere vs. komplexere Loesung").
+  const vorhandene = await alle('bruehgeraet');
+  if (vorhandene.length === 0) {
+    await schreiben('ablauf', ABLAUF_LEER);
+    for (const muehle of MUEHLEN) await schreiben('muehle', muehle);
+    for (const bruehgeraet of BRUEHGERAETE) await schreiben('bruehgeraet', bruehgeraet);
+    for (const zubehoer of ZUBEHOER) await schreiben('zubehoer', zubehoer);
+    for (const setup of SETUPS) await schreiben('setup', setup);
+  }
+
+  // Eigenes Gate: der Symptom-Store bleibt leer, solange nur Geraete gesetzt
+  // wurden (z. B. teilweise migrierte DB) — er wird unabhaengig geprueft.
+  // Die Fehlerliste des Verkostungsbogens (K53, AUFFAELLIGKEITEN_STAMM) lebt
+  // im selben Store (gruppe: 'auffaelligkeit', siehe daten/schema/shot.ts)
+  // und gehoert deshalb ins selbe Gate.
+  const symptomeVorhanden = await alle('symptom');
+  if (symptomeVorhanden.length === 0) {
+    for (const symptom of [...SYMPTOME_STAMM, ...AUFFAELLIGKEITEN_STAMM]) await schreiben('symptom', symptom);
+  }
+
+  // Paket 05 — die zwei Aromen-Sets (SCA + Le Nez, daten/aromen.ts).
+  //
+  // Kein "nur falls leer"-Gate wie oben, sondern **Durchschreiben bei jedem
+  // Start**: die Le-Nez-Flaeschchenliste waechst mit jedem Haeppchen
+  // eingescannter Datenblaetter (aroma-datenblaetter.ts). Mit einem
+  // Leer-Gate wuerde auf einem bereits benutzten Geraet fuer immer die erste,
+  // fast leere Fassung stehen bleiben — der Nachtrag kaeme nie an.
+  //
+  // Das ist gefahrlos, weil ein Aromaset reines Nachschlagewerk ist und
+  // keine Nutzereingaben traegt: die Uebungsergebnisse liegen getrennt im
+  // 'uebung'-Store (daten/schema/uebung.ts) und sind an die Flaeschchen-Id
+  // gebunden, die sich nie aendert. Ueberschrieben wird ausschliesslich, was
+  // in AROMASETS steht — ein selbst angelegtes Set bliebe unberuehrt.
+  for (const aromaset of AROMASETS) await schreiben('aromaset', aromaset);
+
+  // Paket 06 — die neun Getraenke zum Start (daten/stammdaten-getraenke.ts).
+  const getraenkeVorhanden = await alle('getraenk');
+  if (getraenkeVorhanden.length === 0) {
+    for (const getraenk of GETRAENKE) await schreiben('getraenk', getraenk);
+  }
+
+  // Paket 06 — Standard ist Julian (konzept.md:683).
+  const personenVorhanden = await alle('person');
+  if (personenVorhanden.length === 0) {
+    await schreiben('person', PERSON_JULIAN);
+  }
+
+  // Eigenes Gate, unabhaengig vom Geraetepark oben — sonst wuerde der
+  // Singleton uebersprungen, sobald irgendein Geraet (z.B. aus der
+  // Migration) schon existiert.
+  const einstellungenVorhanden = await lesen('einstellungen', EINSTELLUNGEN_ID);
+  if (!einstellungenVorhanden) {
+    await schreiben('einstellungen', {
+      id: EINSTELLUNGEN_ID,
+      begruendungKoffein: true,
+      begruendungBohne: true,
+      sammelSchaeumen: 'einzeln',
+      bestandKnappBezuege: 2,
+      bestandFrischWochen: 8,
+      bestandEingefrorenMonate: 8,
+      // Ohne Festlegung entscheidet das Telefon (siehe schema/einstellungen.ts).
+      thema: 'system',
+    });
+  }
+}

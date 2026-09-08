@@ -6,10 +6,12 @@
  * geliefert"): die Temperatur-Referenztabelle traegt deshalb nur die
  * Startbelegung Kessel-27K, nicht erfundene Zwischenwerte.
  *
- * Setups (Muehle+Bruehgeraet+Ablauf gebunden) entstehen erst in Paket 03 —
- * ein Ablauf mit Ruestzeiten ist hier noch nicht spezifiziert.
+ * Setups (Muehle+Bruehgeraet+Ablauf gebunden) stehen ab Paket 03 — der
+ * Ablauf dahinter ist bewusst leer (K48), die echten Ruestzeiten-Buendel
+ * spezifiziert erst der Planer in Paket 06.
  */
-import type { Muehle, Bruehgeraet, Zubehoer } from './schema';
+import type { Muehle, Bruehgeraet, Zubehoer, Ablauf, Setup, Symptom, Person } from './schema';
+import { SYMPTOME } from '../domain/diagnose';
 
 export const MUEHLE_SCULPTOR: Muehle = {
   id: 'muehle-sculptor',
@@ -34,7 +36,7 @@ export const BRUEHGERAET_MOZZAFIATO: Bruehgeraet = {
   gruppen: 1,
   dampflanze: true,
   ktEinstellbar: true,
-  sieb: { art: 'doppel', portionen: 2 },
+  sieb: { art: 'doppel' },
   fuehrungswert: 'output',
   mengen: [1, 2],
   flushDauer: 3,
@@ -42,9 +44,9 @@ export const BRUEHGERAET_MOZZAFIATO: Bruehgeraet = {
   // Gattungsregel, keine Messung an dieser Maschine). Deckt den genutzten
   // KT-Bereich 119-121 ab; die echte Messreihe ersetzt das spaeter.
   tempReferenz: [
-    { kt: 119, flush: 3, gruppe: 92, herkunft: 'geschaetzt' },
-    { kt: 120, flush: 3, gruppe: 93, herkunft: 'geschaetzt' },
-    { kt: 121, flush: 3, gruppe: 94, herkunft: 'geschaetzt' },
+    { kt: 119, gruppe: 92, herkunft: 'geschaetzt' },
+    { kt: 120, gruppe: 93, herkunft: 'geschaetzt' },
+    { kt: 121, gruppe: 94, herkunft: 'geschaetzt' },
   ],
 };
 
@@ -84,6 +86,23 @@ export const BRUEHGERAET_HARIO_V60: Bruehgeraet = {
   tempReferenz: [],
 };
 
+/**
+ * Cold Brew — Startwert "Karaffe" aus der Tabelle konzept.md:944-951.
+ * fuehrungswert: keiner (konzept.md:966, wie Moka gibt es hier nichts zu
+ * fuehren — ein Vorrat mit Fertig-Zeitpunkt, keine laufende Groesse).
+ */
+export const BRUEHGERAET_COLDBREW_KARAFFE: Bruehgeraet = {
+  id: 'bruehgeraet-coldbrew-karaffe',
+  name: 'Cold-Brew-Karaffe',
+  typ: 'coldbrew',
+  gruppen: 1,
+  dampflanze: false,
+  ktEinstellbar: false,
+  fuehrungswert: null,
+  mengen: [1],
+  tempReferenz: [],
+};
+
 export const ZUBEHOER_KAENNCHEN_350: Zubehoer = {
   id: 'zubehoer-kaennchen-350',
   name: 'Milchkaennchen 350 ml',
@@ -115,10 +134,140 @@ export const BRUEHGERAETE: readonly Bruehgeraet[] = [
   BRUEHGERAET_BIALETTI_1,
   BRUEHGERAET_BIALETTI_3,
   BRUEHGERAET_HARIO_V60,
+  BRUEHGERAET_COLDBREW_KARAFFE,
 ];
 
 export const ZUBEHOER: readonly Zubehoer[] = [
   ZUBEHOER_KAENNCHEN_350,
   ZUBEHOER_KAENNCHEN_500,
   ZUBEHOER_SCHWANENHALS,
+];
+
+/**
+ * K48 — Ablauf ist reines Rechenmodell (Ressourcen, Ruestzeiten,
+ * Buendel) und erscheint nirgends in der Oberflaeche. Die echten
+ * Ruestzeiten-Buendel sind erst mit dem Planer (Paket 06) spezifiziert;
+ * bis dahin traegt jedes Setup einen leeren Ablauf, damit die
+ * Pflichtbindung Setup.ablaufId nie unerfuellt bleibt.
+ */
+export const ABLAUF_LEER: Ablauf = {
+  id: 'ablauf-leer',
+  schritte: [],
+  buendel: [],
+};
+
+/**
+ * Vier Setups aus "Dein Geraetepark": jedes Profil haengt an einem Setup,
+ * damit ein Mahlgrad nie ohne Muehle gelesen wird (Befund 2). Sculptor und
+ * K6 stehen fuer Pour Over gleichberechtigt nebeneinander — beide Muehlen
+ * sind fuer den Hario V60 vorgesehen, ihre Mahlgrade sind nicht
+ * ineinander umrechenbar.
+ */
+export const SETUP_ESPRESSO: Setup = {
+  id: 'setup-espresso',
+  name: 'Espresso · Sculptor · Mozzafiato',
+  muehleId: MUEHLE_SCULPTOR.id,
+  bruehgeraetId: BRUEHGERAET_MOZZAFIATO.id,
+  zubehoerIds: [ZUBEHOER_KAENNCHEN_350.id, ZUBEHOER_KAENNCHEN_500.id],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_POUR_OVER_SCULPTOR: Setup = {
+  id: 'setup-pourover-sculptor',
+  name: 'Pour Over · Sculptor · V60',
+  muehleId: MUEHLE_SCULPTOR.id,
+  bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
+  zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_POUR_OVER_K6: Setup = {
+  id: 'setup-pourover-k6',
+  name: 'Pour Over · K6 · V60',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_HARIO_V60.id,
+  zubehoerIds: [ZUBEHOER_SCHWANENHALS.id],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_MOKA_1: Setup = {
+  id: 'setup-moka-1',
+  name: 'Moka · K6 · Bialetti 1 Tasse',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_BIALETTI_1.id,
+  zubehoerIds: [],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+export const SETUP_MOKA_3: Setup = {
+  id: 'setup-moka-3',
+  name: 'Moka · K6 · Bialetti 3 Tassen',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_BIALETTI_3.id,
+  zubehoerIds: [],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+/** Cold Brew mahlt an der K6 — "deutlich groeber" als der Moka-Bereich (konzept.md:949), die konkrete Zahl liefert der erste Ansatz. */
+export const SETUP_COLDBREW: Setup = {
+  id: 'setup-coldbrew',
+  name: 'Cold Brew · K6 · Karaffe',
+  muehleId: MUEHLE_K6.id,
+  bruehgeraetId: BRUEHGERAET_COLDBREW_KARAFFE.id,
+  zubehoerIds: [],
+  ablaufId: ABLAUF_LEER.id,
+};
+
+/**
+ * Die elf System-Chips (Paket 04) als Symptom-Datensaetze — domain/diagnose.ts
+ * traegt den Katalog, hier wird daraus nur der Store-Eintrag. Ids sind die
+ * Katalog-Ids selbst (stabil, menschenlesbar), keine UUIDs — das Regelwerk
+ * verweist per Id auf sie und darf sich beim Seeden nicht verschieben.
+ */
+export const SYMPTOME_STAMM: readonly Symptom[] = SYMPTOME.map((s) => ({
+  id: s.id,
+  label: s.label,
+  gruppe: s.gruppe,
+  quelle: 'system' as const,
+}));
+
+/**
+ * Die Fehlerliste des Verkostungsbogens (K53) — zehn SCA-Standardfehler,
+ * eigener Katalog neben den elf Dial-in-Symptomen oben: andere Gruppe
+ * ('auffaelligkeit'), andere Chip-Reihe (Verkostungsbogen.svelte statt
+ * ShotErfassung.svelte), kein Regelwerk dahinter. Wie die Dial-in-Chips
+ * traegt jeder Chip seine Staerke selbst (Chips.svelte, leicht/deutlich),
+ * nicht diese Liste.
+ */
+export const AUFFAELLIGKEITEN_STAMM: readonly Symptom[] = [
+  { id: 'papierig', label: 'papierig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'holzig', label: 'holzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'gummig', label: 'gummig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'fermentiert', label: 'fermentiert', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'phenolisch', label: 'phenolisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'erdig', label: 'erdig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'muffig', label: 'muffig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'ranzig', label: 'ranzig', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'medizinisch', label: 'medizinisch', gruppe: 'auffaelligkeit', quelle: 'system' },
+  { id: 'aschig', label: 'aschig', gruppe: 'auffaelligkeit', quelle: 'system' },
+];
+
+/** Standard ist Julian, ueberall umstellbar (konzept.md:683, :1039). */
+export const PERSON_JULIAN: Person = {
+  id: 'person-julian',
+  vorname: 'Julian',
+  aktiv: true,
+  standard: true,
+  favoriten: [],
+  koffeinAnteil: 0,
+  extraShotAnteil: 0,
+};
+
+export const SETUPS: readonly Setup[] = [
+  SETUP_ESPRESSO,
+  SETUP_POUR_OVER_SCULPTOR,
+  SETUP_POUR_OVER_K6,
+  SETUP_MOKA_1,
+  SETUP_MOKA_3,
+  SETUP_COLDBREW,
 ];

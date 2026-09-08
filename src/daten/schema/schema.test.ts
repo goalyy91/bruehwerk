@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { Kaffee, Bruehgeraet, Muehle, Shot, Profil } from './index';
+import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset } from './index';
 import { MUEHLE_K6, BRUEHGERAET_MOZZAFIATO, BRUEHGERAET_BIALETTI_1 } from '../stammdaten';
+import { AROMASET_SCA, AROMASET_LENEZ } from '../aromen';
 
 const KAFFEE_BASIS = {
   id: 'k1',
@@ -32,6 +33,12 @@ describe('Kaffee — Grenzfaelle', () => {
   it('botanik muss auf 100 summieren', () => {
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 40 } }).success).toBe(false);
     expect(Kaffee.safeParse({ ...KAFFEE_BASIS, botanik: { arabicaProzent: 70, robustaProzent: 30 } }).success).toBe(true);
+  });
+
+  it('ein altes status-Feld (offen/angebrochen/leer) laesst sich weiterhin lesen — es faellt dabei weg (UX-2)', () => {
+    const ergebnis = Kaffee.safeParse({ ...KAFFEE_BASIS, status: 'angebrochen' });
+    expect(ergebnis.success).toBe(true);
+    if (ergebnis.success) expect(ergebnis.data).not.toHaveProperty('status');
   });
 });
 
@@ -80,7 +87,7 @@ describe('Shot und Profil — Grundform', () => {
     expect(Shot.safeParse(shot).success).toBe(true);
   });
 
-  it('portionen ausserhalb {1,2} schlaegt fehl', () => {
+  it('portionen 3 ist gueltig (K18 — die 3er-Bialetti bedient drei Tassen)', () => {
     const shot = {
       id: 's1',
       ts: Date.now(),
@@ -91,6 +98,22 @@ describe('Shot und Profil — Grundform', () => {
       ist: ZIEL,
       istHerkunft: {},
       portionen: 3,
+      urteil: 'okay',
+    };
+    expect(Shot.safeParse(shot).success).toBe(true);
+  });
+
+  it('portionen ausserhalb {1,2,3} schlaegt fehl', () => {
+    const shot = {
+      id: 's1',
+      ts: Date.now(),
+      kaffeeId: 'k1',
+      chargeId: 'c1',
+      profilId: 'p1',
+      setupId: 'su1',
+      ist: ZIEL,
+      istHerkunft: {},
+      portionen: 4,
       urteil: 'okay',
     };
     expect(Shot.safeParse(shot).success).toBe(false);
@@ -108,5 +131,100 @@ describe('Shot und Profil — Grundform', () => {
       modus: 'dialin',
     };
     expect(Profil.safeParse(profil).success).toBe(true);
+  });
+});
+
+describe('GussBaustein — sechs typisierte Bausteine plus Altbestand', () => {
+  it('jeder Konzept-Baustein ist gueltig', () => {
+    const bausteine: unknown[] = [
+      { typ: 'vorbereiten', filterSpuelen: true, gefaessVorwaermen: false },
+      { typ: 'bloom', menge: 50, dauer: 30 },
+      { typ: 'guss', zielmenge: 150, dauer: 30, muster: 'spirale' },
+      { typ: 'agitation', art: 'rao-spin' },
+      { typ: 'warten', modus: 'bis-durchgelaufen' },
+      { typ: 'bypass', menge: 20, temperatur: 90 },
+    ];
+    for (const b of bausteine) expect(GussBaustein.safeParse(b).success).toBe(true);
+  });
+
+  it('die alte generische Form (Notion-Migration) bleibt gueltig', () => {
+    const alt = { typ: 'frei', menge: 50, dauer: 30, rolle: 'Bloom', text: 'gleichmaessig durchfeuchten' };
+    expect(GussBaustein.safeParse(alt).success).toBe(true);
+  });
+
+  it('ein unbekannter typ faellt durch', () => {
+    expect(GussBaustein.safeParse({ typ: 'unbekannt', menge: 1 }).success).toBe(false);
+  });
+
+  it('guss ohne Muster ist gueltig — Muster ist optional', () => {
+    expect(GussBaustein.safeParse({ typ: 'guss', zielmenge: 300 }).success).toBe(true);
+  });
+
+  it('ein Gussplan mit gemischten Bausteintypen ist gueltig', () => {
+    const plan = {
+      id: 'g1',
+      name: 'V60 Standard',
+      gesamtwasser: 300,
+      lesart: 'kumulativ',
+      bausteine: [
+        { typ: 'bloom', menge: 50, dauer: 30 },
+        { typ: 'guss', zielmenge: 300, muster: 'zentrum' },
+        { typ: 'frei', menge: 0, rolle: 'Warten', text: 'bis durchgelaufen' },
+      ],
+    };
+    expect(Gussplan.safeParse(plan).success).toBe(true);
+  });
+});
+
+describe('Groessen — fuenf Stufen, keine zehn (K52, konzept.md:764)', () => {
+  const GUELTIG = { saeure: 2, koerper: 2, bitterkeit: 2, aroma: 0, suesse: 4, nachklang: 2 };
+
+  it('Index 0..4 ist gueltig', () => {
+    expect(Groessen.safeParse(GUELTIG).success).toBe(true);
+  });
+
+  it('Index 5 (altes 0-10-Kontinuum) faellt durch', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: 5 }).success).toBe(false);
+  });
+
+  it('negativer Index faellt durch', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: -1 }).success).toBe(false);
+  });
+
+  it('ein Kommawert faellt durch — die Treppe kennt nur ganze Staebe', () => {
+    expect(Groessen.safeParse({ ...GUELTIG, saeure: 2.5 }).success).toBe(false);
+  });
+});
+
+describe('Tasting — Bindung an den Shot', () => {
+  it('ein minimales Tasting ohne Aromen/Auffaelligkeiten ist gueltig', () => {
+    const tasting = {
+      id: 't1',
+      shotId: 's1',
+      groessen: { saeure: 2, koerper: 2, bitterkeit: 2, aroma: 2, suesse: 2, nachklang: 2 },
+    };
+    expect(Tasting.safeParse(tasting).success).toBe(true);
+  });
+});
+
+describe('Aromaset — drei feste Ebenen (K55)', () => {
+  it('AROMASET_SCA aus daten/aromen.ts ist gueltig und nicht platzhalter', () => {
+    const ergebnis = Aromaset.safeParse(AROMASET_SCA);
+    expect(ergebnis.success).toBe(true);
+    if (ergebnis.success) expect(ergebnis.data.platzhalter).toBe(false);
+  });
+
+  it('AROMASET_LENEZ ist gueltig, traegt 60 Flaeschchen und ist als platzhalter markiert', () => {
+    const ergebnis = Aromaset.safeParse(AROMASET_LENEZ);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.platzhalter).toBe(true);
+    const anzahl = ergebnis.data.kategorien.flatMap((k) => k.gruppen).flatMap((g) => g.aromen).length;
+    expect(anzahl).toBe(60);
+  });
+
+  it('eine Kategorie ohne Gruppen faellt durch', () => {
+    const kaputt = { ...AROMASET_SCA, kategorien: [{ id: 'x', label: 'X', gruppen: [] }] };
+    expect(Aromaset.safeParse(kaputt).success).toBe(false);
   });
 });

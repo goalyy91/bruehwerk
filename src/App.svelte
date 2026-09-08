@@ -1,8 +1,8 @@
 <script lang="ts">
-  // Paket 01b: erster echter Bildschirm ist das Musterblatt. Die
-  // planeBezuege-Demo aus Paket 00 ist raus — die Naht domain/ ↔
-  // Oberfläche ist über plan.test.ts belegt, nicht über einen Bildschirm.
-  import Musterblatt from './bereiche/Musterblatt.svelte';
+  // Paket 03: der Rahmen mit den fuenf Bereichen ersetzt den direkten
+  // Musterblatt-Aufruf aus Paket 01b. Das Musterblatt bleibt erreichbar,
+  // jetzt unter Einstellungen.
+  import Rahmen from './bereiche/Rahmen.svelte';
 </script>
 
-<Musterblatt />
+<Rahmen />

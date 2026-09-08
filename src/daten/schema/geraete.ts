@@ -31,17 +31,16 @@ export type Muehle = z.infer<typeof Muehle>;
 
 export const TempReferenzPunkt = z.object({
   kt: z.number(),
-  flush: z.number().nonnegative(),
   gruppe: z.number(),
   // Optional: die Konzepttabelle traegt "-" fuer Reihen ohne Messdatum
   // (z. B. die geschaetzte Startbelegung).
   ts: z.number().int().nonnegative().optional(),
   herkunft: z.enum(['uebernommen', 'gemessen', 'geschaetzt']),
 });
+export type TempReferenzPunkt = z.infer<typeof TempReferenzPunkt>;
 
 export const Sieb = z.object({
   art: z.enum(['einzel', 'doppel']),
-  portionen: z.number().int().positive(),
 });
 
 /**
@@ -110,17 +109,19 @@ export const Ablauf = z.object({
 });
 export type Ablauf = z.infer<typeof Ablauf>;
 
+/**
+ * parallelSchaeumen/sammelSchaeumen/begruendungKoffein/begruendungBohne
+ * standen hier bis zur Korrekturrunde — "Setup" war im Konzept an dieser
+ * Stelle als "allgemeine Einstellungen" gemeint, nicht als diese
+ * Geraete-Kombination. Alle vier sind jetzt globale App-Einstellungen,
+ * siehe schema/einstellungen.ts::AppEinstellungen.
+ */
 export const Setup = z.object({
   id: Id,
   name: z.string().min(1),
   muehleId: Id,
   bruehgeraetId: Id,
   zubehoerIds: z.array(Id).default([]),
-  parallelSchaeumen: z.boolean(),
-  sammelSchaeumen: z.enum(['nie', 'geteilterBezug', 'immer']),
-  /** K31 — zwei getrennte Schalter, Standard an. */
-  begruendungKoffein: z.boolean().default(true),
-  begruendungBohne: z.boolean().default(true),
   ablaufId: Id,
 });
 export type Setup = z.infer<typeof Setup>;

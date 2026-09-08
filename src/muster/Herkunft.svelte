@@ -129,7 +129,7 @@
     border: 1px solid var(--linie);
     border-radius: 50%;
     color: var(--gedaempft);
-    font-family: var(--schrift);
+    font-family: var(--schrift-sans);
     font-size: var(--fs-label);
   }
   .legende {
@@ -142,9 +142,11 @@
     flex-direction: column;
     gap: 6px;
     padding: var(--r3);
-    background: var(--feld-blatt);
-    border: 1px solid var(--feld-rahmen);
-    box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+    background: var(--blatt);
+    border-radius: var(--r-karte);
+    /* Handoff: Schatten sind global verboten, auch als subtile Elevation
+       (Abschnitt 3.5). Abgrenzung gegen den Grund kommt ausschließlich aus
+       der Helligkeitsdifferenz --blatt/--grund. */
   }
   .legende-zeile {
     display: flex;
