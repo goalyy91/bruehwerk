@@ -112,7 +112,7 @@
   <Kopfzeile titel="Übungsmodus" {onZurueck} />
 
   {#if !set}
-    <p class="hinweis">Kein Aromenset mit Fläschchennummern hinterlegt.</p>
+    <p class="hinweis">Noch keine Aromen mit Fläschchennummern erfasst.</p>
   {:else}
     {#if set.platzhalter}
       <p class="quelle">{alleAromen.length} von {FLAESCHCHEN_GESAMT} Fläschchen erfasst</p>

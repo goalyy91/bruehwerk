@@ -67,7 +67,7 @@
   }
 </script>
 
-<p class="hinweis">Vollständiger Bestand, kein Backend beteiligt — funktioniert auch, wenn ein späterer Cloud-Dienst ausfällt.</p>
+<p class="hinweis">Alles, was in der App steht, als Datei zum Mitnehmen.</p>
 
 <div class="aktionen">
   <Blattliste>

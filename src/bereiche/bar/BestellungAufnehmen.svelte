@@ -420,7 +420,7 @@
   {#if fehler}<p class="fehler">{fehler}</p>{/if}
 
   <div class="knopfreihe">
-    <Knopf stufe="primaer" onKlick={positionHinzufuegen} deaktiviert={!getraenkId || !koffein || !kaffeeId}>Position hinzufügen</Knopf>
+    <Knopf stufe="primaer" onKlick={positionHinzufuegen} deaktiviert={!getraenkId || !koffein || !kaffeeId}>Getränk hinzufügen</Knopf>
   </div>
 
   {#if positionen.length > 0}

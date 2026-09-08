@@ -105,6 +105,33 @@ const REGELN = [
           /cursor: pointer|background: var\(--vertiefung\)/.test(block),
       ),
   },
+  {
+    /**
+     * Knopfwoerter schreiben sich klein — ausser sie beginnen mit einem
+     * Hauptwort (Wording-Runde 2026-09-08).
+     *
+     * Vorher stand dieselbe Handlung in zwei Schreibungen im Bild: "Als leer
+     * markieren" neben "als fertig markieren", "Shot verwerfen" neben
+     * "verwerfen"; "uebernehmen" gab es sogar in beiden Fassungen. Ein Knopf
+     * soll wie eine Handlung klingen, nicht wie eine Ueberschrift.
+     *
+     * HAUPTWOERTER ist die Ausnahmeliste: sie nennt, womit ein Knopf gross
+     * beginnen darf. Wer ein neues braucht, traegt es dort ein — und merkt
+     * dabei, dass er eine Ausnahme macht.
+     */
+    name: 'Knopfwort gross geschrieben, ohne mit einem Hauptwort zu beginnen',
+    pruefen: (s: string) =>
+      [...s.matchAll(/>([A-ZÄÖÜ][^<>{}]{0,40})<\/(?:Knopf|button)>/g)].some(
+        (m) => !HAUPTWOERTER.some((w) => m[1]!.startsWith(w)),
+      ),
+  },
+] as const;
+
+/** Womit ein Knopf gross beginnen darf — siehe die Regel darueber. */
+const HAUPTWOERTER = [
+  'Shot', 'Verkostung', 'Bericht', 'Bestellung', 'Datenblatt', 'Regel',
+  'Zeile', 'Getränk', 'Extra', 'Bohne', 'Profil', 'Charge', 'Setup',
+  'Mühle', 'Brühgerät', 'Person', 'Import', 'Ja', 'Nein',
 ] as const;
 
 /**

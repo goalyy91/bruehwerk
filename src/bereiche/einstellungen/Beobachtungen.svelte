@@ -190,7 +190,7 @@
               <Knopf stufe="sekundaer" onKlick={() => zusammenfassenBestaetigen(b.begriff)}>übernehmen</Knopf>
             </div>
           {:else}
-            <Knopf stufe="primaer" onKlick={() => void alsChipAnlegen(b.begriff, b.shotIds)}>Als Chip anlegen</Knopf>
+            <Knopf stufe="primaer" onKlick={() => void alsChipAnlegen(b.begriff, b.shotIds)}>als Chip anlegen</Knopf>
           {/if}
         </div>
       {/each}
@@ -236,7 +236,7 @@
 
 <section class="gruppe">
   <h2>Werkstattbericht</h2>
-  <p class="hinweis">Offene Begriffe, ihre Shots und der Chip-/Regelbestand — als Text, zum Weitergeben.</p>
+  <p class="hinweis">Alle offenen Begriffe mit ihren Shots — als Text zum Weitergeben.</p>
   <Knopf stufe="sekundaer" onKlick={() => void berichtKopieren()}>Bericht in die Zwischenablage</Knopf>
   {#if berichtStatus === 'kopiert'}
     <p class="quittung">kopiert</p>

@@ -311,7 +311,7 @@
   </section>
 
   {#if profil.modus === 'dialin'}
-    <button type="button" class="link" onclick={() => void alsEingefahrenMarkieren()}>Als eingefahren markieren</button>
+    <button type="button" class="link" onclick={() => void alsEingefahrenMarkieren()}>als eingefahren markieren</button>
   {/if}
 
   <section class="verlauf">

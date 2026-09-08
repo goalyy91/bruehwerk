@@ -258,7 +258,7 @@
     {#if dauer > 0}
       <Herkunft art="geschaetzt" wert={`${Math.round(dauer / 60)}`} einheit="min" fuehrung />
     {:else}
-      <p class="hinweis">keine Rüstzeiten hinterlegt</p>
+      <p class="hinweis">keine Rüstzeiten</p>
     {/if}
   </div>
 
@@ -314,7 +314,7 @@
         <p class="verschnitt-satz">Double Shot sinnvoll verwenden</p>
         <div class="verschnitt-wege">
           <button type="button" class="weg-knopf" onclick={() => verschnittExtraShot(eintrag)}>Extra Shot</button>
-          <button type="button" class="weg-knopf" onclick={onZurueckZumAufnehmen}>eigene Position</button>
+          <button type="button" class="weg-knopf" onclick={onZurueckZumAufnehmen}>noch ein Getränk</button>
           {#if wechselZiel}
             <button type="button" class="weg-knopf" onclick={() => bohneWechseln(eintrag, wechselZiel.kaffeeId)}>
               Bohne wechseln → {wechselZiel.name}
@@ -329,7 +329,7 @@
   {#if fehler}<p class="fehler">{fehler}</p>{/if}
 
   <div class="knopfreihe">
-    <Knopf stufe="primaer" onKlick={abarbeitenStarten} deaktiviert={geordnet.length === 0}>Abarbeiten</Knopf>
+    <Knopf stufe="primaer" onKlick={abarbeitenStarten} deaktiviert={geordnet.length === 0}>abarbeiten</Knopf>
   </div>
 {/if}
 

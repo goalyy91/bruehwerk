@@ -347,7 +347,7 @@
     <!-- Kein REGELN-Eintrag passt zu genau dieser Kombination — laut Konzept
          (docs/konzept.md:459) bewusst keine erzwungene Diagnose. Ohne diesen
          Satz blieb unklar, ob die App das ueberhaupt gesehen hat. -->
-    <p class="hinweis">Für diese Auswahl gibt es noch keine hinterlegte Regel — die Befunde bleiben trotzdem am Shot stehen.</p>
+    <p class="hinweis">Zu dieser Auswahl gibt es noch keinen Vorschlag. Die Befunde bleiben trotzdem am Shot.</p>
   {/if}
 
   {#if !diagnoseErgebnis || diagnoseUnterdrueckt || ausserhalbMessreihe}

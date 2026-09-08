@@ -663,8 +663,8 @@
                 {/if}
                 {#if !korrekturOffen}
                   <span class="bestand-aktionen">
-                    <button type="button" class="korrigieren-link" onclick={() => (korrekturOffen = true)}>Korrigieren</button>
-                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>Als leer markieren</button>
+                    <button type="button" class="korrigieren-link" onclick={() => (korrekturOffen = true)}>korrigieren</button>
+                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>als leer markieren</button>
                   </span>
                 {/if}
               </div>

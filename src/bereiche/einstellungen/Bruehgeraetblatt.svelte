@@ -164,7 +164,7 @@
 
 {#if verwerfenBestaetigen}
   <p class="verwerfen-hinweis">
-    Ungespeicherte Änderungen. <button type="button" class="verwerfen-link" onclick={versuchZurueck}>Wirklich verwerfen</button> ·
+    Ungespeicherte Änderungen. <button type="button" class="verwerfen-link" onclick={versuchZurueck}>wirklich verwerfen</button> ·
     <button type="button" class="verwerfen-link" onclick={() => (verwerfenBestaetigen = false)}>weiter bearbeiten</button>
   </p>
 {/if}
