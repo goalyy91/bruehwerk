@@ -4,12 +4,24 @@
  * Wahrheit; die Cloud ist nur ein Spiegel, den man auch abschalten oder
  * verlieren könnte, ohne dass die App aufhört zu funktionieren.
  *
- * Kein Firestore, keine Sammlungen pro Datensatz: hochgeladen wird genau das
- * eine JSON-Objekt, das daten/export.ts::exportiere() ohnehin schon baut —
- * dieselbe Form wie die manuell exportierte Datei, nur automatisch in eine
- * Firebase-Cloud-Storage-Datei statt in einen Download geschrieben.
- * Wiederherstellen läuft über exportiere()s Gegenstück, importiere() —
- * beide unverändert, beide schon getestet.
+ * Firestore, nicht Cloud Storage: Cloud Storage für Firebase verlangt seit
+ * 3.2.2026 zwingend den kostenpflichtigen Blaze-Tarif (eine hinterlegte
+ * Zahlungsmethode), selbst wenn die tatsächliche Nutzung innerhalb der
+ * Gratis-Kontingente bleibt. Firestore bleibt auf dem kostenlosen
+ * Spark-Tarif nutzbar, ganz ohne Zahlungsmethode — Fund 2026-09-09, noch vor
+ * der ersten Einrichtung. Abgelegt wird trotzdem keine "Datenbank" im
+ * eigentlichen Sinn, sondern EIN Dokument pro Konto mit dem kompletten
+ * Bestand als JSON-Text — dieselbe Form wie die manuell exportierte Datei
+ * (daten/export.ts::exportiere()), nur automatisch statt per Download.
+ * Wiederherstellen läuft über deren Gegenstück, importiere() — beide
+ * unverändert, beide schon getestet.
+ *
+ * Ein Firestore-Dokument ist auf ~1 MiB begrenzt — für einen einzelnen
+ * Nutzer noch für Jahre reichlich (Stand 2026-09: einige Dutzend Shots
+ * ergeben wenige KB JSON), aber kein Zustand, der sich beliebig weiter
+ * füllen lässt. Wird das je eng, ist die Lösung eine Aufteilung auf mehrere
+ * Dokumente (eine je Sammlung) — heute bewusst nicht gebaut, weil es dafür
+ * noch keinen echten Anlass gibt.
  *
  * Anmeldung ist "Mit Google", einmalig — bewusst kein anonymes Konto: eine
  * anonyme Firebase-Sitzung läge im selben Browser-Speicher, den ein
@@ -37,15 +49,18 @@ export interface CloudNutzer {
   readonly email: string | null;
 }
 
+/**
+ * Kein storageBucket mehr — das war nur fuer Cloud Storage noetig (siehe
+ * oben, verworfen). Firestore braucht nichts weiter als die App-Config.
+ */
 const KONFIG = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-/** true, sobald alle fünf Werte gesetzt sind — sonst bleibt Cloud-Backup unsichtbar. */
+/** true, sobald alle vier Werte gesetzt sind — sonst bleibt Cloud-Backup unsichtbar. */
 export function cloudVerfuegbar(): boolean {
   return Object.values(KONFIG).every((wert) => !!wert);
 }
@@ -102,26 +117,26 @@ export async function abmelden(): Promise<void> {
   await signOut(auth);
 }
 
-/** Eine Datei je Konto — der eigene uid ist der Dateiname, keine zweite Ablage-Struktur nötig. */
-function pfadFuer(uid: string): string {
-  return `sicherungen/${uid}.json`;
-}
+/** Eine Sammlung "sicherungen", ein Dokument je Konto (uid als Dokument-Id). */
+const SAMMLUNG_NAME = 'sicherungen';
 
 export async function hochladen(uid: string, inhaltJson: string): Promise<void> {
   const authP = holeAuth();
   if (!authP) return;
-  const [auth, { getStorage, ref, uploadString }] = await Promise.all([authP, import('firebase/storage')]);
-  const dateiRef = ref(getStorage(auth.app), pfadFuer(uid));
-  await uploadString(dateiRef, inhaltJson, 'raw', { contentType: 'application/json' });
+  const [auth, { getFirestore, doc, setDoc }] = await Promise.all([authP, import('firebase/firestore')]);
+  const ref = doc(getFirestore(auth.app), SAMMLUNG_NAME, uid);
+  await setDoc(ref, { inhalt: inhaltJson, aktualisiertAm: Date.now() });
 }
 
 export async function herunterladen(uid: string): Promise<string> {
   const authP = holeAuth();
   if (!authP) throw new Error('Cloud-Backup ist nicht eingerichtet.');
-  const [auth, { getStorage, ref, getBytes }] = await Promise.all([authP, import('firebase/storage')]);
-  const dateiRef = ref(getStorage(auth.app), pfadFuer(uid));
-  const bytes = await getBytes(dateiRef);
-  return new TextDecoder().decode(bytes);
+  const [auth, { getFirestore, doc, getDoc }] = await Promise.all([authP, import('firebase/firestore')]);
+  const ref = doc(getFirestore(auth.app), SAMMLUNG_NAME, uid);
+  const schnappschuss = await getDoc(ref);
+  const daten = schnappschuss.data();
+  if (!daten || typeof daten.inhalt !== 'string') throw new Error('Keine Cloud-Sicherung gefunden.');
+  return daten.inhalt;
 }
 
 /**
