@@ -29,6 +29,7 @@
   import { findeTotzonen } from '../../domain/totzone';
   import { GROESSEN } from '../../domain/tasting';
   import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
+  import { kanonischesAromaLabel } from '../../daten/aromen';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
@@ -188,7 +189,13 @@
     return normiereReihe(verkostungenChronologisch.map((e) => ({ wert: e.tasting.groessen[groesse] })));
   }
 
-  const haeufigeAromen = $derived(haeufigsteAromen(verkostungenChronologisch.flatMap((e) => e.tasting.aromen)));
+  const haeufigeAromen = $derived(
+    haeufigsteAromen(
+      verkostungenChronologisch.flatMap((e) =>
+        e.tasting.aromen.map((a) => ({ pfad: a.pfad, kanonischesLabel: kanonischesAromaLabel(a) })),
+      ),
+    ),
+  );
 
   function symptomLabel(id: string): string {
     return bestand.symptome.find((s) => s.id === id)?.label ?? id;

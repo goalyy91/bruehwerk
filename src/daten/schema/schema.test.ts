@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset } from './index';
+import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset, Uebung } from './index';
 import { MUEHLE_K6, BRUEHGERAET_MOZZAFIATO, BRUEHGERAET_BIALETTI_1 } from '../stammdaten';
 import { AROMASET_SCA, AROMASET_LENEZ } from '../aromen';
 
@@ -214,11 +214,11 @@ describe('Aromaset — drei feste Ebenen (K55)', () => {
     if (ergebnis.success) expect(ergebnis.data.platzhalter).toBe(false);
   });
 
-  it('AROMASET_LENEZ ist gueltig, traegt 60 Flaeschchen und ist als platzhalter markiert', () => {
+  it('AROMASET_LENEZ ist gueltig, traegt 60 Flaeschchen mit echten Namen', () => {
     const ergebnis = Aromaset.safeParse(AROMASET_LENEZ);
     expect(ergebnis.success).toBe(true);
     if (!ergebnis.success) return;
-    expect(ergebnis.data.platzhalter).toBe(true);
+    expect(ergebnis.data.platzhalter).toBe(false);
     const anzahl = ergebnis.data.kategorien.flatMap((k) => k.gruppen).flatMap((g) => g.aromen).length;
     expect(anzahl).toBe(60);
   });
@@ -226,5 +226,49 @@ describe('Aromaset — drei feste Ebenen (K55)', () => {
   it('eine Kategorie ohne Gruppen faellt durch', () => {
     const kaputt = { ...AROMASET_SCA, kategorien: [{ id: 'x', label: 'X', gruppen: [] }] };
     expect(Aromaset.safeParse(kaputt).success).toBe(false);
+  });
+});
+
+describe('Uebung — zwei Aufgabenarten statt einer (Aromapaket, Etappe 3)', () => {
+  const NEU = { id: 'u1', setId: 's1', aromaId: 'flaeschchen-21' };
+
+  it('ein neuer Datensatz ohne Angaben bekommt zwei leere Zaehlerpaare und keine Verwechslungen', () => {
+    const ergebnis = Uebung.safeParse(NEU);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.benennen).toEqual({ versuche: 0, treffer: 0 });
+    expect(ergebnis.data.unterscheiden).toEqual({ versuche: 0, treffer: 0 });
+    expect(ergebnis.data.verwechslungen).toEqual({});
+  });
+
+  it('liest einen Datensatz von vor der Erweiterung weiter — versuche/treffer werden zu benennen', () => {
+    const alt = { ...NEU, versuche: 7, treffer: 3, letzterVersuch: 1000 };
+    const ergebnis = Uebung.safeParse(alt);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.benennen).toEqual({ versuche: 7, treffer: 3 });
+    expect(ergebnis.data.unterscheiden).toEqual({ versuche: 0, treffer: 0 });
+    expect(ergebnis.data.letzterVersuch).toBe(1000);
+  });
+
+  it('ein vollstaendiger neuer Datensatz mit beiden Arten und Verwechslungen ist gueltig', () => {
+    const voll = {
+      ...NEU,
+      benennen: { versuche: 5, treffer: 4 },
+      unterscheiden: { versuche: 3, treffer: 3 },
+      verwechslungen: { 'flaeschchen-40': 2, 'flaeschchen-41': 1 },
+    };
+    const ergebnis = Uebung.safeParse(voll);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data).toMatchObject(voll);
+  });
+
+  it('ein "aussenseiter"-Feld aus der zurueckgebauten dritten Aufgabenart wird stillschweigend fallengelassen', () => {
+    const mitAltlast = { ...NEU, aussenseiter: { versuche: 4, treffer: 2 } };
+    const ergebnis = Uebung.safeParse(mitAltlast);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data).not.toHaveProperty('aussenseiter');
   });
 });

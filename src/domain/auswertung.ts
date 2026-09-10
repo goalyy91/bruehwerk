@@ -43,6 +43,14 @@ export function normiereReihe(punkte: readonly { readonly wert: number }[]): rea
 
 export interface AromaPfad {
   readonly pfad: readonly string[];
+  /**
+   * Kanonisches Label zum setuebergreifenden Zusammenzaehlen, z. B. wenn ein
+   * Le-Nez-Flaeschchen und ein SCA-Aroma denselben Geruch meinen
+   * (daten/aromen.ts::kanonischesAromaLabel, K55). Faellt der Aufrufer das
+   * nicht mit, zaehlt weiterhin das letzte Pfadglied — deshalb optional und
+   * hier ohne Import aus daten/ aufgeloest (siehe Dateikopf).
+   */
+  readonly kanonischesLabel?: string;
 }
 
 export interface HaeufigesAroma {
@@ -54,7 +62,7 @@ export interface HaeufigesAroma {
 export function haeufigsteAromen(eintraege: readonly AromaPfad[], limit = 5): readonly HaeufigesAroma[] {
   const zaehler = new Map<string, number>();
   for (const eintrag of eintraege) {
-    const label = eintrag.pfad[eintrag.pfad.length - 1];
+    const label = eintrag.kanonischesLabel ?? eintrag.pfad[eintrag.pfad.length - 1];
     if (!label) continue;
     zaehler.set(label, (zaehler.get(label) ?? 0) + 1);
   }

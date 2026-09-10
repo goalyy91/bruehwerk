@@ -10,26 +10,22 @@
  * CLAUDE.md es fuer die Milliliter-Angaben der Getraenke schon vormerkt) —
  * an der Kategoriestruktur selbst aendert eine Pruefung nichts.
  *
- * AROMASET_LENEZ wird seit 2026-09-06 **aus den Datenblaettern gebaut**
- * (aroma-datenblaetter.ts): auf jedem eingescannten Blatt stehen Nummer,
- * Name und Kategorie, also ist das Blatt der Ursprung und nicht eine
- * Beschreibung neben einer zweiten, handgepflegten Liste. Vorher stand hier
- * eine erfundene Kategorienverteilung mit 60 "(Platzhalter)"-Labels; sie ist
- * ersatzlos weg, weil geratene Daten schlechter sind als sichtbar fehlende.
- *
- * Ein noch nicht erfasstes Flaeschchen heisst "Nr. N (noch nicht erfasst)"
- * und sammelt sich in einer eigenen Kategorie gleichen Namens — kein
- * Screenshot und kein Bericht kann das mit echten Daten verwechseln. Das Set
- * bleibt `platzhalter: true`, bis alle 60 Blaetter da sind.
+ * AROMASET_LENEZ wird seit 2026-09-09 **aus dem Kurzindex gebaut**
+ * (aroma-datenblaetter.ts::FLAESCHCHEN): die neun gedruckten Uebersichts-
+ * seiten des Kartons nennen zu allen 60 Flaeschchen Nummer, Name und
+ * Kategorie, unabhaengig davon, wie viele ausfuehrliche Datenblaetter
+ * (DATENBLAETTER) schon abgetippt sind. Vorher war DATENBLAETTER zugleich
+ * der Ursprung dieser Liste, und ein Flaeschchen ohne Volltextblatt hiess
+ * deshalb "Nr. N (noch nicht erfasst)" — mit dem Kurzindex ist das nicht
+ * mehr noetig, alle 60 Namen sind echt.
  *
  * Die Ids bleiben `flaeschchen-N`, also an die Nummer gebunden und nicht an
- * den Namen: ein Haeppchen neuer Blaetter macht damit bestehende
+ * den Namen: ein Haeppchen neuer Volltextblaetter macht damit bestehende
  * Uebungsmodus-Datensaetze (daten/schema/uebung.ts) nicht ungueltig, weil
- * sich die Nummer-zu-Flaeschchen-Zuordnung nie aendert — nur die Beschriftung
- * kommt hinzu.
+ * sich die Nummer-zu-Flaeschchen-Zuordnung nie aendert.
  */
 import type { Aromaset } from './schema';
-import { DATENBLAETTER, FLAESCHCHEN_GESAMT, datenblattZu } from './aroma-datenblaetter';
+import { DATENBLAETTER, FLAESCHCHEN, FLAESCHCHEN_GESAMT, flaeschchenZu } from './aroma-datenblaetter';
 
 export const AROMASET_SCA: Aromaset = {
   id: 'aromaset-sca',
@@ -295,46 +291,39 @@ export const AROMASET_SCA: Aromaset = {
   ],
 };
 
-/** Die Kategorie, in der alles landet, wozu noch kein Datenblatt vorliegt. */
-const NICHT_ERFASST_ID = 'nicht-erfasst';
-const NICHT_ERFASST_LABEL = 'Noch nicht erfasst';
-
 /** Id eines Flaeschchens — an die Nummer gebunden, nie an den Namen (siehe Kopfkommentar). */
 export function flaeschchenId(nummer: number): string {
   return `flaeschchen-${nummer}`;
 }
 
 /**
- * Baut die neun (bzw. bis zur vollstaendigen Erfassung zehn) Kategorien aus
- * den vorliegenden Datenblaettern. Die Reihenfolge der Kategorien folgt der
- * ersten erfassten Nummer, damit die Liste bei jedem Haeppchen stabil waechst
- * statt sich umzusortieren; "Noch nicht erfasst" steht immer am Ende.
+ * Baut Kategorien und Le-Nez-eigene Untergruppen aus dem Kurzindex
+ * (FLAESCHCHEN). Die Reihenfolge folgt der Nummerierung des Kartons — Blumig
+ * zuerst (Nr. 1), Süß zuletzt (Nr. 60) —, nicht der Reihenfolge im SCA-Set.
  */
 function lenezKategorien(): Aromaset['kategorien'] {
   const kategorien: Aromaset['kategorien'] = [];
-  const nachId = new Map<string, Aromaset['kategorien'][number]>();
+  const kategorieNachId = new Map<string, Aromaset['kategorien'][number]>();
+  const gruppeNachSchluessel = new Map<string, Aromaset['kategorien'][number]['gruppen'][number]>();
 
-  for (let nummer = 1; nummer <= FLAESCHCHEN_GESAMT; nummer++) {
-    const blatt = datenblattZu(nummer);
-    const id = blatt?.kategorieId ?? NICHT_ERFASST_ID;
-    const label = blatt?.kategorieLabel ?? NICHT_ERFASST_LABEL;
-
-    let kategorie = nachId.get(id);
+  for (const f of FLAESCHCHEN) {
+    let kategorie = kategorieNachId.get(f.kategorieId);
     if (!kategorie) {
-      kategorie = { id, label, gruppen: [{ id: `${id}-flaeschchen`, label: 'Fläschchen', aromen: [] }] };
-      nachId.set(id, kategorie);
+      kategorie = { id: f.kategorieId, label: f.kategorieLabel, gruppen: [] };
+      kategorieNachId.set(f.kategorieId, kategorie);
       kategorien.push(kategorie);
     }
-    kategorie.gruppen[0]!.aromen.push({
-      id: flaeschchenId(nummer),
-      label: blatt ? blatt.name : `Nr. ${nummer} (noch nicht erfasst)`,
-      nummer,
-    });
-  }
 
-  // "Noch nicht erfasst" ans Ende, egal bei welcher Nummer die Luecke begann.
-  const offen = kategorien.findIndex((k) => k.id === NICHT_ERFASST_ID);
-  if (offen >= 0) kategorien.push(...kategorien.splice(offen, 1));
+    const gruppenSchluessel = `${f.kategorieId}/${f.gruppeId}`;
+    let gruppe = gruppeNachSchluessel.get(gruppenSchluessel);
+    if (!gruppe) {
+      gruppe = { id: f.gruppeId, label: f.gruppeLabel, aromen: [] };
+      gruppeNachSchluessel.set(gruppenSchluessel, gruppe);
+      kategorie.gruppen.push(gruppe);
+    }
+
+    gruppe.aromen.push({ id: flaeschchenId(f.nummer), label: f.name, nummer: f.nummer });
+  }
   return kategorien;
 }
 
@@ -344,10 +333,33 @@ export const AROMASET_LENEZ: Aromaset = {
   quelle:
     DATENBLAETTER.length === FLAESCHCHEN_GESAMT
       ? 'Le Nez du Café — Begleitmaterial, deutsche Fassung'
-      : `${DATENBLAETTER.length} von ${FLAESCHCHEN_GESAMT} Datenblättern erfasst — der Rest wird nachgetragen`,
+      : `Le Nez du Café — Namen vollständig, ${DATENBLAETTER.length} von ${FLAESCHCHEN_GESAMT} Datenblättern mit Volltext`,
   vialNummern: true,
-  platzhalter: DATENBLAETTER.length < FLAESCHCHEN_GESAMT,
+  // Nicht mehr platzhalter: der Kurzindex traegt alle 60 echten Namen. Was
+  // noch waechst, ist der Volltext (DATENBLAETTER) — das sagt die quelle-Zeile.
+  platzhalter: false,
   kategorien: lenezKategorien(),
 };
 
 export const AROMASETS: readonly Aromaset[] = [AROMASET_SCA, AROMASET_LENEZ];
+
+const SCA_LABEL_NACH_AROMA_ID = new Map(
+  AROMASET_SCA.kategorien.flatMap((k) => k.gruppen.flatMap((g) => g.aromen.map((a) => [a.id, a.label] as const))),
+);
+
+/**
+ * Das kanonische Label eines Aroma-Eintrags fuer setuebergreifendes Zaehlen
+ * (domain/auswertung.ts::haeufigsteAromen). Ein Le-Nez-Flaeschchen mit
+ * bekanntem SCA-Zwilling (aroma-datenblaetter.ts::Flaeschchen.sca) zaehlt
+ * unter dessen SCA-Label — "Heidelbeere" und "Blaubeere" sind sonst zwei
+ * verschiedene Zeilen in derselben Auswertung. Ohne Zwilling (oder bei einem
+ * SCA-Eintrag selbst) zaehlt weiterhin das letzte Pfadglied.
+ */
+export function kanonischesAromaLabel(eintrag: { readonly pfad: readonly string[]; readonly nummer?: number }): string {
+  if (eintrag.nummer !== undefined) {
+    const scaAromaId = flaeschchenZu(eintrag.nummer)?.sca?.aromaId;
+    const scaLabel = scaAromaId ? SCA_LABEL_NACH_AROMA_ID.get(scaAromaId) : undefined;
+    if (scaLabel) return scaLabel;
+  }
+  return eintrag.pfad[eintrag.pfad.length - 1] ?? '';
+}

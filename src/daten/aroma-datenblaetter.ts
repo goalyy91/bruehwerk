@@ -215,3 +215,140 @@ const NACH_NUMMER = new Map(DATENBLAETTER.map((b) => [b.nummer, b] as const));
 export function datenblattZu(nummer: number): AromaDatenblatt | undefined {
   return NACH_NUMMER.get(nummer);
 }
+
+/**
+ * Der Kurzindex aller 60 Flaeschchen — Nummer, Name, Kategorie. Herkunft: die
+ * gedruckten Uebersichtsseiten des Kartons (neun Seiten, je Seite eine
+ * SCA-Kategorie mit Symbolen und Nummern), nicht die ausfuehrlichen
+ * Datenblaetter. Deshalb kennt dieser Index alle 60 Namen, waehrend
+ * DATENBLAETTER weiter Stueck fuer Stueck waechst.
+ *
+ * Zwei getrennte Listen mit unterschiedlichem Tempo, bewusst nicht eine: Der
+ * Kurzindex war an einem Nachmittag fotografiert und uebertragen, die
+ * Volltexte (Beschreibung, Chemie, "Related Aromas") kommen ueber Monate.
+ * `daten/aromen.ts` baut AROMASET_LENEZ aus dieser Liste, nicht mehr aus
+ * DATENBLAETTER — ein Flaeschchen ohne Volltextblatt heisst jetzt mit
+ * seinem echten Namen, nicht mehr "Nr. N (noch nicht erfasst)".
+ */
+export interface ScaZuordnung {
+  /** Id einer Gruppe aus AROMASET_SCA (aromen.ts), z. B. "beere". */
+  readonly gruppeId: string;
+  /**
+   * Id eines Aromas in dieser Gruppe — nur gesetzt, wenn das Le-Nez-Aroma
+   * dort einen echten Zwilling hat. Ein Le-Nez-Aroma ohne SCA-Zwilling
+   * (z. B. Leder, Kartoffel) traegt hoechstens die Gruppe, nie eine
+   * erfundene Aroma-Id.
+   */
+  readonly aromaId?: string;
+}
+
+export interface Flaeschchen {
+  /** Flaeschchennummer, 1..60 — dieselbe Nummer wie in DATENBLAETTER. */
+  readonly nummer: number;
+  readonly name: string;
+  readonly nameOriginal: string;
+  /** Id einer Kategorie aus AROMASET_SCA — identisch mit AromaDatenblatt.kategorieId. */
+  readonly kategorieId: string;
+  readonly kategorieLabel: string;
+  /** Le-Nez-eigene Untergruppe innerhalb der Kategorie, nicht die SCA-Gruppe. */
+  readonly gruppeId: string;
+  readonly gruppeLabel: string;
+  /**
+   * Verweis auf denselben Geruch im SCA-Set, K55: "die Zuordnung liegt im
+   * Hintergrund und haelt die Historie zusammen, ohne sie zu erklaeren" —
+   * deshalb hier und nicht als sichtbarer Radverweis. Fehlt bei einem
+   * Aroma ganz ohne Entsprechung.
+   *
+   * Diese Zuordnung ist eine Einschaetzung, kein Beleg — wie die deutsche
+   * SCA-Uebertragung selbst (aromen.ts) ist sie ungeprueft. Ein Test kann
+   * nur pruefen, dass jede genannte Id existiert, nicht, dass sie stimmt.
+   */
+  readonly sca?: ScaZuordnung;
+}
+
+export const FLAESCHCHEN: readonly Flaeschchen[] = [
+  // Floral — eine Gruppe, vier Flaeschchen.
+  { nummer: 1, name: 'Honig', nameOriginal: 'Honey', kategorieId: 'blumig', kategorieLabel: 'Blumig', gruppeId: 'blumig-gruppe', gruppeLabel: 'Blumig', sca: { gruppeId: 'brauner-zucker', aromaId: 'honig' } },
+  { nummer: 2, name: 'Schwarzer Tee', nameOriginal: 'Black tea', kategorieId: 'blumig', kategorieLabel: 'Blumig', gruppeId: 'blumig-gruppe', gruppeLabel: 'Blumig', sca: { gruppeId: 'schwarztee', aromaId: 'schwarzer-tee' } },
+  { nummer: 3, name: 'Rose', nameOriginal: 'Rose', kategorieId: 'blumig', kategorieLabel: 'Blumig', gruppeId: 'blumig-gruppe', gruppeLabel: 'Blumig', sca: { gruppeId: 'blumig-gruppe', aromaId: 'rose' } },
+  { nummer: 4, name: 'Jasmin', nameOriginal: 'Jasmine', kategorieId: 'blumig', kategorieLabel: 'Blumig', gruppeId: 'blumig-gruppe', gruppeLabel: 'Blumig', sca: { gruppeId: 'blumig-gruppe', aromaId: 'jasmin' } },
+
+  // Fruity — fuenf Untergruppen statt einer flachen 16er-Liste.
+  { nummer: 5, name: 'Himbeere', nameOriginal: 'Raspberry', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'beere', gruppeLabel: 'Beere', sca: { gruppeId: 'beere', aromaId: 'himbeere' } },
+  { nummer: 6, name: 'Blaubeere', nameOriginal: 'Blueberry', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'beere', gruppeLabel: 'Beere', sca: { gruppeId: 'beere', aromaId: 'blaubeere' } },
+  { nummer: 7, name: 'Schwarze Johannisbeere', nameOriginal: 'Black Currant', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'beere', gruppeLabel: 'Beere', sca: { gruppeId: 'beere' } },
+  { nummer: 8, name: 'Erdbeere', nameOriginal: 'Strawberry', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'beere', gruppeLabel: 'Beere', sca: { gruppeId: 'beere', aromaId: 'erdbeere' } },
+  { nummer: 9, name: 'Rosine', nameOriginal: 'Raisin', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'trockenfrucht', gruppeLabel: 'Trockenfrucht', sca: { gruppeId: 'trockenfrucht', aromaId: 'rosine' } },
+  { nummer: 10, name: 'Backpflaume', nameOriginal: 'Prune', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'trockenfrucht', gruppeLabel: 'Trockenfrucht', sca: { gruppeId: 'trockenfrucht', aromaId: 'backpflaume' } },
+  { nummer: 11, name: 'Kirsche', nameOriginal: 'Cherry', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'kernobst-steinobst', gruppeLabel: 'Kernobst/Steinobst', sca: { gruppeId: 'sonstige-frucht', aromaId: 'kirsche' } },
+  { nummer: 12, name: 'Ananas', nameOriginal: 'Pineapple', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'tropisch', gruppeLabel: 'Tropisch', sca: { gruppeId: 'sonstige-frucht', aromaId: 'ananas' } },
+  { nummer: 13, name: 'Mango', nameOriginal: 'Mango', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'tropisch', gruppeLabel: 'Tropisch', sca: { gruppeId: 'sonstige-frucht' } },
+  { nummer: 14, name: 'Melone', nameOriginal: 'Melon', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'tropisch', gruppeLabel: 'Tropisch', sca: { gruppeId: 'sonstige-frucht' } },
+  { nummer: 15, name: 'Banane', nameOriginal: 'Banana', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'tropisch', gruppeLabel: 'Tropisch', sca: { gruppeId: 'sonstige-frucht' } },
+  { nummer: 16, name: 'Apfel', nameOriginal: 'Apple', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'kernobst-steinobst', gruppeLabel: 'Kernobst/Steinobst', sca: { gruppeId: 'sonstige-frucht', aromaId: 'apfel' } },
+  { nummer: 17, name: 'Pfirsich', nameOriginal: 'Peach', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'kernobst-steinobst', gruppeLabel: 'Kernobst/Steinobst', sca: { gruppeId: 'sonstige-frucht', aromaId: 'pfirsich' } },
+  { nummer: 18, name: 'Orange', nameOriginal: 'Orange', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'zitrus', gruppeLabel: 'Zitrus', sca: { gruppeId: 'zitrusfrucht', aromaId: 'orange' } },
+  { nummer: 19, name: 'Zitrone', nameOriginal: 'Lemon', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'zitrus', gruppeLabel: 'Zitrus', sca: { gruppeId: 'zitrusfrucht', aromaId: 'zitrone' } },
+  { nummer: 20, name: 'Limette', nameOriginal: 'Lime', kategorieId: 'fruchtig', kategorieLabel: 'Fruchtig', gruppeId: 'zitrus', gruppeLabel: 'Zitrus', sca: { gruppeId: 'zitrusfrucht', aromaId: 'limette' } },
+
+  // Sour/Fermented — bereits als Volltext-Blatt erfasst (Nr. 21), Namen decken sich.
+  { nummer: 21, name: 'Buttersäure', nameOriginal: 'Butyric Acid', kategorieId: 'sauer-fermentiert', kategorieLabel: 'Sauer / Fermentiert', gruppeId: 'sauer-fermentiert-gruppe', gruppeLabel: 'Sauer / Fermentiert', sca: { gruppeId: 'sauer' } },
+  { nummer: 22, name: 'Weinig', nameOriginal: 'Winey', kategorieId: 'sauer-fermentiert', kategorieLabel: 'Sauer / Fermentiert', gruppeId: 'sauer-fermentiert-gruppe', gruppeLabel: 'Sauer / Fermentiert', sca: { gruppeId: 'alkohol-fermentiert', aromaId: 'weinig' } },
+  { nummer: 23, name: 'Kaffeefruchtfleisch', nameOriginal: 'Coffee Pulp', kategorieId: 'sauer-fermentiert', kategorieLabel: 'Sauer / Fermentiert', gruppeId: 'sauer-fermentiert-gruppe', gruppeLabel: 'Sauer / Fermentiert', sca: { gruppeId: 'alkohol-fermentiert', aromaId: 'fermentiert' } },
+
+  // Green/Vegetative — zwei Untergruppen nach den gedruckten Zeilen.
+  { nummer: 24, name: 'Erbsenschote', nameOriginal: 'Peapod', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'frisch-gruen', gruppeLabel: 'Frisch/Grün', sca: { gruppeId: 'gruen-pflanzlich-gruppe', aromaId: 'erbsenschote' } },
+  { nummer: 25, name: 'Frisches Gras', nameOriginal: 'Grass (Fresh)', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'frisch-gruen', gruppeLabel: 'Frisch/Grün', sca: { gruppeId: 'gruen-pflanzlich-gruppe', aromaId: 'frisch' } },
+  { nummer: 26, name: 'Gurke', nameOriginal: 'Cucumber', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'frisch-gruen', gruppeLabel: 'Frisch/Grün', sca: { gruppeId: 'gruen-pflanzlich-gruppe' } },
+  { nummer: 27, name: 'Grüne Paprika', nameOriginal: 'Green (Bell) Pepper', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'frisch-gruen', gruppeLabel: 'Frisch/Grün', sca: { gruppeId: 'gruen-pflanzlich-gruppe', aromaId: 'dunkelgruen' } },
+  { nummer: 28, name: 'Heuartig', nameOriginal: 'Hay-like', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'frisch-gruen', gruppeLabel: 'Frisch/Grün', sca: { gruppeId: 'gruen-pflanzlich-gruppe', aromaId: 'heuartig' } },
+  { nummer: 29, name: 'Thymian', nameOriginal: 'Thyme', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'kraeuter-holzig', gruppeLabel: 'Kräuter/Holzig', sca: { gruppeId: 'gruen-pflanzlich-gruppe', aromaId: 'krautig' } },
+  { nummer: 30, name: 'Kiefer', nameOriginal: 'Pine', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'kraeuter-holzig', gruppeLabel: 'Kräuter/Holzig', sca: { gruppeId: 'gruen-pflanzlich-gruppe' } },
+  { nummer: 31, name: 'Zeder', nameOriginal: 'Cedar', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'kraeuter-holzig', gruppeLabel: 'Kräuter/Holzig', sca: { gruppeId: 'gruen-pflanzlich-gruppe' } },
+  { nummer: 32, name: 'Kartoffel', nameOriginal: 'Potato', kategorieId: 'gruen-pflanzlich', kategorieLabel: 'Grün / Pflanzlich', gruppeId: 'kraeuter-holzig', gruppeLabel: 'Kräuter/Holzig', sca: { gruppeId: 'sonstiges-gruen' } },
+
+  // Other — zwei Untergruppen, deckungsgleich mit den SCA-Untergruppen "Sonstiges".
+  { nummer: 33, name: 'Pappe', nameOriginal: 'Cardboard', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'papierig-muffig', gruppeLabel: 'Papierig/Muffig', sca: { gruppeId: 'papierig-muffig', aromaId: 'pappe' } },
+  { nummer: 34, name: 'Holzig', nameOriginal: 'Woody', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'papierig-muffig', gruppeLabel: 'Papierig/Muffig', sca: { gruppeId: 'papierig-muffig', aromaId: 'holzig' } },
+  { nummer: 35, name: 'Schimmlig/Feucht', nameOriginal: 'Moldy/Damp', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'papierig-muffig', gruppeLabel: 'Papierig/Muffig', sca: { gruppeId: 'papierig-muffig', aromaId: 'schimmelig' } },
+  { nummer: 36, name: 'Muffig/Erdig', nameOriginal: 'Musty/Earthy', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'papierig-muffig', gruppeLabel: 'Papierig/Muffig', sca: { gruppeId: 'papierig-muffig', aromaId: 'erdig-muffig' } },
+  { nummer: 37, name: 'Leder', nameOriginal: 'Leather', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'papierig-muffig', gruppeLabel: 'Papierig/Muffig', sca: { gruppeId: 'papierig-muffig', aromaId: 'tierisch' } },
+  { nummer: 38, name: 'Medizinisch', nameOriginal: 'Medicinal', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'chemisch', gruppeLabel: 'Chemisch', sca: { gruppeId: 'chemisch', aromaId: 'medizinisch' } },
+  { nummer: 39, name: 'Teer', nameOriginal: 'Tar', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'chemisch', gruppeLabel: 'Chemisch', sca: { gruppeId: 'chemisch' } },
+  { nummer: 40, name: 'Gummi', nameOriginal: 'Rubber', kategorieId: 'sonstiges', kategorieLabel: 'Sonstiges', gruppeId: 'chemisch', gruppeLabel: 'Chemisch', sca: { gruppeId: 'chemisch', aromaId: 'gummi' } },
+
+  // Roasted — eine Gruppe, fuenf Flaeschchen.
+  { nummer: 41, name: 'Tabak', nameOriginal: 'Tobacco', kategorieId: 'roestig', kategorieLabel: 'Röstig', gruppeId: 'roestig-gruppe', gruppeLabel: 'Röstig', sca: { gruppeId: 'tabak', aromaId: 'tabak' } },
+  { nummer: 42, name: 'Rauchig', nameOriginal: 'Smoky', kategorieId: 'roestig', kategorieLabel: 'Röstig', gruppeId: 'roestig-gruppe', gruppeLabel: 'Röstig', sca: { gruppeId: 'verbrannt', aromaId: 'rauchig' } },
+  { nummer: 43, name: 'Butter', nameOriginal: 'Butter', kategorieId: 'roestig', kategorieLabel: 'Röstig', gruppeId: 'roestig-gruppe', gruppeLabel: 'Röstig' },
+  { nummer: 44, name: 'Toast', nameOriginal: 'Toast', kategorieId: 'roestig', kategorieLabel: 'Röstig', gruppeId: 'roestig-gruppe', gruppeLabel: 'Röstig', sca: { gruppeId: 'getreide', aromaId: 'getreidig' } },
+  { nummer: 45, name: 'Malz', nameOriginal: 'Malt', kategorieId: 'roestig', kategorieLabel: 'Röstig', gruppeId: 'roestig-gruppe', gruppeLabel: 'Röstig', sca: { gruppeId: 'getreide', aromaId: 'malzig' } },
+
+  // Spices — eine Gruppe, fuenf Flaeschchen.
+  { nummer: 46, name: 'Pfeffer', nameOriginal: 'Pepper', kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', gruppeId: 'gewuerze-gruppe', gruppeLabel: 'Gewürze', sca: { gruppeId: 'scharf', aromaId: 'pfeffer' } },
+  { nummer: 47, name: '(Stern-)Anis', nameOriginal: '(Star) Anise', kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', gruppeId: 'gewuerze-gruppe', gruppeLabel: 'Gewürze', sca: { gruppeId: 'braune-gewuerze', aromaId: 'anis' } },
+  { nummer: 48, name: 'Muskatnuss', nameOriginal: 'Nutmeg', kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', gruppeId: 'gewuerze-gruppe', gruppeLabel: 'Gewürze', sca: { gruppeId: 'braune-gewuerze', aromaId: 'muskat' } },
+  { nummer: 49, name: 'Zimt', nameOriginal: 'Cinnamon', kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', gruppeId: 'gewuerze-gruppe', gruppeLabel: 'Gewürze', sca: { gruppeId: 'braune-gewuerze', aromaId: 'zimt' } },
+  { nummer: 50, name: 'Gewürznelke', nameOriginal: 'Clove', kategorieId: 'gewuerze', kategorieLabel: 'Gewürze', gruppeId: 'gewuerze-gruppe', gruppeLabel: 'Gewürze', sca: { gruppeId: 'braune-gewuerze', aromaId: 'nelke' } },
+
+  // Nutty/Cocoa — eine Gruppe, sechs Flaeschchen.
+  { nummer: 51, name: 'Erdnuss', nameOriginal: 'Peanut', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'nussig', aromaId: 'erdnuss' } },
+  { nummer: 52, name: 'Haselnuss', nameOriginal: 'Hazelnut', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'nussig', aromaId: 'haselnuss' } },
+  { nummer: 53, name: 'Mandel', nameOriginal: 'Almond', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'nussig', aromaId: 'mandel' } },
+  { nummer: 54, name: 'Walnuss', nameOriginal: 'Walnut', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'nussig' } },
+  { nummer: 55, name: 'Zartbitterschokolade', nameOriginal: 'Dark Chocolate', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'kakao', aromaId: 'zartbitterschokolade' } },
+  { nummer: 56, name: 'Schokolade', nameOriginal: 'Chocolate', kategorieId: 'nussig-kakao', kategorieLabel: 'Nussig / Kakao', gruppeId: 'nussig-kakao-gruppe', gruppeLabel: 'Nussig/Kakao', sca: { gruppeId: 'kakao', aromaId: 'schokolade' } },
+
+  // Sweet — eine Gruppe, vier Flaeschchen.
+  { nummer: 57, name: 'Brauner Zucker', nameOriginal: 'Brown Sugar', kategorieId: 'suess', kategorieLabel: 'Süß', gruppeId: 'suess-gruppe', gruppeLabel: 'Süß', sca: { gruppeId: 'brauner-zucker', aromaId: 'melasse' } },
+  { nummer: 58, name: 'Ahornsirup', nameOriginal: 'Maple Syrup', kategorieId: 'suess', kategorieLabel: 'Süß', gruppeId: 'suess-gruppe', gruppeLabel: 'Süß', sca: { gruppeId: 'brauner-zucker', aromaId: 'ahornsirup' } },
+  { nummer: 59, name: 'Karamellisiert', nameOriginal: 'Caramelized', kategorieId: 'suess', kategorieLabel: 'Süß', gruppeId: 'suess-gruppe', gruppeLabel: 'Süß', sca: { gruppeId: 'brauner-zucker', aromaId: 'karamellisiert' } },
+  { nummer: 60, name: 'Vanille', nameOriginal: 'Vanilla', kategorieId: 'suess', kategorieLabel: 'Süß', gruppeId: 'suess-gruppe', gruppeLabel: 'Süß', sca: { gruppeId: 'vanille', aromaId: 'vanille' } },
+];
+
+const FLAESCHCHEN_NACH_NUMMER = new Map(FLAESCHCHEN.map((f) => [f.nummer, f] as const));
+
+/** Der Kurzindex-Eintrag zu einer Flaeschchennummer. */
+export function flaeschchenZu(nummer: number): Flaeschchen | undefined {
+  return FLAESCHCHEN_NACH_NUMMER.get(nummer);
+}

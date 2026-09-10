@@ -81,6 +81,32 @@
   --d-schatten: rgba(0, 0, 0, 0.5);
   --d-schatten-weich: rgba(0, 0, 0, 0.3);
 
+  /* ---- Kategoriefarben Aromarad · Rohfarben, beide Themes ----
+     K36-Aufhebung (Redesign v2): neun gedaempfte, warme Toene — ausschliesslich
+     fuer den kleinen Punkt samt duennem Rand im Aromarad-Drilldown
+     (muster/DrillDown.svelte), keine Vollflaechen, keine Verwendung ausserhalb
+     des Aromarads. Id-Suffix = kategorieId aus daten/aromen.ts, direkt
+     verwendbar als `var(--kat-${kategorieId})`. */
+  --h-kat-blumig: #a8637a;
+  --h-kat-fruchtig: #ab4a45;
+  --h-kat-sauer-fermentiert: #8a7a2e;
+  --h-kat-gruen-pflanzlich: #5b7a4a;
+  --h-kat-sonstiges: #7d6f5e;
+  --h-kat-roestig: #6b4a30;
+  --h-kat-gewuerze: #a05a2c;
+  --h-kat-nussig-kakao: #8a6142;
+  --h-kat-suess: #a4801f;
+
+  --d-kat-blumig: #c98da0;
+  --d-kat-fruchtig: #cf7d75;
+  --d-kat-sauer-fermentiert: #b5a35a;
+  --d-kat-gruen-pflanzlich: #8aab74;
+  --d-kat-sonstiges: #a89c89;
+  --d-kat-roestig: #a17952;
+  --d-kat-gewuerze: #c98a55;
+  --d-kat-nussig-kakao: #b98f68;
+  --d-kat-suess: #cfae5e;
+
   /* ---- Zuordnung · HELL ist Standard ---- */
   --grund: var(--h-grund);
   --blatt: var(--h-blatt);
@@ -100,6 +126,15 @@
   --kritisch: var(--h-kritisch);
   --schatten: var(--h-schatten);
   --schatten-weich: var(--h-schatten-weich);
+  --kat-blumig: var(--h-kat-blumig);
+  --kat-fruchtig: var(--h-kat-fruchtig);
+  --kat-sauer-fermentiert: var(--h-kat-sauer-fermentiert);
+  --kat-gruen-pflanzlich: var(--h-kat-gruen-pflanzlich);
+  --kat-sonstiges: var(--h-kat-sonstiges);
+  --kat-roestig: var(--h-kat-roestig);
+  --kat-gewuerze: var(--h-kat-gewuerze);
+  --kat-nussig-kakao: var(--h-kat-nussig-kakao);
+  --kat-suess: var(--h-kat-suess);
 
   /* ---- Schrift (Handoff 3.2) ---- */
   --schrift: 'Source Serif 4 Variable', Georgia, serif; /* trägt allen Inhalt */
@@ -225,6 +260,15 @@
     --kritisch: var(--d-kritisch);
     --schatten: var(--d-schatten);
     --schatten-weich: var(--d-schatten-weich);
+    --kat-blumig: var(--d-kat-blumig);
+    --kat-fruchtig: var(--d-kat-fruchtig);
+    --kat-sauer-fermentiert: var(--d-kat-sauer-fermentiert);
+    --kat-gruen-pflanzlich: var(--d-kat-gruen-pflanzlich);
+    --kat-sonstiges: var(--d-kat-sonstiges);
+    --kat-roestig: var(--d-kat-roestig);
+    --kat-gewuerze: var(--d-kat-gewuerze);
+    --kat-nussig-kakao: var(--d-kat-nussig-kakao);
+    --kat-suess: var(--d-kat-suess);
   }
 }
 
@@ -248,6 +292,15 @@
   --kritisch: var(--d-kritisch);
   --schatten: var(--d-schatten);
   --schatten-weich: var(--d-schatten-weich);
+  --kat-blumig: var(--d-kat-blumig);
+  --kat-fruchtig: var(--d-kat-fruchtig);
+  --kat-sauer-fermentiert: var(--d-kat-sauer-fermentiert);
+  --kat-gruen-pflanzlich: var(--d-kat-gruen-pflanzlich);
+  --kat-sonstiges: var(--d-kat-sonstiges);
+  --kat-roestig: var(--d-kat-roestig);
+  --kat-gewuerze: var(--d-kat-gewuerze);
+  --kat-nussig-kakao: var(--d-kat-nussig-kakao);
+  --kat-suess: var(--d-kat-suess);
 }
 [data-theme='hell'] {
   --grund: var(--h-grund);
@@ -268,6 +321,15 @@
   --kritisch: var(--h-kritisch);
   --schatten: var(--h-schatten);
   --schatten-weich: var(--h-schatten-weich);
+  --kat-blumig: var(--h-kat-blumig);
+  --kat-fruchtig: var(--h-kat-fruchtig);
+  --kat-sauer-fermentiert: var(--h-kat-sauer-fermentiert);
+  --kat-gruen-pflanzlich: var(--h-kat-gruen-pflanzlich);
+  --kat-sonstiges: var(--h-kat-sonstiges);
+  --kat-roestig: var(--h-kat-roestig);
+  --kat-gewuerze: var(--h-kat-gewuerze);
+  --kat-nussig-kakao: var(--h-kat-nussig-kakao);
+  --kat-suess: var(--h-kat-suess);
 }
 
 /* ---- Grundlagen, die an jedem Bildschirm gelten ---- */
@@ -314,6 +376,21 @@ button,
   font-variant-numeric: var(--zahl-features);
   font-weight: var(--gw-zahl);
   letter-spacing: -0.01em;
+}
+
+/* Kategorie-Punkt (K36-Aufhebung) — zentral seit dem zweiten echten Aufrufer
+   (DrillDown.svelte UND Uebungsmodus.svelte/Rangliste.svelte). Kleiner Punkt
+   + duenner Rand je Kategorie, keine Vollflaeche: der Rand traegt die volle
+   Farbe, die Fuellung nur gedaempft. Farbe kommt ueber die Inline-Variable
+   `--punkt-farbe`, meist `var(--kat-<kategorieId>)`. */
+.kategorie-punkt {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--punkt-farbe) 35%, transparent);
+  border: 1px solid var(--punkt-farbe);
 }
 
 /* Bühnen-Zahl — Redesign v2, Etappe 3: erst lokal in Bar.svelte
