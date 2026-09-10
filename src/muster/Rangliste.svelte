@@ -4,19 +4,29 @@
   // Zahl. Erster Eintrag in 600. Die Reihenfolge gehört immer einer
   // Person, und die Person steht im Gruppenkopf (K71 — kein Possessiv).
 
-  type Eintrag = { id: string; name: string; wert?: number };
+  // `farbe` optional (Aromapaket): der Kategorie-Punkt vor dem Namen, wenn
+  // ein Aufrufer ihn mitgibt — rein additiv, andere Aufrufer (Getraenke-,
+  // Bestellungs-Rangliste) lassen es weg und sehen keine Aenderung.
+  type Eintrag = { id: string; name: string; wert?: number; farbe?: string };
 
   let {
     person,
     eintraege,
     mitBalken = false,
+    grenze,
   }: {
     person: string;
     eintraege: Eintrag[];
     mitBalken?: boolean;
+    /** Ungesetzt: alles zeigen (bisheriges Verhalten). Gesetzt: erst die ersten `grenze`,
+     * dahinter ein Umschalter "+ N"/"weniger" — fuer lange Listen (Aromapaket, Uebungsmodus). */
+    grenze?: number;
   } = $props();
 
   const maxWert = $derived(Math.max(1, ...eintraege.map((e) => e.wert ?? 0)));
+
+  let ausgeklappt = $state(false);
+  const sichtbar = $derived(grenze !== undefined && !ausgeklappt ? eintraege.slice(0, grenze) : eintraege);
 </script>
 
 <div class="rangliste">
@@ -24,9 +34,12 @@
   {#if eintraege.length === 0}
     <div class="leer">Reihenfolge unbekannt · alphabetisch</div>
   {:else}
-    {#each eintraege as eintrag, i (eintrag.id)}
+    {#each sichtbar as eintrag, i (eintrag.id)}
       <div class="zeile">
-        <span class="name" class:erste={i === 0}>{eintrag.name}</span>
+        <span class="name" class:erste={i === 0}>
+          {#if eintrag.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {eintrag.farbe}"></span>{/if}
+          {eintrag.name}
+        </span>
         {#if mitBalken && eintrag.wert !== undefined}
           <span class="balkenspur">
             <span class="balken" style:width={`${(eintrag.wert / maxWert) * 100}%`}></span>
@@ -35,6 +48,11 @@
         {/if}
       </div>
     {/each}
+    {#if grenze !== undefined && eintraege.length > grenze}
+      <button type="button" class="mehr" onclick={() => (ausgeklappt = !ausgeklappt)}>
+        {ausgeklappt ? 'weniger' : `+ ${eintraege.length - grenze}`}
+      </button>
+    {/if}
   {/if}
 </div>
 
@@ -86,5 +104,18 @@
   .leer {
     font-size: var(--fs-satz);
     color: var(--gedaempft);
+  }
+  /* Wie der "+ N"-Umschalter in DrillDown.svelte: Akzentfarbe statt der
+     Zeilenfarbe — das ist eine Handlung, kein weiterer Rang-Eintrag. */
+  .mehr {
+    margin-top: 4px;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    color: var(--akzent);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    text-align: left;
+    cursor: pointer;
   }
 </style>

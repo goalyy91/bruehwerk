@@ -15,6 +15,10 @@
   // Bildschirm, kein wiederverwendbarer Baustein. Chips.svelte scheidet fuer
   // die Querverweise aus — das ist ein Auswahlmuster mit Staerkegrad, keine
   // Verweisliste.
+  //
+  // Aromapaket, Etappe 2: umgezogen von bereiche/einstellungen/ nach
+  // bereiche/aromen/ — mit dem Verkostungsbogen als zweitem Aufrufer gehoert
+  // das Blatt keinem der beiden Bereiche mehr allein.
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
 

@@ -43,6 +43,19 @@ describe('haeufigsteAromen', () => {
     const eintraege = Array.from({ length: 10 }, (_, i) => ({ pfad: [`Aroma ${i}`] }));
     expect(haeufigsteAromen(eintraege, 3)).toHaveLength(3);
   });
+
+  it('zaehlt ueber kanonischesLabel zusammen, wenn der Aufrufer es mitgibt (K55)', () => {
+    // Ein Le-Nez-Flaeschchen ("Heidelbeere") und ein SCA-Eintrag ("Blaubeere")
+    // meinen denselben Geruch — Profilblatt.svelte loest das ueber
+    // daten/aromen.ts::kanonischesAromaLabel auf, bevor es hier ankommt.
+    const ergebnis = haeufigsteAromen([
+      { pfad: ['Fruchtig', 'Beere', 'Heidelbeere'], kanonischesLabel: 'Blaubeere' },
+      { pfad: ['Fruchtig', 'Beere', 'Blaubeere'], kanonischesLabel: 'Blaubeere' },
+      { pfad: ['Fruchtig', 'Beere', 'Himbeere'], kanonischesLabel: 'Himbeere' },
+    ]);
+    expect(ergebnis[0]).toEqual({ label: 'Blaubeere', anzahl: 2 });
+    expect(ergebnis[1]).toEqual({ label: 'Himbeere', anzahl: 1 });
+  });
 });
 
 describe('verschwundeneAuffaelligkeiten', () => {

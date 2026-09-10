@@ -24,6 +24,14 @@
   // Temperaturtabelle. Rein additiv: wer es weglaesst (z. B. Aufbereitung
   // beim Kaffee), sieht nur den Text wie bisher.
   //
+  // Optionales `farbe` je Option (Aromapaket, Rueckmeldung "Farbe gehoert in
+  // die Auswahlliste, nicht auf die Frage") — der Kategorie-Punkt aus
+  // tokens.css, unabhaengig vom Herkunftszeichen: beide koennen nebeneinander
+  // stehen, ohne sich die Bedeutung zu teilen. Fuer den Uebungsmodus, wo eine
+  // Frage nach dem Aroma-*Namen* fragt und der Punkt deshalb erst in der
+  // Antwortliste stehen darf, nie in der Frage selbst — sonst wuerde die
+  // Kategorie verraten, bevor geraten wurde.
+  //
   // Visueller Redesign-Reset (Handoff 3.8 "Eingabefeld Text/Auswahl"):
   // geschlossenes Feld = Vertiefung, Radius 4, "▾" in Spurfarbe. Die
   // aufgeklappte Liste bleibt ein eigenes Blatt mit Haarlinien; eine
@@ -36,7 +44,7 @@
     onWahl,
     platzhalter = 'wählen …',
   }: {
-    optionen: readonly { wert: string; label: string; symbol?: Zeichen }[];
+    optionen: readonly { wert: string; label: string; symbol?: Zeichen; farbe?: string }[];
     wert: string;
     onWahl: (wert: string) => void;
     platzhalter?: string;
@@ -60,6 +68,7 @@
 <div class="auswahlfeld">
   <button type="button" class="feld" class:offen aria-expanded={offen} onclick={() => (offen = !offen)}>
     <span class="wert" class:platzhalter={!gewaehlteOption}>
+      {#if gewaehlteOption?.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {gewaehlteOption.farbe}"></span>{/if}
       {#if gewaehlteOption?.symbol}
         <span class="zeichen" class:voll={gewaehlteOption.symbol === 'punkt'} class:ring={gewaehlteOption.symbol === 'ring'} class:gestrichelt={gewaehlteOption.symbol === 'gestrichelt'}></span>
       {/if}
@@ -79,6 +88,7 @@
           onclick={() => waehlen(option.wert)}
         >
           <span class="label">
+            {#if option.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {option.farbe}"></span>{/if}
             {#if option.symbol}
               <span class="zeichen" class:voll={option.symbol === 'punkt'} class:ring={option.symbol === 'ring'} class:gestrichelt={option.symbol === 'gestrichelt'}></span>
             {/if}

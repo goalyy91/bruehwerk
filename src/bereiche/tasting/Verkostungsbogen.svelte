@@ -14,6 +14,7 @@
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { GROESSEN, zusammenfassung } from '../../domain/tasting';
+  import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Treppe from '../../muster/Treppe.svelte';
@@ -21,6 +22,7 @@
   import DrillDown from '../../muster/DrillDown.svelte';
   import LesartUmschalter from '../../muster/LesartUmschalter.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
   import type { Tasting, Groessen as GroessenTyp, Staerke } from '../../daten/schema';
 
   let { shotId, onZurueck, onFertig }: { shotId: string; onZurueck: () => void; onFertig: () => void } = $props();
@@ -52,17 +54,34 @@
   const aromasets = $derived(bestand.aromasets);
   let aromasetId = $state(bestehend?.aromen[0]?.set ?? bestand.aromasets[0]?.id ?? '');
   const aktivesSet = $derived(aromasets.find((a) => a.id === aromasetId));
+  // K36-Aufhebung, Etappe 2b: die Kategoriefarbe wird bis in Gruppen und
+  // Blaetter durchgereicht, nicht nur an die oberste Ebene gehaengt — sonst
+  // verschwindet der Punkt beim Reinklicken (Rueckmeldung "Farbe soll immer
+  // dabei sein, nicht erst nach Auswahl"). Der CSS-Variablenname ergibt sich
+  // direkt aus der Kategorie-Id (tokens.css), keine zweite Zuordnungstabelle
+  // noetig.
   const ebenen = $derived(
-    (aktivesSet?.kategorien ?? []).map((k) => ({
-      id: k.id,
-      label: k.label,
-      kinder: k.gruppen.map((g) => ({
-        id: g.id,
-        label: g.label,
-        kinder: g.aromen.map((a) => ({ id: a.id, label: a.label, nummer: a.nummer })),
-      })),
-    })),
+    (aktivesSet?.kategorien ?? []).map((k) => {
+      const farbe = `var(--kat-${k.id})`;
+      return {
+        id: k.id,
+        label: k.label,
+        farbe,
+        kinder: k.gruppen.map((g) => ({
+          id: g.id,
+          label: g.label,
+          farbe,
+          kinder: g.aromen.map((a) => ({ id: a.id, label: a.label, nummer: a.nummer, farbe })),
+        })),
+      };
+    }),
   );
+
+  // Das Datenblatt, ueber die Fluschchennummer im Drill-down erreichbar
+  // (Etappe 2) — analog zu Uebungsmodus.svelte, eigener Zustand statt einer
+  // zweiten Navigations-Ebene, damit der halb ausgefuellte Bogen unangetastet
+  // stehen bleibt, waehrend das Blatt oben liegt.
+  let datenblatt = $state<AromaDatenblatt | undefined>(undefined);
 
   type GewaehltesAroma = { set: string; id: string; label: string; pfad: string[]; nummer?: number };
   let aromenAlle = $state<GewaehltesAroma[]>(
@@ -115,6 +134,13 @@
   }
 </script>
 
+{#if datenblatt}
+  <Aromadatenblatt
+    blatt={datenblatt}
+    onZurueck={() => (datenblatt = undefined)}
+    onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)}
+  />
+{:else}
 <Kopfzeile titel="Verkostung" {onZurueck} />
 
 {#if !shot}
@@ -164,7 +190,13 @@
       <p class="quelle">{aktivesSet.quelle}</p>
     {/if}
     {#key aromasetId}
-      <DrillDown {ebenen} start={aromenFuerAktivesSet} onAenderung={aromenGeaendert} />
+      <DrillDown
+        {ebenen}
+        start={aromenFuerAktivesSet}
+        onAenderung={aromenGeaendert}
+        onNummerKlick={(nummer) => (datenblatt = datenblattZu(nummer))}
+        nummerAktiv={(nummer) => datenblattZu(nummer) !== undefined}
+      />
     {/key}
   </div>
 
@@ -184,6 +216,7 @@
   <div class="knopfreihe">
     <Knopf stufe="primaer" onKlick={speichern}>Verkostung speichern</Knopf>
   </div>
+{/if}
 {/if}
 
 <style>

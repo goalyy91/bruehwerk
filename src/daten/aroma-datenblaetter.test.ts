@@ -6,10 +6,12 @@
  * ein Querverweis ins Leere.
  */
 import { describe, it, expect } from 'vitest';
-import { DATENBLAETTER, FLAESCHCHEN_GESAMT, datenblattZu } from './aroma-datenblaetter';
+import { DATENBLAETTER, FLAESCHCHEN, FLAESCHCHEN_GESAMT, datenblattZu, flaeschchenZu } from './aroma-datenblaetter';
 import { AROMASET_SCA, AROMASET_LENEZ } from './aromen';
 
 const SCA_KATEGORIEN = new Set(AROMASET_SCA.kategorien.map((k) => k.id));
+const SCA_GRUPPEN = new Set(AROMASET_SCA.kategorien.flatMap((k) => k.gruppen.map((g) => g.id)));
+const SCA_AROMEN = new Set(AROMASET_SCA.kategorien.flatMap((k) => k.gruppen.flatMap((g) => g.aromen.map((a) => a.id))));
 
 describe('Datenblaetter — Erfassungsfehler, die man im Bild nicht sieht', () => {
   it('vergibt jede Flaeschchennummer hoechstens einmal', () => {
@@ -48,39 +50,55 @@ describe('Datenblaetter — Erfassungsfehler, die man im Bild nicht sieht', () =
   });
 });
 
-describe('Le-Nez-Set wird aus den Datenblaettern gebaut', () => {
-  const alleAromen = AROMASET_LENEZ.kategorien.flatMap((k) => k.gruppen.flatMap((g) => g.aromen));
-
-  it('fuehrt genau 60 Flaeschchen, luckenlos von 1 bis 60', () => {
-    expect(alleAromen).toHaveLength(FLAESCHCHEN_GESAMT);
-    const nummern = alleAromen.map((a) => a.nummer).sort((x, y) => (x ?? 0) - (y ?? 0));
+describe('Kurzindex (FLAESCHCHEN) — Nummer, Name, Kategorie aller 60', () => {
+  it('fuehrt genau 60 Flaeschchen, luckenlos von 1 bis 60, keine doppelt', () => {
+    expect(FLAESCHCHEN).toHaveLength(FLAESCHCHEN_GESAMT);
+    const nummern = FLAESCHCHEN.map((f) => f.nummer).sort((x, y) => x - y);
     expect(nummern).toEqual(Array.from({ length: FLAESCHCHEN_GESAMT }, (_, i) => i + 1));
   });
 
-  it('beschriftet erfasste Flaeschchen mit ihrem echten Namen', () => {
-    for (const blatt of DATENBLAETTER) {
-      const aroma = alleAromen.find((a) => a.nummer === blatt.nummer);
-      expect(aroma?.label, `Nr. ${blatt.nummer}`).toBe(blatt.name);
+  it('nutzt nur Kategorien, die es im SCA-Set wirklich gibt (K55)', () => {
+    for (const f of FLAESCHCHEN) {
+      expect(SCA_KATEGORIEN.has(f.kategorieId), `${f.name}: ${f.kategorieId}`).toBe(true);
     }
   });
 
-  it('markiert nicht erfasste Flaeschchen als solche, statt sie zu erfinden', () => {
-    const offen = alleAromen.filter((a) => a.nummer !== undefined && !datenblattZu(a.nummer));
-    expect(offen.length).toBe(FLAESCHCHEN_GESAMT - DATENBLAETTER.length);
-    for (const a of offen) expect(a.label).toBe(`Nr. ${a.nummer} (noch nicht erfasst)`);
+  it('verweist mit sca.gruppeId und sca.aromaId nur auf Ids, die es im SCA-Set gibt', () => {
+    for (const f of FLAESCHCHEN) {
+      if (!f.sca) continue;
+      expect(SCA_GRUPPEN.has(f.sca.gruppeId), `${f.name} -> Gruppe ${f.sca.gruppeId}`).toBe(true);
+      if (f.sca.aromaId) {
+        expect(SCA_AROMEN.has(f.sca.aromaId), `${f.name} -> Aroma ${f.sca.aromaId}`).toBe(true);
+      }
+    }
   });
 
-  it('haengt die offenen Flaeschchen ans Ende, nicht zwischen die Kategorien', () => {
-    const letzte = AROMASET_LENEZ.kategorien[AROMASET_LENEZ.kategorien.length - 1];
-    expect(letzte?.id).toBe('nicht-erfasst');
+  it('deckt sich mit den bereits erfassten Volltext-Blaettern (Nummer, Name, Kategorie)', () => {
+    for (const blatt of DATENBLAETTER) {
+      const kurz = flaeschchenZu(blatt.nummer);
+      expect(kurz?.name, `Nr. ${blatt.nummer}`).toBe(blatt.name);
+      expect(kurz?.kategorieId, `Nr. ${blatt.nummer}`).toBe(blatt.kategorieId);
+    }
+  });
+});
+
+describe('Le-Nez-Set wird aus dem Kurzindex gebaut', () => {
+  const alleAromen = AROMASET_LENEZ.kategorien.flatMap((k) => k.gruppen.flatMap((g) => g.aromen));
+
+  it('fuehrt genau 60 Flaeschchen mit ihrem echten Namen', () => {
+    expect(alleAromen).toHaveLength(FLAESCHCHEN_GESAMT);
+    for (const f of FLAESCHCHEN) {
+      const aroma = alleAromen.find((a) => a.nummer === f.nummer);
+      expect(aroma?.label, `Nr. ${f.nummer}`).toBe(f.name);
+    }
   });
 
   it('bindet Ids an die Nummer, damit Uebungsdaten Haeppchen ueberleben', () => {
     for (const a of alleAromen) expect(a.id).toBe(`flaeschchen-${a.nummer}`);
   });
 
-  it('bleibt Platzhalter, solange Blaetter fehlen', () => {
-    expect(AROMASET_LENEZ.platzhalter).toBe(DATENBLAETTER.length < FLAESCHCHEN_GESAMT);
+  it('ist kein Platzhalter mehr — die Namen sind echt, nur der Volltext waechst noch', () => {
+    expect(AROMASET_LENEZ.platzhalter).toBe(false);
   });
 });
 
