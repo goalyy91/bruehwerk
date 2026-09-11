@@ -816,6 +816,683 @@ export const DATENBLAETTER: readonly AromaDatenblatt[] = [
       { nummer: 52, original: 'Haselnuss' },
     ],
   },
+
+  {
+    nummer: 22,
+    name: 'Weinig',
+    nameOriginal: 'Winey',
+    kategorieId: 'sauer-fermentiert',
+    kategorieLabel: 'Sauer / Fermentiert',
+    beschreibung: [
+      'Das Aroma von Rotwein ist vielfältig und hängt von Rebsorte, Terroir und önologischer Praxis ab. Allgemein ist Rotwein fruchtig, mit dunklen Fruchtnoten wie Kirsche, Beeren, Backpflaume oder Rosine.',
+      'Je nach Reifung kann Rotwein Noten von Eukalyptus, Röstaromen, Tabak, Schokolade oder Vanille zeigen. Er kann würzig wie Pfeffer riechen oder holzig wie Tabak. Der Duft kann an einen unfertigen Keller erinnern, an ein Lieblingsessen, an ein besonderes Glas mit einem Freund, an ein gegrilltes Steak oder an selbst gemachte Konfitüre. Archäologische Funde belegen Weinherstellung seit mehr als 7.000 Jahren, in der Region des südlichen Kaukasus zwischen Schwarzem und Kaspischem Meer.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Der vergorene Saft der Rebe Vitis vinifera.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die sommergrüne, verholzende Rebe ist für ihren Saft berühmt. Sie hat eine schuppige Rinde, handförmig gelappte Blätter und wird meist auf unter 2 Meter zurückgeschnitten. Die Frucht ist eine Beere, die Traube, grün, rot oder violett. Weinreben werden vegetativ vermehrt, durch Stecklinge oder Veredelung — deshalb sind die vielen Rebsorten seit Hunderten, wenn nicht Tausenden von Jahren sortenrein geblieben.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die Trauben werden zerdrückt oder gepresst, der Saft vor der Abfüllung fermentiert und gereift. Die eigentliche Kunst der Weinherstellung liegt in der Fermentation: Die Art der Gärung, ob geimpft oder nicht, und weitere Faktoren steuert der Winzer, um den Wein zum gewünschten Profil zu führen. Der Wein wird anschließend vom Trubsatz — der Bodensatz der Beerenreste, die Geläger — durch Abstich, Filtration oder Schönung getrennt. Die Reifung, in Fässern, Stahl, Beton, Flaschen oder einer Kombination davon, verändert Geschmack und Aroma zusätzlich. Am Ende zeigt sich die Kreativität des Winzers in der Verschnitt-Kunst, wenn mehrere Sorten oder Partien zu einem harmonischen Getränk zusammengeführt werden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Weinaromen sind endlos vielfältig und füllen ganze Bücher, Fachzeitschriften und wissenschaftliche Studien. Zu sagen, ein Kaffee habe eine Weinnote, ist vermutlich ebenso vereinfachend wie zu sagen, ein Wein habe eine Kaffeenote. Wer die Welt des Weins erkunden will, findet dafür ein eigenes Le-Nez-du-Vin-Aromaset. Im Wein stammen Blüten- und Zitrusnoten von Terpenen wie Linalool, Limonen und Citronellol. Aldehyde wie Vanillin und Furfural bringen warme, röstige, holzige Noten. Pyrazine können an grüne Paprika erinnern. Ester und Ketone wirken fruchtig, blumig und buttrig. Manche dieser Verbindungen entstehen im Zusammenhang mit alkoholischer oder malolaktischer Gärung, andere durch das Zusammenspiel von Hefen mit Aminosäuren, wieder andere sind enzymabhängig. Und schließlich nehmen Weine beim Reifen je nach Gefäß weitere Aromakomponenten auf, etwa Phenole aus dem Eichenfass.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt weinig als „die scharfe, durchdringende, leicht fruchtige, alkoholartige Note, die man mit Wein verbindet“. Ein reichhaltiger, weiniger Kaffee mit ausgeglichenen Schokoladen- oder Kräuternoten gilt als besonderer Kaffee. Die Chemie von Rotwein und bestimmten Kaffees überschneidet sich stark, Parallelen lassen sich leicht ziehen.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Fruchtig-weinige Aromen entstehen durch die Fermentation während der Nachernte-Verarbeitung. Die mikrobielle Aktivität hängt stark von der Verarbeitungsmethode ab und erzeugt die chemischen Stoffwechselprodukte, die zu den vertrauten Aromen führen. Traditionell galt natural aufbereiteter Kaffee — die ganze Frucht trocknet auf dem Samen, bevor sie geschält und gemahlen wird — als der zuverlässigste Weg zu einem weinigen Kaffee. Regionen, die naturals produzieren, etwa Äthiopien, Jemen und Brasilien, waren die Hauptquelle für Kaffees mit weiniger Note.',
+          'Der weltweite Kaffeemarkt hat sich seit den frühen 2000er-Jahren in Sachen Aromaprofile und naturals stark gewandelt. Natural aufbereitete Kaffees haben sich seither qualitativ deutlich verbessert und wurden entsprechend akzeptierter und geschätzter. Zwei Jahrzehnte später gibt es weinige Kaffees aus fast allen Anbauregionen der Welt. Die kräftigen, fruchtig-weinigen Noten von naturals haben schon immer die Aufmerksamkeit von Konsumenten auf sich gezogen, die ihr Verständnis und ihre Erfahrung mit Kaffee erweitern wollten. Der Zustrom neuer, experimenteller Verarbeitungsmethoden — darunter Honey-Prozesse und anaerobe Fermentation — kann ebenfalls zu weinigen Noten führen.',
+          'Taucht eine weinige Note in einem gewaschenen Kaffee auf, lohnt genaueres Hinsehen: Sie kann durch mangelhafte Verarbeitung oder Schwierigkeiten in der Aufbereitung entstehen und auf Unregelmäßigkeiten hindeuten. Wird ein gewaschener Kaffee nicht vollständig fermentiert und ordentlich gewaschen, bevor er trocknet, fermentiert das restliche Fruchtfleisch beim Trocknen und bei der Lagerung weiter — und hinterlässt unerwartete oder schwankende Weinnoten.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 11, original: 'Kirsche' },
+      { nummer: 10, original: 'Backpflaume' },
+      { nummer: 9, original: 'Rosine' },
+      { nummer: 23, original: 'Kaffeefruchtfleisch' },
+      { nummer: 21, original: 'Buttersäure' },
+    ],
+  },
+
+  {
+    nummer: 23,
+    name: 'Kaffeefruchtfleisch',
+    nameOriginal: 'Coffee Pulp',
+    kategorieId: 'sauer-fermentiert',
+    kategorieLabel: 'Sauer / Fermentiert',
+    beschreibung: [
+      'Kaffeefruchtfleisch ist der süße, fermentierte, trocknende, stechende Duft von gärendem Kaffee-Fruchtfleischabfall. Er ist sauer, weinig, reif und intensiv fruchtig.',
+      'Er kann direkt zur Waschstation zurückversetzen, an schwipsig-alkoholische Noten oder an Kompost erinnern. Auf der positiven Seite kann er blumig und nach reifen Früchten duften — Jasmin, Ananas, Apfel und die frische Kaffeekirsche selbst. Manchmal erinnert er an eine schöne Flasche Beaujolais. Dieses Aroma lässt sich als ein Kontinuum von Fruchtigkeit verstehen, dessen Intensität je nach Person positiv oder negativ wirkt.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Das verworfene, fruchtige Fleisch der Gattung Coffea.'],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Bei der Nachernte-Verarbeitung wird das Fruchtfleisch (Mesokarp) auf mechanischem oder biologischem Weg vom Kaffeesamen gelöst. Geschieht das, durchläuft der Kaffee entweder die gewaschene oder die Honey-Aufbereitung. Trocknet dagegen die ganze Frucht auf dem Samen, ist er natural aufbereitet und wird erst später durch eine Schälmaschine vom Fruchtfleisch befreit. Beim mechanischen Entpulpen werden Schale und der Großteil des Mesokarps abgerissen, indem die Kirschen durch eine rotierende Trommel, ein Sieb oder eine Scheibe gepresst werden. Wie viel Fruchtfleisch dabei zum Trocknen auf dem Pergament verbleibt, ist der entscheidende Faktor dafür, wie stark die mikrobielle Aktivität auf diesem Kaffee ausfällt.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Intensiv fruchtige, fermentierte Aromen prägen diesen Duft. Der Geruch reifer Frucht baut sich aus mehreren Produkten der Fermentation und des mikrobiellen Stoffwechsels auf, darunter Acetaldehyd (reifer Apfel), Ethylacetat (Ananas), Isobutanol (süß), Isobutylacetat (fruchtig-süß) und Ethyl-3-hexenoat (grün, fruchtig, Rum). Mit steigender Intensität kommen Isoamylalkohol (Banane, fermentiert) und Isoamylacetat (Banane, Birne) dazu und bringen reife, warme Fruchtnoten ein. Diese fruchtigen Noten können durch moschusartig-käsige Aromen ergänzt oder ausgeglichen werden, etwa durch 2-Methylbuttersäure, die natürlich in Kaffee, Kakao und Wein vorkommt und nach fruchtigem Käse riechen kann. Ihr Isomer, die 3-Methylbuttersäure (Isovaleriansäure), hat ebenfalls einen käsig-schweißigen, fermentierten Geruch. Im Extremfall riecht das Ganze nach Ethanol und Buttersäure: Ethanol ist ein Hauptprodukt der Fermentation im Kaffeefruchtfleisch, Buttersäure steuert den überreifen, fauligen Unterton zum extremen Kaffeefruchtfleisch-Aroma bei.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das Aroma von Kaffeefruchtfleisch kann aus einem durchschnittlichen Kaffee einen besonderen machen. Im Übermaß ist es aber ein Warnsignal: In hoher Intensität führt es zum Ferment-Fehlton. Die Grenze zwischen fruchtigem Kaffeefruchtfleisch und Ferment-Fehlton ist vielleicht umstritten und sollte nicht im Auge des Betrachters liegen, sondern aus der Absicht der Verarbeitung heraus beurteilt werden. Hat ein Erzeuger einen intensiven Kaffeefruchtfleisch-Charakter absichtlich herbeigeführt, ist das eine völlig andere Situation als ein Zufall, eine nachlässige Verarbeitung oder ein unerwartetes Ergebnis durch schlechte Praxis, schlechtes Wetter oder höhere Gewalt. Gefällt es einem, umso besser — gefällt es nicht, geht man einfach weiter.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Ein Kaffeefruchtfleisch-Aroma im Kaffee ist vollständig ein Ergebnis der Nachernte-Verarbeitung. Ob mild, mittel oder stark ausgeprägt — dieses Merkmal ist immer ein Produkt der Fermentation. Gewaschene, auf dem Pergament getrocknete Kaffees haben traditionell den niedrigsten Anteil dieses Aromas. Kaffees, die mit Mucilage (Schleimschicht) getrocknet werden — mechanisch entschleimt oder als Honey — haben einen höheren Anteil. Natural aufbereitete, mit der ganzen Frucht getrocknete Kaffees haben den höchsten. Jede zusätzliche Fermentation — etwa eine anaerobe oder in einem geschlossenen System in der ganzen Kirsche — bringt zusätzliches Kaffeefruchtfleisch-Aroma ins Endprodukt. Fermentation in geringem Maß kann durchaus als Säure und Frucht geschätzt werden. Jeder Kaffee hat seinen Markt, und jeder Erzeuger hat das Recht, für seinen Markt zu produzieren.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 11, original: 'Kirsche' },
+      { nummer: 12, original: 'Ananas' },
+      { nummer: 16, original: 'Apfel' },
+      { nummer: 22, original: 'Weinig' },
+      { nummer: 21, original: 'Buttersäure' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 4, original: 'Jasmin' },
+    ],
+  },
+
+  {
+    nummer: 24,
+    name: 'Erbsenschote',
+    nameOriginal: 'Peapod',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Erbsenschote hat ein unverwechselbares, pflanzliches Aroma: erdig, frisch, grün und süß. Der Geruch lässt sich auch als „erbsig“, kartoffelartig, muffig oder krautig beschreiben.',
+      'In der Fachliteratur zu Erbsen und Hülsenfrüchten gilt eine bohnige Note als Auffälligkeit. Für viele weckt der Duft frischer Erbsenschoten eine kräftige Erinnerung — an fruchtbare Gartenerde oder an deftige Hausmannskost. Erbsen werden weltweit angebaut und gegessen und sind für ihre guten Nährwerte bekannt, unter anderem als Eiweiß- und Ballaststoffquelle. Man bekommt sie frisch, aus der Dose oder tiefgekühlt, getrocknete Erbsen landen häufig in Suppen.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die Frucht der Pflanze Pisum sativum, der Gartenerbse.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Erbse gehört zur Familie der Fabaceae (Hülsenfrüchtler), die dem Boden auf natürliche Weise Stickstoff zuführen. Sie ist einjährig und wird als Kaltzeit-Kultur in vielen Teilen der Welt angebaut. Die Frucht der Erbse ist eine Hülse mit 5 bis 10 Samen — den Erbsen.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Erbsen stammen ursprünglich aus dem Nahen Osten, aus der Gegend des heutigen Türkei und Irak. Die Domestizierung der Wildform fiel vermutlich mit dem Beginn des Ackerbaus überhaupt zusammen.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Rohe Erbsen beziehungsweise Erbsenschoten unterscheiden sich chemisch deutlich von verarbeiteten, getrockneten, gerösteten, blanchierten oder gebackenen Erbsenprodukten. Die chemische Mischung des Erbsenschoten-Aromas in der Natur besteht überwiegend aus Alkanalen, Ketonen, Alkoholen und Pyrazinen. Nennenswerte Stoffe sind Nonanal, Hexanal und 3-Alkyl-2-methoxypyrazine, die zur grünen, frisch-grasigen, pflanzlichen Note beitragen. Dazu kommt 2-Isopropyl-3-methoxypyrazin (IPMP), das eine unverwechselbare pflanzliche Note ähnlich grüner Paprika beisteuert. Dieselben Verbindungen finden sich in vielen grünen Gemüsen und Pflanzen wieder, darunter Trauben, Wein und Kaffee.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Erbsenschote als „eine grüne, süße, bohnige, frische, rohe und muffig-erdige Note“.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Das Erbsenschoten-Aroma trägt zum Geruch von rohem, grünem Kaffee bei. Die Alkylpyrazine 3-Isopropyl-2-methoxypyrazin und 2-Isopropyl-3-methoxypyrazin (IPMP) verleihen eine erbsig-pflanzliche, an grüne Paprika erinnernde Note und gelten als wichtige Duftstoffe im rohen Kaffee.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Diese Verbindungen bauen sich beim Rösten im Allgemeinen ab — je länger die Röstentwicklung, desto weniger grüne, grasige, „erbsige“ und paprikaartige Noten bleiben übrig. Hell gerösteter Kaffee kann noch nach Erbsenschote duften. Als negativ gilt diese Note, wenn eine Röstung unterentwickelt ist und sie zusammen mit anderen grün-pflanzlichen Aromen dominiert.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 25, original: 'Frisches Gras' },
+      { nummer: 27, original: 'Grüne Paprika' },
+      { nummer: 36, original: 'Muffig/Erdig' },
+      { nummer: 32, original: 'Kartoffel' },
+    ],
+  },
+
+  {
+    nummer: 25,
+    name: 'Frisches Gras',
+    nameOriginal: 'Grass (Fresh)',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Der Duft von Gras wird als frisch, grün, blättrig und roh beschrieben, mitunter sogar fruchtig und blumig. Viele Lebensmittel und Getränke, vor allem Obst und Gemüse, können eine grasige Note zeigen.',
+      'Grüner Tee, Olivenöl und manche Mezcals sind für ihren frischen Grasduft bekannt. Manche Gräser setzen bei Beschädigung sogenannte grüne Blattduftstoffe frei — eine Gruppe pflanzlicher Signalstoffe, die typischerweise ausgeschüttet werden, wenn Pflanzen angegriffen werden oder unter Stress stehen. Wird das Gras verletzt oder geschnitten, werden diese Stoffe freigesetzt: Die Zellschäden setzen Enzyme frei, die lange Fettsäureketten aufspalten. Die Pflanze nutzt das zu ihrem eigenen Vorteil, um Insekten und Tiere zu beeinflussen. Erhitzen deaktiviert die Enzyme und löst Reaktionen in anderen Molekülen aus, sodass die frische, grüne Note verblasst und andere Aromen stärker hervortreten.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Gras ist eine Gruppe von Blütenpflanzen aus den großen Familien der Süßgräser (Poaceae) und Gramineae. Dazu zählen Getreide wie Mais, Weizen, Gerste und Reis, Bambus und die Gräser natürlicher Graslandschaften.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Botanisch gehören Gräser zu den einkeimblättrigen Pflanzen — sie wachsen aus dem Samen mit nur einem ersten Blatt. Gräser haben lange Blätter oder Halme, dünne, gerade Wurzeln, einen runden Stängel und eine Blütenähre. Viele sind auf schnelles Wachstum in voller Sonne eingestellt und nutzen den C4-Photosyntheseweg zur Energiegewinnung. Rasenmischungen enthalten je nach Klima etwa Kentucky-Rispengras, Weidelgras, Bermudagras, Kikuyugras, Durban-Gras, Manila-Gras, japanisches Rasengras oder Schwingel — sie wachsen weltweit, je nach Klimazone. Dazu kommen Tausende Wildgräser in Steppen, Savannen und anderen Graslandschaften.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Die grasige Note wird chemisch von den Aldehyden Hexanal, cis-3-Hexanal und cis-3-Hexen-1-ol geprägt — sie gelten als Kennzeichen des Duftes von frisch geschnittenem Gras. Diese Verbindung findet sich auch in Erdbeeren, Tomaten, Himbeeren und vielen anderen Pflanzen. Der Alkohol 1-Hexanol trägt ebenfalls zum Duft von frischem Gras bei. Untersuchungen deuten darauf hin, dass cis-3-Hexen-1-ol die Akzeptanz von grünem Tee, Fruchtsaft und anderen Lebensmitteln bei Konsumenten mindern kann. Trans-2-Hexenal ist eine der Verbindungen, die für diese Wirkung verantwortlich sind, und verleiht eine grün-grasige Note. Obwohl diese Stoffe als geruchlich niedrigschwellig gelten, unterscheidet sich die Fähigkeit, sie wahrzunehmen, von Mensch zu Mensch stark.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt „frisch“ als „eine grüne Note, die man mit frisch geschnittenem Gras und Blattgrün verbindet, gekennzeichnet durch einen süßen, durchdringenden Charakter“. Das schließt geschnittenes Gras ein, fasst aber eine größere Kategorie frischer, grüner Düfte zusammen. Im Unterschied zu heuartig hat Gras einen frischen, blättrigen Duft.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Die grasige Note ist einer der wesentlichen grünen Charakterzüge des rohen Kaffeesamens. Hexanol gilt als wichtiger flüchtiger Bestandteil von grünem Arabica-Kaffee. Hexanal wurde ebenfalls als Duftstoff in grünem Robusta-Kaffee nachgewiesen, während dieser trocknet.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Fruchtige und grüne Aromen werden häufig mit diesen Hexanol- und Hexanal-Verbindungen in Verbindung gebracht. Untersuchungen legen nahe, dass sie in gewaschen aufbereitetem Kaffee im Vergleich zu naturals relativ hoch konzentriert sind.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Die grasigen Noten im grünen Kaffee, die von Aldehyden und Alkoholen getragen werden, wandeln sich beim Rösten normalerweise um. Hell gerösteter Kaffee enthält den höchsten Hexanal-Anteil, der mit fortschreitender Röstung abgebaut wird. Die grasige Note ist eines der wichtigsten Kennzeichen des insgesamt grünen Eindrucks, den ein Kaffee hinterlässt, wenn er beim Rösten nicht richtig entwickelt wurde.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 28, original: 'Heuartig' },
+      { nummer: 26, original: 'Gurke' },
+      { nummer: 24, original: 'Erbsenschote' },
+    ],
+  },
+
+  {
+    nummer: 27,
+    name: 'Grüne Paprika',
+    nameOriginal: 'Green (Bell) Pepper',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Grüne Paprika bringt einen pflanzlichen Geschmack und Duft mit, der sich deutlich von der typischen Würze der Chilifamilie unterscheidet. Das Aroma ist grün, erdig, frisch, grasig und süß.',
+      'Es kann auch blumige, krautige und Gurken-Noten enthalten. In Lebensmitteln und Getränken wirken diese Verbindungen sehr stark auf den sensorischen Eindruck — sie sind also selbst in kleinsten Mengen äußerst wirksam. Wegen dieser Intensität ist die Note der grünen Paprika breit erforscht worden: bei Paprika selbst, bei Trauben und Wein, bei Erdnüssen, anderen Gemüsen und ihren Ölen sowie bei Kaffee.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Grüne Paprika gehört zu einer Gruppe süßer Paprikasorten aus Capsicum annuum var. annuum (Grossum-Gruppe). Sie zählen zur Familie der Nachtschattengewächse (Solanaceae).',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Pflanze ist von Natur aus eine tropische Staude, wird aber meist als einjähriges Gemüse angebaut. Paprika stammt ursprünglich aus Mittel- und Südamerika und trägt Früchte in vielen Farben.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Diese süßen Paprika wurden in Mexiko schon seit Jahrtausenden angebaut, bevor Europäer sie nach Spanien brachten. Von dort verbreiteten sie sich über den Mittelmeerraum und die ganze Welt und gehören heute fest zu vielen unterschiedlichen Küchen.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Chemisch werden die Pyrazine, insbesondere die Methoxypyrazine, mit grünen und erdigen Düften in Verbindung gebracht. Obwohl Pyrazine sonst mit dem Rösten und Röstaromen assoziiert werden, stammen die alkylierten Methoxypyrazine hier direkt aus der Pflanze und dem grünen Samen selbst. Diese Verbindungen verleihen vielen Gemüsesorten und Weinen einen unverwechselbaren Duft. In der Natur werden sie nicht nur von Pflanzen gebildet, sondern auch von Mikroorganismen, Insekten und Wirbellosen — oft als chemisches Kommunikationsmittel, um zu warnen, sich zu verteidigen oder anzulocken.',
+          'Die Verbindung 2-Isobutyl-3-methoxypyrazin wurde als erste als Schlüsselsubstanz für das Aroma der grünen Paprika identifiziert. Das häufigste Pyrazin in Paprika ist 3-Isobutyl-2-methoxypyrazin (IBMP); Pflanzen bilden es als Nebenprodukt der Atmung. Auch 3-Isopropyl-2-methoxypyrazin (IPMP) gilt als mitverantwortlich für das Aroma von Gartenerbsen und grüner Paprika.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Eine Note nach grüner Paprika kann in Kaffee angenehm und vielschichtig wirken und würzige, süße oder Schokoladennoten in einem besonderen Kaffee ausbalancieren. Manche der beteiligten Verbindungen tragen aber auch zu bekannten Auffälligkeiten bei. Insbesondere 2-Methoxy-3-sec-butylpyrazin, das in grünem Kaffee nachgewiesen wurde, kann zu einer grünen Gemüsenote wie grüner Paprika beitragen — es ist aber ebenso Bestandteil der Auffälligkeit muffig-erdig.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Das Grüne-Paprika-Aroma ist ein wesentlicher Bestandteil von rohem, grünem Kaffee. Die Alkylpyrazine 3-Isopropyl-2-methoxypyrazin (IPMP) und 2-Isopropyl-3-methoxypyrazin verleihen eine erbsig-grüne Paprikanote und gelten als wichtige Duftstoffe im Kaffee. Diese Verbindungen bauen sich beim Rösten ab — je länger die Röstentwicklung, desto weniger grüne, grasige, „erbsige“ und paprikaartige Noten bleiben übrig.',
+          'Die Verbindung 3-Isobutyl-2-methoxypyrazin (IBMP), eine der Kennverbindungen für die grüne Paprikanote in Pflanzen, gilt zugleich als Auffälligkeit: Sie trägt zum Rio-Fehlton bei und ist auch für den Kartoffel-Fehler mitverantwortlich. Dieselben Verbindungen können aber auch — ganz ohne Fehlton — für eine pflanzliche, an grüne Paprika oder „Erbsen“ erinnernde Kaffeenote sorgen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 24, original: 'Erbsenschote' },
+      { nummer: 25, original: 'Frisches Gras' },
+      { nummer: 9, original: 'Rosine' },
+      { nummer: 35, original: 'Schimmlig/Feucht' },
+      { nummer: 36, original: 'Muffig/Erdig' },
+      { nummer: 32, original: 'Kartoffel' },
+    ],
+  },
+
+  {
+    nummer: 28,
+    name: 'Heuartig',
+    nameOriginal: 'Hay-like',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Geschnittenes Heu hat ein süßes Aroma, beschrieben als trocken, pudrig, vanillig, fruchtig, grün, erdig und krautig.',
+      'Minderwertiges Heu kann feucht-muffig riechen, wenn Feuchtigkeit den Ballen schadet. Viele pflanzliche Produkte können heuartige Aromen zeigen, darunter Olivenöl, Seetang, Tee, Brokkoli, Basilikum, Pilze, Wein, Reis und andere Kräuter. Auch Milchprodukte wie Milch, Butter und Käse können je nach Futter der Milchtiere eine heuartige Note annehmen. Im echten Heu verblasst das Aroma, während die Bestandteile aushärten und trocknen. Da Aromastoffe flüchtiger sind als Wasser, verdunstet mit jedem Trocknungsprozess, der den Großteil des Wassers verdampft, auch ein Teil des Geschmacks.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'In vielen Teilen der Welt, wo das Klima Weidehaltung erschwert, ist Heu die wichtigste oder einzige Quelle für Ballaststoffe, Energie, Eiweiß, Vitamine und Mineralstoffe, die Nutztiere über den Winter brauchen. Heu wird geschnitten, getrocknet und gepresst, meist als Mischung wilder und angebauter Gräser und Kräuter — darunter Bermudagras, Liebesgras oder Rohrschwingel, Luzerne und Klee. Der Geruch von Heu hängt vom Reifegrad beim Schnitt und vom Feuchtigkeitsgehalt beim Pressen ab. Frisch geschnittenes Heu, frei von Gerüchen, die auf schlechte Handhabung hindeuten, gilt als das begehrteste.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Weil in geschnittenem Heu viele verschiedene Gras- und Kräuterarten stecken, tragen zahlreiche Verbindungen zu seinem natürlichen Duft bei. Um diesen künstlich nachzubilden, greift man unter anderem auf Phosgen zurück, das für einen unverwechselbaren muffig-heuartigen Duft bekannt ist. Dieses Gas — auch als chemische Waffe bekannt und streng reguliert — wird von der Duftstoffindustrie in sicheren Mengen genutzt, um einen trockenen, heuartigen Duft zu erzeugen. Eine weitere Substanz, die den Geruch von Heu nachahmt, ist Cumarin, ein Benzopyron-Molekül. Es wird von vielen Pflanzen als Schutz gegen Fraßfeinde gebildet und stammt großteils aus der Tonkabohne, dem Samen des Hülsenfrucht-Baums Dipteryx odorata (brasilianischer Teak), der in Südamerika wächst. Cumarin hat einen süßen Duft, ähnlich dem von Vanille.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt heuartig als „die leicht süße, trockene, staubige Note mit einem leicht grünen Charakter, die man mit trockenen Gräsern verbindet“.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Wie Gras ist auch Heu ein häufiger Bestandteil des Aromas von grünem Kaffee. Heuartige Düfte wurden sogar im Kaffeefruchtfleisch nachgewiesen.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Viele Verbindungen, die zu einer heuartigen Note beitragen, sind bekannte Produkte der Maillard-Reaktion und anderer Vorgänge beim Rösten. Furane, Hydroxymethylfurfural, Furfural und weitere Stoffe wurden im Kaffee nachgewiesen. Auch Pyrrole tragen zu dieser warmen, heuartigen Note bei. Ethenon wurde in geröstetem Robusta-Kaffee mit einem süßen, nach frisch gemähtem Heu duftenden Aroma in Verbindung gebracht. Heuartige Aromen können außerdem ein Kennzeichen gealterten, gerösteten Kaffees sein, bei Robusta wie bei Arabica — wobei Robustas diese Note typischerweise stärker zeigen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 25, original: 'Frisches Gras' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 29, original: 'Thymian' },
+      { nummer: 60, original: 'Vanille' },
+    ],
+  },
+
+  {
+    nummer: 29,
+    name: 'Thymian',
+    nameOriginal: 'Thyme',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Thymian riecht krautig, würzig, minzig, holzig und pfeffrig. Seltener wird er als süß, ledrig oder leicht zitrisch beschrieben.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die häufigste Thymianart ist Thymus vulgaris.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Thymian ist eine krautige, ausdauernde Pflanze, die im Mittelmeerraum heimisch ist. Er gehört zur Familie der Lippenblütler (Lamiaceae), die rund 400 Arten umfasst — viele davon aromatisch, darunter Rosmarin, Minze, Oregano, Lavendel und Salbei.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Thymian wurde schon im alten Ägypten und im antiken Griechenland geschätzt, sowohl in der Küche als auch für aromatische und medizinische Zwecke. Thymianöl gilt bis heute für seine starken antimikrobiellen und antioxidativen Eigenschaften.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Viele Vertreter dieser Pflanzenfamilie bilden flüchtige Stoffe als Abwehrmittel. Diese haben einen starken Geruch und Geschmack, weshalb in der Küche schon eine kleine Menge viel bewirkt. Die durchdringenden, intensiven Aromen dieser Pflanzen stammen von Terpenen, Phenolen und Alkoholen — vor allem von Thymol (nach dem Thymian-Duft benannt), Carvacrol, Linalool, Gamma-Terpineol, Geraniol und Sabinenhydrat.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Kaffees aus aller Welt können krautige, an Thymian erinnernde Düfte zeigen. Diese Aromen wirken meist kräftig und harzig, und Thymian lässt sich leicht innerhalb solcher krautig-holziger Düfte ausmachen. Am bekanntesten sind die krautigen Noten, die in indonesischem Arabica von Java geschätzt werden. Bestimmte mittelamerikanische Kaffees, etwa aus Guatemala, können besonders krautige Aromen zeigen, die gelegentlich an Thymian erinnern. Vom afrikanischen Kontinent kann natural aufbereiteter äthiopischer Harrar ebenfalls einen würzig-krautigen Duft haben, der eher ins Blumige und Fruchtige spielt.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Bestimmte Verbindungen, die krautige Thymian-Aromen prägen, wurden gezielt in grünem Kaffee nachgewiesen. Die Verbindung γ-Terpinen wurde in Robusta-Kaffee aus Vietnam identifiziert. Das Monoterpenoid Linalool ist bekanntermaßen sowohl in Robusta- als auch in Arabica-Kaffee weit verbreitet.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Manche krautigen und würzigen Aromen im Kaffee, darunter Thymian, entstehen vermutlich erst beim Rösten. Pyrazine, die während der Röstung gebildet werden, gelten allgemein als Träger würzig-krautiger Aromen. Diese Verbindungen können zu einer Thymian-Note beitragen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 30, original: 'Kiefer' },
+      { nummer: 31, original: 'Zeder' },
+      { nummer: 28, original: 'Heuartig' },
+      { nummer: 37, original: 'Leder' },
+      { nummer: 46, original: 'Pfeffer' },
+    ],
+  },
+
+  {
+    nummer: 30,
+    name: 'Kiefer',
+    nameOriginal: 'Pine',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Der warme, frische, feine Duft eines Kiefernwaldes prägt sich oft unvergesslich ein. Ob es der Wald selbst ist, ein Weihnachtsbaum oder ein Lagerfeuer — die angenehme Assoziation mit dem Kiefernduft steht außer Frage.',
+      'Ähnlich wie Zeder, Holzig und Thymian kann der Duft der Kiefer frisch, aber auch fruchtig, klar und süß sein. Er gilt gemeinhin als natürlich, angenehm und harmonisch und hat nachweislich eine entspannende Wirkung. Manchmal wird er auch als harzig beschrieben, vermutlich wegen der Verbindung zwischen Kiefer und dem Harz desselben Baums. Man vermutet, dass Kiefern diese verlockenden, angenehmen Düfte entwickeln, um Bestäuber anzulocken — schließlich bilden Nadelbäume keine Blüten.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          '„Kiefer“ steht für viele Nadelbaumarten der Gattung Pinus. In dieser Gattung gibt es mehr als 120 Arten, die vor allem auf der Nordhalbkugel vorkommen.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Kiefern sind harzige, langlebige Nadelbäume. Die höchste Art, die Ponderosa-Kiefer, kann bis zu 80 Meter hoch werden. Die Langlebige Kiefer (Bristlecone Pine) gilt als eine der ältesten, am längsten lebenden Pflanzen der Welt. Statt Blüten bilden Kiefern einhäusige Zapfen zur Fortpflanzung.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der verlockende Duft eines Kiefernwaldes entsteht aus einem beachtlichen Bukett unterschiedlicher chemischer Verbindungen — dessen Komplexität lässt sich weder kurz zusammenfassen noch ist sie wissenschaftlich vollständig erschlossen. Eine ganze Reihe von Monoterpenen erinnert an Nadelbäume. Pinen ist das häufigste davon und wird von den Bäumen an die Luft abgegeben — deshalb duften solche Wälder so intensiv. Diese Verbindung kann sich in andere mit blumigerem Duft umwandeln, was zum angenehmen Waldbukett beiträgt. Weitere Terpene im Kiefernduft sind Limonen, Myrcen, Camphen und Phellandren. Limonen bilden sowohl Nadelbäume als auch manche essbare Bäume, Früchte und Kräuter. Camphen kommt in verschiedenen ätherischen Ölen vor, etwa in Kiefer, Zypresse, Bergamotte und Muskatnuss, und trägt dort einen großen Teil der Schlüsselaromen bei. Phellandren ist kennzeichnend für den besonderen Duft der Küstenkiefer, die im Westen Nordamerikas heimisch ist. Bornylacetat, ein Ester, trägt zu einem frischen, klaren Kiefernduft bei und wird in Parfüms, Lufterfrischern, Reinigungsmitteln und Kosmetik verwendet, auch medizinisch. Sogar das beliebte Vanillin ist Teil der Kiefernduft-Mischung und trägt vermutlich zu ihrer Süße bei.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Eine Kiefernnote in Kaffee wahrzunehmen ist bemerkenswert und interessant — oft ein Hinweis auf etwas Besonderes. Warum genau sich ein kiefernartiger Duft in einem Kaffee findet, ist nicht ganz geklärt. Es gibt aber einige bestimmte Verbindungen im Kaffee, die bekanntermaßen mit einer Kiefernnote zusammenhängen.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Vor allem Limonen und andere Terpene gelten als wichtiger Beitrag zum Arabica-Aroma der Gesha-Genotypen. Kiefernaromen finden sich auch in anderen besonderen Arabica-Kaffees, etwa im wilden Kaffee aus dem Harenna-Wald in Äthiopien. Robustas aus aller Welt werden häufig als holzig beschrieben, seltener aber als kiefernartig. Holzig, im Unterschied zu waldig oder nach Wald, kann sich vom frischen, würzigen, blumigen Duft der Kiefer unterscheiden. Besonders bestimmte indonesische Robustas werden für ihre kiefernartigen Düfte geschätzt. Die Herkunft dieser Kiefernduftstoffe im Kaffee liegt zweifellos teilweise im rohen Samen selbst: Pinen, Myrcen und Limonen wurden in der roten Kaffeekirsche sowohl von Robusta als auch von Arabica nachgewiesen.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Diese Kiefernduftstoffe entstehen teilweise auch erst beim Rösten. Die harzig-holzige Qualität der Kiefer erinnert an andere Produkte des Röstens. Monoterpene bilden sich bekanntermaßen in der frühen Röstphase (unter 160 °C). Maltol, ein Produkt der Maillard-Reaktion, das meist mit Karamellaromen assoziiert wird, findet sich auch in Rinde und Nadeln von Kiefern und lässt sich regelmäßig im Kaffee schmecken.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 31, original: 'Zeder' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 29, original: 'Thymian' },
+    ],
+  },
+
+  {
+    nummer: 31,
+    name: 'Zeder',
+    nameOriginal: 'Cedar',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Zeder ist bekannt für ihr würziges, harziges, duftendes Holz.',
+      'Ihr Aroma kann an Bleistiftspäne, frisches Holz, einen Kleiderschrank oder einen erdigen Wald erinnern. Interessanterweise hat sich gezeigt, dass Zedernduft eine entspannende Wirkung hat, und das Öl gilt als antiseptisch und pilzhemmend.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Zeder ist der gebräuchliche Name für eine Gattung des Baums Cedrus innerhalb der Familie der Kieferngewächse.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Ein Nadelbaum, heimisch im Himalaya und im Mittelmeerraum. Cedrus atlantica, ein großer Baum aus Marokko und Algerien, trägt einen für die Gattung typischen Duft.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Die nach der Zeder benannte Verbindung Cedrol, ein Sesquiterpen-Alkohol, hat einen leicht holzigen Duft. Zu den gängigen Stoffen im Zedernholzöl zählen Cedrol, Cedren, Himachalan, α-Atlanton und Thujopsen. Manche Verbindungen aus der Gruppe der Sesquiterpenoide teilen eine holzige Qualität, darunter die baumspezifischen Himachalene, Santalole und Santalen. Zedernholzöl wird häufig in Shampoos und Seifen eingesetzt, um andere Düfte zu verstärken. Cedren und Cedrol sind dabei die gängigsten Stoffe, die Produkten gezielt einen holzigen Zedernduft verleihen. Im natürlichen Zedernduft tragen jedoch noch viele weitere Verbindungen zum Bukett bei.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Zedernnoten in Kaffee können je nach Balance der übrigen Aromen und ihrer Intensität positiv oder negativ wirken. Robustas, darunter die Conilon-Sorte, werden oft für holzige Nuancen genannt. Holzig kommt manchmal von einem Eindruck, der eher auf geringe Qualität oder Handelsware hindeutet. Im Gegensatz dazu kann Zeder auch fruchtige, blumige Züge zeigen, die als besonderer, leicht würziger Duft positiv auffallen. Welche genaue chemische Zusammensetzung zu Zedernnoten im Kaffee führt, ist bislang nicht vollständig geklärt.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Das Pyrazin Chinoxalin wurde im Kaffee nachgewiesen und mit einem zedernholzig-buttrigen Duft in Verbindung gebracht. Diese Noten entstehen vermutlich beim Rösten, wenn Noten von Zeder, Tabak und anderen eher harzigen oder verbrannten Düften gebildet werden. Cedrol wurde in anderen Nutzpflanzen als Produkt der Maillard-Reaktion identifiziert und wurde auch in Kaffeeblatt-Tee und Kaffee-Kombucha nachgewiesen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 30, original: 'Kiefer' },
+    ],
+  },
+
+  {
+    nummer: 32,
+    name: 'Kartoffel',
+    nameOriginal: 'Potato',
+    kategorieId: 'gruen-pflanzlich',
+    kategorieLabel: 'Grün / Pflanzlich',
+    beschreibung: [
+      'Der scharfe, erdige, muffige Duft der Kartoffel kann an das Ausgraben einer Knolle aus dem Erdboden erinnern.',
+      'Er wird als roher, geschälter Kartoffelgeruch beschrieben. Diese erdig-grüne Note findet sich auch in Erbsenschoten und ist bei vielen anderen Pflanzen bekannt. Die Kartoffel wurde vor bis zu 10.000 Jahren domestiziert und wird heute weltweit als Grundnahrungsmittel vieler Kulturen angebaut.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Die stärkehaltige Knolle der Pflanze Solanum tuberosum, ursprünglich beheimatet in der Andenregion Perus und Boliviens. Sie gehört zur Familie der Nachtschattengewächse (Solanaceae) — zusammen mit Tabak, grüner Paprika und Tomate.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Pflanze ist mehrjährig, und die Knollen, die unterirdisch aus den Wurzeln wachsen, sind das stärke- und nährstoffreiche Gemüse. Die Knolle kommt in vielen Farben, Formen und Größen vor und trägt Poren, die als Augen bekannt sind.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der rohe Geruch wird von einer chemischen Stoffgruppe namens Methoxypyrazine geprägt. Methoxypyrazine sind für ihren niedrigen Geruchsschwellenwert bekannt — Menschen erkennen selbst kleinste Mengen davon. Es handelt sich um Verbindungen, die aus Aminosäuren entstehen und typischerweise subtile erdige Aromen mit sich bringen. Sie können entstehen, wenn Bodenbakterien in die Knolle einwandern. Dieselben Stoffe stecken, als unerwünschte Note nach grüner Paprika oder Spargel, auch in manchen Sauvignon-Blanc- und Cabernet-Sauvignon-Weinen, wo sie von Rebstielen oder Beerenschalen stammen. Viele weitere Verbindungen tragen zum Aroma der gekochten Kartoffel bei, darunter Methionin, ein Produkt der Maillard-Reaktion.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Kartoffel ist im Kaffee ein schwer fassbarer und äußerst zerstörerischer Fehlton, der vor allem die Region der ostafrikanischen Großen Seen betrifft. Der Fehler mag nur wenige Kaffeesamen betreffen, wirkt sich aber deutlich auf die Qualität der gesamten Partie aus.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Der Kartoffel-Fehlton hängt mit Insektenschäden durch die Antestia-Wanze (Antestiopsis orbitalis) zusammen. Diese Stinkwanzen ernähren sich von der Kaffeekirsche und schädigen dabei den Samen. Dieser Schädling befällt afrikanischen Kaffee seit mehr als einem Jahrhundert. In Jahren mit starkem Antestia-Befall wurden Schäden an bis zu 40 Prozent der Kaffeekirschen gemeldet. Antestia befällt Kaffeekirschen in unterschiedlichen Reifestadien sowie andere Teile der Kaffeepflanze.',
+          'Antestia-Wanzen verbreiten mikrobielle Erreger, die zwei bestimmte Verbindungen bilden, 3-Isopropyl-2-methoxypyrazin und 2-Isobutyl-3-methoxypyrazin, die teilweise für den Fehlton verantwortlich sind. Die Gattung Pantoea aus der Familie der Enterobacteriaceae wurde als bakterieller Verursacher identifiziert, der zum Kartoffelgeschmack-Fehler im Kaffee beiträgt. Diese fakultativ anaeroben Bakterien bilden typischerweise Milchsäure und andere Stoffwechselprodukte. Es gibt Hinweise darauf, dass die Stressreaktion der Pflanze auf den Antestia-Befall zusätzlich biochemische Veränderungen im Samen auslöst, die zum Fehlton beitragen. Eine Studie aus dem Jahr 2024 verzeichnete mehr als 30 beteiligte Verbindungen beim Kartoffel-Fehlton, darunter solche, die möglicherweise mit einer Fraßreaktion der Pflanze zusammenhängen.',
+          'Der charakteristische, schmutzig-rohe Kartoffelgeruch lässt sich sowohl im grünen als auch im gerösteten Kaffee erkennen. Eine der Schwierigkeiten bei der Bekämpfung dieses Fehltons ist sein scheinbar zufälliges Auftreten nach der Verarbeitung. Beschädigte, verfärbte Samen und Schwimmer lassen sich beim Sortieren zwar sorgfältig aussortieren, das garantiert aber keinen kartoffelfreien Kaffee. Der Fehlton ist äußerst zerstörerisch, weil er den wirtschaftlichen Ertrag der Erzeuger deutlich mindert. Ein Stigma gegenüber Kaffee aus der betroffenen Region hat diesen wirtschaftlichen Schaden weiter verstärkt — unabhängig davon, ob ein einzelner Kaffee betroffen ist, zögern internationale Käufer, für Kaffees aus der Region Aufpreise zu zahlen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 27, original: 'Grüne Paprika' },
+      { nummer: 24, original: 'Erbsenschote' },
+      { nummer: 36, original: 'Muffig/Erdig' },
+      { nummer: 35, original: 'Schimmlig/Feucht' },
+    ],
+  },
+
+  {
+    nummer: 33,
+    name: 'Pappe',
+    nameOriginal: 'Cardboard',
+    kategorieId: 'sonstiges',
+    kategorieLabel: 'Sonstiges',
+    beschreibung: [
+      'Pappe riecht holzig, süß, muffig, abgestanden, manchmal tierisch oder ledrig, manchmal auch nach Vanille.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Herstellung',
+        text: [
+          'Pappe ist ein verarbeitetes Holzprodukt, für dessen Herstellung mehrere Schritte und Industrieanlagen nötig sind. Sie kann aus neuem oder recyceltem Papier entstehen, ebenso aus anderen Holzprodukten, Weich- oder Hartholz. Zuerst wird Papier oder Holz zu Faserbrei verarbeitet. Dieser wird zu großen Bögen gepresst und getrocknet. Um die Bögen zu wellen, laufen sie durch eine Wellmaschine, wo sie erhitzt und gepresst werden, sodass wellenförmige Schichten entstehen — das erhöht Stabilität und Dämmwirkung. Diese Schichten werden mit Deckflächen verklebt, wofür Klebstoffe und Leime nötig sind. Als wichtiges Verpackungsmaterial wird Pappe für viele Produkte genutzt, auch für Lebensmittel und Getränke. Bei Verzehrbarem ist es jedoch grundsätzlich unerwünscht, einen der Verpackung ähnelnden Geruch wahrzunehmen.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der Geruch von Pappe gilt als Kennzeichen von Altbackenheit in vielen Lebensmitteln und Getränken. Getreide, Mehl, Brot, Cerealien, Bier und sogar Milch können mit der Zeit einen Pappgeruch entwickeln. Allgemein gilt: Werden langkettige Aldehyde Licht oder Sauerstoff ausgesetzt, zerfallen sie zu kurzkettigen Aldehyden, die nach Pappe riechen. Mehr als 35 Duftstoffe wurden in Pappe nachgewiesen. In der Regel dominieren dabei Aldehyde und phenolische Verbindungen. Vanillin, (E)- und (Z)-Non-2-enal, (R,S)-γ-Nonalacton, 2-Methoxyphenol und 3-Propylphenol gehören zu den wichtigsten identifizierten Verbindungen. Die süßen und muffigen Noten von Pappe treten dabei vergleichsweise schwach auf, verglichen mit den holzigen Düften.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Pappe als „die Note, die man mit Pappe oder Papierverpackung verbindet“. Ein Pappgeruch im Kaffee gilt nie als positive Eigenschaft.',
+        ],
+      },
+      {
+        titel: 'Pflanze und Nachernte-Verarbeitung',
+        text: [
+          'Ähnlich wie holzige Düfte kann ein Pappgeruch entstehen, wenn der grüne Kaffeesamen beschädigt ist oder gealtert. Wird Kaffee schlecht verarbeitet oder getrocknet und dabei durch Pilzbefall oder Hitze geschädigt, leidet die Unversehrtheit des Kaffeesamens — das lässt sich oft am Erscheinungsbild oder in der Tasse als holzige Aromen erkennen. Diese Aromen werden durch (E)-2-Nonenal verursacht, das bei der Oxidation ungesättigter Fettsäuren wie Linolsäure entsteht, einer wichtigen Fettsäure in den Lipiden des Kaffees. Chemisch wurde diese Verbindung im grünen Kaffee als Bestandteil des komplexen Rio-Fehltons identifiziert, der schimmelig-feucht riecht. Vor dem Rösten kann sich, zusammen mit holzigen Noten, ein Pappgeruch durch unsachgemäße oder zu lange Lagerung von grünem Kaffee bilden.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: ['Nach dem Rösten kann der Pappgeruch mit zunehmendem Alter als Zeichen von Altbackenheit noch zunehmen.'],
+      },
+    ],
+    verwandte: [
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 35, original: 'Schimmlig/Feucht' },
+      { nummer: 31, original: 'Zeder' },
+      { nummer: 37, original: 'Leder' },
+      { nummer: 60, original: 'Vanille' },
+    ],
+  },
+
+  {
+    nummer: 34,
+    name: 'Holzig',
+    nameOriginal: 'Woody',
+    kategorieId: 'sonstiges',
+    kategorieLabel: 'Sonstiges',
+    beschreibung: [
+      'Holzig umfasst eine äußerst vielfältige Gruppe von Aromen. Frisch, trocken, scharf oder kräftig, würzig oder stumpf — je nach Person wird jedes davon mit Holz in Verbindung gebracht. Es kann minzig und grün sein, erdig und warm, moschusartig und süß.',
+      'Zu holzig zählen Zeder, Eiche, Sandelholz, Kiefer und jedes andere frische oder trockene Holz. Der Duft kann an ein Eichenfass denken lassen, an ein Sitzungszimmer, an ein Postamt oder an einen Campingausflug. Holzig liegt wirklich im Kopf des Betrachters.',
+      'Ein Schreiner kann den unterschiedlichen Duft vieler Holzarten unterscheiden — Fichte, Teak, Zebranoholz, Ebenholz, Kiefer, Redwood, Eiche, Koa, Walnuss, Eukalyptus und Rosenholz. Er oder sie findet diese Holzdüfte überall wieder. Für die meisten Menschen, die nicht beruflich mit Holz, Zimmerei oder verwandten Branchen zu tun haben, bildet sich die Erfahrung mit Holzduft wohl eher im Wald selbst.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Chemie',
+        text: [
+          'Der holzige Duft kann chemisch stark variieren und umfasst eine komplexe Mischung aus Hunderten von Verbindungen. Holzig von Nadelbäumen wirkt meist stark aromatisch und frisch, vor allem durch Pinen (siehe Kiefer) und Kampfer, ein Terpen mit menthol-ähnlichem, würzigem Duft. In frischem Holz tragen Vetiverylacetat und Hexanal zu einer grasig-holzigen Note bei. Blumige oder zitrische Noten in frischem Holz gehen auf die duftenden Terpene Limonen und Germacren zurück. Eine scharfe, saure Note in frischem Holz kann direkt vom Alkohol Methanol oder von Essigsäure stammen, wie man sie in frischer Eiche findet.',
+          'Ob frisch oder getrocknet, macht im Bukett einen großen Unterschied. In Eichenholz wurden mehr als 95 Duftstoffe eigens nachgewiesen, darunter zahlreiche Terpene, Aldehyde, Säuren und Lactone. Aromen, die an trockenes Holz erinnern, sind unter anderem süßes, warmes, geröstetes Furfural. Sandelholz wird meist als süß, warm, bernsteinartig, ledrig und sogar cremig beschrieben — Schlüsselverbindung seines charakteristischen Dufts ist das Terpen α-Santalol. Weitere warme, holzige Aromen bringt Tobacarol mit, eine weiche, warme, würzige, an Muskatnuss und Tabak erinnernde Verbindung. Trockene, süße, warme Holznoten können von Cedrylacetat, Cedrol und Vetiverol stammen. Das Terpen Caryophyllen ist ebenfalls für ein würzig-krautig-holziges Aroma bekannt.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt holzig als „die süße, braune, muffige, dunkle Note, die man mit der Rinde eines Baums verbindet“. Diese besondere Ausprägung von Holzig gilt als nussig, warm, leicht süß. Zweifellos gibt es im Kaffee mehr Spielarten von Holzig, als diese Definition abdeckt. Dennoch gibt es klare Beispiele, wo genau dieser Charakter von Holzig im Kaffee auftritt. Am bekanntesten ist das typische Profil eines sumatranischen Arabica aus Indonesien, der holzig und würzig ist und ein schweres Mundgefühl hat. Robustas aus aller Welt sind für ihre holzigen Eigenschaften bekannt. Je nach Art und Intensität kann Holzigkeit ausgewogen und positiv oder rau und adstringierend wirken. Bei Conilon-Kaffees wirkt die holzige Nuance typischerweise als raue, adstringierende Wahrnehmung mit krautigen Noten.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Ein wesentlicher Ursprung von Holzigkeit im Kaffee ist der Alterungsprozess des grünen Kaffees. Unsachgemäß oder zu lange gelagerte Kaffees werden mit der Zeit holzig. Unter ungünstigen Bedingungen gelagerter Kaffee kann schnell an Qualität verlieren und diese am Ende ruinieren. Diese Eigenschaft zeigt sich dann als trockenes Holz, Eichenfass, totes Holz oder Pappgeruch. Man geht allgemein davon aus, dass dies durch den Zerfall der Zellstruktur im Samen verursacht wird. Diese Art von Holzig wird mit dem Aldehyd trans-2-Nonenal in Verbindung gebracht, einer schalen, papierartig-holzigen Note. Diese Verbindung ist ein Oxidationsprodukt ungesättigter Fettsäuren und gilt weithin als verantwortlich für den charakteristischen holzigen Duft, der in lange gelagertem Kaffee bestehen bleibt.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Bei natural aufbereiteten Robustas können unter weniger als idealen Verarbeitungs- oder Trocknungsbedingungen negative, gummi- und holzartige Noten entstehen. Vermutlich verursacht durch eine Schädigung des grünen Samens, die zu einem Verlust organischer Substanz führt — ausgelöst durch Pilzbefall oder unsachgemäße Trocknung.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Warme, süße, holzige Aromen, wie in der WCR-Definition oben beschrieben, entstehen auch beim Rösten. Pyrazine sind ein wichtiger Bestandteil des Röstaromas vieler Lebensmittel, auch von Kaffee, und entstehen durch Maillard-Reaktionen. Das Keton Cyclotene ist für ein süßes, karamellartig-holziges Aroma bekannt und entsteht durch die Pyrolyse von Lignocellulose beim Rösten. M-Kresol und 1-Methylpyrrol tragen dunkle, warme, nussig-holzige Aromen bei. Wird die Röstung dunkel, führt der Abbau von Chlorogensäuren zur Bildung von Phenolen, darunter auch holzige Duftstoffe. Flüchtige Phenole wie Guajacol tragen zu gerösteten, holzigen, rauchigen und aschigen Noten bei.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 33, original: 'Pappe' },
+      { nummer: 31, original: 'Zeder' },
+      { nummer: 30, original: 'Kiefer' },
+      { nummer: 28, original: 'Heuartig' },
+    ],
+  },
 ];
 
 /** Wie viele Flaeschchen das Set insgesamt hat — die 60 des Le-Nez-Kartons. */
