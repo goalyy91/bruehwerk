@@ -165,14 +165,23 @@
     unterscheiden: { versuche: 0, treffer: 0 },
     verwechslungen: {},
   };
+  // Klickbar nur, wenn zu dieser Nummer schon ein Datenblatt erfasst ist —
+  // dasselbe "nur begehbar, wenn das Ziel existiert"-Muster wie bei den
+  // Querverweisen in Aromadatenblatt.svelte. Kein Spoiler-Risiko: Name und
+  // Kategorie-Punkt stehen hier ohnehin schon offen, unabhaengig vom
+  // Aufdecken-Status der laufenden Aufgabe.
   const rangliste = $derived(
     alleAromen
-      .map((a) => ({
-        id: a.id,
-        name: a.label,
-        wert: Math.round(gesamtquote(staende.get(a.id) ?? LEERER_STAND) * 100),
-        farbe: farbeVonAroma.get(a.id),
-      }))
+      .map((a) => {
+        const ziel = a.nummer !== undefined ? datenblattZu(a.nummer) : undefined;
+        return {
+          id: a.id,
+          name: a.label,
+          wert: Math.round(gesamtquote(staende.get(a.id) ?? LEERER_STAND) * 100),
+          farbe: farbeVonAroma.get(a.id),
+          onKlick: ziel ? () => (datenblatt = ziel) : undefined,
+        };
+      })
       .sort((a, b) => b.wert - a.wert),
   );
 </script>
@@ -206,6 +215,7 @@
                   wert={tipp}
                   onWahl={(w) => (tipp = w)}
                   platzhalter="dein Tipp …"
+                  suchbar
                 />
               {:else}
                 <Segment optionen={aufgabe.optionen.map((a) => ({ wert: a.id, label: String(a.nummer) }))} wert={tipp} onWahl={(w) => (tipp = w)} />
