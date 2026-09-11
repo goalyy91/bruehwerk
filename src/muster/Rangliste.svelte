@@ -7,7 +7,14 @@
   // `farbe` optional (Aromapaket): der Kategorie-Punkt vor dem Namen, wenn
   // ein Aufrufer ihn mitgibt — rein additiv, andere Aufrufer (Getraenke-,
   // Bestellungs-Rangliste) lassen es weg und sehen keine Aenderung.
-  type Eintrag = { id: string; name: string; wert?: number; farbe?: string };
+  //
+  // `onKlick` optional (Uebungsmodus-Rueckmeldung): macht den Namen
+  // begehbar, z. B. zum Datenblatt eines Aromas. Rein additiv wie `farbe` —
+  // ohne Aufrufer bleibt der Name ein <span> wie bisher. Optik bewusst
+  // unveraendert (kein Akzentton, kein Chevron): Praezedenzfall ist die
+  // "Muehle X"-Zeile in Blattzeile.svelte, die navigiert und trotzdem ein
+  // normaler Objektname bleibt.
+  type Eintrag = { id: string; name: string; wert?: number; farbe?: string; onKlick?: () => void };
 
   let {
     person,
@@ -36,10 +43,17 @@
   {:else}
     {#each sichtbar as eintrag, i (eintrag.id)}
       <div class="zeile">
-        <span class="name" class:erste={i === 0}>
-          {#if eintrag.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {eintrag.farbe}"></span>{/if}
-          {eintrag.name}
-        </span>
+        {#if eintrag.onKlick}
+          <button type="button" class="name klickbar" class:erste={i === 0} onclick={eintrag.onKlick}>
+            {#if eintrag.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {eintrag.farbe}"></span>{/if}
+            {eintrag.name}
+          </button>
+        {:else}
+          <span class="name" class:erste={i === 0}>
+            {#if eintrag.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {eintrag.farbe}"></span>{/if}
+            {eintrag.name}
+          </span>
+        {/if}
         {#if mitBalken && eintrag.wert !== undefined}
           <span class="balkenspur">
             <span class="balken" style:width={`${(eintrag.wert / maxWert) * 100}%`}></span>
@@ -83,6 +97,16 @@
   .name.erste {
     font-weight: var(--gw-titel);
     color: var(--tinte);
+  }
+  /* Optik bleibt die eines Objektnamens (siehe Kopfkommentar) — nur
+     Knopf-Reset und Zeiger kommen dazu. */
+  button.name.klickbar {
+    border: none;
+    background: none;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
   }
   .balkenspur {
     flex: 1;
