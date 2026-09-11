@@ -163,116 +163,121 @@
 {:else if !gussplan}
   <p class="hinweis">Kein Gussplan. <button type="button" class="link" onclick={gussplanAnlegen}>anlegen</button></p>
 {:else}
-  <div class="kopf">
-    <span class="titel">Gussplan · {gussplan.name}</span>
+  <h2>Gussplan</h2>
+  <div class="abschnittskopf">
     <span class="summe zahl">{profil.ziel.input} g · {summe} g · {verhaeltnisText}</span>
+    <div class="lesart-wrapper">
+      <LesartUmschalter
+        optionA="auf X g"
+        optionB="+ X g"
+        start={gussplan.lesart === 'kumulativ' ? 'a' : 'b'}
+        onWahl={lesartWechseln}
+      />
+    </div>
   </div>
-
-  <LesartUmschalter
-    optionA="auf X g"
-    optionB="+ X g"
-    start={gussplan.lesart === 'kumulativ' ? 'a' : 'b'}
-    onWahl={lesartWechseln}
-  />
 
   <div class="kartenblock">
     <Blattliste>
     {#each gussplan.bausteine as baustein, i (i)}
-      <button
-        type="button"
-        class="zeile"
-        class:offen={offeneZeile === i}
-        aria-expanded={offeneZeile === i}
-        onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}
-      >
-        <span class="typ">{BAUSTEIN_LABEL[baustein.typ]}</span>
-        <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
-        <span class="chevron" class:offen={offeneZeile === i} aria-hidden="true">▾</span>
-      </button>
-      {#if offeneZeile === i}
-        <div class="formular">
-          {#if baustein.typ === 'bloom'}
-            <label>Menge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.menge}
-              onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-            <label>Dauer <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.dauer}
-              onchange={(e) => bausteinAendern(i, { ...baustein, dauer: Number((e.currentTarget as HTMLInputElement).value) })} /> s</label>
-          {:else if baustein.typ === 'guss'}
-            <label>Zielmenge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.zielmenge}
-              onchange={(e) => bausteinAendern(i, { ...baustein, zielmenge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-            <div class="auswahlzeile">
-              <span class="auswahllabel">Muster</span>
-              <Einzelauswahl
-                optionen={[
-                  { wert: 'zentrum', label: 'Zentrum' },
-                  { wert: 'spirale', label: 'Spirale' },
-                  { wert: 'aussen', label: 'außen halten' },
-                ]}
-                wert={baustein.muster ?? ''}
-                onWahl={(w) => bausteinAendern(i, { ...baustein, muster: w as never })}
-              />
+      <div class="baustein" class:offen={offeneZeile === i}>
+        <button
+          type="button"
+          class="zeile"
+          aria-expanded={offeneZeile === i}
+          onclick={() => (offeneZeile = offeneZeile === i ? undefined : i)}
+        >
+          <span class="typ">{BAUSTEIN_LABEL[baustein.typ]}</span>
+          <span class="kopfwert zahl">{kopfzeile(baustein)}</span>
+          <span class="chevron" class:offen={offeneZeile === i} aria-hidden="true">▾</span>
+        </button>
+        {#if offeneZeile === i}
+          <div class="formular">
+            <!-- Rueckmeldung 2026-09-12: Umsortieren/Loeschen war ganz unten,
+                 hinter allen Feldern versteckt — fuer eine beim Ausprobieren
+                 eines Rezepts haeufige Aktion zu weit vom Zeilenkopf weg.
+                 Jetzt das Erste, was man nach dem Aufklappen sieht. -->
+            <div class="werkzeuge">
+              <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, -1)} disabled={i === 0} aria-label="nach oben verschieben">↑</button>
+              <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, 1)} disabled={i === gussplan.bausteine.length - 1} aria-label="nach unten verschieben">↓</button>
+              <button type="button" class="werkzeug loeschen" onclick={() => bausteinLoeschen(i)}>
+                {loeschenBestaetigen === i ? 'wirklich?' : 'löschen'}
+              </button>
             </div>
-          {:else if baustein.typ === 'agitation'}
-            <div class="auswahlzeile">
-              <span class="auswahllabel">Art</span>
-              <Einzelauswahl
-                optionen={[
-                  { wert: 'schwenken', label: 'Schwenken' },
-                  { wert: 'rao-spin', label: 'Rao Spin' },
-                  { wert: 'ruehren', label: 'Rühren' },
-                  { wert: 'klopfen', label: 'Klopfen' },
-                ]}
-                wert={baustein.art}
-                onWahl={(w) => bausteinAendern(i, { ...baustein, art: w as never })}
-              />
-            </div>
-          {:else if baustein.typ === 'warten'}
-            <div class="auswahlzeile">
-              <span class="auswahllabel">Modus</span>
-              <Einzelauswahl
-                optionen={[
-                  { wert: 'bis-durchgelaufen', label: 'bis durchgelaufen' },
-                  { wert: 'feste-dauer', label: 'feste Dauer' },
-                ]}
-                wert={baustein.modus}
-                onWahl={(w) => bausteinAendern(i, { ...baustein, modus: w as never })}
-              />
-            </div>
-          {:else if baustein.typ === 'bypass'}
-            <label>Menge <input class="eingabefeld-text zahl" type="text" inputmode="decimal" value={baustein.menge}
-              onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
-          {:else if baustein.typ === 'vorbereiten'}
-            <Schalter label="Filter spülen" an={baustein.filterSpuelen}
-              onWahl={(a) => bausteinAendern(i, { ...baustein, filterSpuelen: a })} />
-            <Schalter label="Gefäß vorwärmen" an={baustein.gefaessVorwaermen}
-              onWahl={(a) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: a })} />
-          {:else if baustein.typ === 'frei'}
-            <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
-          {/if}
-          {#if baustein.typ !== 'frei'}
-            <!-- Beim Warten-Baustein ist die Notiz der eigentliche Wert der
-                 Zeile ("Warten bis der Rand trocken ist") — Label und
-                 Platzhalter sagen das, statt "Notiz" zu heissen wie ueberall
-                 sonst (bausteinZeile() in domain/gussplan.ts liest sie so). -->
-            <label class="notiz">{baustein.typ === 'warten' ? 'bis' : 'Notiz'}
-              <input
-                class="eingabefeld-text"
-                type="text"
-                placeholder={baustein.typ === 'warten' ? 'durchgelaufen' : undefined}
-                value={baustein.notiz ?? ''}
-                onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })}
-              />
-            </label>
-          {/if}
-
-          <div class="werkzeuge">
-            <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, -1)} disabled={i === 0}>↑</button>
-            <button type="button" class="werkzeug" onclick={() => bausteinVerschieben(i, 1)} disabled={i === gussplan.bausteine.length - 1}>↓</button>
-            <button type="button" class="werkzeug loeschen" onclick={() => bausteinLoeschen(i)}>
-              {loeschenBestaetigen === i ? 'wirklich?' : 'löschen'}
-            </button>
+            {#if baustein.typ === 'bloom'}
+              <label>Menge <input class="eingabefeld-text schmal zahl" type="text" inputmode="decimal" value={baustein.menge}
+                onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+              <label>Dauer <input class="eingabefeld-text schmal zahl" type="text" inputmode="decimal" value={baustein.dauer}
+                onchange={(e) => bausteinAendern(i, { ...baustein, dauer: Number((e.currentTarget as HTMLInputElement).value) })} /> s</label>
+            {:else if baustein.typ === 'guss'}
+              <label>Zielmenge <input class="eingabefeld-text schmal zahl" type="text" inputmode="decimal" value={baustein.zielmenge}
+                onchange={(e) => bausteinAendern(i, { ...baustein, zielmenge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Muster</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'zentrum', label: 'Zentrum' },
+                    { wert: 'spirale', label: 'Spirale' },
+                    { wert: 'aussen', label: 'außen halten' },
+                  ]}
+                  wert={baustein.muster ?? ''}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, muster: w as never })}
+                />
+              </div>
+            {:else if baustein.typ === 'agitation'}
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Art</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'schwenken', label: 'Schwenken' },
+                    { wert: 'rao-spin', label: 'Rao Spin' },
+                    { wert: 'ruehren', label: 'Rühren' },
+                    { wert: 'klopfen', label: 'Klopfen' },
+                  ]}
+                  wert={baustein.art}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, art: w as never })}
+                />
+              </div>
+            {:else if baustein.typ === 'warten'}
+              <div class="auswahlzeile">
+                <span class="auswahllabel">Modus</span>
+                <Einzelauswahl
+                  optionen={[
+                    { wert: 'bis-durchgelaufen', label: 'bis durchgelaufen' },
+                    { wert: 'feste-dauer', label: 'feste Dauer' },
+                  ]}
+                  wert={baustein.modus}
+                  onWahl={(w) => bausteinAendern(i, { ...baustein, modus: w as never })}
+                />
+              </div>
+            {:else if baustein.typ === 'bypass'}
+              <label>Menge <input class="eingabefeld-text schmal zahl" type="text" inputmode="decimal" value={baustein.menge}
+                onchange={(e) => bausteinAendern(i, { ...baustein, menge: Number((e.currentTarget as HTMLInputElement).value) })} /> g</label>
+            {:else if baustein.typ === 'vorbereiten'}
+              <Schalter label="Filter spülen" an={baustein.filterSpuelen}
+                onWahl={(a) => bausteinAendern(i, { ...baustein, filterSpuelen: a })} />
+              <Schalter label="Gefäß vorwärmen" an={baustein.gefaessVorwaermen}
+                onWahl={(a) => bausteinAendern(i, { ...baustein, gefaessVorwaermen: a })} />
+            {:else if baustein.typ === 'frei'}
+              <p class="hinweis-klein">Altbestand aus der Notion-Migration — nur ansehbar.</p>
+            {/if}
+            {#if baustein.typ !== 'frei'}
+              <!-- Beim Warten-Baustein ist die Notiz der eigentliche Wert der
+                   Zeile ("Warten bis der Rand trocken ist") — Label und
+                   Platzhalter sagen das, statt "Notiz" zu heissen wie ueberall
+                   sonst (bausteinZeile() in domain/gussplan.ts liest sie so). -->
+              <label class="notiz">{baustein.typ === 'warten' ? 'bis' : 'Notiz'}
+                <input
+                  class="eingabefeld-text"
+                  type="text"
+                  placeholder={baustein.typ === 'warten' ? 'durchgelaufen' : undefined}
+                  value={baustein.notiz ?? ''}
+                  onchange={(e) => bausteinAendern(i, { ...baustein, notiz: (e.currentTarget as HTMLInputElement).value || undefined })}
+                />
+              </label>
+            {/if}
           </div>
-        </div>
-      {/if}
+        {/if}
+      </div>
     {/each}
   </Blattliste>
   </div>
@@ -311,20 +316,28 @@
     cursor: pointer;
     padding: 0;
   }
-  .kopf {
+  /* Kopf jetzt zweizeilig: h2 (global, wie "Ziel"/"Spielraum") traegt den
+     Abschnittsnamen allein, darunter Kennzahlen links / Lesart-Umschalter
+     rechts — vorher standen Titel und Kennzahlen in einer Zeile und der
+     Umschalter lief volle Breite (Befund 2026-09-11: wirkte dominanter als
+     die Rezeptschritte selbst, obwohl er nur die Sprache wechselt, K73). */
+  .abschnittskopf {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    margin: var(--r4) 0 var(--r2);
-  }
-  .titel {
-    font-size: var(--fs-bedienwort);
-    color: var(--tinte);
+    align-items: center;
+    gap: var(--r2);
+    margin: var(--r2) 0 var(--r3);
   }
   .summe {
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     color: var(--gedaempft);
+  }
+  /* Schrumpft den Umschalter auf seinen Inhalt statt der vollen Zeilenbreite
+     — LesartUmschalter.svelte selbst bleibt unveraendert, sie fuellt nur,
+     was der Wrapper vorgibt. */
+  .lesart-wrapper {
+    width: fit-content;
   }
   /* Blatt mit Zeilen (Bausteine) + aufgeklapptem Formular in Vertiefung
      (offener Zustand) — kein zentrales Muster fuer diese Form vorhanden.
@@ -333,6 +346,17 @@
      (tests/bildsprache.test.ts). */
   .kartenblock {
     margin-bottom: var(--r5);
+  }
+  /* Kopf+Formular liegen jetzt in EINEM Wrapper je Baustein (vorher zwei
+     Geschwister-Kinder von Blattliste — das zog deren generische
+     Haarlinie ungewollt auch zwischen eine Zeile und ihr eigenes
+     aufgeklapptes Formular, Befund 2026-09-11). Der Wrapper selbst bekommt
+     im offenen Zustand einen Rahmen um beide zusammen: eine erkennbare
+     Bearbeitungsflaeche statt Tan-Zeile/Creme-Formular/Tan-Feld. */
+  .baustein.offen {
+    border: 1px solid var(--linie);
+    border-radius: var(--r-karte);
+    overflow: hidden;
   }
   .zeile {
     width: 100%;
@@ -347,13 +371,6 @@
     color: var(--tinte);
     text-align: left;
     cursor: pointer;
-  }
-  /* Offener Zustand erkennbar (Befund 2026-09-08: Formular und Zeile sahen
-     im geschlossenen wie im geoeffneten Zustand identisch aus). Dieselbe
-     Vertiefungsflaeche wie das Formular direkt darunter — beide zusammen
-     lesen sich als ein Block, nicht als zwei zufaellig benachbarte. */
-  .zeile.offen {
-    background: var(--vertiefung);
   }
   .zeile .chevron {
     flex: none;

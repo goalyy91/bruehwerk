@@ -289,15 +289,18 @@
          Werte gleich groß, die Größenbetonung gehört ausschließlich in den
          Live-Kontext (ShotErfassung.svelte, dort über IstGegenZiel).
          Anordnung nach Rückmeldung: Preinfusion/Brühgruppe/Output/Zeit als
-         eigener 2×2-Block nach Input/Mahlgrad/[Drehzahl]/[Kessel]. Die
-         Brühgruppe (umgerechnete Temperatur, K54) ist jetzt eine eigene
-         Kachel mit eigenem Symbol statt eines Text-Hinweises unter "Kessel"
-         — "Kessel" bezeichnet nur noch den eingestellten Maschinenwert.
-         Preinfusion nur am Siebträger (Rückmeldung 2026-09-08): am V60/Moka/
-         Cold Brew gibt es sie nicht, das Feld stand dort immer leer. Die
-         Zeit-Kachel liest sich als m:ss, wenn der Führungswert (K7) die
-         Durchlaufzeit ist — gespeichert bleiben Sekunden (Parameterkachel
-         `mmss`-Prop, domain/zeit.ts). -->
+         eigener 2×2-Block nach Input/Mahlgrad/[Drehzahl]/[Kessel]/
+         [Temperatur]. Die Brühgruppe (umgerechnete Temperatur, K54) ist
+         eine eigene Kachel mit eigenem Symbol statt eines Text-Hinweises
+         unter "Kessel" — "Kessel" bezeichnet nur noch den eingestellten
+         Maschinenwert. "Temperatur" (Rückmeldung 2026-09-11) ist das
+         Pour-Over-Gegenstück dazu: die direkt aus der Schwanenhalskanne
+         eingegossene Wassertemperatur, ohne K54-Umrechnung, weil sie schon
+         die Brühtemperatur ist. Preinfusion nur am Siebträger (Rückmeldung
+         2026-09-08): am V60/Moka/Cold Brew gibt es sie nicht, das Feld
+         stand dort immer leer. Die Zeit-Kachel liest sich als m:ss, wenn
+         der Führungswert (K7) die Durchlaufzeit ist — gespeichert bleiben
+         Sekunden (Parameterkachel `mmss`-Prop, domain/zeit.ts). -->
     <div class="parameter-raster">
       <Parameterkachel symbol="input" label="Input" wert={profil.ziel.input} einheit="g" onAendern={(w) => zielSpeichern('input', w)} />
       <Parameterkachel
@@ -312,6 +315,13 @@
       {/if}
       {#if bruehgeraet?.ktEinstellbar}
         <Parameterkachel symbol="kessel" label="Kessel" wert={profil.ziel.kt ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('kt', w)} />
+      {/if}
+      {#if bruehgeraet?.typ === 'pourover'}
+        <!-- Kein eigenes Symbol: dieselbe Thermometer-Zeichnung wie "Kessel"
+             passt inhaltlich (beides eine einstellbare Zieltemperatur), nur
+             ohne dessen K54-Umrechnung — die Kanne liefert die Bruehtemperatur
+             direkt (Rueckmeldung 2026-09-11). -->
+        <Parameterkachel symbol="kessel" label="Temperatur" wert={profil.ziel.temperatur ?? ''} einheit="°C" onAendern={(w) => zielSpeichern('temperatur', w)} />
       {/if}
       {#if bruehgeraet?.typ === 'espresso'}
         <Parameterkachel symbol="preinfusion" label="Preinfusion" wert={profil.ziel.pre ?? ''} einheit="s" onAendern={(w) => zielSpeichern('pre', w)} />

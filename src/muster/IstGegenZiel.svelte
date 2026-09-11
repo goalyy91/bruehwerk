@@ -139,7 +139,12 @@
   }
   .wert {
     justify-self: end;
-    width: 4ch;
+    /* War "width: 4ch" — mit box-sizing:border-box frass das eigene
+       Innenpolster (padding) davon einen Teil weg, ein dreistelliger Wert
+       wie "240" schnitt sichtbar ab (Rueckmeldung 2026-09-12). min-width
+       statt einer harten Breite: waechst bei Bedarf, bleibt bei kurzen
+       Werten trotzdem knapp. */
+    min-width: 5ch;
     line-height: 1;
     text-align: right;
     border: none;
