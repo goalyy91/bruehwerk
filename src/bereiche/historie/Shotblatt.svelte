@@ -8,13 +8,18 @@
   // Ist-Werte als Parameterkachel-Raster (eingestellt) + Werteliste
   // (gemessen) — dieselbe Aufteilung wie ShotErfassung.svelte, nur lesend.
 
+  import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
   import { berechneGesamt, zusammenfassung } from '../../domain/tasting';
+  import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
+  import { ermittleDiagnose, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
   import Urteil from '../../muster/Urteil.svelte';
+  import Chips from '../../muster/Chips.svelte';
+  import Vorschlag from '../../muster/Vorschlag.svelte';
 
   let { shotId, onZurueck, onOeffnenVerkostung }: { shotId: string; onZurueck: () => void; onOeffnenVerkostung: () => void } = $props();
 
@@ -45,6 +50,114 @@
     if (!shot) return;
     try {
       await schreiben('shot', { ...shot, urteil });
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  // Aromapaket-Rueckmeldung 2026-09-11: "in Historie bei daneben auch
+  // naeher beurteilen und dadurch ggf. anpassen". Dieselbe Chips ->
+  // domain/diagnose.ts -> Vorschlag-Kette wie im Alltagspfad
+  // (ShotErfassung.svelte), nur nachtraeglich und ohne Zeitdruck aufrufbar.
+  // Nur bei "daneben" — bei einem guten Shot ergaebe eine Diagnose selten
+  // einen sinnvollen Vorschlag (Regelwerk ist auf "etwas war auffaellig"
+  // ausgelegt).
+  const CHIP_GRUPPEN: { titel: string; gruppe: 'geschmack' | 'lauf' }[] = [
+    { titel: 'Geschmack', gruppe: 'geschmack' },
+    { titel: 'Lauf', gruppe: 'lauf' },
+  ];
+  const chipGruppen = $derived(
+    CHIP_GRUPPEN.map((g) => ({
+      titel: g.titel,
+      chips: bestand.symptome.filter((s) => s.gruppe === g.gruppe).map((s) => ({ id: s.id, label: s.label })),
+    })),
+  );
+
+  let diagnoseBefunde = $state<Befund[]>(untrack(() => shot?.befunde ?? []));
+  let diagnoseFreitext = $state(untrack(() => shot?.freitext ?? ''));
+
+  const vorherigeProfilShots = $derived(
+    shot
+      ? bestand.shots
+          .filter((s) => s.profilId === shot.profilId && s.id !== shot.id)
+          .map((s) => ({ ts: s.ts, vorschlagRegelId: s.vorschlag?.regelId, vorschlagZustand: s.vorschlag?.zustand }))
+      : [],
+  );
+  const diagnoseAuswertung = $derived(
+    shot ? ermittleDiagnose(diagnoseBefunde, bestand.symptome, shot.ts, vorherigeProfilShots) : { ergebnis: undefined, unterdrueckt: false },
+  );
+
+  // K67/K75 — derselbe Messreihen-Check wie im Alltagspfad: liegt der
+  // Ist-Wert des betroffenen Parameters ausserhalb der bisherigen Messreihe
+  // dieses Profils, entfaellt der Vorschlag mit Begruendung.
+  const EINHEIT_PARAMETER: Record<RegelParameter, string> = { mg: '', kt: '°C', output: 'g', input: 'g' };
+  const ausserhalbMessreihe = $derived.by(() => {
+    const aenderung = diagnoseAuswertung.ergebnis?.aenderung;
+    if (!aenderung || !shot) return undefined;
+    const werte = bestand.shots
+      .filter((s) => s.profilId === shot.profilId && s.id !== shot.id)
+      .map((s) => s.ist[aenderung.parameter])
+      .filter((w): w is number => w !== undefined);
+    const reihe = bildeMessreihe(werte);
+    if (!reihe) return undefined;
+    const istWert = shot.ist[aenderung.parameter];
+    if (istWert === undefined || (istWert >= reihe.min && istWert <= reihe.max)) return undefined;
+    const einheit = aenderung.parameter === 'mg' && muehle?.skala.typ === 'klicks' ? 'Klicks' : EINHEIT_PARAMETER[aenderung.parameter];
+    return `${messreiheSatz(reihe, einheit)} bisher · Vorschlag entfällt`;
+  });
+
+  // Ein bereits an diesem Shot haengender Vorschlag bleibt sichtbar und
+  // bedienbar, unabhaengig von einer frischen K76-Pruefung — die gilt fuer
+  // "einen neuen Vorschlag nicht ungefragt nachreichen", nicht dafuer, einen
+  // schon bestehenden beim erneuten Ansehen zu verstecken.
+  const zeigeVorschlag = $derived(
+    !!diagnoseAuswertung.ergebnis &&
+      ((shot?.vorschlag && shot.vorschlag.regelId === diagnoseAuswertung.ergebnis.regelId) || !diagnoseAuswertung.unterdrueckt),
+  );
+  const vorschlagStart = $derived.by((): 'offen' | 'uebernommen' | 'abgelehnt' | 'fehlt' => {
+    if (ausserhalbMessreihe) return 'fehlt';
+    if (shot?.vorschlag && diagnoseAuswertung.ergebnis && shot.vorschlag.regelId === diagnoseAuswertung.ergebnis.regelId) {
+      return shot.vorschlag.zustand;
+    }
+    return 'offen';
+  });
+
+  function mgSchrittgroesse(parameter: RegelParameter): number {
+    return parameter === 'mg' && muehle ? muehle.skala.schritt : 1;
+  }
+
+  // Anders als "Später" im Alltagspfad (bleibt "offen", K10 — man wird beim
+  // naechsten Shot erneut gefragt) ist eine Ablehnung hier eine bewusste,
+  // nachtraegliche Entscheidung: sie speichert "abgelehnt" und macht damit
+  // "doch übernehmen" (Vorschlag.svelte) zum echten Rueckweg.
+  async function diagnoseAbschliessen(uebernommen: boolean) {
+    if (!shot || !profil) return;
+    const ergebnis = diagnoseAuswertung.ergebnis;
+    let aktualisiert = { ...shot, befunde: diagnoseBefunde, freitext: diagnoseFreitext.trim() || undefined };
+    if (ergebnis && !ausserhalbMessreihe) {
+      aktualisiert = {
+        ...aktualisiert,
+        vorschlag: {
+          regelId: ergebnis.regelId,
+          diagnose: ergebnis.diagnose,
+          empfehlungstext: ergebnis.empfehlungstext,
+          parameter: ergebnis.aenderung?.parameter,
+          richtung: ergebnis.aenderung?.richtung,
+          alt: ergebnis.aenderung ? profil.ziel[ergebnis.aenderung.parameter] : undefined,
+          neu:
+            ergebnis.aenderung && uebernommen
+              ? berechneNeuenWert(ergebnis.aenderung, profil.ziel[ergebnis.aenderung.parameter] ?? 0, mgSchrittgroesse(ergebnis.aenderung.parameter))
+              : undefined,
+          zustand: uebernommen ? 'uebernommen' : 'abgelehnt',
+          ts: Date.now(),
+        },
+      };
+    }
+    try {
+      await schreiben('shot', aktualisiert);
+      if (uebernommen && ergebnis?.aenderung && aktualisiert.vorschlag?.neu !== undefined) {
+        await schreiben('profil', { ...profil, ziel: { ...profil.ziel, [ergebnis.aenderung.parameter]: aktualisiert.vorschlag.neu } });
+      }
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -91,7 +204,35 @@
     />
   </div>
 
-  {#if shot.befunde.length > 0 || shot.vorschlag}
+  {#if shot.urteil === 'daneben'}
+    <div class="block">
+      <h2>Diagnose</h2>
+      <p class="hinweis">Was störte? Bleibt am Shot stehen, auch ohne Auswahl.</p>
+      <Chips
+        gruppen={chipGruppen}
+        start={diagnoseBefunde}
+        freitextStart={diagnoseFreitext}
+        onAenderung={(b) => (diagnoseBefunde = b)}
+        onFreitext={(t) => (diagnoseFreitext = t)}
+      />
+      {#if zeigeVorschlag && diagnoseAuswertung.ergebnis}
+        <div class="diagnose-vorschlag">
+          <Vorschlag
+            diagnose={diagnoseAuswertung.ergebnis.diagnose}
+            empfehlung={diagnoseAuswertung.ergebnis.empfehlungstext}
+            herkunft={diagnoseAuswertung.ergebnis.geschaetzt ? 'geschätzt aus Einzelbefund' : undefined}
+            start={vorschlagStart}
+            begruendungFehlt={ausserhalbMessreihe}
+            datum={shot.vorschlag?.ts ? new Date(shot.vorschlag.ts).toLocaleDateString('de-DE') : undefined}
+            onUebernehmen={() => void diagnoseAbschliessen(true)}
+            onSpaeter={() => void diagnoseAbschliessen(false)}
+            onDochUebernehmen={() => void diagnoseAbschliessen(true)}
+          />
+        </div>
+      {/if}
+      {#if fehler}<p class="fehler">{fehler}</p>{/if}
+    </div>
+  {:else if shot.befunde.length > 0 || shot.vorschlag}
     <div class="block gedaempft-block">
       <h2>Dial-in</h2>
       {#if shot.befunde.length > 0}
@@ -173,6 +314,9 @@
     font-size: var(--fs-satz);
     color: var(--gedaempft);
     margin: 0 0 var(--r2);
+  }
+  .diagnose-vorschlag {
+    margin-top: var(--r5);
   }
   .vorschlag-zustand {
     font-size: var(--fs-meta);

@@ -22,6 +22,7 @@
   import { bohnenSchnittmenge } from '../../domain/getraenk';
   import { restGramm, geschaetzteBezuege, benoetigtProBezug, altersTage, brauchtAufmerksamkeit } from '../../domain/vorrat';
   import { offeneBeobachtungen } from '../../domain/beobachtungen';
+  import { insBildRuecken } from '../../muster/insBildRuecken';
   import {
     sortiereUndDeckeln,
     restmengeUnbekannt,
@@ -363,9 +364,10 @@
   <p class="begruessung">{begruessungsText.satz}</p>
 </header>
 
-{#if letzterShot && kaffeeName}
-  <p class="quittung">{kaffeeName} · {letzterShot.urteil}</p>
-{:else}
+{#if !(letzterShot && kaffeeName)}
+  <!-- K4 aufgehoben (Livebetrieb-Rueckmeldung 2026-09-11): die Quittungszeile
+       ("Kaffeename · Urteil") ist raus, der Einstiegs-Hinweis fuer einen
+       Nutzer ganz ohne Shots bleibt — das ist Einstieg, keine Quittung. -->
   <p class="hinweis">Noch kein Shot geloggt. Loggen geht ab einem Kaffee mit Profil — unter „Kaffees".</p>
 {/if}
 
@@ -389,7 +391,7 @@
        wenn die Koffein-Vorbelegung selbst unsicher ist oder mehrere Bohnen
        gleichzeitig passen und die zuletzt verwendete nicht mehr dazugehört. -->
   {#if fastway?.phase === 'koffein' && fastway.koffeinVorbelegung?.frage}
-    <div class="fastway-frage">
+    <div class="fastway-frage" use:insBildRuecken>
       <VorbelegteFrage
         frage="Entkoffeiniert?"
         anteil={fastway.koffeinVorbelegung.anteil * 100}
@@ -398,7 +400,7 @@
       />
     </div>
   {:else if fastway?.phase === 'bohne' && fastway.bohnenOptionen}
-    <div class="fastway-frage">
+    <div class="fastway-frage" use:insBildRuecken>
       <h2>Bohne</h2>
       <Einzelauswahl
         optionen={fastway.bohnenOptionen.map((k) => ({ wert: k.id, label: k.name }))}
@@ -589,11 +591,6 @@
     max-width: 22ch;
     margin: 0;
   }
-  .quittung {
-    font-size: var(--fs-satz);
-    color: var(--satz);
-    margin: var(--r3) 0 0;
-  }
   .hinweis {
     font-size: var(--fs-meta);
     color: var(--gedaempft);
@@ -751,7 +748,12 @@
     background: var(--blatt);
     border-radius: var(--r-kachel);
     padding: 12px 16px 11px;
-    min-height: 68px;
+    /* War 68px. Livebetrieb-Rueckmeldung 2026-09-11: die Quittungszeile
+       ("Kaffeename · Urteil", K4) ist aufgehoben — die frei werdende Hoehe
+       (~34px im Regelfall) steckt jetzt hier, damit Label auf drei statt
+       zwei Zeilen und der Wert notfalls zweizeilig statt abgeschnitten
+       passen (siehe .kennzahl-label/.kennzahl-zahl unten). */
+    min-height: 100px;
     /* Regression aus dem vorigen Fix: Grid-Zellen sind standardmaessig
        min-width:auto — ein "white-space: nowrap"-Kind (.kennzahl-zahl,
        unten) zwingt die Spalte dann auf die volle Textbreite statt zu
@@ -763,17 +765,17 @@
     flex-direction: column;
     justify-content: space-between;
   }
-  /* Befund 2026-09-08 (Livebetrieb, S25): "Meistgenutzte Bohne, letzte 30
-     Tage" ist das mit Abstand längste Label im Fakten-Pool
-     (domain/hinweise.ts::kennzahlenPool), sein Wert ein freier Kaffeename
-     ohne Längenbegrenzung. Genau diese Kombination liess eine Kachel auf
-     drei Zeilen Label + zwei Zeilen Name wachsen — mehr als das Doppelte
-     der anderen sechs Kennzahlen, und genug, um das Dashboard übers Bild
-     hinauszuschieben. Kein Abstandsproblem (das war beim letzten Befund
-     schon behoben), sondern eine Kachel ohne Höhenbegrenzung, deren
-     tatsächliche Höhe vom Zufall abhing, welche zwei Fakten gerade gezogen
-     wurden. Zeilenklammerung auf beiden Zeilen macht jede Kachel unabhängig
-     vom Inhalt gleich hoch. */
+  /* Befund 2026-09-08 (Livebetrieb, S25): lange Labels im Fakten-Pool
+     (domain/hinweise.ts::kennzahlenPool) liessen eine Kachel auf drei Zeilen
+     Label + zwei Zeilen Wert wachsen — mehr als das Doppelte der anderen
+     Kennzahlen, und genug, um das Dashboard übers Bild hinauszuschieben.
+     Zeilenklammerung auf beiden Zeilen macht jede Kachel unabhängig vom
+     Inhalt gleich hoch.
+     Livebetrieb-Rückmeldung 2026-09-11: die Klammerung allein loeste die
+     "…"-Kuerzung nicht — das war ein Breitenproblem (zwei Spalten auf einem
+     360-px-Telefon), keine Hoehenfrage. Behoben durch kuerzere Labels
+     ("Meistgenutzte Bohne · 30 Tage" statt "…, letzte 30 Tage") UND mehr
+     Zeilen, seit die Quittungszeile (K4) aufgehoben ist. */
   .kennzahl-label {
     font-family: var(--schrift-sans);
     font-size: var(--fs-kachel-label);
@@ -782,22 +784,26 @@
     color: var(--gedaempft);
     line-height: 1.35;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
   /* Rückmeldung 2026-09-08: „finde die KPIs noch arg plakativ". 26 px war
      größer als jede andere Zahl der App (--fs-wert ist 19). Die zwei Kacheln
      sind Beiwerk am Fuß des Bildschirms, nicht seine Aussage — sie stehen
-     jetzt auf derselben Zahlengröße wie überall sonst. */
+     jetzt auf derselben Zahlengröße wie überall sonst.
+     Zweizeilig statt einzeilig abgeschnitten (2026-09-11) — derselbe Grund
+     wie beim Label: ein freier Kaffeename passt selten in eine 153-px-Spalte. */
   .kennzahl-zahl {
     font-size: var(--fs-wert);
-    line-height: 1;
+    line-height: 1.15;
     color: var(--tinte);
-    display: block;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: break-word;
   }
 </style>

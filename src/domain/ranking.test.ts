@@ -4,6 +4,7 @@ import {
   scoreFortschreiben,
   vorbelegung,
   begruendung,
+  vorbelegteAntwort,
   rangiereGetraenke,
   HALBWERTSZEIT_TAGE,
   FENSTER_POSITIONEN,
@@ -128,6 +129,24 @@ describe('Begruendung', () => {
 
   it('fehlt ohne Historie', () => {
     expect(begruendung(vorbelegung([]))).toBeNull();
+  });
+});
+
+describe('vorbelegteAntwort — die Vorbelegung als echter Antwortwert, nicht nur Anzeige', () => {
+  it('>= 60 % ergibt true, nicht nur eine optische Markierung', () => {
+    expect(vorbelegteAntwort(vorbelegung(Array.from({ length: 8 }, (_, i) => i < 7)))).toBe(true);
+  });
+
+  it('<= 40 % ergibt false — implizit "nein", ohne dass gefragt wird', () => {
+    expect(vorbelegteAntwort(vorbelegung(Array.from({ length: 20 }, () => false)))).toBe(false);
+  });
+
+  it('40-60 % ergibt undefined — kein Default, K56: raten waere hier schlechter als fragen', () => {
+    expect(vorbelegteAntwort(vorbelegung(Array.from({ length: 10 }, (_, i) => i < 5)))).toBeUndefined();
+  });
+
+  it('ohne Historie wird gefragt, aber nicht vorbelegt', () => {
+    expect(vorbelegteAntwort(vorbelegung([]))).toBeUndefined();
   });
 });
 

@@ -111,6 +111,23 @@ export function begruendung(v: Vorbelegung): string | null {
   return `${v.treffer} von ${v.von} zuletzt`;
 }
 
+/**
+ * Bildet alle drei Faelle der Tabelle einmal auf einen echten Antwortwert ab
+ * — bislang uebersetzte nur der ≤40%-Fall ("gar nicht fragen" -> `false`)
+ * in eine echte Vorbelegung des Zustands, der ≥60%-Fall blieb rein optisch
+ * (`VorbelegteFrage.svelte` markierte "Ja" nur als Vorschlag, `onWahl` feuerte
+ * erst beim Tippen). Wer vorbelegt aussieht, soll auch vorbelegt *sein* —
+ * sonst haengt der Rest eines Formulars an einem Tap, der nichts entscheidet,
+ * was nicht laengst entschieden waere.
+ *
+ * `undefined` heisst ausdruecklich "kein Default" (40-60 %, K56: hier zu
+ * raten waere schlechter als zu fragen) — nicht "unbekannt".
+ */
+export function vorbelegteAntwort(v: Vorbelegung): boolean | undefined {
+  if (!v.frage) return false;
+  return v.vorbelegt ? true : undefined;
+}
+
 /** Minimaler Ausschnitt einer Position, den das Ranking braucht — kein Import aus daten/schema (domain/ bleibt unabhaengig davon). */
 export interface PositionFuerRanking {
   /** Fehlt bei Positionen aus dem Mengen-Modus (keine Personenzuordnung). */

@@ -160,23 +160,23 @@ export function kennzahlenPool(shots: readonly ShotFuerKennzahl[], kaffees: read
   const letzte30 = inFenster(30);
   if (letzte30.length >= MINDEST_STICHPROBE) {
     const koffeinhaltig = letzte30.filter((s) => kaffeeById.get(s.kaffeeId)?.entkoffeiniert === false).length;
-    pool.push({ label: 'Koffeinhaltig, letzte 30 Tage', wert: `${Math.round((koffeinhaltig / letzte30.length) * 100)} %` });
+    pool.push({ label: 'Koffeinhaltig · 30 Tage', wert: `${Math.round((koffeinhaltig / letzte30.length) * 100)} %` });
 
     const meistgenutzteId = haeufigster(letzte30.map((s) => s.kaffeeId));
     const meistgenutzterName = meistgenutzteId ? kaffeeById.get(meistgenutzteId)?.name : undefined;
-    if (meistgenutzterName) pool.push({ label: 'Meistgenutzte Bohne, letzte 30 Tage', wert: meistgenutzterName });
+    if (meistgenutzterName) pool.push({ label: 'Meistgenutzte Bohne · 30 Tage', wert: meistgenutzterName });
 
     const zubereitungen = letzte30.map((s) => s.zubereitung).filter((z): z is string => z !== undefined);
     const haeufigsteZubereitung = zubereitungen.length >= MINDEST_STICHPROBE ? haeufigster(zubereitungen) : undefined;
     if (haeufigsteZubereitung) {
-      pool.push({ label: 'Häufigste Zubereitung, letzte 30 Tage', wert: ZUBEREITUNG_LABEL[haeufigsteZubereitung] ?? haeufigsteZubereitung });
+      pool.push({ label: 'Häufigste Zubereitung · 30 Tage', wert: ZUBEREITUNG_LABEL[haeufigsteZubereitung] ?? haeufigsteZubereitung });
     }
   }
 
   // "Probiert" verspricht Abwechslung — bei genau einer Bohne waere das
   // irrefuehrend, deshalb erst ab zwei verschiedenen.
   const verschiedeneBohnen = new Set(inFenster(90).map((s) => s.kaffeeId)).size;
-  if (verschiedeneBohnen >= 2) pool.push({ label: 'Verschiedene Bohnen, letzte 90 Tage', wert: String(verschiedeneBohnen) });
+  if (verschiedeneBohnen >= 2) pool.push({ label: 'Verschiedene Bohnen · 90 Tage', wert: String(verschiedeneBohnen) });
 
   const aktiveBohnen = kaffees.filter((k) => k.aktiv).length;
   if (aktiveBohnen > 0) pool.push({ label: 'Aktive Bohnen im Bestand', wert: String(aktiveBohnen) });

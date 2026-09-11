@@ -24,6 +24,7 @@
     start,
     onWahl,
     mitErklaerung = true,
+    interaktiv = true,
   }: {
     titel: string;
     art: Art;
@@ -35,6 +36,10 @@
      *  Verkostungsbogen.svelte) — Default true fuer den Alleinstand
      *  (Musterblatt.svelte). */
     mitErklaerung?: boolean;
+    /** false fuer eine reine Leseansicht (Verkostungsblatt.svelte) — Striche
+     *  ohne Knopf, kein `onWahl`. Additiv, jeder bestehende Aufrufer bleibt
+     *  unveraendert. */
+    interaktiv?: boolean;
   } = $props();
 
   // `start` ist nur der Anfangswert — danach führt die Komponente ihre
@@ -67,13 +72,23 @@
   </div>
   <div class="staebe">
     {#each striche as anzahl, i (i)}
-      <button type="button" class="spalte" onclick={() => waehle(i)} aria-label={woerter[i]}>
-        <span class="tick-stapel">
-          {#each Array.from({ length: anzahl }) as _, t (t)}
-            <span class="tick" class:gefuellt={istGefuellt(i)}></span>
-          {/each}
+      {#if interaktiv}
+        <button type="button" class="spalte" onclick={() => waehle(i)} aria-label={woerter[i]}>
+          <span class="tick-stapel">
+            {#each Array.from({ length: anzahl }) as _, t (t)}
+              <span class="tick" class:gefuellt={istGefuellt(i)}></span>
+            {/each}
+          </span>
+        </button>
+      {:else}
+        <span class="spalte spalte-lesend">
+          <span class="tick-stapel">
+            {#each Array.from({ length: anzahl }) as _, t (t)}
+              <span class="tick" class:gefuellt={istGefuellt(i)}></span>
+            {/each}
+          </span>
         </span>
-      </button>
+      {/if}
     {/each}
   </div>
   <div class="woerter">
@@ -121,6 +136,12 @@
     padding: 0;
     cursor: pointer;
     min-height: var(--treffer);
+  }
+  /* Leseansicht (interaktiv=false): kein Knopf, kein Trefferflaechen-Mindestmass
+     — genau der engere Stand, den eine gespeicherte Verkostung lesbarer macht. */
+  .spalte-lesend {
+    cursor: default;
+    min-height: auto;
   }
   .tick-stapel {
     width: 18px;

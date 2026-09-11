@@ -14,7 +14,7 @@ Hauptstelle hat — die meisten Punkte sind zusätzlich an weiteren Stellen bele
 | K1 | staerke gehört zum Symptom, nicht zum Shot | Datenmodell › Was die Gestaltung am Modell geändert hat |
 | K2 | Abhaken nur auf Getränke-/Positionsebene; Handgriffe sind Modell, keine Oberfläche | Die Bestellung › Abarbeiten |
 | K3 | Muster 5: Ist-Werte mit Ziel vorbelegt; Ziel im Gruppenkopf, keine Zielzeile | Dial-in und Alltagskorrektur › Wie die Werte dastehen |
-| K4 | Ende des Alltagspfads: eine Quittungszeile oben, max. eine, bis nächstes Öffnen oder nächster Shot; neu ersetzt alt | Dial-in und Alltagskorrektur › Die Quittung |
+| K4 | *aufgehoben, Livebetrieb-Rückmeldung 2026-09-11* — ursprünglich „eine Quittungszeile oben, max. eine, bis nächstes Öffnen oder nächster Shot"; jetzt keine Zeile mehr, die freie Höhe vergrößert die Dashboard-Kennzahl-Kacheln | Dial-in und Alltagskorrektur › Die Quittung |
 | K5 | Vokabular Output / Input / Preinfusion; Reihenfolge Output → Preinfusion → Zeit | Dial-in und Alltagskorrektur › Wie die Werte dastehen |
 | K6 | Spielraum: Zeit ± 2 s · Output ± 0,4 g · Input keiner | Dial-in und Alltagskorrektur › Wie die Werte dastehen |
 | K7 | Führungswert: Siebträger Output · Pour Over Durchlaufzeit · Moka keiner | Getränke › Was je Gerät gilt |
