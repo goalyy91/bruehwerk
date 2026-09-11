@@ -141,10 +141,18 @@
     justify-self: end;
     /* War "width: 4ch" — mit box-sizing:border-box frass das eigene
        Innenpolster (padding) davon einen Teil weg, ein dreistelliger Wert
-       wie "240" schnitt sichtbar ab (Rueckmeldung 2026-09-12). min-width
-       statt einer harten Breite: waechst bei Bedarf, bleibt bei kurzen
-       Werten trotzdem knapp. */
-    min-width: 5ch;
+       wie "240" schnitt sichtbar ab (Rueckmeldung 2026-09-12).
+       Zwischenzeitlich auf "min-width: 5ch" geaendert, um genau das zu
+       beheben — als echte Regression zurueckgekommen (Rueckmeldung
+       2026-09-11): ein <input> ohne eigene "width" nimmt in einer Grid-
+       Spalte mit "auto"-Groesse die Browser-Standardbreite eines
+       Textfelds (roughly 20 Zeichen), nicht die des Inhalts — die Zeile
+       quoll auf und drueckte das Label daneben fast weg. Eine harte
+       Breite (wie beim mmss-Feld direkt darunter) ist hier also kein
+       Kompromiss, sondern der einzig richtige Weg: 6ch bleibt reichlich
+       fuer vierstellige Werte plus Innenpolster, waechst aber nicht von
+       selbst weiter. */
+    width: 6ch;
     line-height: 1;
     text-align: right;
     border: none;

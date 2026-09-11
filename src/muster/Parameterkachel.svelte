@@ -157,6 +157,14 @@
   .eingabe {
     width: 100%;
     min-width: 0;
+    /* Volle Breite bleibt der Treffer-Bereich fuer das Eingabefeld (K-
+       Trefferflaeche) — ohne rechtsbuendigen Text stand die Zahl aber links
+       im breiten Feld, waehrend die Einheit rechts aussen an der Kachel
+       "haengt" (Rueckmeldung 2026-09-11: sichtbar bei Input/Mahlgrad/Output
+       etc., nicht nur beim neuen Gussplan-Umbau). Rechtsbuendig ruecken Zahl
+       und Einheit zusammen — dieselbe Konvention wie IstGegenZiel.svelte's
+       .wert, wo Wert und Einheit ebenfalls rechts stehen. */
+    text-align: right;
     border: none;
     background: none;
     padding: 0;
