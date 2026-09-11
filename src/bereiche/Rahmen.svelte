@@ -172,6 +172,7 @@
         onOeffnenShot={() => navigation.gehe({ name: 'shot', kaffeeId: route.kaffeeId, profilId: route.profilId })}
         onBearbeiten={() => navigation.gehe({ name: 'profilBearbeiten', kaffeeId: route.kaffeeId, profilId: route.profilId })}
         onGeloescht={() => navigation.ersetze({ name: 'kaffee', kaffeeId: route.kaffeeId })}
+        onOeffnenVerkostung={(shotId) => navigation.gehe({ name: 'verkostung', shotId })}
       />
     {:else if route.name === 'profilBearbeiten'}
       <ProfilBearbeiten profilId={route.profilId} onZurueck={() => navigation.zurueck()} />
