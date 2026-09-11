@@ -21,6 +21,7 @@
   // das Blatt keinem der beiden Bereiche mehr allein.
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
+  import { navigation } from '../navigation.svelte';
 
   let {
     blatt,
@@ -31,6 +32,21 @@
     onZurueck: () => void;
     onVerweis: (nummer: number) => void;
   } = $props();
+
+  // Beide Aufrufer (Uebungsmodus, Verkostungsbogen) oeffnen dieses Blatt per
+  // lokalem Zustand, nicht per navigation.gehe() — der Router-eigene
+  // Scroll-Reset (navigation.svelte.ts) greift hier also nicht. Ohne diesen
+  // Effekt stuende das Blatt genau dort, wo die aufrufende Liste gerade
+  // gescrollt war (z. B. weit unten in der Trefferquote). Reagiert bewusst
+  // auf `blatt`, nicht nur beim ersten Anzeigen: ein Sprung ueber einen
+  // Querverweis (onVerweis) zeigt ein neues Blatt in derselben Instanz und
+  // soll ebenso oben beginnen.
+  $effect(() => {
+    blatt;
+    requestAnimationFrame(() => {
+      if (navigation.scrollContainer) navigation.scrollContainer.scrollTop = 0;
+    });
+  });
 
   // Ein Querverweis ist nur begehbar, wenn das Zielblatt schon erfasst ist.
   // Solange nicht, traegt das auf diesem Blatt gedruckte Wort den Verweis —
