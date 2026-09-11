@@ -42,6 +42,7 @@
   import Beobachtungen from './einstellungen/Beobachtungen.svelte';
   import Historie from './historie/Historie.svelte';
   import Shotblatt from './historie/Shotblatt.svelte';
+  import Verkostungsblatt from './tasting/Verkostungsblatt.svelte';
   import Verkostungsbogen from './tasting/Verkostungsbogen.svelte';
   import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
   import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
@@ -177,10 +178,25 @@
       <Shotblatt
         shotId={route.shotId}
         onZurueck={() => navigation.zurueck()}
-        onOeffnenVerkostung={() => navigation.gehe({ name: 'verkostung', shotId: route.shotId })}
+        onOeffnenVerkostung={() =>
+          navigation.gehe(
+            bestand.tastingVon(route.shotId)
+              ? { name: 'verkostung', shotId: route.shotId }
+              : { name: 'verkostungBearbeiten', shotId: route.shotId },
+          )}
       />
     {:else if route.name === 'verkostung'}
-      <Verkostungsbogen shotId={route.shotId} onZurueck={() => navigation.zurueck()} onFertig={() => navigation.zurueck()} />
+      <Verkostungsblatt
+        shotId={route.shotId}
+        onZurueck={() => navigation.zurueck()}
+        onBearbeiten={() => navigation.gehe({ name: 'verkostungBearbeiten', shotId: route.shotId })}
+      />
+    {:else if route.name === 'verkostungBearbeiten'}
+      <Verkostungsbogen
+        shotId={route.shotId}
+        onZurueck={() => navigation.zurueck()}
+        onFertig={() => navigation.gehe({ name: 'verkostung', shotId: route.shotId })}
+      />
     {:else if route.name === 'getraenke'}
       <GetraenkeListe onOeffnen={(id) => navigation.gehe({ name: 'getraenk', id })} />
     {:else if route.name === 'getraenk'}

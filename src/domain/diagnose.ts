@@ -268,6 +268,48 @@ export function kehrtZurueck(vorherigeRegelId: string | undefined, aktuelleRegel
   return vorherigeRegelId !== undefined && vorherigeRegelId === aktuelleRegelId;
 }
 
+/** Ein anderer Shot desselben Profils, so weit reduziert, wie die K68/K76-Pruefung ihn braucht. */
+export interface VorherigerShot {
+  readonly ts: number;
+  readonly vorschlagRegelId?: string;
+  readonly vorschlagZustand?: 'offen' | 'uebernommen' | 'abgelehnt';
+}
+
+export interface DiagnoseAuswertung {
+  readonly ergebnis: Diagnose | undefined;
+  /** true, wenn ergebnis zwar existiert, aber wegen K68/K76 nicht gezeigt werden soll. */
+  readonly unterdrueckt: boolean;
+}
+
+/**
+ * Buendelt diagnostiziere()/diagnostiziereEigen() mit der K68/K76-
+ * Unterdrueckung zu einem Aufruf — zweiter echter Aufrufer
+ * (Shotblatt.svelte, Aromapaket-Rueckmeldung "in Historie bei daneben auch
+ * naeher beurteilen") statt einer zweiten Kopie derselben vier Zeilen
+ * (ux-regeln.md Regel 6/12). `ShotErfassung.svelte` nutzt dieselbe Funktion.
+ *
+ * `vorherigeShots` muss nicht vorgefiltert sein — diese Funktion filtert
+ * selbst auf `ts < shotTs`. Das ist mit Absicht: ein Aufrufer, der
+ * nachtraeglich einen Shot aus der Mitte der Historie diagnostiziert (statt
+ * immer den juengsten), darf spaetere Shots nicht versehentlich als
+ * "vorherig" zaehlen.
+ */
+export function ermittleDiagnose(
+  befunde: readonly Befund[],
+  eigeneChips: readonly EigenerChip[],
+  shotTs: number,
+  vorherigeShots: readonly VorherigerShot[],
+): DiagnoseAuswertung {
+  const ergebnis = diagnostiziere(befunde) ?? diagnostiziereEigen(befunde, eigeneChips);
+  if (!ergebnis) return { ergebnis: undefined, unterdrueckt: false };
+
+  const frueher = vorherigeShots.filter((s) => s.ts < shotTs).sort((a, b) => b.ts - a.ts);
+  const vorherigeRegelId = frueher[0] && frueher[0].vorschlagZustand !== 'uebernommen' ? frueher[0].vorschlagRegelId : undefined;
+  const wurdeBereitsGezeigt = frueher.some((s) => s.vorschlagRegelId === ergebnis.regelId && s.vorschlagZustand !== 'uebernommen');
+  const unterdrueckt = wurdeBereitsGezeigt && !kehrtZurueck(vorherigeRegelId, ergebnis.regelId);
+  return { ergebnis, unterdrueckt };
+}
+
 export interface EigenerChip {
   readonly id: string;
   readonly label: string;

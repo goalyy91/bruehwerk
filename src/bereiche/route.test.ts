@@ -9,6 +9,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'historie' },
   { name: 'historieShot', shotId: 's1' },
   { name: 'verkostung', shotId: 's1' },
+  { name: 'verkostungBearbeiten', shotId: 's1' },
   { name: 'getraenke' },
   { name: 'getraenk', id: 'g1' },
   { name: 'getraenkNeu', vorlageId: 'g1' },
@@ -86,6 +87,10 @@ describe('route — elternVon', () => {
     const historie = elternVon(shotblatt!);
     expect(historie).toEqual({ name: 'historie' } satisfies Route);
     expect(elternVon(historie!)).toBeUndefined();
+  });
+
+  it('verkostungBearbeiten -> verkostung (Blatt/Bearbeiten wie bei Kaffee)', () => {
+    expect(elternVon({ name: 'verkostungBearbeiten', shotId: 's1' })).toEqual({ name: 'verkostung', shotId: 's1' } satisfies Route);
   });
 
   it('uebung -> einstellungen', () => {

@@ -22,7 +22,7 @@
   import { bestand, schreiben, chargeStatusAktualisieren } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { bildeMessreihe, messreiheSatz } from '../../domain/messreihe';
-  import { diagnostiziere, diagnostiziereEigen, kehrtZurueck, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
+  import { ermittleDiagnose, berechneNeuenWert, type Befund, type RegelParameter } from '../../domain/diagnose';
   import { ermittleUebergaenge, chargenHinweis, driftHinweis } from '../../domain/drift';
   import IstGegenZiel, { type IstGegenZielZeile } from '../../muster/IstGegenZiel.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
@@ -149,33 +149,21 @@
     })),
   );
 
-  // Erst das System-Regelwerk, dann eigene Chips mit Regel (Weg b) —
-  // ein eigener Chip triggert allein, das System-Regelwerk braucht eine
-  // Kombination und ist damit die spezifischere Aussage.
-  const diagnoseErgebnis = $derived(
-    diagnostiziere(diagnoseBefunde) ?? diagnostiziereEigen(diagnoseBefunde, bestand.symptome),
-  );
-
-  // K76 — ein bereits diagnostizierter, nicht uebernommener Befund legt sich
-  // nicht bei jedem folgenden Shot erneut vor. Er kehrt erst zurueck, wenn
-  // der UNMITTELBAR vorherige Shot auf diesem Profil dieselbe Regel zeigte
-  // (kehrtZurueck) — sonst bleibt er unterdrueckt, auch wenn er bei einem
-  // noch frueheren Shot schon einmal auftauchte.
+  // Diagnose + K68/K76-Unterdrueckung in einem Aufruf (domain/diagnose.ts —
+  // dieselbe Funktion, die Shotblatt.svelte fuer die nachtraegliche Diagnose
+  // aus der Historie nutzt, statt einer zweiten Kopie). `entwurf` ist beim
+  // Aufruf immer der juengste Shot dieses Profils, "vorherig" (ts < ts)
+  // trifft hier also ohnehin nur echte Vorgaenger.
   const vorherigeProfilShots = $derived(
-    bestand.shots.filter((s) => s.profilId === profilId && s.id !== entwurf?.id).sort((a, b) => b.ts - a.ts),
+    bestand.shots
+      .filter((s) => s.profilId === profilId && s.id !== entwurf?.id)
+      .map((s) => ({ ts: s.ts, vorschlagRegelId: s.vorschlag?.regelId, vorschlagZustand: s.vorschlag?.zustand })),
   );
-  const vorherigeRegelId = $derived.by(() => {
-    const v = vorherigeProfilShots[0]?.vorschlag;
-    return v && v.zustand !== 'uebernommen' ? v.regelId : undefined;
-  });
-  const wurdeBereitsGezeigt = $derived(
-    diagnoseErgebnis ? vorherigeProfilShots.some((s) => s.vorschlag?.regelId === diagnoseErgebnis.regelId && s.vorschlag?.zustand !== 'uebernommen') : false,
+  const diagnoseAuswertung = $derived(
+    ermittleDiagnose(diagnoseBefunde, bestand.symptome, entwurf?.ts ?? Date.now(), vorherigeProfilShots),
   );
-  const diagnoseUnterdrueckt = $derived(
-    diagnoseErgebnis
-      ? wurdeBereitsGezeigt && !kehrtZurueck(vorherigeRegelId, diagnoseErgebnis.regelId)
-      : false,
-  );
+  const diagnoseErgebnis = $derived(diagnoseAuswertung.ergebnis);
+  const diagnoseUnterdrueckt = $derived(diagnoseAuswertung.unterdrueckt);
 
   // K67/K75 — liegt der Ist-Wert des betroffenen Parameters ausserhalb der
   // bisherigen Messreihe dieses Profils, entfaellt der Vorschlag mit

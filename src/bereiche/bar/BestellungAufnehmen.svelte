@@ -10,8 +10,9 @@
 
   import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
-  import { rangiereGetraenke, vorbelegung, begruendung } from '../../domain/ranking';
+  import { rangiereGetraenke, vorbelegung, begruendung, vorbelegteAntwort } from '../../domain/ranking';
   import { bohnenSchnittmenge } from '../../domain/getraenk';
+  import { insBildRuecken } from '../../muster/insBildRuecken';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
@@ -113,9 +114,15 @@
   );
   const koffeinVorbelegung = $derived(vorbelegung(eigenePositionenChronologisch.map((p) => p.koffein === 'entkoffeiniert')));
 
+  // Rueckmeldung: eine Vorbelegung, die nur optisch markiert ist, aber einen
+  // Tap braucht, um wirklich zu gelten, ist keine Vorbelegung. Deckt jetzt
+  // alle drei Faelle der Tabelle ab (vorher nur den <=40%-Fall) — bei >=60%
+  // ist "koffein" von hier an sofort gesetzt, VorbelegteFrage.svelte zeigt
+  // die Frage trotzdem (mit "Ja" markiert), ein Tap aendert sie nur noch.
   $effect(() => {
-    if (getraenkId && koffein === undefined && !koffeinVorbelegung.frage) {
-      koffein = 'normal';
+    if (getraenkId && koffein === undefined) {
+      const antwort = vorbelegteAntwort(koffeinVorbelegung);
+      if (antwort !== undefined) koffein = antwort ? 'entkoffeiniert' : 'normal';
     }
   });
 
@@ -125,6 +132,15 @@
     getraenkGewaehlt && koffein ? bohnenSchnittmenge(bestand.kaffees, getraenkGewaehlt.zubereitung, koffein) : [],
   );
   const bohnenGesamt = $derived(bestand.kaffees.filter((k) => k.aktiv).length);
+
+  // Bei genau einer passenden Bohne direkt vorbelegen — bisher nur im Modus
+  // "Mengen" (Zeile weiter unten), obwohl es hier genauso keine echte Wahl
+  // gibt: eine Option ist keine Entscheidung, die einen Tap verdient.
+  $effect(() => {
+    if (bohnenOptionen.length === 1 && !kaffeeId) {
+      kaffeeId = bohnenOptionen[0]!.id;
+    }
+  });
 
   // Extra Shot — nur anbieten, wenn das Getraenk ihn zulaesst.
   let extraShot = $state(false);
@@ -136,11 +152,19 @@
    */
   const extraShotMoeglich = $derived(getraenkGewaehlt?.extraShotMoeglich ?? false);
 
+  // Rueckmeldung 2026-09-11: der Reset liess die Zwischenfelder schlagartig
+  // verschwinden — der Scroll-Container schrumpft dabei mit, der Browser
+  // klemmt die Position auf die neue (kuerzere) Hoehe, und das sieht aus wie
+  // ein Sprung nach oben. Der Rueckweg zum Getraenke-Feld war schon immer
+  // richtig, er geschah nur unabsichtlich hart statt sanft.
+  let getraenkFeldPersonen: HTMLElement | undefined = $state();
+
   function zuruecksetzenFuerNaechste() {
     getraenkId = '';
     koffein = undefined;
     kaffeeId = '';
     extraShot = false;
+    requestAnimationFrame(() => getraenkFeldPersonen?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
 
   let fehler = $state('');
@@ -191,11 +215,14 @@
     }
   });
 
+  let getraenkFeldMengen: HTMLElement | undefined = $state();
+
   function mengenZuruecksetzenFuerNaechste() {
     mengenGetraenkId = '';
     mengenAnzahl = 1;
     mengenKoffein = 'normal';
     mengenKaffeeId = '';
+    requestAnimationFrame(() => getraenkFeldMengen?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
 
   async function mengenPositionenHinzufuegen() {
@@ -265,7 +292,7 @@
   </div>
 
   {#if modus === 'mengen'}
-    <div class="block">
+    <div class="block" bind:this={getraenkFeldMengen}>
       <h2>Getränk</h2>
       <Einzelauswahl
         optionen={mengenGetraenkeSortiert.map((g) => ({ wert: g.id, label: g.name }))}
@@ -275,7 +302,7 @@
     </div>
 
     {#if mengenGetraenkId}
-      <div class="block">
+      <div class="block" use:insBildRuecken>
         <h2>Menge</h2>
         <div class="mengensteller">
           <button type="button" class="mengenknopf" onclick={() => (mengenAnzahl = Math.max(1, mengenAnzahl - 1))} aria-label="weniger" disabled={mengenAnzahl <= 1}>−</button>
@@ -296,7 +323,7 @@
         />
       </div>
 
-      <div class="block">
+      <div class="block" use:insBildRuecken>
         <h2>Bohne · {mengenBohnenOptionen.length} von {mengenBohnenGesamt}</h2>
         {#if mengenBohnenOptionen.length === 0}
           <p class="hinweis">Keine passende Bohne aktiv — bei einem Kaffee unter „bearbeiten" fehlt „Geeignet für" für diese Zubereitung, oder Koffein passt nicht.</p>
@@ -380,14 +407,14 @@
   </div>
 
   {#if personId}
-    <div class="block">
+    <div class="block" bind:this={getraenkFeldPersonen}>
       <h2>Getränk</h2>
       <Einzelauswahl optionen={getraenkeSortiert.map((g) => ({ wert: g.id, label: g.name }))} wert={getraenkId} onWahl={(w) => (getraenkId = w)} />
     </div>
   {/if}
 
   {#if getraenkId && koffeinVorbelegung.frage}
-    <div class="block">
+    <div class="block" use:insBildRuecken>
       <VorbelegteFrage
         frage="Entkoffeiniert?"
         anteil={koffeinVorbelegung.anteil * 100}
@@ -404,13 +431,13 @@
          Historie besteht. Derselbe leise Ausnahme-Link wie "für jemand
          anderen" oben — die stille Vorbelegung bleibt Regelfall, ein Tap
          genügt für die Ausnahme. -->
-    <button type="button" class="fuer-andere koffein-umschalten" onclick={() => (koffein = koffein === 'entkoffeiniert' ? 'normal' : 'entkoffeiniert')}>
+    <button type="button" class="fuer-andere koffein-umschalten" use:insBildRuecken onclick={() => (koffein = koffein === 'entkoffeiniert' ? 'normal' : 'entkoffeiniert')}>
       {koffein === 'entkoffeiniert' ? 'stattdessen normal' : 'stattdessen entkoffeiniert'}
     </button>
   {/if}
 
   {#if getraenkId && koffein}
-    <div class="block">
+    <div class="block" use:insBildRuecken>
       <h2>Bohne · {bohnenOptionen.length} von {bohnenGesamt}</h2>
       {#if bohnenOptionen.length === 0}
         <p class="hinweis">Keine passende Bohne aktiv.</p>
@@ -421,7 +448,7 @@
   {/if}
 
   {#if kaffeeId && extraShotMoeglich}
-    <div class="block">
+    <div class="block" use:insBildRuecken>
       <Schalter label="Extra Shot" an={extraShot} onWahl={(a) => (extraShot = a)} />
     </div>
   {/if}

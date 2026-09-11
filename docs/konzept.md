@@ -409,11 +409,13 @@ Drei Entscheidungen aus der Gestaltung ändern, wie die Shot-Erfassung aussieht 
 >
 > Vorgabe: Zeit ± 2 s · Output ± 0,4 g · Durchlaufzeit ± 5 s. **Input und Mahlgrad haben keinen**, weil du sie einstellst statt sie zu messen — dort ist jede Änderung Absicht. Je Größe am Profil pflegbar, in Schritten der Größe, mit einem Startvorschlag aus deiner eigenen Streuung.
 
-#### Die Quittung K4
+#### Die Quittung K4 — aufgehoben
 
-Der Alltagspfad endet dort, wo er anfing: in der Bar. Oben steht eine Zeile, die sagt, was gerade passiert ist — **höchstens eine**, und eine neue ersetzt die alte. Sie bleibt bis zum nächsten Öffnen oder bis zum nächsten Shot.
+Der Alltagspfad endete dort, wo er anfing: in der Bar. Oben stand eine Zeile, die sagte, was gerade passiert ist — **höchstens eine**, und eine neue ersetzte die alte. Sie blieb bis zum nächsten Öffnen oder bis zum nächsten Shot.
 
-Das ist bewusst schwach dosiert. Eine Liste der letzten fünf Shots wäre eine Historie an der falschen Stelle; eine Meldung, die von selbst verschwindet, hätte man verpasst. Eine Zeile, die stehen bleibt, bis etwas Neues passiert, ist genau die Menge Rückmeldung, die ein Vorgang braucht, der zwei Taps dauert.
+Das war bewusst schwach dosiert. Eine Liste der letzten fünf Shots wäre eine Historie an der falschen Stelle gewesen; eine Meldung, die von selbst verschwindet, hätte man verpasst. Eine Zeile, die stehen bleibt, bis etwas Neues passiert, war genau die Menge Rückmeldung, die ein Vorgang braucht, der zwei Taps dauert.
+
+**K4 aufgehoben (Livebetrieb-Rückmeldung 2026-09-11):** die Zeile fällt weg. Der Shot selbst steht schon in der Historie, und das Urteil war ohnehin nur eine Wiederholung dessen, was man gerade selbst getippt hat — der Platz zählte mehr als die Bestätigung. Die freiwerdende Höhe vergrößert direkt darunter die Dashboard-Kennzahl-Kacheln (Abschnitt „Was die App über dich weiß" bzw. `domain/hinweise.ts`), deren Labels vorher teils abgeschnitten wurden. Der Hinweis für einen ganz neuen Nutzer ohne geloggten Shot („Loggen geht ab einem Kaffee mit Profil") bleibt — das ist Einstieg, keine Quittung.
 
 #### Wann die App nicht vorbelegt K12
 

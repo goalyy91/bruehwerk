@@ -115,8 +115,8 @@ describe('kennzahlenPool — nur mit ausreichender Datenbasis, nichts geraten (K
     expect(labels).toContain('Bezüge diese Woche');
     expect(labels).toContain('Aktive Bohnen im Bestand');
     // Unter der Mindeststichprobe (3) — kein erzwungenes "100 %".
-    expect(labels).not.toContain('Koffeinhaltig, letzte 30 Tage');
-    expect(labels).not.toContain('Verschiedene Bohnen, letzte 90 Tage');
+    expect(labels).not.toContain('Koffeinhaltig · 30 Tage');
+    expect(labels).not.toContain('Verschiedene Bohnen · 90 Tage');
   });
 
   it('rechnet den Koffein-Anteil erst ab drei Shots in 30 Tagen', () => {
@@ -131,7 +131,7 @@ describe('kennzahlenPool — nur mit ausreichender Datenbasis, nichts geraten (K
       { ts: jetzt - 3 * TAG, kaffeeId: 'entkoffeiniert' },
     ];
     const pool = kennzahlenPool(shots, kaffees, jetzt);
-    const eintrag = pool.find((k) => k.label === 'Koffeinhaltig, letzte 30 Tage');
+    const eintrag = pool.find((k) => k.label === 'Koffeinhaltig · 30 Tage');
     expect(eintrag?.wert).toBe('67 %');
   });
 
@@ -143,7 +143,7 @@ describe('kennzahlenPool — nur mit ausreichender Datenbasis, nichts geraten (K
       kaffees,
       jetzt,
     );
-    expect(einBohne.some((k) => k.label === 'Verschiedene Bohnen, letzte 90 Tage')).toBe(false);
+    expect(einBohne.some((k) => k.label === 'Verschiedene Bohnen · 90 Tage')).toBe(false);
 
     const zweiBohnen = kennzahlenPool(
       [
@@ -153,7 +153,7 @@ describe('kennzahlenPool — nur mit ausreichender Datenbasis, nichts geraten (K
       [...kaffees, { id: 'b', name: 'Manaresi', aktiv: true, entkoffeiniert: false }],
       jetzt,
     );
-    const eintrag = zweiBohnen.find((k) => k.label === 'Verschiedene Bohnen, letzte 90 Tage');
+    const eintrag = zweiBohnen.find((k) => k.label === 'Verschiedene Bohnen · 90 Tage');
     expect(eintrag?.wert).toBe('2');
   });
 
@@ -169,14 +169,14 @@ describe('kennzahlenPool — nur mit ausreichender Datenbasis, nichts geraten (K
       { ts: jetzt, kaffeeId: 'b' },
     ];
     const pool = kennzahlenPool(shots, kaffees, jetzt);
-    expect(pool.find((k) => k.label === 'Meistgenutzte Bohne, letzte 30 Tage')?.wert).toBe('Red Honey');
+    expect(pool.find((k) => k.label === 'Meistgenutzte Bohne · 30 Tage')?.wert).toBe('Red Honey');
   });
 
   it('ignoriert Kaffees ohne Namen (geloescht/unbekannt) still statt mit "undefined"', () => {
     const jetzt = Date.now();
     const shots = [{ ts: jetzt, kaffeeId: 'a' }, { ts: jetzt, kaffeeId: 'a' }, { ts: jetzt, kaffeeId: 'a' }];
     const pool = kennzahlenPool(shots, [], jetzt);
-    expect(pool.some((k) => k.label === 'Meistgenutzte Bohne, letzte 30 Tage')).toBe(false);
+    expect(pool.some((k) => k.label === 'Meistgenutzte Bohne · 30 Tage')).toBe(false);
   });
 });
 

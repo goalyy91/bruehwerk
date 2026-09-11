@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { diagnostiziere, kehrtZurueck, berechneNeuenWert, type Befund } from './diagnose';
+import { diagnostiziere, kehrtZurueck, berechneNeuenWert, ermittleDiagnose, type Befund, type VorherigerShot } from './diagnose';
 
 function befund(symptomId: string, staerke: 'leicht' | 'deutlich' = 'deutlich'): Befund {
   return { symptomId, staerke };
@@ -153,5 +153,45 @@ describe('K76 — Rueckkehr erst bei zwei aufeinanderfolgenden Shots mit demselb
 
   it('kehrt zurueck, wenn der unmittelbar vorherige Shot dieselbe Regel zeigte', () => {
     expect(kehrtZurueck('unterextraktion', 'unterextraktion')).toBe(true);
+  });
+});
+
+describe('ermittleDiagnose — Diagnose + K68/K76 in einem Aufruf (zweiter echter Aufrufer: Shotblatt.svelte)', () => {
+  const FLACH: Befund[] = [befund('flach')];
+
+  it('ohne Befunde kein Ergebnis, nichts unterdrueckt', () => {
+    expect(ermittleDiagnose([], [], 1000, [])).toEqual({ ergebnis: undefined, unterdrueckt: false });
+  });
+
+  it('erstmalig (keine Vorgeschichte) wird nichts unterdrueckt', () => {
+    const a = ermittleDiagnose(FLACH, [], 1000, []);
+    expect(a.ergebnis?.regelId).toBe('konzentration-niedrig');
+    expect(a.unterdrueckt).toBe(false);
+  });
+
+  it('schon einmal gezeigt, und der unmittelbar vorherige Shot zeigt es erneut -> nicht unterdrueckt (K76: zwei in Folge)', () => {
+    const vorherige: VorherigerShot[] = [
+      { ts: 500, vorschlagRegelId: 'konzentration-niedrig', vorschlagZustand: 'offen' }, // unmittelbar davor: dieselbe Regel
+      { ts: 100, vorschlagRegelId: 'konzentration-niedrig', vorschlagZustand: 'offen' }, // schon einmal gezeigt
+    ];
+    expect(ermittleDiagnose(FLACH, [], 1000, vorherige).unterdrueckt).toBe(false);
+  });
+
+  it('schon einmal gezeigt, aber NICHT beim unmittelbar vorherigen Shot -> unterdrueckt', () => {
+    const vorherige: VorherigerShot[] = [
+      { ts: 500, vorschlagRegelId: 'ueberextraktion', vorschlagZustand: 'offen' }, // unmittelbar davor: andere Regel
+      { ts: 100, vorschlagRegelId: 'konzentration-niedrig', vorschlagZustand: 'offen' }, // schon einmal gezeigt
+    ];
+    expect(ermittleDiagnose(FLACH, [], 1000, vorherige).unterdrueckt).toBe(true);
+  });
+
+  it('ein uebernommener Vorschlag zaehlt nicht als "schon gezeigt, nicht entschieden"', () => {
+    const vorherige: VorherigerShot[] = [{ ts: 500, vorschlagRegelId: 'konzentration-niedrig', vorschlagZustand: 'uebernommen' }];
+    expect(ermittleDiagnose(FLACH, [], 1000, vorherige).unterdrueckt).toBe(false);
+  });
+
+  it('spaetere Shots zaehlen nicht als "vorherig" — wichtig fuer einen Shot aus der Mitte der Historie', () => {
+    const vorherige: VorherigerShot[] = [{ ts: 2000, vorschlagRegelId: 'konzentration-niedrig', vorschlagZustand: 'offen' }];
+    expect(ermittleDiagnose(FLACH, [], 1000, vorherige).unterdrueckt).toBe(false);
   });
 });
