@@ -6,6 +6,13 @@
   // und laeuft ueber Kontextmenue.svelte statt native alert()/confirm()
   // (Regel 6). Referenzpruefung inhaltlich unveraendert.
   //
+  // Rueckmeldung 2026-09-11: "bearbeiten" stand hinter dem "⋯"-Menue
+  // zusammen mit "loeschen" versteckt, obwohl es die weit haeufigere der
+  // beiden Aktionen ist (Regel 4: "was regelmaessig gebraucht wird, bleibt
+  // sichtbar"). Direkter Stift wie bei Kaffeeblatt/Getraenkeblatt
+  // (BearbeitenKnopf.svelte), das "⋯"-Menue bleibt nur noch fuer das
+  // seltene, destruktive Loeschen (samt eingebauter Zwei-Tap-Bestaetigung).
+  //
   // Paket 4: h2-Typografie kommt jetzt aus tokens.css (global), hier nur
   // noch der lokale margin.
   //
@@ -17,6 +24,7 @@
   import { bestand, loeschen } from '../bestand.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
 
   let {
@@ -56,12 +64,10 @@
 {:else}
   <Kopfzeile titel={setup.name} {onZurueck}>
     {#snippet aktion()}
-      <Kontextmenue
-        eintraege={[
-          { text: 'bearbeiten', onWahl: onBearbeiten },
-          { text: 'löschen', kritisch: true, onWahl: versuchLoeschen },
-        ]}
-      />
+      <div class="kopf-aktionen">
+        <BearbeitenKnopf onKlick={onBearbeiten} />
+        <Kontextmenue eintraege={[{ text: 'löschen', kritisch: true, onWahl: versuchLoeschen }]} />
+      </div>
     {/snippet}
   </Kopfzeile>
 
@@ -81,6 +87,11 @@
 {/if}
 
 <style>
+  .kopf-aktionen {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+  }
   h2 {
     margin: 0 0 var(--r-kachelabstand);
   }

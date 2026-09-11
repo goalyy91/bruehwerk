@@ -48,30 +48,13 @@
   import Schalter from '../../muster/Schalter.svelte';
   import AktivKnopf from '../../muster/AktivKnopf.svelte';
   import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
-  import ProfilIcon, { type ProfilIconTyp } from '../../muster/ProfilIcon.svelte';
+  import ProfilIcon, {
+    type ProfilIconTyp,
+    PROFIL_ICON_OPTIONEN,
+    profilIconGroesse,
+    standardIconVon,
+  } from '../../muster/ProfilIcon.svelte';
   import type { Charge, Profil, Ansatz, Aufbereitung } from '../../daten/schema';
-
-  /** Reihenfolge in der Auswahlzeile beim Profil-Anlegen. */
-  const PROFIL_ICON_OPTIONEN: readonly ProfilIconTyp[] = [
-    'siebtraeger',
-    'moka',
-    'pourover',
-    'coldbrew',
-    'ristretto',
-    'espresso',
-    'lungo',
-  ];
-  /** Geräte-Icons brauchen mehr Fläche als die Tassen-Füllstände, um in der
-   *  56-px-Kachel nicht "dünn" zu wirken (Rückmeldung zur Icon-Bibliothek). */
-  function profilIconGroesse(icon: ProfilIconTyp): number {
-    return icon === 'ristretto' || icon === 'espresso' || icon === 'lungo' ? 26 : 30;
-  }
-  /** Vorbelegung aus dem Gerät — espresso heißt hier "siebtraeger" (das
-   *  Icon zeigt den Portafilter, nicht die Zubereitungsart-Bezeichnung). */
-  function standardIconVon(typ: 'espresso' | 'moka' | 'pourover' | 'coldbrew' | undefined): ProfilIconTyp {
-    if (typ === 'espresso') return 'siebtraeger';
-    return typ ?? 'siebtraeger';
-  }
 
   let {
     kaffeeId,

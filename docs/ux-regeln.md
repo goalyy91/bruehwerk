@@ -91,12 +91,17 @@ müssen nicht permanent sichtbar sein.
 **Regel:** Was regelmäßig gebraucht wird, bleibt sichtbar. Was nur gelegentlich
 gebraucht wird, wandert ins **`⋯`-Kontextmenü** in der Kopfzeile.
 
-Das ist ein noch nicht gebauter Baustein (vorgeschlagener Name:
-`src/muster/Kontextmenue.svelte`) — solange ein Bildschirm nur eine Sekundäraktion hat
-(wie aktuell das Bearbeiten beim Kaffee), bleibt es beim vorhandenen Stift-Symbol in
-`Kopfzeile.svelte` (`aktion`-Snippet-Slot). Das `⋯`-Menü kommt, sobald ein Bildschirm
-mehr als eine Sekundäraktion braucht — absehbar beim Geräte-Löschen
-(`docs/offene-punkte-ux.md`, Punkt 1).
+Wichtig: das ist eine Regel pro **Aktion**, nicht pro Bildschirm — "mehr als eine
+Sekundäraktion" heißt nicht automatisch "alles ins Menü". Ein Bildschirm mit
+Bearbeiten (häufig) und Löschen (selten, destruktiv) zeigt beides gleichzeitig: das
+Stift-Symbol (`src/muster/BearbeitenKnopf.svelte`) direkt in `Kopfzeile.svelte`
+(`aktion`-Snippet-Slot), das `⋯`-Menü (`src/muster/Kontextmenue.svelte`) daneben nur
+noch für das seltene Löschen. Genau das ist zuerst bei Kaffee/Getränk gebaut worden
+(dort mit Aktiv/Inaktiv statt Löschen als zweiter häufiger Aktion, `AktivKnopf.svelte`)
+und wurde am 2026-09-11 auf Setup/Mühle/Brühgerät nachgezogen, wo "bearbeiten" bis
+dahin noch hinter dem Menü versteckt war. Erst wenn eine Aktion für sich genommen
+selten ist, wandert *sie* ins Menü — nicht weil eine zweite Aktion existiert, sondern
+weil sie selbst es rechtfertigt.
 
 **Bewusst kein Bottom Sheet.** `AuswahlListe.svelte` deckt „zuklappbare Auswahl aus
 mehreren Werten" bereits ab, ein zweiter Baustein für denselben Zweck wäre Redundanz

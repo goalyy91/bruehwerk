@@ -28,6 +28,7 @@ export type Route =
   | { name: 'kaffee'; kaffeeId: string }
   | { name: 'kaffeeBearbeiten'; kaffeeId: string }
   | { name: 'profil'; kaffeeId: string; profilId: string }
+  | { name: 'profilBearbeiten'; kaffeeId: string; profilId: string }
   | { name: 'shot'; kaffeeId: string; profilId: string }
   | { name: 'einstellungen' }
   | { name: 'geraete' }
@@ -83,6 +84,8 @@ export function zuPfad(route: Route): string {
       return `/kaffees/${route.kaffeeId}/bearbeiten`;
     case 'profil':
       return `/kaffees/${route.kaffeeId}/profil/${route.profilId}`;
+    case 'profilBearbeiten':
+      return `/kaffees/${route.kaffeeId}/profil/${route.profilId}/bearbeiten`;
     case 'shot':
       return `/kaffees/${route.kaffeeId}/profil/${route.profilId}/shot`;
     case 'einstellungen':
@@ -154,6 +157,9 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 2) return { name: 'kaffee', kaffeeId: t[1]! };
     if (t.length === 3 && t[2] === 'bearbeiten') return { name: 'kaffeeBearbeiten', kaffeeId: t[1]! };
     if (t.length === 4 && t[2] === 'profil') return { name: 'profil', kaffeeId: t[1]!, profilId: t[3]! };
+    if (t.length === 5 && t[2] === 'profil' && t[4] === 'bearbeiten') {
+      return { name: 'profilBearbeiten', kaffeeId: t[1]!, profilId: t[3]! };
+    }
     if (t.length === 5 && t[2] === 'profil' && t[4] === 'shot') {
       return { name: 'shot', kaffeeId: t[1]!, profilId: t[3]! };
     }
@@ -227,6 +233,8 @@ export function elternVon(route: Route): Route | undefined {
       return { name: 'kaffee', kaffeeId: route.kaffeeId };
     case 'profil':
       return { name: 'kaffee', kaffeeId: route.kaffeeId };
+    case 'profilBearbeiten':
+      return { name: 'profil', kaffeeId: route.kaffeeId, profilId: route.profilId };
     case 'shot':
       return { name: 'profil', kaffeeId: route.kaffeeId, profilId: route.profilId };
     case 'geraete':
@@ -280,6 +288,7 @@ export function tabVon(route: Route): Bereich {
     case 'kaffee':
     case 'kaffeeBearbeiten':
     case 'profil':
+    case 'profilBearbeiten':
     case 'shot':
       return 'kaffees';
     case 'einstellungen':

@@ -23,7 +23,7 @@
   // Werteliste.svelte bleibt fuer "Spielraum" zustaendig (echte Zeilenliste,
   // kein Kachel-Raster laut Handoff).
 
-  import { bestand, schreiben } from '../bestand.svelte';
+  import { bestand, schreiben, loeschen } from '../bestand.svelte';
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
@@ -32,6 +32,8 @@
   import { kanonischesAromaLabel } from '../../daten/aromen';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
+  import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Knopf from '../../muster/Knopf.svelte';
@@ -44,10 +46,12 @@
   // (Rahmen.svelte rendert dort direkt ShotErfassung) statt eines lokal
   // umgeschalteten Zustands hier — damit schliesst die Zurueck-Geste die
   // Erfassung, statt die App zu verlassen.
-  let { profilId, onZurueck, onOeffnenShot }: {
+  let { profilId, onZurueck, onOeffnenShot, onBearbeiten, onGeloescht }: {
     profilId: string;
     onZurueck: () => void;
     onOeffnenShot: () => void;
+    onBearbeiten: () => void;
+    onGeloescht: () => void;
   } = $props();
 
   /** Etappe 8, Block C: Spielraum ist Einstellsache, keine Alltagsinformation — eingeklappter Start. */
@@ -208,6 +212,41 @@
 
   let speicherFehler = $state<string | undefined>(undefined);
 
+  // Loeschen (Rueckmeldung 2026-09-11) — gleiches Muster wie SetupAnsicht.svelte
+  // / MuehleAnsicht.svelte: kein Kaskadenloeschen, erst pruefen, wer das
+  // Profil noch braucht. Ein Profil traegt drei Arten Verweise: Shots (echte
+  // Messwerte), Durchgaenge (Buendelungs-Historie aus der Bestellung) und
+  // Ansaetze (Cold-Brew-Vorrat) — jede davon wuerde ihr Profil verlieren.
+  let loeschFehler = $state<string | undefined>(undefined);
+
+  async function versuchLoeschen() {
+    if (!profil) return;
+    loeschFehler = undefined;
+    const shots = bestand.shots.filter((s) => s.profilId === profil.id).length;
+    if (shots > 0) {
+      loeschFehler = `wird noch von ${shots} Shot${shots === 1 ? '' : 's'} benutzt und kann nicht gelöscht werden`;
+      return;
+    }
+    const durchgaenge = bestand.durchgaenge.filter((d) => d.profilId === profil.id).length;
+    if (durchgaenge > 0) {
+      loeschFehler = `wird noch von ${durchgaenge} ${durchgaenge === 1 ? 'Durchgang' : 'Durchgängen'} benutzt und kann nicht gelöscht werden`;
+      return;
+    }
+    const ansaetze = bestand.ansaetze.filter((a) => a.profilId === profil.id).length;
+    if (ansaetze > 0) {
+      loeschFehler = `wird noch von ${ansaetze} ${ansaetze === 1 ? 'Ansatz' : 'Ansätzen'} benutzt und kann nicht gelöscht werden`;
+      return;
+    }
+    // Der Gussplan ist anders als Setup/Muehle/Geraet kein geteilter, sondern
+    // ein exklusiv von diesem Profil angelegter Datensatz (gussplanAnlegen()
+    // in GussplanEditor.svelte) — ohne das Profil hat er keinen Zweck mehr.
+    if (profil.gussplanId) {
+      await loeschen('gussplan', profil.gussplanId);
+    }
+    await loeschen('profil', profil.id);
+    onGeloescht();
+  }
+
   async function zielSpeichern<K extends keyof Profil['ziel']>(feld: K, wert: Profil['ziel'][K]) {
     if (!profil) return;
     speicherFehler = undefined;
@@ -272,7 +311,19 @@
   <Kopfzeile titel="Profil" onZurueck={onZurueck} />
   <p class="hinweis">Profil nicht gefunden.</p>
 {:else}
-  <Kopfzeile titel={profil.name} {onZurueck} gross />
+  <Kopfzeile titel={profil.name} {onZurueck} gross>
+    {#snippet aktion()}
+      <div class="kopf-aktionen">
+        <BearbeitenKnopf onKlick={onBearbeiten} />
+        <Kontextmenue eintraege={[{ text: 'löschen', kritisch: true, onWahl: versuchLoeschen }]} />
+      </div>
+    {/snippet}
+  </Kopfzeile>
+
+  {#if loeschFehler}
+    <p class="fehler">Nicht gelöscht: {loeschFehler}.</p>
+  {/if}
+
   <!-- Reihenfolge Titel -> Setup-Kette -> Primäraktion laut Handoff-
        Screen-Mapping ("Profil/Espresso-Setup"): vorher stand die Pille vor
        der Setup-Kette. -->
@@ -539,6 +590,11 @@
   .hinweis {
     color: var(--gedaempft);
     font-size: var(--fs-meta);
+  }
+  .kopf-aktionen {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
   }
   .fehler {
     color: var(--kritisch);
