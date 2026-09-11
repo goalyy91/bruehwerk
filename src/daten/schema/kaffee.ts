@@ -131,6 +131,13 @@ export const ZielWerte = z.object({
   mg: z.number(),
   rpm: z.number().optional(),
   kt: z.number().optional(),
+  /**
+   * Pour-Over-Zieltemperatur des Wassers, direkt aus der Schwanenhalskanne
+   * — anders als `kt` keine Wärmetauscher-Einstellung, deshalb keine K54-
+   * Umrechnung (kesselZuGruppe) noetig: der Wert IST schon die Brühtemperatur.
+   * Nur bei bruehgeraet.typ === 'pourover' angezeigt (Profilblatt.svelte).
+   */
+  temperatur: z.number().optional(),
   output: z.number().nonnegative(),
   pre: z.number().nonnegative().optional(),
   zeit: z.number().nonnegative(),
