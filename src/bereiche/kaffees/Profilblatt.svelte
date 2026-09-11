@@ -27,13 +27,14 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
-  import { GROESSEN } from '../../domain/tasting';
-  import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
+  import { haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
   import { kanonischesAromaLabel } from '../../daten/aromen';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
   import Werteliste, { type WertelisteZeile } from '../../muster/Werteliste.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Knopf from '../../muster/Knopf.svelte';
@@ -46,12 +47,13 @@
   // (Rahmen.svelte rendert dort direkt ShotErfassung) statt eines lokal
   // umgeschalteten Zustands hier — damit schliesst die Zurueck-Geste die
   // Erfassung, statt die App zu verlassen.
-  let { profilId, onZurueck, onOeffnenShot, onBearbeiten, onGeloescht }: {
+  let { profilId, onZurueck, onOeffnenShot, onBearbeiten, onGeloescht, onOeffnenVerkostung }: {
     profilId: string;
     onZurueck: () => void;
     onOeffnenShot: () => void;
     onBearbeiten: () => void;
     onGeloescht: () => void;
+    onOeffnenVerkostung: (shotId: string) => void;
   } = $props();
 
   /** Etappe 8, Block C: Spielraum ist Einstellsache, keine Alltagsinformation — eingeklappter Start. */
@@ -188,10 +190,14 @@
       .sort((a, b) => a.ts - b.ts),
   );
 
-  const BIPOLARE_GROESSEN = GROESSEN.filter((g) => g.art === 'bipolar');
-  function verlaufFuerGroesse(groesse: (typeof GROESSEN)[number]['id']) {
-    return normiereReihe(verkostungenChronologisch.map((e) => ({ wert: e.tasting.groessen[groesse] })));
-  }
+  // Rueckmeldung 2026-09-11: das Verlaufsdiagramm je Kriterium (Saeure/
+  // Koerper/Bitterkeit, je eine 180-px-Verlaufskurve) war fuer "viele
+  // Messpunkte ueber Zeit" gebaut (Mahlgrad-Drift ueber Dutzende Shots),
+  // nicht fuer eine gelegentliche, bewusste Verkostung — mit einer einzigen
+  // Verkostung ergab das drei fast leere Charts uebereinander. Ersetzt durch
+  // einen einzigen Link zur neuesten Verkostung; alle aelteren bleiben ueber
+  // Historie erreichbar (kein zweiter Auswahlweg fuer dieselben Daten).
+  const neuesteVerkostung = $derived(verkostungenChronologisch.at(-1));
 
   const haeufigeAromen = $derived(
     haeufigsteAromen(
@@ -431,13 +437,15 @@
   {#if verkostungenChronologisch.length > 0}
     <section class="verkostungen">
       <h2>Verkostungen</h2>
-      {#each BIPOLARE_GROESSEN as g (g.id)}
-        <p class="teiltitel">{g.titel}</p>
-        <Verlaufskurve
-          punkte={verlaufFuerGroesse(g.id).map((p) => ({ x: p.x, y: p.wert / 4 }))}
-          achsMarken={[g.woerter[0], g.woerter[2], g.woerter[4]]}
-        />
-      {/each}
+      {#if neuesteVerkostung}
+        <Blattliste>
+          <Blattzeile
+            label="Verkostung ansehen"
+            meta={new Date(neuesteVerkostung.ts).toLocaleDateString('de-DE')}
+            onKlick={() => onOeffnenVerkostung(neuesteVerkostung.tasting.shotId)}
+          />
+        </Blattliste>
+      {/if}
 
       {#if haeufigeAromen.length > 0}
         <p class="teiltitel">Häufigste Aromen</p>

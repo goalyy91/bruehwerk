@@ -13,10 +13,20 @@
   import Blattliste from '../../muster/Blattliste.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Suchfeld from '../../muster/Suchfeld.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
 
   let { onOeffnen }: { onOeffnen: (shotId: string) => void } = $props();
 
   let suchtext = $state('');
+  // Rueckmeldung 2026-09-11: eine Verkostung ist keine Pflicht je Shot, und
+  // wer gezielt seine bisherigen Einschaetzungen durchgehen will, will nicht
+  // erst jeden Shot einzeln oeffnen, um zu sehen, ob ueberhaupt eine da ist.
+  // Ein Tasting-Datensatz existiert nur, wenn der Bogen tatsaechlich
+  // gespeichert wurde (kein Entwurfs-/Teilzustand, K "Schreiben ist sofort").
+  let nurMitVerkostung = $state(false);
+  function hatVerkostung(shotId: string): boolean {
+    return bestand.tastings.some((t) => t.shotId === shotId);
+  }
 
   function kaffeeName(kaffeeId: string): string {
     return bestand.kaffees.find((k) => k.id === kaffeeId)?.name ?? 'unbekannter Kaffee';
@@ -32,6 +42,7 @@
   const gefiltert = $derived(
     [...bestand.shots]
       .filter((s) => kaffeeName(s.kaffeeId).toLowerCase().includes(suchtext.trim().toLowerCase()))
+      .filter((s) => !nurMitVerkostung || hatVerkostung(s.id))
       .sort((a, b) => b.ts - a.ts),
   );
 
@@ -52,6 +63,9 @@
 
 <div class="suchzeile">
   <Suchfeld wert={suchtext} onWert={(w) => (suchtext = w)} platzhalter="Kaffee suchen …" />
+</div>
+<div class="filterzeile">
+  <Schalter label="nur mit Verkostung" an={nurMitVerkostung} onWahl={(a) => (nurMitVerkostung = a)} />
 </div>
 
 <p class="zaehlung">{zaehlform(gefiltert.length, bestand.shots.length, 'Shot')}</p>
@@ -82,6 +96,9 @@
 <style>
   .suchzeile {
     margin-bottom: var(--r3);
+  }
+  .filterzeile {
+    margin-bottom: var(--r4);
   }
   .zaehlung {
     font-size: var(--fs-label);
