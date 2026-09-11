@@ -1,4 +1,4 @@
-<script lang="ts">
+<script module lang="ts">
   // Profil-Icon — Redesign v2. Sieben Varianten aus der freigegebenen
   // Icon-Bibliothek (Artifact "profil-icons.html", Rückmeldungsrunde
   // 2026-09-04): vier Zubereitungsarten (Siebträger/Moka/Pour Over/
@@ -11,6 +11,33 @@
 
   export type ProfilIconTyp = 'siebtraeger' | 'moka' | 'pourover' | 'coldbrew' | 'ristretto' | 'espresso' | 'lungo';
 
+  /** Reihenfolge in der Auswahlzeile beim Profil-Anlegen/-Bearbeiten. Stand
+   *  bis 2026-09-11 doppelt: einmal privat in Kaffeeblatt.svelte (Anlegen),
+   *  jetzt hier zentral, weil ProfilBearbeiten.svelte dieselbe Auswahlzeile
+   *  ein zweites Mal braucht (Regel 12, Konsistenz vor Einzelloesung). */
+  export const PROFIL_ICON_OPTIONEN: readonly ProfilIconTyp[] = [
+    'siebtraeger',
+    'moka',
+    'pourover',
+    'coldbrew',
+    'ristretto',
+    'espresso',
+    'lungo',
+  ];
+  /** Geräte-Icons brauchen mehr Fläche als die Tassen-Füllstände, um in der
+   *  56-px-Kachel nicht "dünn" zu wirken (Rückmeldung zur Icon-Bibliothek). */
+  export function profilIconGroesse(icon: ProfilIconTyp): number {
+    return icon === 'ristretto' || icon === 'espresso' || icon === 'lungo' ? 26 : 30;
+  }
+  /** Vorbelegung aus dem Gerät — espresso heißt hier "siebtraeger" (das
+   *  Icon zeigt den Portafilter, nicht die Zubereitungsart-Bezeichnung). */
+  export function standardIconVon(typ: 'espresso' | 'moka' | 'pourover' | 'coldbrew' | undefined): ProfilIconTyp {
+    if (typ === 'espresso') return 'siebtraeger';
+    return typ ?? 'siebtraeger';
+  }
+</script>
+
+<script lang="ts">
   let { icon, groesse = 24 }: { icon: ProfilIconTyp; groesse?: number } = $props();
 </script>
 

@@ -1,8 +1,13 @@
 <script lang="ts">
-  // Kontextmenue — UX-Korrekturrunde (docs/ux-regeln.md Regel 4). Faellig,
-  // sobald ein Bildschirm mehr als eine Sekundaeraktion hat (bearbeiten +
-  // loeschen). Solange es nur eine gibt, bleibt es beim Stift-Symbol im
-  // `aktion`-Slot von Kopfzeile.svelte — das aendert dieses Muster nicht.
+  // Kontextmenue — UX-Korrekturrunde (docs/ux-regeln.md Regel 4). Die Regel
+  // ist pro Aktion, nicht pro Bildschirm: haeufig gebrauchte Aktionen (z. B.
+  // bearbeiten) bleiben als eigenes Icon im `aktion`-Slot von Kopfzeile.svelte
+  // sichtbar (BearbeitenKnopf.svelte, AktivKnopf.svelte), nur seltene,
+  // typischerweise destruktive Aktionen (loeschen) wandern hierher. Zwei
+  // Aktionen auf einem Bildschirm heisst also nicht automatisch "beide ins
+  // Menue" — Kaffeeblatt/Getraenkeblatt und seit 2026-09-11 auch Setup-/
+  // Muehle-/Bruehgeraet-Ansicht zeigen bearbeiten direkt und nur loeschen
+  // hier drin.
   //
   // Kein Bottom Sheet: dieselbe Aufklapp-Mechanik wie AuswahlListe.svelte,
   // im Seitenfluss statt als modaler Dialog (Regel 4 schliesst ein zweites
