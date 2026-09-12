@@ -116,10 +116,10 @@ describe('Die ersten drei Blaetter (21, 39, 40)', () => {
   });
 
   it('haelt noch nicht erfasste Verweise mit ihrem gedruckten Wort fest', () => {
-    // Nr. 41 (Tabak) ist noch nicht erfasst — der Verweis darf trotzdem nicht
-    // zu einem nackten "Nr. 41" verkuemmern.
-    const tabak = datenblattZu(39)?.verwandte.find((v) => v.nummer === 41);
-    expect(tabak?.original).toBe('Tabak');
-    expect(datenblattZu(41)).toBeUndefined();
+    // Nr. 26 (Gurke) ist noch nicht erfasst — der Verweis darf trotzdem nicht
+    // zu einem nackten "Nr. 26" verkuemmern.
+    const gurke = datenblattZu(25)?.verwandte.find((v) => v.nummer === 26);
+    expect(gurke?.original).toBe('Gurke');
+    expect(datenblattZu(26)).toBeUndefined();
   });
 });

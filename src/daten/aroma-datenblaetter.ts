@@ -2429,6 +2429,889 @@ export const DATENBLAETTER: readonly AromaDatenblatt[] = [
       { nummer: 1, original: 'Honig' },
     ],
   },
+
+  {
+    nummer: 41,
+    name: 'Tabak',
+    nameOriginal: 'Tobacco',
+    kategorieId: 'roestig',
+    kategorieLabel: 'Röstig',
+    beschreibung: [
+      'Tabak riecht süß, nach Ahorn, verbrannt, braun-röstig, holzig, würzig, bitter, krautig, blumig-ledrig, fleischig, nussig, nach Tee und Honig.',
+      'Typische Duftbeschreibungen für Tabak sind nussig, heuartig, teeartig, nelkig, rosinenartig, schokoladig, vanillig, karamellig sowie rauchig oder verbrannt.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Kultivierter Tabak ist eine einjährige, krautige Pflanze der Gattung Nicotiana. Die am häufigsten angebaute Art dieser Gattung ist Nicotiana tabacum. Die meisten Tabaksorten sind aus dieser Art gezüchtet und als Virginia-Tabak bekannt.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Heimisch in Mittelamerika, wird die Pflanze weltweit für ihre duftenden Blätter angebaut, die von Hand gepflückt, in einem Fermentationsprozess getrocknet und zu Handelstabak verarbeitet werden. Die größten Tabakerzeuger sind China, Indien, Brasilien, Indonesien, die USA, Simbabwe und Argentinien.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die Blätter dieser Pflanze werden von Hand gepflückt und im Fermentationsprozess getrocknet. Erst nach der Verarbeitung entsteht beim Rauchen des Tabaks der komplexe Duft.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'In Tabak und seinem Rauch wurden Tausende chemische Verbindungen identifiziert. Zu den flüchtigen und aromatischen Verbindungen zählen Aldehyde, Ketone, Alkohole, Ester und Alkene. Carbonyl-Duftstoffe wie Aldehyde, Ketone und Chinone haben einen wichtigen Einfluss auf Qualität und Geschmack von Tabak. Rauchige Noten wie Benzaldehyd können fruchtig riechen. Ähnlich wie bei Kaffee lässt sich die Qualität von Tabak sensorisch beurteilen und mit den physikalischen und chemischen Eigenschaften des Rohprodukts in Verbindung bringen. Viele flüchtige Verbindungen überschneiden sich zwischen Tabak und geröstetem Kaffee, darunter Alkohole, Aldehyde, Chlorogensäuren, Ketone, Lipide und Furane.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Tabak als „die braune, leicht süße, leicht durchdringende Note, die man mit ausgereiftem Tabak verbindet“. Sie unterscheidet sich deutlich von aschigen, verbrannten, beißenden Aromen, die im Rauch oder beim Verbrennen des Produkts auftreten.',
+          'Kaffees aus Indonesien (Sumatra) und der Demokratischen Republik Kongo (DRC) sind bekannt dafür, typischerweise Tabaknoten zu zeigen. Das traditionelle brasilianische Arabica-Profil enthielt diesen Duft oft. Auch Robusta-Kaffees sind für einen angenehmen Tabakduft bekannt. Wie bei vielen Gerüchen lässt sich diese Note als positiv oder negativ interpretieren, je nach Intensität, Balance mit anderen Noten und dem Gesamteindruck des Kaffees.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Viele der Verbindungen im Kaffee, die an Tabak denken lassen, entstehen vermutlich während des Röstens. Die würzig-süßen Noten von Aldehyden und Pyrazinen bilden sich bekanntermaßen durch Maillard-Reaktionen. Ein süßer, krautiger Duft, ähnlich dem Tabakgeruch, wurde als Produkt der Pyrolyse von Trigonellin beim Rösten identifiziert.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 28, original: 'Heuartig' },
+      { nummer: 50, original: 'Gewürznelke' },
+      { nummer: 58, original: 'Ahornsirup' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 37, original: 'Leder' },
+      { nummer: 39, original: 'Teer' },
+    ],
+  },
+
+  {
+    nummer: 42,
+    name: 'Rauchig',
+    nameOriginal: 'Smoky',
+    kategorieId: 'roestig',
+    kategorieLabel: 'Röstig',
+    beschreibung: [
+      'Rauchige Aromen riechen typischerweise holzig, scharf, beißend, harzig oder mitunter schwefelig, ähnlich wie Teer. Rauch ist ein kräftiger, durchdringender Duft und kann sehr bestimmte Erinnerungen wecken — an Lagerfeuer, Kamine, geräuchertes Fleisch, Fisch, Käse und andere Lebensmittel.',
+      'Seit die ersten Menschen mit Feuer kochten, gehört der Duft von Rauch zu unserem Wortschatz und unserer Ernährung. Viele Kulturen nutzen bis heute Räuchermethoden, um bestimmte Lebensmittel haltbar zu machen — der Duft hat sich bis in die moderne Küche gehalten. Lebensmittel, die gegrillt, angekohlt oder über offener Flamme zubereitet werden, nehmen rauchige Aromen auf. Das Verbrennen, oder Pyrolyse, von Holz beeinflusst, welche Verbindungen entstehen — und damit Geschmack und Qualität des sensorischen Ergebnisses. Ob ein Rauchduft angenehm oder abstoßend wirkt, hängt von Intensität und genauer Art des Rauchs ab.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Chemie',
+        text: [
+          'Rauchig ist ein weites Feld — es beschreibt allgemein den Duft, den Holz und Holzprodukte beim Verbrennen erzeugen. Beim Verbrennen von Holz zerfallen Bestandteile wie Cellulose, Hemicellulose und Lignin durch Pyrolyse und bilden Rauch. Rauch selbst kann aber aus der Verbrennung vieler Stoffe entstehen und ist deshalb nicht auf Holz beschränkt.',
+          'Holzrauch ist eine komplexe Mischung aus Verbindungen, manche davon flüchtig, darunter Phenole, Aldehyde, Furane, Terpene, weitere flüchtige organische Verbindungen und polyzyklische aromatische Kohlenwasserstoffe. Je nach Quelle wurden mehr als 400 Verbindungen in Holzrauch oder Raucharoma identifiziert. Wie viel davon entsteht, hängt vom verbrennenden Stoff, der Temperatur, dem Feuchtigkeitsgehalt des Holzes und der beim Verbrennen vorhandenen Sauerstoffmenge ab. Die Pyrolyse von Cellulose beim Verbrennen ergibt Aldehyde und aliphatische Säuren. Hemicellulose zerfällt zu Aldehyden, Carbonylverbindungen und Furanen, die dem Rauch seine charakteristischen Aromen verleihen. Verbrennendes Lignin bildet phenolische Verbindungen wie das würzige Eugenol, das süße Guajacol und die unangenehmen Kresole.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt rauchig als „eine scharfe, durchdringende Note, die ein Produkt der Verbrennung von Holz, Blättern oder eines nicht-natürlichen Produkts ist“.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Das Rösten prägt die endgültigen Eigenschaften des Kaffees, doch unsachgemäßes, fehlerhaftes oder sonst zu heißes Rösten kann mehrere unerwünschte Fehltöne und potenziell negative Aromen entstehen lassen. Bestimmte Verbindungen wurden gezielt mit Röstproblemen in Verbindung gebracht. Insbesondere 4-Ethyl-2-methoxyphenol und Phenol werden mit angesengten und dunklen Auffälligkeiten assoziiert, die als rauchig und würzig beschrieben werden. Andere Verbindungen wie Pyridin, Pyrazine und Difurfurylether nehmen bei solchen fehlerhaften Röstungen deutlich zu. Dunklere Röstungen verleihen dem Kaffee vermutlich mehr rauchige Aromen und erhöhen die Zahl potenziell schädlicher Verbindungen.',
+          'Bei der Bewertung der Kaffee-Eigenschaften selbst gilt rauchig nicht als Eigenschaft des Kaffees, sondern als aromatischer Fehlton. Diese Note findet sich meist in verbrannten, überrösteten Kaffees. Besonders unglücklich ist das bei Kaffee, der nicht ordentlich probegeröstet wurde. Stellt ein Verkoster eine rauchige Note fest, sollte idealerweise eine neue Probe geröstet und verkostet werden, um das volle Potenzial dieses Kaffees zu erkennen.',
+          'Für die Produktionsröstung mag es Zeit und Ort für rauchige Aromen im Kaffee geben, die in bestimmten Märkten gewünscht sind. Das sollte eine Röstentscheidung jedes Unternehmens sein, abhängig von Kundenwünschen und -erwartungen. Für die professionelle sensorische Bewertung von Kaffee sollten rauchige Noten aber nie vorhanden sein.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 39, original: 'Teer' },
+      { nummer: 40, original: 'Gummi' },
+    ],
+  },
+
+  {
+    nummer: 43,
+    name: 'Butter',
+    nameOriginal: 'Butter',
+    kategorieId: 'roestig',
+    kategorieLabel: 'Röstig',
+    beschreibung: [
+      'Die genaue Aromazusammensetzung von Butter hängt vom Futter des Tieres, der Herstellungssaison, dem Herstellungsverfahren und den Lagerbedingungen ab. Das Aroma von Butter sollte frisch, süß, reich, cremig, warm und leicht geröstet sein. Es kann nussig, blumig oder fruchtig wirken und an Toast, Buttergebäck, Zuckermais oder Kochen erinnern.',
+      'Butter, die geschlagene süße Sahne von Kühen, ist ein vielseitiges und bedeutendes Lebensmittel weltweit, vor allem als Fett zum Kochen genutzt. Ihr Aroma stammt aus der milden Fermentation der Sahne und der süßen Zucker in der Milch. Butter kann süß, gesalzen, ungesalzen und kultiviert sein. Ihre physikalischen Eigenschaften erlauben es ihr, über einen weiten Temperaturbereich fest zu bleiben und dennoch vollständig im Mund zu schmelzen. Sie hat eine relativ hohe oxidative Stabilität, wodurch sie höhere Hitze verträgt als manche Öle.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Geschichte',
+        text: [
+          'Butter zählt wahrscheinlich zu den ältesten Milchprodukten überhaupt. Schätzungen datieren die erste Butter auf die Jungsteinzeit in Afrika, vor bis zu 10.000 Jahren. Diese frühen Buttersorten stammten vermutlich nicht von Kühen, sondern von anderen domestizierten Tieren wie Schafen oder Ziegen. Man geht davon aus, dass die alten Sumerer in Mesopotamien Butter als Opfergabe für ihre Götter nutzten. In Irland verwendete man vor mehr als 3.500 Jahren Torfmoore, um Butter zu kühlen und zu lagern — solche Ablagerungen werden gelegentlich noch heute entdeckt.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die Hauptschritte der Butterherstellung sind Vorbereitung der Sahne, Sahnereifung, Emulsion und Mischen. Zuerst wird die Sahne von der Milch getrennt. Findet eine Pasteurisierung statt, geschieht sie vor der Reifung der Sahne, wenn diese schnell abgekühlt wird, damit sich Fettkristalle bilden, die später die Streichfähigkeit der Butter beeinflussen. Der gesamte Vorgang aus Vorbereiten, Pasteurisieren, Kühlen und Reifen dauert etwa 12 Stunden, die Reifung kann aber länger fortgesetzt werden. Findet eine Kultivierung statt, werden als Nächstes Starterkulturen — meist die Gattung Lactococcus — der Sahne zugesetzt. Zum Schluss kommt die Sahne in eine Buttermaschine, die den Rahm von den festen Bestandteilen trennt. Diese festen Bestandteile werden gespült, geformt, gegebenenfalls gesalzen und gekühlt, bevor sie verpackt werden. Butter ist eigens mit einem Milchfettgehalt von mehr als 80 Prozent definiert. Wie viel Fett die Milch enthält, hängt stark vom Futter der Kühe und ihrem Laktationsstadium ab.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Viele kennen die intensive buttrige Verbindung Diacetyl, doch in Butter wurden mehr als 200 flüchtige Aromastoffe identifiziert. Süßrahmbutter ist typischerweise von Lactonen geprägt, mit fruchtigen und cremigen Noten, sowie von Schwefelverbindungen. Die wichtigen Duftstoffe kultivierter (fermentierter) Butter sind Diacetyl, Buttersäure (käsig riechend) und δ-Decalacton (angenehm nussig-fruchtig). Sie entstehen durch die Fermentation von Milchsäurebakterien. Weitere Aldehyde bilden sich als Hitzeprodukte während der Butterherstellung, etwa durch Maillard-Reaktionen: 2-Methyl- und 3-Methylbutanal. Andere Aldehyde bringen eine grasige, frisch-grüne Komponente ein, etwa Hexanal und Nonanal.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Ein intensives Butteraroma ist ein besonderer, ungewöhnlicher Duft im Kaffee. Als leichte, mit anderen Charakterzügen ausgeglichene Note findet sich Butter aber in vielen Kaffees weltweit, sowohl bei Arabica als auch bei Robusta. Der Butterduft kann eine Mischung aus Verbindungen sein, darunter viele, die auch im Milchprodukt selbst vorkommen, wie Ketone, Säuren und Aldehyde. Die Bestandteile dieses Aromas finden sich schon im grünen Kaffee und entstehen zusätzlich während des Röstens.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Diacetyl ist von Natur aus im grünen Kaffee vorhanden, entsteht aber überwiegend erst beim Rösten. Ketone, besonders aromatische, und Diketone wie Diacetyl sind in erhitzten Fetten weit verbreitet. Diese Verbindung bildet sich bis zu einem gewissen Grad beim Rösten, doch mit fortschreitender Röstung wandelt sie sich um, und mehr verbrannte, schwefelige Noten dominieren. Deshalb begegnet man dem Aroma seltener in dunkel gerösteten Kaffees, und deshalb zeigen hellere, eher toast- und getreideartig schmeckende Kaffees ebenfalls Butteraromen. Es gibt auch Hinweise, dass Diacetyl von der Röstung bis in den fertigen Aufguss gelangt.',
+          'Beim Kaffeerösten entstehen weitere Verbindungen, die eine Butternote beeinflussen können. Buttersäure wurde im Kaffee nachgewiesen und entsteht während Maillard-Reaktionen. Diese Verbindung trägt zur blumig-käsigen Seite des Butteraromas bei und findet sich auch in Blauschimmelkäse. Gesättigte Lactone wie γ-Butyrolacton sind im Kaffee weit verbreitet und nehmen mit dem Röstgrad zu — sie haben einen süßen, buttrigen, gerösteten Duft. Furane als Ester tragen vermutlich zu den fruchtig-blumig-gerösteten Noten der Butter bei. Pyrrole und Pyridine, wie sie bekanntermaßen beim Rösten entstehen, tragen zum röstig-warmen Butteraroma bei.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 44, original: 'Toast' },
+      { nummer: 25, original: 'Frisches Gras' },
+    ],
+  },
+
+  {
+    nummer: 44,
+    name: 'Toast',
+    nameOriginal: 'Toast',
+    kategorieId: 'roestig',
+    kategorieLabel: 'Röstig',
+    beschreibung: [
+      'Toast hat ein süßes, braunes, nussiges, getreideartiges Aroma, wie man es von einem Toaster kennt, vom Frühstück, vom liebsten Brot, vom Grill oder von Butter. Das warme, wohlige Knuspern von getoastetem Brot wird weltweit geschätzt.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Chemie',
+        text: [
+          'Brot und seine Bräunung beim Backen und Toasten sind ein Paradebeispiel dafür, wie Maillard-Reaktionen ablaufen. Immer wenn Hitze ein Lebensmittel braun werden lässt, sind Maillard-Reaktionen am Werk und erzeugen eine Fülle schmackhafter, angenehmer Geschmacks- und Aromastoffe. Unter Hitze ordnen diese Reaktionen Aminosäuren (Proteine) und Kohlenhydrate (reduzierende Zucker) neu an. Das Bukett eines Maillard-Reaktionsprodukts umfasst Furane, Furanone, Acetylpyrrolin und Pyrazine, neben vielen weiteren Verbindungen. Je dunkler das Toastbrot, desto intensiver das Aroma — bis irgendwann verbranntere, aschige oder rauchige Düfte dominieren.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: 'Röstung',
+        text: [
+          'Jedes Kaffeearoma trägt eine dominierende Röst-Note in sich, dazu gehört auch das toastige Aroma. Das Rösten ist ein notwendiger Schritt, um Kaffee überhaupt genießbar zu machen, und erzeugt zugleich den Großteil von Geschmack und Aroma im Kaffee. Der grüne Samen und die auf ihn angewandten Nachernte-Verarbeitungsmethoden bestimmen dabei die chemische Zusammensetzung des Samens, die wiederum die konkreten Reaktionen beim Rösten bestimmt — auch wenn dieser Zusammenhang wissenschaftlich noch am Anfang steht. Zwar könnte theoretisch jeder geröstete Kaffee Toast-Aromen zeigen, doch nur gelegentlich findet sich ein Kaffee, der getoastetem oder gegrilltem Brot wirklich nahekommt. Robusta-Kaffees, oder nicht ausreichend geröstete Robustas, können viele Getreidenoten zeigen, darunter Korn, Malz und Toast. Eine Toast-Note gilt allgemein als positiver Charakterzug, außer sie dominiert in einem gegrillten, rauchigen, verbrannten Aroma.',
+          'Maillard-Reaktionen während des Zuckerabbaus beeinflussen Aroma, Geschmack und Farbbildung. Saccharose, der häufigste freie Zucker im grünen Kaffee, muss erst in Glukose und Fruktose zerlegt werden, um Maillard-Reaktionen einzugehen. Die dabei entstehenden flüchtigen Stoffe umfassen Pyridine, Pyrazine, Ketone, Oxazole, Thiazole, Pyrrole, Terpene, Furane und viele weitere. Viele davon tragen zum charakteristischen Röstgeruch bei, darunter auch Toast.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 43, original: 'Butter' },
+      { nummer: 45, original: 'Malz' },
+      { nummer: 41, original: 'Tabak' },
+      { nummer: 42, original: 'Rauchig' },
+    ],
+  },
+
+  {
+    nummer: 45,
+    name: 'Malz',
+    nameOriginal: 'Malt',
+    kategorieId: 'roestig',
+    kategorieLabel: 'Röstig',
+    beschreibung: [
+      'Malz riecht süß und getreideartig, mit Noten von Honig, Keks, Karamell und mitunter leicht fermentiert, schokoladig oder sogar rauchig.',
+      'Malz bezeichnet jede Art Getreide, die zum Keimen gebracht wurde — ein Vorgang, der auch Mälzen genannt wird. Zwar lässt sich jedes Getreide dafür verwenden, doch Gerste ist mit Abstand am häufigsten, während Roggen, Weizen, Reis und Mais deutlich seltener zu Malz verarbeitet werden. Gemälztes Getreide ist vielseitig und findet sich in Milchshakes, Bonbons, Backwaren, Whisky und Bagels. Der Großteil des weltweit erzeugten Malzes dient aber ausschließlich der Bierherstellung.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Geschichte',
+        text: [
+          'Den alten Ägyptern wird zugeschrieben, den Mälzungsprozess als einen der Schritte der Bierherstellung entwickelt zu haben. Mit Malz gebrautes Bier war fester Bestandteil vieler früher Gesellschaften, und Bier diente auch als Opfergabe für die Götter.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die erste Stufe des Mälzens heißt Einweichen: Dabei wird das Getreide gewaschen und mit Wasser und Sauerstoff zum Keimen gebracht. Das geschieht, indem das Getreide in Wasser eingeweicht und anschließend eine Trockenphase eingelegt wird, in der das Korn das Wasser aufnimmt. Dieser Vorgang wird meist mehrfach wiederholt. Das aufgenommene Wasser setzt den Keimungsprozess und die Enzymbildung in Gang. In der zweiten Stufe geht die Keimung weiter: Wurzeln treten aus dem Korn aus, und Triebe wachsen aus der äußeren Spelze. Dieser Vorgang dauert normalerweise vier bis sechs Tage und ergibt sogenanntes Grünmalz. Zum Schluss wird das Keimen durch Hitze im sogenannten Darren gestoppt. Das Korn welkt und röstet dann, wodurch es offiziell zu Malz wird. Die gezielten Abweichungen in diesem Schritt erzeugen die große Bandbreite an Malzfarben und -aromen, mit denen Brauer ihre einzigartigen Biere gestalten.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Beim Darren wird Malz ähnlich geröstet wie Kaffee. Sowohl Karamellisierung als auch Maillard-Reaktionen bestimmen dabei Geschmack, Aroma und Farbbildung des Malzes. Das Endergebnis hängt von der Ausgangsqualität des Getreides, dem genauen Mälzungsprozess, dem Feuchtigkeitsgehalt des Malzes und der Darrtemperatur ab. Dabei bilden sich Furane, Aldehyde, Pyrrole und Pyrazine, die die typischen nussigen, gerösteten, malzigen Noten verleihen. Besonders wichtig sind 2-Methylbutanal (nussig), 3-Methylbutanal (malzig) und 2-Methylpropanal (grün, malzig). Maltol, eine nach Karamell duftende Verbindung, entsteht durch Maillard-Reaktionen beim Rösten. Auch fruchtige Noten entwickeln sich, etwa durch 3-Methylbutanal, das Malz eine pfirsichartige, säuerliche Note verleiht.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Malz als „die hellbraune, staubige, muffige, süße, saure und/oder leicht fermentierte Note, die man mit Getreide verbindet“. Ein Malzaroma lässt sich in vielen Kaffees finden, wenn sie auf eine bestimmte Art geröstet werden, die die warmen, körnigen Noten von Gerstenmalz hervorbringt.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Wegen der Ähnlichkeit zwischen Kaffee- und Malzröstung — und weil der Großteil der Aromastoffe beider Produkte durch Maillard-Reaktionen entsteht — überschneiden sich viele Verbindungen in diesen gerösteten Produkten. Weil körnige oder malzige Aromen bei längerer Röstzeit und höheren Temperaturen eher verschwinden oder überdeckt werden, finden sich Malznoten vermutlich häufiger in hell gerösteten Kaffees. Viele derselben Ester und Phenole, die zu blumigen, fruchtigen, holzigen und würzigen Düften in Malz beitragen, wirken auch hier mit.',
+          'Es ist bekannt, dass 2-Methylpropanal, 2-Methylbutanal und 3-Methylbutanal prägende Bestandteile des Röstaromas von Kaffee sind und in vielen Kaffees vorkommen. Diese nussigen, röstigen, malzigen Noten sind dieselben Verbindungen, die auch gemälztes Getreide auszeichnen — wenig überraschend angesichts der Ähnlichkeit der beiden Getreidearten (Gerste und Kaffee) und der Verfahren, die sie teilen.',
+          'Eine weitere wichtige Verbindung, die geröstetes Malz und Kaffee gemeinsam haben, ist Maltol. Dieses Phenol entsteht durch den Zuckerabbau beim Rösten und trägt eine süße, geröstete Note bei. Es gibt Hinweise, dass Robusta typischerweise eine höhere Konzentration dieser Verbindung aufweist als Arabica. Maltol wurde als wichtiger Aromastoff in philippinischem Robusta-Kaffee identifiziert und trägt auch zum fertigen Aufguss bei.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 44, original: 'Toast' },
+      { nummer: 41, original: 'Tabak' },
+      { nummer: 42, original: 'Rauchig' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 1, original: 'Honig' },
+    ],
+  },
+
+  {
+    nummer: 46,
+    name: 'Pfeffer',
+    nameOriginal: 'Pepper',
+    kategorieId: 'gewuerze',
+    kategorieLabel: 'Gewürze',
+    beschreibung: [
+      'Pfeffer ist für seinen trigeminalen Kribbeleffekt bekannt — der eigentliche Duft aber ist scharf, holzig, frisch, harzig und warm. Je nach Sorte und Verarbeitung kann er blumig, fruchtig oder muffig wirken.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Piper nigrum, der schwarze Pfeffer, ist die am häufigsten kultivierte Art in der Familie der Pfeffergewächse (Piperaceae).'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Heimisch in der Malabar-Region Indiens, wird schwarzer Pfeffer für seine Frucht angebaut. Er ist eine verholzende, blühende Kletterpflanze, wird bis zu 4 Meter hoch und blüht in Ähren. Ihre kleinen Früchte, botanisch Steinfrüchte, bilden diese Ähren und sind als Pfefferkörner bekannt. Jedes Pfefferkorn ist etwa 5 Millimeter groß und enthält einen einzigen Samen. Die Reben werden oft im Mischanbau kultiviert, weil sie gut an Bäumen oder anderen mehrjährigen Kulturen wie Kaffee emporklettern. Die getrocknete Frucht der Pfefferpflanze gilt als das wichtigste und meistkonsumierte Gewürz der Welt.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Pfeffer wird in Indien seit Jahrtausenden angebaut und in der Küche verwendet. Im Altertum war Pfeffer so kostbar, dass er als Zahlungsmittel für Steuern, Mitgiften und Pacht diente. Laut der Ernährungs- und Landwirtschaftsorganisation der Vereinten Nationen (FAO) waren Vietnam, Brasilien, Indonesien und Indien 2022 die größten Pfeffer-Erzeuger.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Pfefferkörner werden geerntet, während die Frucht noch grün ist, dann fermentieren gelassen und in der Sonne getrocknet, bis sie dunkelbraun oder schwarz werden. Dieser Farbwechsel der frischen, grünen Frucht entsteht durch die enzymatische Oxidation von Ethanolglykosid, ausgelöst durch eine in der frischen Frucht vorhandene Oxidase (Polyphenoloxidase, PPO). Das Trocknen läuft weiter, bis die Pfefferkörner einen Feuchtigkeitsgehalt von unter 10 Prozent erreichen. Ähnlich wie beim Trocknen von Kaffee können die Umstände beim Trocknen — Wetter, Methode, Wenden der Pfefferkörner, mikrobielle Aktivität — die Qualität des Endprodukts erheblich beeinflussen.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der scharfe Biss des Pfefferaromas geht überwiegend auf das Alkaloid Piperin zurück. Sein durchdringend-scharfer, brennender Duft kann Nase und Mund reizen — ähnlich wie, aber etwa hundertmal schwächer als, das Capsaicin in Chilischoten. Viele weitere Verbindungen tragen zum Pfefferaroma bei. Wichtige Substanzen sind die kiefernartig duftenden Terpene (S)-α-Phellandren (eukalyptusartig), α- und β-Pinen (kiefernartig), Myrcen (pfeffrig, erdig, würzig), Limonen (kiefer- und zitronenartig) und Linalool (blumig, zitrisch, süß, frisch). Die Aldehyde Methylpropanal sowie 2- und 3-Methylbutanal verleihen blumige, nussige, sogar kakaoartige Aromen. Die muffigeren, blumigen Noten gehen auf Butter- und Methylbuttersäure zurück, die einen fruchtig-blumig-cremigen Geruch haben können.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Pfeffer als „die würzige, durchdringende, muffige und holzige Note, die charakteristisch für gemahlenen schwarzen Pfeffer ist“. Erdige, krautige, würzige Kaffees zeigen oft eine Pfeffernote, darunter solche aus Indonesien, Indien und Äthiopien. Indonesische Kaffees können krautige, erdige und pfeffrige Aromen haben. Indische Kaffees, einschließlich Monsooned-Kaffee, gelten als würzig und fruchtig, mit Noten von Gewürznelke, Muskatnuss und schwarzem Pfeffer. Äthiopischer Harrar ist für seine kräftigen, würzigen, blumigen Noten bekannt, darunter Pfeffer, Zimt und Blaubeere. Auch mittelamerikanische Kaffees, etwa aus Guatemala, können würzig wirken und nach Gewürz und Schokolade riechen.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Natural, wet-hulled und Monsooned-Kaffees entwickeln am ehesten Aromen dunkler Frucht und Würze. Die Nachernte-Verarbeitung beeinflusst dieses Aroma im Kaffee zweifellos, denn viele natural aufbereitete Kaffees bauen bei längerer Trocknung oder Fermentation würzige Noten zusammen mit dunkler Frucht auf. Der genaue Weg dorthin ist unklar, vermutlich ein Ergebnis mikrobieller Stoffwechselprodukte und ihres Zusammenspiels beim Rösten.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Das Röstprofil kann Pfeffer und ähnliche Aromen ebenfalls beeinflussen und hervorbringen. Bestimmte würzige Noten sind bekanntermaßen ein Ergebnis der Pyrolyse beim Rösten. Manche der wichtigen Aromaverbindungen in schwarzem Pfeffer, besonders die würzigen Terpene, finden sich auch in geröstetem Kaffee. Myrcen zum Beispiel könnte sich beim Abbau von Terpenoiden während des Röstens bilden, da es ein Pyrolyseprodukt von β-Pinen ist. Linalool und Limonen finden sich ebenfalls häufig in geröstetem Kaffee und gelten allgemein als positive Qualitätsmerkmale. Keine dieser Verbindungen steht für sich allein in einem Kaffee — sie sind Teil einer chemischen Suppe, die zu einem Aroma wird, das größer ist als die Summe ihrer Teile. Limonen für sich allein würde nie nach Pfeffer riechen. Der Ursprung des würzigen, schwarzen-Pfeffer-Aromas im Kaffee liegt zweifellos in einer Vielzahl von Faktoren, die bis zur Rösterei zurückreichen. Das eigentliche Maß liegt in der Tasse und im Kopf des Verkosters, der sich an schwarzen Pfeffer erinnert fühlt.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 30, original: 'Kiefer' },
+      { nummer: 50, original: 'Gewürznelke' },
+      { nummer: 42, original: 'Rauchig' },
+    ],
+  },
+
+  {
+    nummer: 47,
+    name: '(Stern-)Anis',
+    nameOriginal: '(Star) Anise',
+    kategorieId: 'gewuerze',
+    kategorieLabel: 'Gewürze',
+    beschreibung: [
+      'Anis hat einen trockenen, süßen, holzigen Duft. Er riecht nach Lakritz und Fenchel und wirkt leicht blumig.',
+      'Sternanis ist Zutat der traditionellen chinesischen Fünf-Gewürze-Mischung. In Indien ist er wichtiger Bestandteil von Garam Masala. Er steckt in mehreren vietnamesischen Signaturgerichten, etwa in der Pho-Bo-Suppe. Sein Duft kann an Lakritz, Backwaren, Zahnpasta, chinesische oder vietnamesische Küche sowie an Konfekt und Bonbons erinnern.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Der getrocknete Samenstand der Pflanze Illicium verum.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Das Gewürz, das wir als Sternanis kennen, ist die getrocknete Frucht und der Samenstand eines kleinen bis mittelgroßen, immergrünen Baums. Die rotbraune Frucht besteht aus sechs bis acht Fruchtblättern, die sternförmig angeordnet sind. Sie ist heimisch in Südchina und Nordvietnam, wird aber auch in Japan, Indien, Laos, Kambodscha und Vietnam angebaut. Sternanis ist mit dem Kraut Anis nur entfernt verwandt. Die Frucht wird vor der Reife gepflückt und anschließend getrocknet. Das ätherische Öl des Gewürzes sitzt in der Fruchtschale, nicht im Samen. In der Aromatherapie wird Sternanis genutzt, um Husten, Koliken, Krämpfe, Schluckauf und Verdauungsbeschwerden zu lindern. Er hat kräftige antimikrobielle, antioxidative und insektizide Eigenschaften.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'In der traditionellen chinesischen Medizin gilt Sternanis als wärmendes Yang, das eine Erkältung vertreiben und den Fluss des Chi regulieren soll, um Schmerzen oder eine Erkältung zu lindern.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Sternanis, Anis und Fenchel bilden alle einen großen Anteil an (E)-Anethol und weiteren Verbindungen und teilen sich deshalb ähnliche Aromen. Die Hauptverbindung, die für mehr als 70 Prozent der flüchtigen Stoffe in Sternanis verantwortlich ist, ist (E)-Anethol. Anethol gilt als eine sehr süße Verbindung. Als Anis-Kampfer bekannt, ist diese Verbindung gut löslich in Ethanol. Weitere, weniger dominante Verbindungen sind α-Pinen, Camphen, β-Pinen, Linalool, cis-Anethol, trans-Anethol, Safrol, Anisaldehyd und Acetoanisol. Sie bringen zitrische, nussige, blumige, medizinische und karamellisierte Noten in das Aroma ein.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Anis als „eine durchdringende, süße, braune, karamellisierte Note, die petroleumartige, medizinische und blumige Züge enthalten kann“. Jeder Kaffee mit braunen Gewürznoten hat das Potenzial, eine anisartige Qualität zu zeigen, je nach Wahrnehmung des Verkosters. Indonesische, besonders sumatranische Kaffees sind für würzige Noten bekannt, darunter Lakritz und Anis.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Wie bei vielen braunen Gewürzen entwickelt sich das Aroma von (Stern-)Anis im Kaffee erst beim Rösten. Anethol, oder Anis-Kampfer, wurde im Kaffee als Produkt des Röstens identifiziert — dunklere, weiter entwickelte Röstungen zeigen dabei höhere Mengen als hellere. Diese eindeutig anisartige Verbindung wurde auch direkt im Aroma von aufgegossenem äthiopischem Kaffee nachgewiesen. Die untergeordneten Bestandteile des Anisaromas, etwa Pinen, Linalool und Limonen, wurden ebenfalls im Kaffee identifiziert. Anisaldehyd wurde im Kaffee als süß, holzig und anisartig identifiziert.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 50, original: 'Gewürznelke' },
+      { nummer: 49, original: 'Zimt' },
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 46, original: 'Pfeffer' },
+    ],
+  },
+
+  {
+    nummer: 48,
+    name: 'Muskatnuss',
+    nameOriginal: 'Nutmeg',
+    kategorieId: 'gewuerze',
+    kategorieLabel: 'Gewürze',
+    beschreibung: [
+      'Dieses Gewürz hat einen unverwechselbar scharfen, warmen, süßen Geschmack und wird in vielen Backwaren verwendet. Sein einzigartiges Aroma trägt holzige Noten von Zimt, Pfeffer, Kiefer und Erde.',
+      'Das Pulver wird häufig in Saucen, Desserts, Fleischgerichten und saisonalen Getränken wie Eierlikör verwendet. In Indonesien und Indien wird die ganze Muskatfrucht samt Samen für viele Gerichte genutzt. Weltweit ist sie eine beliebte Zutat in herbstlichen und winterlichen Getränken, auch in Lattes. Ihr Duft kann an ein tröstliches Gericht erinnern, an ein warmes Feuer oder an einen klaren Herbsttag auf dem Kürbisfeld.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Das Gewürz Muskatnuss ist der getrocknete Kern des Samens vom Baum Myristica fragrans.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Heimisch in Indonesien und verbreitet von Indien bis Australien, kann dieser Baum bis zu 10 Meter hoch werden. Die Frucht ist eine gelbe Steinfrucht mit fleischiger Fruchtwand, die sich bei Reife in zwei Hälften spaltet und damit signalisiert, dass der Samen im Inneren erntereif ist. Der Samen ist von einer tiefroten, netzartigen Hülle umgeben — dem Samenmantel, der als eigenständiges Gewürz namens Macis verarbeitet und verkauft wird. Der Samen trocknet innerhalb der Kerne, bis er exportfertig ist.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Es gibt Belege, dass die Indonesier Muskatnuss seit mehr als 3.500 Jahren in ihrer Küche verwenden. Muskatnuss wurde fast ausschließlich auf den Banda-Inseln Indonesiens angebaut, bevor sie nach Indien gebracht wurde. Als die ersten europäischen Händler im 16. Jahrhundert eintrafen, überzog eine Reihe unglücklicher Kolonisierungskonflikte die Inseln und ihre Bewohner. Zuerst kontrollierten die Portugiesen den Muskatnuss-Handel über Jahrhunderte, bis hin zum Völkermord, um ihr Monopol auf das Gewürz zu sichern. Sowohl die Niederländer als auch die Briten wollten leider ebenfalls am Muskatnuss-Geschäft teilhaben und führten Krieg um die Inseln, in dem die Portugiesen die Kontrolle verloren. Um die Kämpfe zu beenden, tauschten die Niederländer ihre Kolonie Neu-Amsterdam (die heutige Insel Manhattan, New York) in der Neuen Welt gegen die britische Zusicherung ein, die Kontrolle über die Banda-Inseln und den Muskatnuss-Handel zu behalten. Dieser kurzsichtige Tausch sicherte ihre Muskatnuss-Macht nur für weitere hundert Jahre — dann übernahmen die Briten die Kontrolle über die Inseln und begannen sofort, Muskatnuss in andere britische Kolonien zu verpflanzen, darunter Grenada, das die Pflanze bis heute anbaut. Die Banda-Inseln und ihre indigene Bevölkerung wurden kolonisiert und versklavt — zuerst von den Portugiesen, dann von den Niederländern, den Briten und wieder den Niederländern —, bevor sie nach dem Zweiten Weltkrieg ihre Unabhängigkeit zurückerlangten.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Muskatnuss verdankt ihren charakteristischen Duft einer Kombination aus Pinen, Camphen, Dipenten, monoterpenen Kohlenwasserstoffen, Estern, Sesquiterpenen, Alkenen und weiteren Verbindungen. Sabinen hat einen warmen, pfeffrigen, holzigen, krautigen Duft. Myristicin, Limonen, Cineol, Safrol, Sabinen, Pinen und Terpineol steuern zusammen ein Bukett fruchtiger, blumiger, erdiger, warmer Aromen bei. Myristicin bringt eine würzige Note mit sich, der auch psychoaktive Wirkungen nachgesagt werden. Safrol ist der Hauptduftstoff der Sassafraswurzel, die traditionell zur Herstellung von Sassafras-Limonade diente, heute als Root Beer bekannt.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Muskatnuss als „eine feuchte, braune, holzige, durchdringende, petroleumartige, schwere Note mit einem leicht zitronigen Zug“. Muskatnuss gehört zur Gruppe der „braunen Gewürze“, die allgemein Backgewürze umfasst. Sie wird häufig mit Kaffee assoziiert — nicht nur wegen der Tradition, sie über Lattes und Cappuccinos zu streuen, sondern auch wegen der warmen, würzigen Noten, die beim Rösten entstehen. Es gibt keine starke Verbindung zwischen der eigentümlichen Chemie der Muskatnuss und der des Kaffees, doch das heißt nicht, dass wir sie nicht wahrnehmen können.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Grüner Kaffee und Muskatnuss teilen tatsächlich einiges an Chemie. Ob das bedeutet, dass sie ähnlich riechen, oder der Grund dafür ist, dass sie ähnlich riechen können, ist noch nicht geklärt. Ethylacetat zum Beispiel ist ein Alkohol, das beiden Produkten gemeinsam ist. Aldehyde und Terpenoide wie Vanillin kommen in beiden Pflanzen vor. Ester und monoterpene Kohlenwasserstoffe wie Pinen finden sich sowohl in grünem Kaffee als auch in Muskatnuss. Es gibt zudem bestimmte Verbindungen mit dem Potenzial, einen muskatnussartigen Duft abzugeben, die im Kaffee identifiziert wurden — wie genau sie mit der komplexen Mischung zusammenwirken und ob sie es überhaupt bis in die Tasse schaffen, ist aber weitgehend unbekannt.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Ähnlich könnten verschiedene beim Rösten entstehende Verbindungen einen Muskatnuss-Duft beeinflussen — direkte Zusammenhänge sind allerdings nicht bekannt. Zum Beispiel kommen viele Aldehyde und Kohlenwasserstoffe in beiden Pflanzen vor. Die genaue Mischung dieser Stoffe und wie sie beim Brühen und Verkosten zusammenwirken, gehört zu jenem Geheimnis, das uns alle immer wieder auf die nächste Tasse hoffen lässt.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 49, original: 'Zimt' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 50, original: 'Gewürznelke' },
+      { nummer: 47, original: 'Anis' },
+      { nummer: 46, original: 'Pfeffer' },
+      { nummer: 60, original: 'Vanille' },
+    ],
+  },
+
+  {
+    nummer: 49,
+    name: 'Zimt',
+    nameOriginal: 'Cinnamon',
+    kategorieId: 'gewuerze',
+    kategorieLabel: 'Gewürze',
+    beschreibung: [
+      'Dieses Gewürz hat einen zarten Duft. Ceylon-Zimt gilt als besonders fein und vielschichtig im Geschmack. Sein Duft ist blumig, zitrisch, würzig, reich und erdig, während Cassia-Zimt eher bitter, herb und scharf wirkt. Der Duft kann an süßes, klebriges Gebäck erinnern, an ein warmes Currygericht oder an ein scharfes Sichuan-Chili-Gericht.',
+      'Heute wird Zimt nicht nur in süßen, sondern auch in herzhaften Gerichten geschätzt und findet sich in vielen Küchen und Kulturen.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Das Gewürz stammt aus der Rinde verschiedener Arten der Gattung Cinnamomum, darunter C. verum (Ceylon), C. cassia, C. loureirii (Saigon) und der indonesische C. burmanni (Korinje). Die Gattung umfasst 250 Arten.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Zimt ist ein kleiner, immergrüner Baum, der bis zu 15 Meter hoch wird und in Südostasien, China und Australien verbreitet ist. Die stark aromatische Rinde ist etwa 10 Millimeter dick, an jungen Zweigen glatt und hellbraun, an ausgewachsenen Bäumen rau und dunkel. Ceylon-Zimt, angebaut in Sri Lanka, gilt als der „echte“ Zimt. Die anderen Arten werden im Handel meist als Cassia-Zimt verkauft, ohne dass das üblicherweise gesondert gekennzeichnet wird.',
+          'Zimt ist für eine breite Palette gesundheitlicher Wirkungen bekannt. Er dient als Zutat in der ayurvedischen Medizin — zum Beispiel, um ein saisonal aus dem Gleichgewicht geratenes Vata-Dosha zu behandeln, das mit der Herbstsaison verbunden wird. Die Rinde wirkt schleimlösend. Sie gilt außerdem als antioxidativ, entzündungshemmend, antibiotisch, antimikrobiell und antidiabetisch. Forschung deutet darauf hin, dass Zimt den Stoffwechsel ankurbeln, oxidative Schäden an Zellen verhindern und sogar kognitivem Abbau und Krebs entgegenwirken kann.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Zimt ist seit langem ein immens beliebtes Gewürz in Küche und Medizin. Seine Nutzung reicht fast 5.000 Jahre zurück. Zimt begleitete Zivilisationen von China bis zu den alten Römern, Ägyptern und Griechen und wird sogar in der Bibel erwähnt. Die Suche nach Zimt führte viele europäische Entdecker in neue Länder, auch nach Amerika.',
+          'Vor der Kolonialzeit handelte Ceylon (das heutige Sri Lanka) mit Zimt innerhalb der Region und bis in den Nahen Osten und nach Ägypten. Die Portugiesen schlossen Anfang des 16. Jahrhunderts Geschäfte mit der lokalen Herrscherschicht, was schließlich noch vor Ende des Jahrhunderts zur vollständigen portugiesischen Kolonialisierung der Insel führte. Andere europäische Nationen ließen sich vom aufregenden Gewürz locken: Die Niederländer übernahmen im späten 17. Jahrhundert über die Niederländische Ostindien-Kompanie die Kontrolle, gefolgt von den Briten, die im späten 18. Jahrhundert die Macht übernahmen. All diesen Kolonialmächten war klar: Mit dieser kleinen Insel kamen Ruhm und Reichtum aus der Rinde jenes Baums, der die Welt in seinen Bann zog.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die Rinde des Baums liefert den größten Teil des als Gewürz verwendeten Zimts, doch auch Blätter, Wurzeln, Blüten und Früchte wurden genutzt, um aromatische Öle zu gewinnen. Bevor sich Röhren von einem C.-verum-Baum ernten lassen, muss er ausgereift sein, was etwa 24 Jahre dauern kann. Bei der Ernte werden meist nur ein oder zwei Triebe des Baums gleichzeitig geschnitten, um seine Gesundheit zu erhalten — einzelne Bäume werden typischerweise alle zwei bis drei Jahre geerntet. Der Vorgang umfasst mehrere Schritte: Ernten der Triebe, Reinigen und Waschen, Schaben, Reiben, Schälen, Trocknen und das Formen der Röhren. Diese Röhren rollen sich zu den Zimtstangen, die im Ganzen verkauft werden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Untersuchungen zeigen, dass der dominante Geschmack von Zimt von einer einzigen Verbindung kommt: Zimtaldehyd, das mehr als 75 Prozent des Ölgehalts der Rinde ausmacht. Es ist ein Flavonoid (Phenylpropanoid), das natürlich in Bäumen vorkommt und eine Vorstufe von Lignin ist. Die häufigsten weiteren aromatischen Verbindungen sind Eugenol, Zimtylacetat, Caryophyllen und Linalool.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt diese Note als „eine süße, braune, leicht holzige, leicht durchdringende, würzige Note“. Wie bei Muskatnuss finden sich die genauen Verbindungen, die das einzigartige Zimtaroma ausmachen — allen voran Zimtaldehyd —, nicht im Kaffee. Es gibt aber eine Reihe von Verbindungen, die sich Gewürz und Kaffee teilen, darunter Ester, phenolische Verbindungen und Kohlenwasserstoffe — auch wenn das nicht zwangsläufig dazu führt, dass ein Kaffee nach Zimt riecht.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Beim Rösten entstehende Verbindungen, die sich als holzig und würzig beschreiben lassen, tragen zweifellos zur Wahrnehmung von Zimt in manchen Kaffees bei. Viele Furane bilden sich durch das Erhitzen von Glukose. Das Furan 2-Furanmethanol wird mit einem Duft ähnlich Zimt oder Eukalyptus beschrieben. Furfural hat einen getreideartigen, zimtähnlichen Duft, der sich beim Rösten bis zu 230 °C bilden kann, sich bei höheren Temperaturen aber wieder abbaut. Furfuryl, ein Produkt des Polysaccharid-Abbaus beim Rösten, wird als süß, karamellig und getreideartig beschrieben und kann manchmal nach Zimt riechen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 48, original: 'Muskatnuss' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 50, original: 'Gewürznelke' },
+      { nummer: 47, original: 'Anis' },
+      { nummer: 1, original: 'Honig' },
+    ],
+  },
+
+  {
+    nummer: 50,
+    name: 'Gewürznelke',
+    nameOriginal: 'Clove',
+    kategorieId: 'gewuerze',
+    kategorieLabel: 'Gewürze',
+    beschreibung: [
+      'Der Duft ist warm, würzig und holzig und kann Noten von Pfeffer und Zimt haben. Er kann an ein Weihnachtsessen erinnern, an Zigaretten, Glühwein, Orangen, Softdrinks oder einen Pumpkin-Spice-Latte.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die getrockneten Blütenknospen des Baums Syzygium aromaticum.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Der Baum ist heimisch auf den Molukken in Indonesien, auch als Gewürzinseln bekannt. Dieser immergrüne, tropische Baum aus der Familie der Myrtengewächse kann bis zu 12 Meter hoch werden und mehr als 100 Jahre alt. Die Blüte beginnt meist fünf Jahre nach dem Pflanzen. Die wichtigsten Anbauländer für Gewürznelken sind Indonesien, Indien, Malaysia, Sri Lanka, Madagaskar und Tansania.',
+          'Gewürznelken werden seit dem Altertum medizinisch genutzt und haben ihre Wurzeln in der ayurvedischen Medizin, wo sie gegen Magenbeschwerden eingesetzt werden und das Pitta-Dosha erhöhen sollen. Wie wichtig Gewürznelken als medizinische Pflanze sind, zeigt die große Bandbreite pharmakologischer Wirkungen, die sich aus ihrer traditionellen Anwendung über Jahrhunderte ableiten lassen und die moderne wissenschaftliche Methoden inzwischen untersucht haben. Gewürznelken wurden nachweislich antioxidativ, antibakteriell, pilzhemmend, antiviral und krebshemmend nachgewiesen.',
+          'Gewürznelken werden vielfach in Tees, Fleischgerichten, Backwaren, Glühwein und eingelegten Speisen verwendet. Sie sind eine Schlüsselzutat der chinesischen Fünf-Gewürze-Mischung und stecken auch in Zahnpasta, Kaugummi und anderen Konsumgütern.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Gewürznelken zählten zu den frühesten Gewürzen, die in der asiatischen Region gehandelt wurden. Um die Nachfrage anzukurbeln und die Preise hochzuhalten, unternahmen die Niederländer erhebliche Anstrengungen, Gewürznelken von allen bis auf zwei kleinen Inseln auszurotten. Später schmuggelten die Franzosen sie in die Neue Welt und brachen damit das Monopol, wodurch sich der Handel weltweit ausbreitete.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Die kleinen Blütenknospen des Baums dienen der Gewürzherstellung. Junge Blütenknospen sind blass und wechseln allmählich über Grün zu Rot — dann sind sie erntereif. Sie werden sorgfältig von Hand geerntet. Nach der Ernte werden die Knospen von Hand von den Stielen getrennt und zum Trocknen auf Matten ausgebreitet. Das Trocknen kann vier bis fünf Tage dauern. Gut getrocknete Knospen sind hart, knackig, dunkelbraun und haben einen Feuchtigkeitsgehalt von unter 12 Prozent — so lassen sie sich ein bis zwei Jahre in Säcken lagern. Ein einzelner ausgewachsener Baum kann jährlich 34 Kilogramm getrocknete Knospen liefern.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Gewürznelken enthalten bis zu 20 Prozent ätherische Öle, hauptsächlich bestehend aus dem Phenol Eugenol. Benzylalkohol trägt ebenfalls zum Duft bei, der als süß, blumig und feucht-holzig bekannt ist.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Gewürznelke als „eine süße, braune, würzige, durchdringende, blumige, zitrische, medizinische und leicht minzige Note“. Gewürznelken und ähnliche Gewürze sind bekanntlich gute Begleiter zu Kaffee, doch einen Kaffee mit einer ausgeprägten Nelkennote zu finden ist selten. Die fast minzige Würze der Gewürznelke ist ein herausstechender Charakterzug, der sich in bemerkenswert holzigen, erdigen, würzigen Kaffees zeigen kann, etwa aus Indonesien oder Indien. In solchen Kaffees kann eine Nelkennote ein Highlight und ein erwünschtes Merkmal sein, wenn sie mit den übrigen Eigenschaften im Gleichgewicht steht.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Phenole — darunter, aber nicht nur, Eugenol — sind ein bedeutendes Ergebnis des Röstprozesses. Eugenol wurde im Kaffee identifiziert, auch wenn seine genaue Herkunft dort ungeklärt ist. Als bedeutendes Phenol im Kaffee wird vermutet, dass Eugenol durch die Pyrolyse von Melanoidin-Verbindungen, durch alkalische Fusion oder durch Abbau in Glycerin entsteht — oder durch eine Kombination davon. Diese Verbindung findet sich auch im Kaffeeaufguss, ihre Extraktion hängt aber von der Wasserhärte ab.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 49, original: 'Zimt' },
+      { nummer: 48, original: 'Muskatnuss' },
+      { nummer: 47, original: 'Anis' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 46, original: 'Pfeffer' },
+      { nummer: 41, original: 'Tabak' },
+    ],
+  },
+
+  {
+    nummer: 51,
+    name: 'Erdnuss',
+    nameOriginal: 'Peanut',
+    kategorieId: 'nussig-kakao',
+    kategorieLabel: 'Nussig / Kakao',
+    beschreibung: [
+      'Erdnüsse haben ein fettiges, geröstetes, süßes, nussiges Aroma, das manchmal nach Toast, Butter oder sogar Malz riecht.',
+      'Sie sind ein nährstoffreicher, schmackhafter Snack für sich, finden sich in Erdnussbutter, in frittierten herzhaften Gerichten, in einem Sandwich mit Konfitüre und in verschiedenen regionalen Street-Food-Gerichten weltweit. Erdnüsse werden für den einzigartigen, angenehmen Geschmack geschätzt, der sich beim Rösten entwickelt.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die Nuss der Pflanze Arachis hypogaea aus der Familie der Hülsenfrüchtler (Fabaceae).'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Erdnuss ist die unterirdische Frucht einer krautigen Hülsenfrucht, heimisch in den Anden Südamerikas. Als Hülsenfrucht steht sie in Symbiose mit Bakterien, die es der Pflanze erlauben, Stickstoff aus der Luft zu binden und dem Boden zuzuführen. Eine ungewöhnliche Nuss, denn ihre Hülsen und Nüsse wachsen unter der Erde. Tatsächlich ist die Erdnuss gar keine echte Nuss, sondern ein Samen in einer Hülse, der sich als schmackhaft erweist, wenn er gereift und geröstet wird.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'So alt wie die Landwirtschaft selbst, hat die Erdnuss eine Rolle in der Weltgeschichte gespielt — als Hauptfigur von Handel, Sklaverei und Kolonisierung. Die Menschen der Andenregion in Bolivien kultivierten Erdnüsse bereits vor mehr als 7.000 Jahren. Nachdem die kolonisierenden Portugiesen Ende des 15. Jahrhunderts auf die Pflanze in Amerika stießen, begannen sie, Erdnüsse in Westafrika anzubauen. Erdnüsse wurden häufig versklavten Menschen auf ihrer langen Überfahrt nach Amerika zu essen gegeben. Von Westafrika aus reisten Erdnüsse auf Sklavenschiffen in die USA, wo sie angepflanzt und weiterhin überwiegend von versklavten Menschen gegessen wurden. Erst mit dem Bürgerkrieg wurden weiße US-Amerikaner im Süden mit diesem Nahrungsmittel vertraut. Anfang des 20. Jahrhunderts erforschte und bewarb der amerikanische Wissenschaftler George Washington Carver die Erdnuss im gesamten Süden und legte sogar vor dem Kongress Zeugnis über den Nutzen dieser Pflanze ab.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Nach dem Trocknen auf einen Feuchtigkeitsgehalt von etwa 10 Prozent werden rohe Erdnüsse gewaschen, um Erde zu entfernen, und dann in einem Heizgerät getrocknet. Anschließend können die Erdnüsse in der Schale trocken geröstet werden, bei 160 bis 200 °C für 1 bis 1,5 Stunden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Erdnüsse sind ein reichhaltiges Lebensmittel mit mehr als 200 aromaaktiven Verbindungen. Der Großteil der wirkungsvollen flüchtigen Verbindungen entsteht während des Röstens, wenn Maillard-Reaktionen, Strecker-Abbau, Karamellisierung und Lipidoxidation gleichzeitig ablaufen. Bei Maillard-Reaktionen entstehen Furane, Thiazole, Thiophene, Pyrrole, Pyridine und Pyrazine. Karamellisierung erzeugt Furan-Derivate. Pyrazine gelten typischerweise als eine der charakteristischsten Verbindungen des Erdnussgeschmacks. Weil Erdnüsse zu fast 50 Prozent aus Fett bestehen, erzeugt die Lipidoxidation aliphatische Aldehyde, Ketone und Alkohole. Es gibt eine ganze Reihe von Fehltönen und Fehlaromen, die bei unsachgemäß gerösteten oder gelagerten Erdnüssen auftreten, darunter harsche, grasartige Aldehyde, fruchtige Alkohole sowie Pappe- und Fisch-artige Oxidationsprodukte.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Erdnuss als „eine süße, hellbraune, ölige, etwas muffig-staubige, bohnige Note, die leicht adstringierend sein kann“. Erdnuss ist im Kaffee ein leicht erkennbares Aroma. In geringer Intensität und im Gleichgewicht mit Süße kann Erdnuss eine erwünschte Eigenschaft sein. Bei hoher Konzentration oder wenn sie dominiert, kann ein Erdnussgeruch einen Kaffee jedoch negativ überlagern. In gehobenen wie kommerziellen Robustas ist Erdnuss ein verbreiteter Duft und Geschmack. Kombiniert mit Schokolade- und würzigen Noten kann Erdnuss unauffällig, grundlegend oder Teil des allgemeinen Kaffeearomas sein, das in den Hintergrund einer Beschreibung tritt. Wird dagegen von einem Kaffee erwartet, einen gewaschenen Milds- oder gewaschenen Verarbeitungsstil zu verkörpern, kann Erdnuss diesem Profil eher abträglich sein. Es gibt eine ganze Reihe komplexer, ineinandergreifender Faktoren, die einen Kaffee nach Erdnuss riechen lassen können — Genetik, Fruchtreife, Verarbeitung, Alter des grünen Kaffees, Röstentwicklung und Nachröst-Alterung. Traditionelle brasilianische Kaffees, besonders Pulped Naturals (Honeys), sind für eine süße Erdnuss-Eigenschaft bekannt, abhängig vom Anteil der auf dem Pergament verbliebenen Mucilage sowie vom Röstprofil.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Das Rösten selbst erzeugt viele chemische Verbindungen, die denen in gerösteten Erdnüssen ähneln. Kaffee enthält Pyrazin, Pyrrol, Oxazol und Thiazol, die alle als geröstete Erdnuss-artige Aromen identifiziert wurden. Pyrazine sind typischerweise in geringer Konzentration erwünscht, werden bei hoher Konzentration aber zunehmend bitter. Ein Erdnuss-Aroma im Kaffee ist oft ein Symptom unzureichender Röstentwicklung. Eine unterentwickelte Röstung lässt sich leicht an einem kräftigen Erdnussgeruch erkennen. Besonders bei gewaschenen Kaffees, bei denen man andere aromatische Noten dominieren erwartet, wird das als qualitätsmindernd wahrgenommen. Ähnlich verhält es sich, wenn Nachröst-Alterung einen Kaffee beeinträchtigt: Lipide oxidieren und erzeugen einige derselben Pappe- und Fisch-artigen Fehlaromen, die auch bei Erdnüssen auftreten.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 54, original: 'Walnuss' },
+      { nummer: 52, original: 'Haselnuss' },
+      { nummer: 53, original: 'Mandel' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 45, original: 'Malz' },
+    ],
+  },
+
+  {
+    nummer: 52,
+    name: 'Haselnuss',
+    nameOriginal: 'Hazelnut',
+    kategorieId: 'nussig-kakao',
+    kategorieLabel: 'Nussig / Kakao',
+    beschreibung: [
+      'Der Duft von Haselnüssen lässt sich als reich, nussig, erdig, süß, fruchtig und zart beschreiben. Haselnüsse bewegen sich wegen ihrer fettigen, buttrigen Beschaffenheit oft zwischen süß und herzhaft.',
+      'Sie können auch etwas holzig oder sogar scharf und bitter wirken. Sie passen gut zu bitteren Gemüsesorten wie Kohl, Lauch und Endivie. Haselnüsse haben eine lange gemeinsame Geschichte mit Schokolade in Keksen, Kuchen, Torten und Süßigkeiten. Der Duft gerösteter Haselnüsse kann an einen Weihnachtsmarkt erinnern, an eine reichhaltige Torte oder an einen köstlichen Schokoladenaufstrich.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die Nuss des Baums Corylus, mit den Arten avellana, colurna, maxima und americana.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Diese Gattung gehört zur Familie der Birkengewächse (Betulaceae), die essbare Nüsse hervorbringt. In Europa werden sie auch Lambertsnüsse oder Zellernüsse genannt. Ein kleiner, sommergrüner Baum mit weichem Holz, dessen Blätter behaart und gesägt sind. In der Natur wächst er als vielstämmiger Strauch, im kommerziellen Anbau dagegen als einstämmiger Baum bis zu 6 Meter Höhe. Der Baum bildet sowohl männliche Kätzchen als auch weibliche Blüten und trägt eine rundliche Nuss von etwa 1 bis 4 Zentimetern Durchmesser.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Haselnüsse werden meist mechanisch vom Baum oder vom Boden geerntet, bevor sie enthülst werden. Nach dem Enthülsen werden die Nüsse, noch in ihrer Schale, üblicherweise getrocknet und desinfiziert, um sie lagerfähig zu machen. Das Trocknen geschieht in der Sonne oder maschinell bei 30 bis 40 °C. Danach werden sie nach Größe sortiert und ganz mit Schale verkauft. Um die Schalen kommerziell zu entfernen, müssen sie geknackt oder zerkleinert werden, um die essbaren Kerne freizulegen. Anschließend werden die Nüsse geröstet, in speziellen Röhrenöfen mit Drehbewegung. Beim Rösten werden die Nüsse üblicherweise unter Luftstrom auf 100 bis 160 °C erhitzt, für 10 bis 60 Minuten. Der Hauptzweck des Röstens ist es, Geschmack, Farbe, Knusprigkeit und die knackige Textur des Produkts zu verbessern.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'In Haselnüssen stecken viele flüchtige Aromaverbindungen, doch nur ein ausgewählter Kern davon baut den charakteristischen Haselnussduft auf. Weil rohe Haselnüsse geschmacklich eher fad sind, gilt das Rösten allgemein als der Haupttreiber für Geschmack und Aroma der Nuss. Rösten erhöht nachweislich die Menge an Pyrazinen, Pyrrolen, Terpenen, Aldehyden und Ketonen in Haselnüssen. Unter den Ketonen sticht eine Verbindung namens 5-Methyl-(E)-2-hepten-4-on hervor, auch als Filberton bekannt, die mit dem Rösten zunimmt. Filberton — der Name kommt vom englischen „filbert“ für Haselnuss — trägt den charakteristischen Duft gerösteter Haselnüsse bei.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Haselnuss als „eine holzige, braune, süße, muffig-erdige, leicht zederartige Note, die blumige, bohnige, ölige, adstringierende und bittere Geschmacksnoten enthalten kann“. Im Kaffee gehört Haselnuss zu den eher fruchtigen, blumigen, muffigen Nüssen, die als positive Eigenschaft auftreten. Sie ist vielleicht die zarteste und blumigste unter den Nüssen. Man findet sie in blumigen Kaffees aus aller Welt, besonders aus Äthiopien, Panama und Mittelamerika.',
+        ],
+      },
+      {
+        titel: 'Pflanze und Nachernte-Verarbeitung',
+        text: [
+          'Haselnuss scheint bis zu einem gewissen Grad von wilder (Heirloom-)Kaffeegenetik beeinflusst zu sein. Das erklärt, warum äthiopische und von Gesha abstammende Kaffees aus Panama für diese Qualität bekannt sind. Andere Kaffees können durch ein komplexes Zusammenspiel von Genetik und Umwelt beeinflusst sein, zusammen mit der Verarbeitung. Unter den mittelamerikanischen Kaffees werden solche aus Costa Rica und Guatemala häufig mit Haselnuss-Eigenschaften beschrieben. Diese traditionell gewaschenen Kaffees sind weniger fruchtig als andere Verarbeitungsmethoden und lassen süßere, kräftigere Schokoladen- und Nussaromen hervortreten. In anderen Teilen der Welt findet sich Haselnuss auch in manchen erdigen, muffigen, von braunen Gewürzen geprägten Kaffees aus Indonesien. Letztlich ist die Präsenz von Haselnuss, weil nussige Eigenschaften in vielen Kaffees allgegenwärtig sind, eine Frage der Balance der Eigenschaften in jedem einzelnen Kaffee.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Das Rösten ermöglicht und erzeugt einen Großteil der nussigen Grundnote in jedem Kaffee. Das Rösten selbst erzeugt viele chemische Verbindungen, die denen in gerösteten Haselnüssen ähneln. Kaffee enthält Pyrazin, Pyrrol, Oxazol, Pyridin und Thiazol, die alle als geröstete Aromen identifiziert wurden. Besonders Pyrazine wurden dafür identifiziert, dem Kaffee eine Haselnuss-Note zu verleihen. Bestimmte aromatische Kohlenwasserstoffe im Kaffee, etwa Benzole, können sich als muffig-nussiges Aroma ähnlich Haselnuss zeigen. Pyrazine sind typischerweise in geringer Konzentration erwünscht, werden aber bei hoher Konzentration zunehmend bitter. Wie bei Haselnüssen bringt eine zu weit getriebene Röstung mehr bittere, holzige Charakterzüge hervor.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 53, original: 'Mandel' },
+      { nummer: 51, original: 'Erdnuss' },
+      { nummer: 54, original: 'Walnuss' },
+      { nummer: 43, original: 'Butter' },
+      { nummer: 56, original: 'Schokolade' },
+      { nummer: 55, original: 'Zartbitterschokolade' },
+      { nummer: 31, original: 'Zeder' },
+    ],
+  },
+
+  {
+    nummer: 53,
+    name: 'Mandel',
+    nameOriginal: 'Almond',
+    kategorieId: 'nussig-kakao',
+    kategorieLabel: 'Nussig / Kakao',
+    beschreibung: [
+      'Mandeln haben eines der fruchtigeren Nussaromen.',
+      'Ihr Aroma riecht nach Frucht, Zartbitterschokolade, Kirsche und Toast; geröstet wird es nussig, holzig, sogar erdig. Mandeln werden weltweit roh oder geröstet als Snack genossen. Der Duft kann an Marzipan, Kirschen, Obsttörtchen oder Kuchen erinnern.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Nüsse des Baums Prunus amygdalus (oder P. dulcis).'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Dieser Laubbaum wird bis zu 4,5 Meter hoch. Er ist heimisch in Armenien, sein bevorzugtes Klima ist mediterran, mit kühlem Winter. Im Frühling blühen weiße oder rosa, duftende Blüten. Sie müssen von Insekten fremdbestäubt werden, im kommerziellen Anbau werden dafür Bienen eingesetzt. Daraus entstehen Früchte (Steinfrüchte), ähnlich wie bei anderen Prunus-Arten, etwa der Pflaume. Zwar bildet der Baum keine echte Nuss, doch im Inneren, in der Fruchtwand des Samens, sitzt ein Samen, der umgangssprachlich als Nuss bekannt ist. Ist die Frucht reif, spaltet sich die Hülle von der Schale, bevor diese vom Baum fällt.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Nach der Ernte werden Mandeln zunächst von Verunreinigungen befreit, bevor sie enthülst werden, um die schützende Fruchtwand zu entfernen. Anschließend durchlaufen sie eine Reihe von Scherwalzen, um die Schalen zu entfernen. Die Kerne (Mandeln) werden dann auf Dichtetischen und mit Schwerkraft-Sortierern getrennt. An diesem Punkt sind die Mandeln entweder verkaufsfertig oder bereit für die Röstung. Eine Trockenröstung nutzt typischerweise Temperaturen von 130 bis 150 °C, manche Mandeln werden aber auch in Öl geröstet. Eine Luftröstung bei niedriger bis mittlerer Temperatur von 130 bis 145 °C hilft, die Mikrostruktur der Mandel zu erhalten und die Haltbarkeit des Produkts zu maximieren. Bei niedrigeren Rösttemperaturen sind längere Zeiten nötig, bei höheren kürzere.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Beim Rösten entwickelt sich das Mandelaroma durch Lipidoxidation, Zuckerpyrolyse und Maillard-Reaktionen. Diese erzeugen malzige, geröstete, schokoladige, nussige Geschmacksnoten, während sich Pyrazine, Furane, Alkohole, Pyrrole, Ketone, Aldehyde und aromatische Kohlenwasserstoffe bilden. Pyrazine entstehen während der Maillard-Reaktion. Pyrazine, verzweigte Aldehyde und Ketone bilden sich bei diesen Bräunungsreaktionen. Furanhaltige Verbindungen, die aus dem Abbau von Zuckern entstehen, sowie Alkohole und Aldehyde, die sich durch Lipidoxidation bilden, tragen ebenfalls bei. Dazu zählt Benzaldehyd, einer der bemerkenswertesten und stärksten Beiträge zum Mandelaroma. Bei sehr intensiver Röstung nimmt die Benzaldehyd-Intensität jedoch ab.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt die Mandel-Eigenschaft als „eine süße, hellbraune, holzige und buttrige Note mit blumigen und fruchtigen Zügen, die Rose, Kirsche und Aprikose einschließen können. Sie ist außerdem adstringierend und kann leicht rauchig sein“. In Kaffees mit fruchtigen Kirschnoten wird eine Nussigkeit vermutlich als Mandel wahrgenommen, einfach wegen der Ähnlichkeit der Aromachemie zwischen beiden. So können viele Kaffees mit Steinobstnoten an Mandel denken lassen.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Der Röstprozess ermöglicht und erzeugt einen Großteil der nussigen Grundnote in jedem Kaffee. Das Rösten selbst erzeugt viele chemische Verbindungen, die denen in gerösteten Mandeln ähneln. Kaffee enthält Pyrazin, Pyrrol, Oxazol, Pyridin und Thiazol, die alle als geröstete Aromen identifiziert wurden. Bestimmte aromatische Aldehyde im Kaffee, darunter Benzaldehyd, können als fruchtig-nussiges, an Mandel erinnerndes Aroma auftreten. Besonders dunklere Röstungen erzeugen zusammen mit einem fruchtigen Kaffee wahrscheinlich Mandelaromen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 52, original: 'Haselnuss' },
+      { nummer: 54, original: 'Walnuss' },
+      { nummer: 56, original: 'Schokolade' },
+      { nummer: 45, original: 'Malz' },
+      { nummer: 57, original: 'Brauner Zucker' },
+      { nummer: 11, original: 'Kirsche' },
+      { nummer: 3, original: 'Rose' },
+    ],
+  },
+
+  {
+    nummer: 54,
+    name: 'Walnuss',
+    nameOriginal: 'Walnut',
+    kategorieId: 'nussig-kakao',
+    kategorieLabel: 'Nussig / Kakao',
+    beschreibung: [
+      'Der Duft der Walnuss ist muffig, nussig, süß, erdig, blumig, manchmal harzig wie Kiefer oder mit einer scharfen Adstringenz.',
+      'Walnüsse werden eingelegt, in Honig eingeweicht oder in Gebäck wie Baklava gebacken, ebenso als texturgebende Note zu vielen herzhaften Gerichten gegeben, darunter Fleisch und Gemüse. Die Walnuss spielt eine große Rolle in der Küche des Kaukasus, wo sie traditionell in Eintöpfe, Fleischgerichte, Saucen und Desserts eingearbeitet wird.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Nüsse des Baums Juglans regia, bekannt als Echte Walnuss oder Persische Walnuss. Andere Arten werden zwar angebaut, aber meist nicht kommerziell produziert.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Dieser langlebige Laubbaum treibt spät aus und belaubt sich auf der Nordhalbkugel typischerweise erst spät im Frühling. Der Baum braucht lange, bis er ausgereift ist — die ersten Früchte entstehen frühestens mit 15 Jahren. Die Frucht ist eine sogenannte Scheinfrucht: Sie entwickelt sich nicht nur aus dem Fruchtknoten, sondern auch aus anderen Teilen der Blüte. Die Frucht hat eine grüne, steinfruchtartige Hülle, und darin die Fruchtwand beziehungsweise Schale, die den Samen umschließt, der als Nuss gegessen wird. Die Schale hat meist zwei oder drei Segmente. Der Samen ist von einer Samenhaut umgeben und wird als Kern bezeichnet.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Um die Walnuss ranken sich viele Geschichten — man geht davon aus, dass sie die älteste vom Menschen kultivierte Baumnuss ist; sie trat vermutlich erstmals in der Jungsteinzeit auf, vor 4.000 bis 6.000 Jahren. Die Verbreitung der Walnuss in Europa ist das Ergebnis menschlicher Ausbreitung in den 5.000 Jahren nach dem letzten Kälte-Maximum der Eiszeit. Griechen und Römer verbreiteten den Baum schließlich über ganz Europa, und von dort gelangte die Walnuss durch Handel und Kolonisierung in die ganze Welt. Bis Mitte des 19. Jahrhunderts wurde die Walnuss bereits im Central Valley in Kalifornien angebaut.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Kommerziell werden sowohl geschälte als auch ungeschälte Walnüsse verkauft. Nach dem Schälen lassen sich Walnüsse roh oder geröstet essen. Wie bei anderen Nüssen verbessert das Rösten Aroma, Geschmack und Textur der Walnuss, und Konsumenten schätzen dieses intuitive Qualitätsmaß. Geröstet wird meist mit heißer Luft.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das charakteristische Aroma frischer Walnüsse wird durch eine Mischung aus 3-Hydroxy-4,5-dimethyl-2(5H)-furanon (Sotolon) und (2E,4E,6Z)-Nona-2,4,6-trienal geprägt. Nach dem Rösten enthalten Walnüsse typischerweise eine Mischung aus Aldehyden, Ketonen, Alkoholen, Pyrazinen und Furanen sowie Säuren. Aldehyde wie Hexanal, Heptanal und Octanal entstehen vor allem durch Lipidoxidation. Alkohole bilden sich beim Abbau dieser Aldehyde und tragen grüne Noten bei. Ketone entstehen beim Abbau von Zuckern während der Röstung, und Furane sowie Pyrazine entstehen ebenfalls beim Rösten und sind die Hauptquelle des Walnussaromas. Die Verbindung 2-Ethyl-5-methylpyrazin wurde als besonders wirksame Verbindung in Walnüssen identifiziert.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Diese Note ist im Kaffee scharf, auffällig und etwas ungewöhnlich. Der erdig-nussige Geruch geht meist mit einem trockenen Mundgefühl einher und ist deshalb ein retronasaler Geruch — man nimmt ihn eher beim Schlucken über den Rachen wahr als direkt über die Nase. Die Adstringenz mancher Kaffees kann den bitteren Tanninen der Walnuss-Samenhaut ähneln. Diese Eigenschaft wirkt normalerweise nicht überwältigend, kann aber zusammen mit starker Bitterkeit zu einer unangenehmen Kombination führen. Gut ausbalanciert mit erdigen, schokoladigen oder krautigen Noten kann Walnuss einen Kaffee in einer feinen Nussigkeit verankern, die weltweit geschätzt wird. Walnuss findet sich vor allem in Kaffees aus Indonesien und benachbarten Anbaugebieten, in feinen Robustas und in zarten mittelamerikanischen Kaffees.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Chemisch erzeugt der Röstprozess bei Walnüssen und Kaffee ähnliche Aromen. Furane und Pyrazine machen einen erheblichen Teil des Röstaromas von Kaffee aus und ebenso die geröstete Nussigkeit der Walnuss. Tatsächlich wurde das kennzeichnende Walnuss-Lacton Sotolon auch im Kaffee nachgewiesen, als Produkt der Maillard-Reaktionen — dort kann es einen süßen, karamellisierten, bockshornkleeartigen oder sogar an Ahorn erinnernden Duft verleihen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 52, original: 'Haselnuss' },
+      { nummer: 45, original: 'Malz' },
+      { nummer: 43, original: 'Butter' },
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 34, original: 'Holzig' },
+      { nummer: 30, original: 'Kiefer' },
+      { nummer: 31, original: 'Zeder' },
+    ],
+  },
+
+  {
+    nummer: 55,
+    name: 'Zartbitterschokolade',
+    nameOriginal: 'Dark Chocolate',
+    kategorieId: 'nussig-kakao',
+    kategorieLabel: 'Nussig / Kakao',
+    beschreibung: [
+      'Verglichen mit gewöhnlicher Schokolade oder Milchschokolade ist Zartbitterschokolade intensiver, mit einem angenehm bitteren, gerösteten Aroma. Hochwertige Zartbitterschokolade kann blumige, zitrische und tabakartige Noten zeigen.',
+      'Schokolade ist, ähnlich wie Weinig, eine Eigenschaft, die eine ganze eigene Welt umfasst. Zartbitterschokolade enthält bis zu 80 Prozent Kakaomasse, der Rest ist meist Kakaobutter. Die meisten gesundheitlichen Vorzüge, die Schokolade zugeschrieben werden, hängen mit dem Verzehr der dunklen Sorte zusammen.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Die Süßware aus dem Samen von Theobroma cacao, dem Kakaobaum. Der lateinische Name Theobroma bedeutet „Speise der Götter“.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Kakao ist ein immergrüner Baum, heimisch im Amazonas-Regenwald. Blüten und Früchte des Baums wachsen direkt aus Stamm und älteren Ästen — ein ungewöhnliches botanisches Phänomen namens Kauliflorie. Ein einzelner Baum kann im Jahr bis zu 250.000 Blüten bilden. Die winzigen, zarten weißen Blüten halten nur einen einzigen Tag. In ihrer natürlichen Umgebung müssen sie von Gnitzen bestäubt werden, winzigen Mücken, die Pollen zwischen den Blüten übertragen. Im Anbau werden die Blüten von Hand bestäubt, mit Pinzetten. Die Frucht, Kakaoschote genannt, ist 15 bis 30 Zentimeter lang und reift zu einer orangen Farbe. Die Schote enthält meist 20 bis 60 Samen, eingebettet in weißes Fruchtfleisch. Der Samen ist oval und abgeflacht, etwa 2 Zentimeter lang und 1 Zentimeter breit.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Der Kakaobaum wurde erstmals vor mehr als 5.000 Jahren für seinen Samen kultiviert, in der Gegend des heutigen Ecuador. Frühe mesoamerikanische Kulturen — Olmeken, Azteken und Maya — schmolzen Kakao zu einem bitteren Getränk ein. Die Schoten und ihre Produkte waren wirtschaftlich und politisch bedeutsam, der Samen ein zentrales Handelsgut und diente auch als Zahlungsmittel. Für diese Kulturen spielte Schokolade eine herausragende Rolle bei Ritualen, Festen und dem Konsum der Elite. Es gibt keine Belege für süße, heiße Schokoladengetränke, bevor mexikanische Nonnen in Oaxaca im 16. Jahrhundert davon berichteten, sie zu trinken.',
+          'Als die Spanier im 16. Jahrhundert auf die Azteken trafen und sie eroberten, brachten sie auch die Schokolade auf den europäischen Kontinent. Irgendwann danach fügten Entdecker und Händler dem Getränk Zucker und Zimt hinzu, was seine Beliebtheit steigerte. Die Nachfrage in Europa explodierte, und die Spanier versklavten bis ins späte 19. Jahrhundert Menschen, um Kakao zu produzieren. Wegen ihrer frühen Kolonisierung Amerikas hielt Spanien über viele Jahre ein Monopol auf Schokolade. Nur der wohlhabendste, elitärste spanische Adel konnte sich diesen teuren Import leisten. Andere Kolonialmächte — die Briten, Niederländer und Franzosen — begannen, in den von ihnen gehaltenen Ländern eigene Kakaoplantagen anzulegen, um ihren eigenen Bedarf zu decken. Im späten 17. Jahrhundert wurde es beliebter, Milch zur Schokolade zuzugeben. Mitte des 18. Jahrhunderts, mit dem Aufkommen der Industriellen Revolution, entwickelte die Schokoladenindustrie zahlreiche Erfindungen, um Schokolade schneller und mit weniger Handarbeit herzustellen. Die Fähigkeit, Schokolade in großen Mengen herzustellen, erlaubte es der breiten Bevölkerung, diese Köstlichkeit zu genießen.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: ['Siehe Schokolade (Nr. 56).'],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das typische Schokoladenaroma hängt von einem hohen Anteil an Kakaopulver ab. Zartbitterschokolade und Kakaopulver enthalten mehrere hundert flüchtige Bestandteile, darunter Pyrazine, Thiazole, Oxazole, Pyrrol-Derivate, Pyridine, Aldehyde und Furane. In einer Studie zu Zartbitterschokolade wurden 2-Methoxyphenol, 3-Methylbuttersäure, Vanillin und Linalool als die Verbindungen mit dem größten Einfluss auf ein positives Aroma identifiziert.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Zartbitterschokolade als „eine hochintensive Mischung aus Kakao und Kakaobutter, die dunkel-röstige, würzige, verbrannte und muffige Noten mit erhöhter Adstringenz und Bitterkeit enthalten kann“.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung und Röstung',
+        text: [
+          'Ein Zartbitterschokoladen-Aroma im Kaffee wäre ein durchdringender, bitterer Geruch, ähnlich bitterer Backschokolade oder feinem Konfekt. Wegen des Koffeins und der natürlichen Bitterkeit im Kaffee wird ein Schokoladenduft eher mit der dunkleren Sorte assoziiert. Grundsätzlich kann jeder Kaffee, jede Verarbeitung und jede Röstung Schokoladennoten zeigen, doch am ehesten begegnet man ihnen in hochintensiven Kaffees. Manche davon sind intensiv fruchtige Kaffees, etwa natural aufbereitete. Andere sind intensiv geröstete Kaffees, mit mehr Pyrazinen und bitter-röstigen Noten, die eher als Zartbitterschokolade auftreten. Arabicas aus Mittelamerika werden häufig mit diesen Aromen assoziiert. Auch feine Robustas können Schokoladennoten zeigen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 56, original: 'Schokolade' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 10, original: 'Backpflaume' },
+      { nummer: 41, original: 'Tabak' },
+    ],
+  },
 ];
 
 /** Wie viele Flaeschchen das Set insgesamt hat — die 60 des Le-Nez-Kartons. */
