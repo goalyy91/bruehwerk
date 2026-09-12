@@ -1493,6 +1493,942 @@ export const DATENBLAETTER: readonly AromaDatenblatt[] = [
       { nummer: 28, original: 'Heuartig' },
     ],
   },
+
+  {
+    nummer: 35,
+    name: 'Schimmlig/Feucht',
+    nameOriginal: 'Moldy/Damp',
+    kategorieId: 'sonstiges',
+    kategorieLabel: 'Sonstiges',
+    beschreibung: [
+      'Dieser Duft ist ein muffiger, dumpfer Geruch, schimmelartig beschrieben, der an einen unfertigen Keller erinnert.',
+      'Es ist eine allgemeine Auffälligkeit in vielen Lebensmitteln und Getränken, besonders bekannt in der Weinbranche für den „Korkfehler“, der durch kontaminierte Korken in Wein entsteht. Ein starker Korkfehler verströmt einen unangenehmen Duft, der an einen muffigen Keller erinnert. Beschreibungen des Korkfehlers reichen bis ins frühe 20. Jahrhundert zurück, die dafür verantwortliche Verbindung wurde aber erst in den 1980er-Jahren identifiziert.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Chemie',
+        text: [
+          'Dieser Fehlton besteht vor allem aus TCA (2,4,6-Trichloranisol) und entsteht durch Pilzbefall. Andere Chloranisole und Chlorphenole können in Wein ebenfalls dazu beitragen. Neuere Untersuchungen zeigen, dass Geosmin und MIB (2-Methylisoborneol) erdige Noten beisteuern können, während Guajacol und Pyrazine einen phenolischen oder medizinischen Zug beitragen können. Menschen reagieren bemerkenswert empfindlich auf TCA — der Geruchsschwellenwert liegt bei nur 0,03 bis 1–2 Nanogramm pro Liter. Unterschiede in der Empfindlichkeit gelten als genetisch bedingt, auch wenn Training sie nachweislich verbessern kann.',
+          'TCA ist ein tückisches Molekül, das die eigene Wahrnehmung stören kann: Schon eine winzige Menge unterdrückt deutlich die Übertragungsströme, die zum Riechzentrum im Gehirn führen. Untersuchungen zu diesem Thema fanden heraus, dass diese Unterdrückung dazu führt, dass Menschen insgesamt weniger Geschmack und Aroma wahrnehmen. Das erklärt, warum TCA schon in geringer Konzentration Aromen und Geschmack dämpfen oder abstumpfen und einen Wein fade und uninteressant wirken lassen kann. TCA gilt als einer der bedeutendsten Kontaminanten in vielen Lebensmitteln und Getränken, etwa Wein, Bier, Milch, Wasser, Trockenobst, Eiern, Whisky, Kakaopulver, Sake, Meeresfrüchten und Kaffee.',
+          'Das biochemische Verständnis dieses Fehltons ist noch nicht vollständig geklärt. Anerkannt ist, dass er hauptsächlich durch Kontamination mit Mikroorganismen entsteht — Pilze wie Penicillium, Aspergillus, Actinomyces und Streptomyces bilden TCA als Stoffwechselprodukt, wenn bestimmte chlorierte Substrate verfügbar sind. Beim Wein trägt manchmal schon der Korkbaum selbst diese Verbindung in sich, aus der Umwelt aufgenommen, noch bevor die Korken hergestellt werden. Seit der Zusammenhang mit dem Fehler bekannt ist, wurde das aber fast vollständig beseitigt. Der Fehlton kann grundsätzlich an mehreren Stellen der Weinherstellung, Reifung und Abfüllung entstehen, sobald die Mikroorganismen unter den richtigen Bedingungen vorhanden sind.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt schimmlig/feucht als „die Note, die man mit feuchten, geschlossenen Räumen oder Kellern verbindet — kann muffig, scharf und leicht grün sein“. Im Kaffee ist sie gut als muffiger, kellerartiger Geruch beschrieben.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Im Kaffee wird dieser Fehlton oft mit einem medizinischen, jodartigen oder Phenol-Fehlton vermengt. Tatsächlich ähneln sich schimmlig-feuchte Auffälligkeiten und können zusammen mit anderen Problemen auftreten, doch Aromaprofil und Wirkung unterscheiden sich. Manche nennen das den Rio-Fehlton. Der Rio-Fehlton besteht nicht nur aus muffigen Düften, sondern auch aus einem starken jodartigen, medizinischen Geruch — das Ergebnis unterschiedlicher Stoffgruppen. Der Name „Rio“ geht auf die Region in Brasilien zurück, die einst mit diesem Fehlton verflucht war. Der Fehlton existierte allerdings schon immer auch in anderen Anbauländern. Der Rio-Fehlton ist im Kaffee heute deutlich seltener als noch vor 20 Jahren, weil sich Qualität und Sorgfalt in der Kaffeeverarbeitung weltweit verbessert haben.',
+          'Der muffig-erdige Fehlton im Kaffee entsteht Untersuchungen zufolge vor allem durch 2-Methylisoborneol (MIB), 2,4,6-Trichloranisol (TCA) und Geosmin. Vermutlich verursacht durch unsachgemäße Trocknungsbedingungen, die bestimmten Pilzen wie Aspergillus erlauben zu gedeihen und Fehltöne zu erzeugen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 36, original: 'Muffig/Erdig' },
+      { nummer: 24, original: 'Erbsenschote' },
+      { nummer: 32, original: 'Kartoffel' },
+    ],
+  },
+
+  {
+    nummer: 1,
+    name: 'Honig',
+    nameOriginal: 'Honey',
+    kategorieId: 'blumig',
+    kategorieLabel: 'Blumig',
+    beschreibung: [
+      'Honig trägt den Duft der flüchtigen Blütenaromen weiter.',
+      'Sein Hauptaroma ist blumig, kann aber auch fruchtig, heuartig, würzig wie Zimt, krautig, karamellig, wachsartig oder buttrig sein. Merriam-Websters Wörterbuch definiert Honig, den von Bienen erzeugten Stoff, als „ein süßes, zähflüssiges Material, gewonnen aus dem Nektar von Blüten im Honigsack verschiedener Bienenarten“.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Geschichte',
+        text: [
+          'Die Westliche Honigbiene Apis mellifera stammt ursprünglich aus Asien oder Afrika, hat sich aber weit über ihr natürliches Verbreitungsgebiet hinaus ausgebreitet und lebt heute auf jedem Kontinent außer der Antarktis. Menschen betreiben seit Tausenden von Jahren weltweit Bienenzucht, um Honig zu gewinnen. Honig wurde im alten Ägypten, in Griechenland, Rom und China verzehrt und diente auch als Heilmittel gegen Krankheiten sowie zur Wundheilung.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Bienen sammeln Pollen und Nektar von Blüten und wandeln sie in Honig um, den sie in ihren Waben lagern, um die wachsende Brut des Volkes zu ernähren. In freier Wildbahn haben Honigbienen meist ein großes Streifgebiet und sammeln Pollen von vielen verschiedenen Pflanzenarten. Je nachdem, welche Blüten besucht wurden, kann der Honig ganz unterschiedliche flüchtige Aromen tragen. Bekannte, im Handel erhältliche Honigsorten sind unter anderem Orangenblüten-, Manuka-, Akazien-, Kastanien- und Lindenhonig. Honig galt lange als Speise der Götter, und seine Herstellung, sein Duft und seine Eigenschaften werden seit Jahrtausenden mit Romantik, Genuss und Luxus in Verbindung gebracht.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der Gehalt des Honigs hängt eng mit seiner botanischen Herkunft und der Region zusammen, aus der er stammt. Flüchtige Verbindungen stammen im Allgemeinen aus der Pflanze selbst, aus der Umwandlung pflanzlicher Stoffe durch den Stoffwechsel der Biene, aus Erhitzung oder Handhabung bei Verarbeitung und Lagerung, oder aus mikrobieller beziehungsweise umweltbedingter Kontamination. Honig besteht überwiegend aus Fruktose und Glukose, dazu weitere Kohlenhydrate, Wasser, Enzyme, Amino- und organische Säuren, Mineralien, Wachse und Aromastoffe. Mehr als 300 flüchtige Verbindungen wurden in Honigen aus aller Welt identifiziert. Je nach Honig kann der charakteristische Duft von einer einzigen dominanten Aromaverbindung stammen oder aus dem Zusammenspiel vieler Verbindungen entstehen.',
+          'Zu den wichtigsten chemischen Gruppen, die zum Honigaroma beitragen, zählen Alkohole, Säuren, Ketone, Kohlenwasserstoffe, Ester, Aldehyde, Furane, Terpene und Lactone. Phenylacetaldehyd, ein Aldehyd, hat den charakteristischen honigartigen Duft, der von der Duftstoffindustrie genutzt wird. Weitere bemerkenswerte Verbindungen in Honig sind Benzaldehyd (süß, mandelartig), Nonanal und Nonanol (nach Zitrus, blumig und grün riechend), Linalool (ähnlich blumig und zitrisch) sowie Furfural (fruchtig, nach Kirsche riechend). Honig spiegelt die Blütennoten der Pflanzen wider, aus denen er entstanden ist.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Honig als „eine süße, hellbraune, leicht würzige Note, die man mit Honig verbindet“. Viele verschiedene Kaffees können Honignoten zeigen, was zweifellos mit der Zahl und Vielfalt der chemischen Verbindungen zusammenhängt, die zum Honig selbst beitragen. Honigartige Aromen können im grünen Samen, während der Nachernte-Verarbeitung oder beim Rösten entstehen, je nachdem, um welche Verbindung es sich handelt.',
+          'Viele Kaffees mit ausgeprägten blumigen Noten haben das Potenzial, eine honigartige Süße zu zeigen. Das kommt bei Arabica häufiger vor als bei Robusta. Dieses Potenzial hängt stark mit der menschlichen Assoziation zwischen Honig und Blumen zusammen, die je nach individueller Erinnerung unterschiedlich ausfällt.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Äthiopische Kaffees werden oft für ihre von Natur aus blumigen Bouquets erkannt, vermutlich wegen der großen genetischen Vielfalt in diesem Ursprungszentrum der Arabica-Pflanze. Phenylethylalkohol hat einen süßen, blumigen, honigartigen Duft und gilt als wichtige Verbindung im äthiopischen Kaffee. Phenylacetaldehyd und Benzolessigsäure, beide mit Honigaromen assoziiert, wurden ebenfalls in äthiopischem Kaffee nachgewiesen. Das Keton β-Damascenon und 2-Phenylethanol haben blumige Honignoten und wurden sowohl in grünem als auch in geröstetem Kaffee gefunden.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Es wird vermutet, dass bestimmte Schritte der Nachernte-Verarbeitung das Honigaroma im Kaffee beeinflussen. Während der Fermentation nimmt die Honig-Eigenschaft mit der Beimpfung von Saccharomyces-cerevisiae-Hefen zu. Phenylessigsäure, ein blumig-honigartiges Aroma, wird mit dieser Hefe in Verbindung gebracht.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Schließlich können Honignoten auch während des Röstens entstehen. Das Aldehyd Phenylacetaldehyd riecht im Kaffee nach Honig und Blüten und kann je nach Zeit- und Temperaturverlauf beim Rösten sowohl entstehen als auch wieder verloren gehen. Es bildet sich während der Strecker-Abbaureaktion, einem Teil der Maillard-Reaktionen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 28, original: 'Heuartig' },
+      { nummer: 4, original: 'Jasmin' },
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 25, original: 'Frisches Gras' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 43, original: 'Butter' },
+    ],
+  },
+
+  {
+    nummer: 2,
+    name: 'Schwarzer Tee',
+    nameOriginal: 'Black tea',
+    kategorieId: 'blumig',
+    kategorieLabel: 'Blumig',
+    beschreibung: [
+      'Schwarzer Tee hat ein süßes, erdiges Aroma, das Honig-, Malz-, Kartoffel-, Blüten- und Fruchtnoten enthalten kann. Je nach Tee kann er krautig oder rauchig sein.',
+      'Geschmack und Aroma von Tee kommen von der Pflanze selbst, von der Verarbeitung und von Qualität und Alter des Tees. Das Teearoma wird stark von der Teesorte geprägt. Rollen, Trocknen und Oxidation erlauben eine spontane Fermentation der Blätter, wodurch der kräftige Geschmack und das charakteristische Aroma entstehen. Manche Schwarztees werden so weit getrocknet, dass es fast einer Röstung gleichkommt — das bringt zusätzliche Aromen hervor.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Schwarzer Tee besteht aus den verarbeiteten Blättern des Strauchs Camellia sinensis.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Schwarzer Tee stammt ursprünglich aus China und gilt, nach Wasser, oft als das weltweit meistgetrunkene Getränk.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'In schwarzem Tee wurden Hunderte flüchtiger Verbindungen identifiziert, dominiert von Estern und Alkoholen. Manche entstehen durch Oxidation und enzymatische Umwandlung bei der Teeblattverarbeitung, andere durch Maillard-Reaktionen. Aldehyde wie Hexanal bilden die grünen, frischen Noten. Alkohole tragen blumige und zitrische Noten bei. Geraniol — benannt nach der Blüte der Geranie — hat einen warmen, rosenartigen Duft. Linalool wird oft als lavendelartig beschrieben, kann aber auch zitrisch wirken. Nerolidol schließlich ist ein Alkohol, der schwarzem Tee eine holzig-rindenartige Note verleiht. Blumige Ketone, darunter Damascenon und Ionon, tragen zu den rosen- und blumenartigen, tabakähnlichen Aromen bei. Bei einer derart komplexen Mischung aus Genetik, Verarbeitung und kulturellen Praktiken lässt sich die Vielfalt und Menge im schwarzen Tee nicht auf wenige Verbindungen reduzieren. Wie Kaffee ist auch Tee eine ganze Welt für sich — und eine sehr geschätzte.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt schwarzen Tee als „eine etwas braune, muffige Note nach getrockneter Pflanze und getrockneter Rinde, die man mit der Oxidation von Teeblättern verbindet“. Manche Kaffeeverkoster beschreiben teeartig eher als Textur denn als Aroma. Vielleicht ist es ebenso vereinfachend, ein Kaffeearoma als schwarzen Tee zu beschreiben, wie eine Kaffeenote im Wein zu finden.',
+        ],
+      },
+      {
+        titel: 'Pflanze und Nachernte-Verarbeitung',
+        text: [
+          'Eine große Kombination von Chemie führt vermutlich zur Wahrnehmung von schwarzem Tee im Kaffee. Viele der wichtigsten Verbindungsgruppen im schwarzen Tee kommen auch im Kaffee vor. Wie beim Tee finden sich grüne und holzig-krautige Noten im grünen Kaffee. Fruchtige und blumige Ketone, Alkohole und Ester sind oft Produkte der Fermentation während der Nachernte-Verarbeitung des Kaffees. Linalool wurde in vielen Arabica-Kaffees nachgewiesen, sowohl grün als auch geröstet, und wird als holzig, blumig, sogar zitrisch beschrieben. Beta-Damascenon, eine holzig-blumige Note, wurde in erheblichen Mengen in Robusta-Kaffees festgestellt.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Malzige, süße und karamellisierte Noten, wie sie im Tee vorkommen, können in beiden Produkten durch Maillard-Reaktionen entstehen. Die genaue Kombination davon und ihre Assoziation mit schwarzem Tee ist vermutlich ein Produkt der jeweils eigenen Erfahrung. Kaffees vom afrikanischen Kontinent, reich an fruchtigen Noten, etwa aus Kenia oder Burundi, können einen kräftigen Schwarztee-Duft zeigen. Andere blütenbetonte Kaffees, etwa äthiopischer Yirgacheffe, können ebenfalls einen Schwarztee-Charakter annehmen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 1, original: 'Honig' },
+      { nummer: 3, original: 'Rose' },
+      { nummer: 60, original: 'Vanille' },
+      { nummer: 45, original: 'Malz' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 42, original: 'Rauchig' },
+      { nummer: 18, original: 'Orange' },
+    ],
+  },
+
+  {
+    nummer: 3,
+    name: 'Rose',
+    nameOriginal: 'Rose',
+    kategorieId: 'blumig',
+    kategorieLabel: 'Blumig',
+    beschreibung: [
+      'Der Duft der Rose wird oft als weich und blumig beschrieben. Rosen sind süß, moschusartig, holzig und blumig mit einer grünen Frische. Sie können scharf oder harzig, würzig, fruchtig oder waldig wirken.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Es gibt verschiedene Arten der Gattung Rosa in der Familie der Rosengewächse. Innerhalb der etwa 100 Rosa-Arten gibt es bis zu 20.000 Kultursorten.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Rose, oft die Königin der Blumenwelt genannt, ist die Blüte einer verholzenden, langlebigen, ausdauernden Pflanze. Die wilden Blüten haben typischerweise fünf Blütenblätter in Rosa, Rot oder Weiß, mit einigen Ausnahmen. Rosen bilden Samenkörper, sogenannte Hagebutten, die eine ausgezeichnete Vitamin-C-Quelle sind.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Die Vorfahren der Pflanze, die wir heute als Rose kennen, stammen aus China, wo Menschen schon vor rund 5.000 Jahren begannen, Gartenrosen zu kultivieren. Die Blüte der Rosa-Pflanze verströmt einen markanten Duft, und das Rosenbukett gehört zu den bekanntesten blumigen Gerüchen überhaupt. Seit der Antike wird aus Rosen Rosenöl oder Rosenwasser gewonnen, um ihren Duft festzuhalten, und sie dienten kosmetischen, kulinarischen, medizinischen und religiösen Zwecken.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der wiedererkennbare Rosenduft entsteht überwiegend durch monoterpene Alkohole wie Geraniol, Citronellol, Eugenol, Linalool sowie das Benzenoid Phenylethanol. Von diesen sind Geraniol, Linalool und Phenylethanol vor allem blumig, Citronellol verströmt Zitrusnoten, und Eugenol trägt eine nelkenartige Würze bei. Mehr als 400 Verbindungen tragen insgesamt zum Rosenaroma bei, doch 2-Phenylethanol gilt als die häufigste zugrunde liegende flüchtige Verbindung, die für den unverwechselbaren Rosenduft verantwortlich ist.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Rose als „einen süßen, weichen, leicht muffig-staubigen Blütenduft, den man mit frischen oder getrockneten Rosen verbindet“. Rose ist eine besondere blumige Qualität, die angenehm wirkt, mit einer begleitenden Säure, die an eine Hagebutte erinnern kann.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Man weiß, dass diese Verbindungen sich beim Reifen der Frucht bilden beziehungsweise vermehren, weshalb sie möglicherweise auch schon im Samen bei der Ernte vorhanden sind. Linalool und Geraniol wurden in Kaffees unterschiedlichster Herkunft nachgewiesen. Terpene gelten bekanntermaßen als bedeutender Beitrag zur Kaffeequalität. Monoterpene sind flüchtige Verbindungen, die von der Blüte über die Frucht bis zum Samen des Kaffees vorkommen und den Röstprozess überstehen.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Während der Nachernte-Verarbeitung des Kaffees tragen Mikroorganismen als Fermentations-Stoffwechselprodukte weitere dieser erwünschten Aromastoffe bei. Monoterpen-Alkohole sind auch bekannte Produkte von Hefen, darunter die Gattung Saccharomyces, die bei der Kaffee-Nachernte-Verarbeitung verbreitet ist. Die Zugabe dieser Hefen erhöht nachweislich direkt die Menge an 2-Phenylethylacetat, dem Rosenduftstoff. Die Hefearten Pichia und Kloeckera wurden gezielt dafür identifiziert, 2-Phenylethanol zu bilden, die Verbindung mit dem eindeutigsten Rosenaroma.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Nach dem Rösten des Kaffees bleibt ein Großteil dieser Aromastoffe erhalten und übersteht auch den Aufguss. Diese Verbindungen, die blumige und Rosennoten beisteuern, können die Qualität des Aufgusses erheblich beeinflussen und sind in vielen Märkten gefragt.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 4, original: 'Jasmin' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 34, original: 'Holzig' },
+    ],
+  },
+
+  {
+    nummer: 4,
+    name: 'Jasmin',
+    nameOriginal: 'Jasmine',
+    kategorieId: 'blumig',
+    kategorieLabel: 'Blumig',
+    beschreibung: [
+      'Der Duft von Jasmin ist einzigartig und unverwechselbar, mit einem reichen, blumigen Aroma, das süß, würzig und moschusartig ist.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Die Gattung Jasminum gehört zur Familie der Ölbaumgewächse (Oleaceae) und umfasst viele Arten, darunter J. officinale, den gewöhnlichen Jasmin.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Diese Gattung ist für ihre süßen, zarten Blüten bekannt, die einen betörenden Duft verströmen. Die Blüten sind typischerweise weiß und fünfblättrig. Die Pflanze ist eine kräftig wachsende Kletterpflanze. Der blumige Duft wird bekanntermaßen stärker, wenn die Pflanze in eine Umgebung kommt, in der die Temperatur nachts absinkt.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Wo genau Jasmin ursprünglich herstammt, ist unbekannt — die Pflanze wird aber seit langer Zeit in ganz Asien genutzt. Jasminöl dient seit Jahrhunderten als Parfüm und für medizinische Zwecke. Die Art J. sambac wird traditionell verwendet, um Jasmintee in China zu aromatisieren, und J. grandiflorum sowie J. sambac werden seit Jahrhunderten in Indien genutzt.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Die Blüte der Jasminpflanze verströmt eine Mischung aus Alkoholen, Aldehyden, Ketonen, Estern, Phenolen und Alkenen. Benzylalkohol trägt wesentlich zum frischen, blumigen Duft bei. Linalool sorgt für die typische blumig-würzige Note. Indol macht bis zu 10 Prozent des typischen Jasminaromas aus und steuert die krautige, „schmutzige“ Blütennote bei, die zusätzlich von Kresolen beeinflusst wird. Der Duft dieser Blüte ist so eigen und wiedererkennbar, dass Verbindungen wie Jasmon und Jasminaldehyd bekannt sind und in der Duftstoffindustrie gezielt genutzt werden, um den charakteristischen Duft nachzubilden. Interessanterweise stammt die Verbindung Jasminaldehyd dabei aus Rizinusöl, nicht aus der Pflanze selbst.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Jasmin als „eine intensive, leicht durchdringende, süße, blumige Note mit einem unterliegenden grünen, muffig-staubigen Zug“. Diese moschusartige Blütennote wird oft mit den Blüten der Kaffeepflanze selbst verglichen, die ein ähnliches Aromabukett tragen. Jasmin-Duftstoffe wurden sowohl in grünem als auch in geröstetem Kaffee nachgewiesen. Methyl-2-phenylacetat ist eine wichtige, im Kaffee identifizierte Verbindung, die für eine Jasminnote verantwortlich ist.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Blütennoten, besonders Jasmin, sind in vielen Märkten äußerst begehrt. Blumige Aromen deuten meist auf einen zarten oder weichen Kaffee hin. Ein äthiopischer Yirgacheffe ist ein klassisches Beispiel für einen Kaffee mit ausgeprägter Jasminnote, oft verbunden mit ähnlichen blumigen Noten. Andere blumige Kaffees, etwa Gesha aus Panama, Guatemala oder Kolumbien, werden häufig mit dieser Art von Blütenduft beschrieben. Andere Kaffees, etwa aus Kenia, Burundi und Ruanda, können fruchtig sein und blumige Noten wie Jasmin anklingen lassen. Manche krautigen Kaffees mit moschusartig-würzigen Noten schließlich können ebenfalls an Jasmin erinnern.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 1, original: 'Honig' },
+      { nummer: 3, original: 'Rose' },
+      { nummer: 2, original: 'Schwarzer Tee' },
+      { nummer: 60, original: 'Vanille' },
+    ],
+  },
+
+  {
+    nummer: 5,
+    name: 'Himbeere',
+    nameOriginal: 'Raspberry',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Himbeer-Aroma ist weich, süß und saftig, hell, blumig und herb-säuerlich. Es findet sich häufig in Desserts, Eis, Konfitüren und Gelees.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die aggregierten Beeren des Strauchs Rubus idaeus, ein Mitglied der Familie der Rosengewächse.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die ausdauernde Pflanze bildet dornige Ruten, die zweijährig Früchte tragen. Im Anbau werden die Ruten jedes Jahr zurückgeschnitten, damit die Pflanze erneut trägt. Die Ruten können mehr als 2 Meter hoch werden. Die Pflanze hat weiße oder rosa, fünfblättrige Blüten und trägt saftige Früchte. Die Frucht wird meist Beere genannt, ist aber genau genommen ein aggregiertes Steinfruchtgebilde aus vielen kleinen Steinfrüchtchen, von denen jede einen einzigen Samen enthält. Eine Himbeere kann aus bis zu 100 solcher Steinfrüchtchen bestehen und bis zu 5 Gramm wiegen. Ein Strauch kann Hunderte Beeren im Jahr liefern. Es ist eine flüchtige Frucht mit kurzer Saison: Einmal gepflückt, hält eine Beere nur etwa einen Tag, bevor sie Schimmel und anderen hungrigen Mikroben zum Opfer fällt.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das Duftprofil der roten Himbeere wird von Norisoprenoiden, Lactonen, Carbonylverbindungen, Estern und Alkoholen dominiert. Zu den am häufigsten nachgewiesenen Verbindungen zählen Ketone wie Ionone (die nach Rose und Veilchen riechen) und das sogenannte Himbeerketon. Dem Namen nach gilt Himbeerketon offensichtlich als die charakteristische Verbindung des Himbeeraromas. Das Aldehyd Benzaldehyd riecht nussig-fruchtig, ähnlich wie Mandel. Hexanal riecht grasig, grün und frisch. Die Terpene α-Pinen, β-Caryophyllen, β-Myrcen, Linalool, Geraniol und trans-β-Ocimen steuern holzige, blumige und würzige Noten bei. Zu den Estern zählen Ethylacetat und Ethylheptanoat, dazu der Alkohol 2-Methylbutanol.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Himbeere als „die leicht süße, fruchtige, blumige, leicht saure und muffige Note, die man mit Himbeeren verbindet“. Es gibt eine gute Überschneidung zwischen den Aldehyden, Ketonen, Alkoholen und Estern, die den Duft der Himbeere ausmachen, und denen im Kaffee. All diese Verbindungsarten lassen sich leicht in Kaffees aus aller Welt nachweisen — vermutlich ein Ergebnis von Genetik, Umwelt und menschlichem Einfluss auf diese Kaffees.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Traditionelle Kaffee-Aromaprofile kannten solch helle, rote Fruchtnoten nicht, bis sich der natural-Prozess weiterentwickelte. Seit den frühen 2000er-Jahren haben Qualität und Akzeptanz von naturals den Markt vorangetrieben, und mit ihnen kam eine Welle heller, saftiger Fruchtnoten. Himbeerketon selbst wurde im Kaffee identifiziert, und es wurde vermutet, dass es zu einem insgesamt fruchtigen Charakter beiträgt, besonders bei äthiopischem Kaffee. Furanon, dem eine Himbeernote zugeschrieben wird, wurde in fertig aufgegossenem Kaffee nachgewiesen, die Herkunft dieser Verbindung ist aber unbekannt. Das genaue Rezept dafür bleibt bislang offen — jeder Prozess, der die Fermentation dazu bringt, fruchtige Eigenschaften zu verstärken, hat das Potenzial, eine Himbeernote zu erzeugen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 8, original: 'Erdbeere' },
+      { nummer: 6, original: 'Blaubeere' },
+      { nummer: 3, original: 'Rose' },
+    ],
+  },
+
+  {
+    nummer: 6,
+    name: 'Blaubeere',
+    nameOriginal: 'Blueberry',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Der Duft dieser dunkelblauen Beeren ist süß, sauer und wird oft als teeartig und blumig beschrieben.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Eine Frucht aus einer Untergruppe kultivierter Pflanzen der Gattung Vaccinium. Diese Gattung umfasst Hunderte Arten, heimisch von den Tropen bis in die Arktis, darunter Blaubeeren, Preiselbeeren, Moosbeeren und andere. Die Sektion Vaccinium sect. Cyanococcus ist die als Blaubeeren bekannte Gruppe, mit Hochbusch- und Niedrigbuschtypen.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Blaubeere ist ein weit verbreiteter, ausdauernder Strauch. Ursprünglich war die Gattung überwiegend zirkumpolar verbreitet, heimisch in Nordamerika. Sie wird meist in halbwildem Anbau kultiviert. Die Hochbusch-Typen wurden im 20. Jahrhundert vom US-Landwirtschaftsministerium (USDA) gezüchtet.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'In Blaubeeren wurden bis zu 200 flüchtige organische Verbindungen nachgewiesen, die alle zum Aroma beitragen können. 1937 beschrieb Frederick Colville, der erste dokumentierte Blaubeer-Züchter, frühe Sorten als „köstlich und aromatisch im Geschmack“. Die chemische Zusammensetzung des Blaubeeraromas ist komplex und umfasst Terpene, Ester, Alkohole und Aldehyde, die typischerweise fruchtige, blumige Noten zu Lebensmitteln und Getränken beitragen. Linalool wurde in vielen Studien als bedeutender Beitrag zum besonderen blumigen Aroma der Blaubeere identifiziert. Forscher haben eine Gruppe von acht terpenoiden, flüchtigen Stoffen identifiziert (p-Cymol, Myrtenal, Linalool, L-Carvenol, Geranylaceton, Geranylacetat, D-Limonen und β-Myrcen), die die wichtigsten chemischen Verbindungen dieses Aromas ausmachen.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Blaubeere als „die leicht dunkle, fruchtige, süße, leicht saure, muffig-staubige, blumige Note, die man mit Blaubeeren verbindet“. Wegen ihrer ausgeprägten, hochintensiven Fruchtnote in der Tasse ist Blaubeere oft ein Aroma, das auch Neulinge in der Kaffeewelt sofort wiedererkennen. Das macht es leicht erkennbar und wertvoll innerhalb der komplexen Aromamischung des Kaffees.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Kultivierte Blaubeersorten haben ähnliche Noten und Intensitäten wie jene im Kaffeearoma. Insbesondere Blaubeere gehört zu den unverwechselbarsten Aromen, die in äthiopischen Kaffees vorkommen. Charakteristisch für die Region Harrar (Oromia) in Äthiopien, kann diese Note auch in anderen äthiopischen Kaffees oder weltweit angebauten äthiopischen Sorten auftreten. Dieses Aroma ist Bestandteil des weinigen Charakters, der für das typische Mokka-Profil steht. Linalool, ebenfalls in Blaubeeren enthalten, gilt als eine der wichtigsten flüchtigen Aromaverbindungen im Harrar-Kaffee.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Traditionell werden Harrar-Kaffees wegen des Klimas in der Region natural aufbereitet — der Kaffee wächst und trocknet dort typischerweise in voller Sonne. Dunkle Fruchtnoten wie Blaubeere sind bei natural aufbereiteten Kaffees typisch, wegen der Vielfalt der Fermentationsreaktionen, die zur Chemie so verarbeiteter Kaffees beitragen und zu einer Bandbreite an fruchtigen und weinigen Aromen führen können.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 2, original: 'Schwarzer Tee' },
+      { nummer: 5, original: 'Himbeere' },
+    ],
+  },
+
+  {
+    nummer: 7,
+    name: 'Schwarze Johannisbeere',
+    nameOriginal: 'Black Currant',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Schwarze Johannisbeeren haben ein scharfes, herbes, moschusartig-schwefeliges dunkles Fruchtaroma, das etwas an Trauben erinnern kann.',
+      'Diese Beeren werden häufig zu Konfitüren, Sirupen und Likören verarbeitet. Manchmal stecken sie auch in der Füllung von Gebäck wie Mince Pies. Der Duft kann an eine gehaltvolle Flasche Pinot Noir oder Burgunder erinnern.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die Frucht des Strauchs Ribes nigrum, auch als Cassis bekannt.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Ein sommergrüner Strauch, weit verbreitet in Europa und Asien angebaut. Der Strauch hat kurze Triebe und behaarte, mit Drüsen besetzte Blätter. Die Sträucher werden etwa 1,5 Meter hoch und bilden mehrere Stämme. Aus den Blüten entstehen lange, herabhängende Fruchtstände, die Johannisbeeren genannt werden. Die schwarze, runde Frucht ist botanisch eine echte Beere. Sie ist reich an Vitamin C, Anthocyanen und Antioxidantien.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Während des Zweiten Weltkriegs ermutigte die britische Regierung Hobbygärtner, wegen ihres Vitamin-C-Gehalts schwarze Johannisbeeren anzupflanzen und zu essen. In den USA war die Frucht bis ins frühe 20. Jahrhundert beliebt, wurde dann aber für die Verbreitung des Weymouthskiefern-Blasenrosts verantwortlich gemacht und landesweit verboten. Das Bundesverbot wurde 1966 aufgehoben, blieb aber in vielen Bundesstaaten bis in die frühen 2000er-Jahre in Kraft.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das unverwechselbare Bukett der schwarzen Johannisbeere ist eine Mischung aus fruchtigen Estern, schwefelhaltigen Verbindungen wie Thiolen sowie holzig-grünen Terpenen. Wichtige fruchtige Ester sind Ethylbutyrat, Hexylacetat und Methylbenzoat. Das Aldehyd Hexanal steuert den grünen, grasigen Charakter bei. Pinen, Terpineol und 3-Caren tragen zur holzigen Note bei. Die eigentlichen Stars sind aber die Thiole, die den moschusartig-fruchtigen Ton liefern, den Fans der Frucht so schätzen. Dazu zählen 1-Methoxy-3-methyl-3-mercaptobutan, 2-Methoxy-4-methyl-4-butanthiol und 4-Thio-4-methylpentan-2-on, alle mit starkem Eigengeruch. Manche dieser schwefelhaltigen Verbindungen gelten als „katzenartig“, wegen ihrer Ähnlichkeit zum Geruch von Katzenurin.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Die häufigsten Kaffees, die mit einer Schwarze-Johannisbeere-Note in Verbindung gebracht werden, stammen aus den ostafrikanischen Anbauregionen. Kenianische Kaffees werden traditionell für ihre saftigen, hellen Johannisbeer-Noten geschätzt. Kaffees aus Ruanda, Burundi, Tansania und Äthiopien können ebenfalls Aromen dunkler Beeren zeigen, die sich der schwarzen Johannisbeere zuordnen lassen. Kaffees mit dunklen Fruchtnoten, etwa aus dem Jemen, können ebenfalls eine Johannisbeer-Note zeigen, das ist aber nicht garantiert.',
+          'Fruchtige, schwefelhaltige Thiole ähnlich denen in schwarzen Johannisbeeren wurden auch im Kaffee identifiziert. So können etwa 2,4-Dimethyloxazol und 1-Butanol in geringer Konzentration moschusartig und johannisbeerartig wirken. Das durchdringende 3-Mercapto-3-methylbutylformat wird als katzenartig und johannisbeerartig beschrieben. Diese Verbindungen können auch eine grüne, johannisbeerartige Note verleihen — 3-Mercapto-3-methylbutylformat wurde in geröstetem Kaffee nachgewiesen.',
+          'Zwar wurde gezeigt, dass manche dieser schwefelhaltigen Verbindungen bei dunkler Röstung verbrennen, doch sie sind überhaupt nur durch ein komplexes Netz aus Vorstufen vorhanden, das bei der Kaffeegenetik beginnt, von der Umwelt beeinflusst und während der Nachernte-Verarbeitung umgewandelt wird. Das besondere Aroma der schwarzen Johannisbeere ist in Kaffees aus unterschiedlichsten Anbauregionen möglich (auch außerhalb Afrikas), verarbeitet in unterschiedlichen Stilen (gewaschen, eingeweicht oder nicht, natural) und passend geröstet. Das gehört zu jener Magie — oder jenem Unbekannten — des Kaffees, die uns immer wieder entgeht und die Suche danach am Laufen hält.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 22, original: 'Weinig' },
+      { nummer: 10, original: 'Backpflaume' },
+    ],
+  },
+
+  {
+    nummer: 8,
+    name: 'Erdbeere',
+    nameOriginal: 'Strawberry',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Das Erdbeer-Aroma ist süß, herb, blumig und wird oft als weich beschrieben.',
+      'Diese vielgeliebte Frucht wird frisch genossen und in unzähligen Gebäcken und Desserts verarbeitet. Ihr Duft kann an Eiscreme oder frische Sahne erinnern, an eine Sommertorte, ein Trifle oder eine Konfitüre. Der Anbau der Erdbeere begann im 18. Jahrhundert in Europa, wilde Erdbeeren wurden aber schon Jahrhunderte zuvor genossen. In vielen Anbaugebieten ist die Saison kurz und die Frucht empfindlich und flüchtig — das Aroma verändert sich während der Nachreifung nach der Ernte dramatisch, weshalb im kommerziellen Umfeld mit der Nachernte-Verarbeitung besonders sorgfältig umgegangen werden muss.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Die Frucht der Gattung Fragaria. Es gibt weltweit etwa 23 Arten wilder und kultivierter Erdbeeren. Die häufigste Wildart ist F. vesca, die meistangebaute Gartenerdbeere ist die Hybride F. × ananassa.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Erdbeere ist eine reizvolle, niedrig wachsende, krautige Pflanze. Ihre behaarten Blätter sind zusammengesetzt aus drei gesägten Blättchen. Die süßen Blüten sind zart, weiß und blühen in kleinen Büscheln. Die Frucht der Erdbeere ist streng genommen gar keine Beere, sondern eine sogenannte Sammelnussfrucht. Der rote, fleischige Teil, den wir essen, ist eigentlich der vergrößerte Blütenboden, der zahlreiche Nüsschen trägt — das sind die „Samen“, die man außen sieht. Ein solches Nüsschen ist die eigentliche Frucht der Erdbeere und enthält jeweils einen einzigen Embryo. Die Erdbeere ist heimisch in den gemäßigten Zonen der Nordhalbkugel und wird heute weltweit angebaut.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Aroma und Geschmack der Erdbeere werden von einer großen Zahl flüchtiger Verbindungen bestimmt, deren Bildung von vielen Faktoren abhängt: Sorte, Reifegrad und Nachernte-Behandlung. Hunderte Duftstoffe sind daran beteiligt, darunter Ester, Aldehyde, Alkohole, Terpene, Ketone, Säuren und Lactone. Zu den wichtigen kennzeichnenden flüchtigen Verbindungen der Erdbeere zählen Ester wie Methylbutanoat, Ethylbutanoat, Ethylhexanoat und 2-Methylbutanoat. Diese fruchtigen Verbindungen sind auch Teil der Banane- und Mango-Aromen sowie anderer Früchte. Süße, karamellisierte Aromen aus Furanonen spielen ebenfalls eine große Rolle, darunter 2,5-Dimethyl-4-hydroxy-3(2H)-furanon und 4-Methoxy-2,5-dimethyl-3(2H)-furanon. Terpenoide wie Linalool und Nerolidol steuern holzig-blumige Düfte bei. Die Komplexität dieses Aromas entspricht zweifellos seinem eloquenten Bukett, das die Welt verzaubert hat.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Erdbeere als „die etwas süße, leicht saure, blumige, fruchtige, oft weinige Note, die man mit Erdbeeren verbindet“. Ein heller, intensiv fruchtiger Kaffee mit Erdbeernoten ist ein besonderes, seltenes sensorisches Erlebnis. Wie bei vielen kräftig blumigen und fruchtigen Kaffees lässt sich erwarten, dass diese Aromen entweder ein Produkt von Pflanze und Umwelt oder der Nachernte-Verarbeitung sind (oder beides). Eine Erdbeernote im Kaffee wird vermutlich sowohl von flüchtigen Säuren als auch vom vollständigen Zusammenspiel fruchtiger und blumiger Verbindungen beeinflusst, die zusammen eine der roten Beere ähnliche Mischung ergeben.',
+        ],
+      },
+      {
+        titel: 'Pflanze',
+        text: [
+          'Es gibt bestimmte Kaffeesorten und -regionen, bei denen man eher blumige und fruchtige Kaffees erwartet. Gesha und äthiopische wilde (Heirloom-)Sorten werden manchmal mit Erdbeernoten beschrieben. Wie genau diese schwer fassbare Wechselwirkung zwischen Genetik und Umwelt zustande kommt, ist unbekannt — man ist aber dankbar dafür. Auch viele Kaffees aus Mittel- und Südamerika können Erdbeere hervorrufen, was vermutlich eher mit Verarbeitungsentscheidungen zu tun hat.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Traditionell sind natural aufbereitete Kaffees die fruchtigsten am Markt und deshalb auch am ehesten mit Erdbeer-Duft und -Aroma verbunden. Kaffees, die mit anaerober Fermentation verarbeitet wurden, können Erdbeer-Düfte zeigen. Grundsätzlich lässt sich jeder Kaffee mit Nachernte-Verarbeitungsmethoden in Richtung blumig und fruchtig treiben, doch welche genaue Mischung flüchtiger Verbindungen sich am Ende zu Erdbeere summiert, ist noch keine verlässliche Wissenschaft. Erdbeernoten in einem Kaffee zu erzeugen, ähnelt dem Prozess, mit dem man Ananas-, Beeren- oder Blütennoten anstrebt. Es konsistent hinzubekommen und das Risiko dieser Prozesse zu beherrschen, dürfte aber die eigentliche Herausforderung sein.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 17, original: 'Pfirsich' },
+      { nummer: 12, original: 'Ananas' },
+      { nummer: 13, original: 'Mango' },
+      { nummer: 5, original: 'Himbeere' },
+      { nummer: 3, original: 'Rose' },
+    ],
+  },
+
+  {
+    nummer: 9,
+    name: 'Rosine',
+    nameOriginal: 'Raisin',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Der intensive, süße, dunkel-fruchtige Duft von Rosinen macht sie zu einem beliebten Snack und einer häufigen Zutat in Kuchen, Salaten, süßem Gebäck, Brot und Backwaren.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die getrocknete Frucht verschiedener Sorten der Weinrebe Vitis vinifera.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Sultana, auch als Thompson Seedless bekannt, ist die beliebteste Rebsorte für Rosinen. Diese Rebe wächst meist nur in heißen Klimazonen, weil Hitze sowohl für einen guten Fruchtansatz als auch für das Trocknen der Beeren nötig ist. Die Beeren sind grün, groß und bestehen überwiegend aus wassergefüllten Zellen, geschützt von einer wachsartigen Schale.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Die Geschichte der Rosinenherstellung ist zweifellos eng mit der Weinherstellung verknüpft. Rosinentrauben wurden schon vor 4.000 Jahren in Persien und Ägypten angebaut. Trocknen gehört zu den ältesten Methoden der Lebensmittelkonservierung überhaupt. Nachdem die Spanier Weinreben nach Nordamerika brachten, entstanden ab Mitte des 19. Jahrhunderts im heißen Wüstenklima Kaliforniens die ersten dort produzierten Rosinen.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Zuerst müssen die Trauben geerntet und getrocknet werden. Manchmal bleiben sie dafür an der Rebe hängen, meist aber werden sie geschnitten und auf Tabletts im Feld getrocknet. Rosinen können in der Sonne oder maschinell getrocknet werden. Die Sonnentrocknung dauert je nach Klima nur drei Tage oder bis zu drei Wochen. Ziel ist es, den Feuchtigkeitsgehalt der Rosinen auf unter 13 Prozent zu senken — das hemmt das Wachstum von Mikroorganismen, verlangsamt den enzymatischen Abbau und verhindert, dass der Keimling austreibt. Schnelleres Trocknen führt meist zu höherer Rosinenqualität, weshalb entsprechende Techniken entwickelt wurden. Manche Erzeuger überziehen die Schale trocknender Rosinen mit alkalischen Ölemulsionen oder anderen Beschichtungen, etwa Kaliumcarbonat, um den Wasserverlust durch die Beerenschale zu erleichtern. Nach dem Trocknen müssen die Rosinen gereinigt, entstielt, entkernt und für den Verkauf vorbereitet werden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das Aroma von Rosinen ist eine sensorische Kerneigenschaft, die maßgeblich beeinflusst, wie gern Konsumenten sie mögen. Rund 120 Verbindungen machen ihren Duft aus, darunter Aldehyde, Ester, Säuren, Alkohole, Ketone, Terpene und Furane. Es gibt zwei Hauptwege, wie Rosinen ihr Aroma entwickeln: enzymatisch durch Oxidation, oder durch Maillard-Reaktionen. Das meiste davon geschieht beim Trocknen — je schneller getrocknet wird, desto weniger Bräunung entsteht. Trocknungsverfahren mit hoher Temperatur führen zu mehr gerösteten und fettigen Aromen. Trocknung bei niedrigerer Temperatur dagegen erhält vergleichsweise blumige und grüne Noten.',
+          'Manche Aromen entstehen beim Trocknen durch Lipidoxidation, die über den enzymatischen Abbau ungesättigter Fettsäuren abläuft. Das Enzym Polyphenoloxidase (PPO) ist hauptsächlich dafür verantwortlich, dass sich beim Trocknen der braune Farbstoff verstärkt. Aromastoffe, die dabei entstehen, sind unter anderem aliphatische Säuren und Aldehyde wie Hexanal, Nonanal und 1-Octen-3-ol sowie Heptan-, Octan- und Nonansäure. Diese Verbindungen bringen bekanntermaßen grüne, scharfe und blumige Noten mit sich.',
+          'Beim Trocknen von Rosinen laufen außerdem Maillard-Reaktionen ab. Sie erzeugen eine ganze Reihe von Aromastoffen, die den typischen Rosinenduft aufbauen. Pyrazine und Furane steuern geröstete, fruchtige und blumige Noten bei, etwa 2,3-Butandion, 5-Hydroxymethyl-2-furaldehyd, 2-Ethyl-6-methylpyrazin, Pyrazin, 3-Ethyl-2,5-dimethylpyrazin, Furfural, Benzaldehyd, Benzylalkohol und Phenylacetaldehyd. Diese Verbindungen bringen den süßen, karamellisierten Duft in die Rosine. Diese Reaktionen fallen bei sonnengetrockneten Rosinen deutlich stärker aus als bei maschinell getrockneten.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Rosine als „die konzentrierte, süße, leicht saure, braune, fruchtige, blumige Note, die charakteristisch für getrocknete Trauben ist“. Der Rosinenduft im Kaffee ähnelt dem von Backpflaume und anderem Trockenobst. Man begegnet einem fruchtigen, reichen Rosinenaroma in vielen Kaffeearten. Feine Robustas werden für ihren Rosinencharakter geschätzt, den man sowohl in gewaschenen als auch in natural aufbereiteten Kaffees findet.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Fruchtige, fermentationsbetonte Kaffees, besonders naturals, können Rosine in Duft und Aroma zeigen. Das Kontinuum von Frucht über dunkle Frucht bis hin zu getrockneter, weiniger Frucht ist bekanntermaßen ein Ergebnis von Fermentationsart und -dauer, und Rosine ist in vielen natural aufbereiteten Kaffees deutlich zu erkennen.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Maillard-Reaktionen spielen sowohl bei Kaffee als auch bei Rosinen eine Rolle, weshalb sich manche der braunen, karamellisierten Aromen zweifellos überschneiden. Zusammen mit fruchtigen Noten im Kaffee lässt sich das leicht als Rosine interpretieren. Furane und Furanone entstehen beim Rösten und riechen typischerweise süß, buttrig, brotartig oder nach brauner Würze. Auch Aldehyde bilden sich, darunter Nonanal und Linalool, die zu holzigen und blumigen Aromen beitragen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 10, original: 'Backpflaume' },
+      { nummer: 22, original: 'Weinig' },
+      { nummer: 7, original: 'Schwarze Johannisbeere' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 16, original: 'Apfel' },
+    ],
+  },
+
+  {
+    nummer: 10,
+    name: 'Backpflaume',
+    nameOriginal: 'Prune',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Getrocknete Pflaumen, also Backpflaumen, haben ein fruchtiges, erdiges, tiefes, intensives Aroma, das sogar würzige oder blumige Anklänge haben kann.',
+      'Trotz ihres Aussehens werden sie für ihre reichen, saftigen Fruchtaromen geschätzt und sind eine beliebte Zutat in Konfitüren, Säften und marokkanischen Tajines. Sie werden in Konfekt und Kuchen eingebacken und geben dort eine süße, erdige, würzige Note ab, die die Süße von Desserts ausgleicht. Der Duft kann an Fruchtkonfitüren, einen kräftigen Rotwein oder einen Früchtekuchen erinnern. Er passt gut zu Schokolade.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die getrocknete Frucht der Pflaume, Prunus domestica.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Zwei grundlegend verschiedene Pflaumentypen, für unterschiedliche Zwecke gezüchtet, haben ihren Ursprung in verschiedenen Weltregionen. Prunus domestica, der eurasische Baum, stammt aus der Gegend des Kaukasus, nahe dem Kaspischen Meer. Die Frucht dieser eurasischen Pflaume ist purpurblau-oval mit fleischigem, halb steinlösendem Fruchtfleisch. Die meisten Pflaumen für Backpflaumen sind sogenannte Freestone-Sorten, deren Kern sich leicht aus der Frucht lösen lässt. Die anderen, aus Asien stammenden Pflaumentypen werden für den Frischverzehr gezüchtet und haben eine andere Abstammungslinie, teils verbunden mit Luther Burbank und anderen Züchtern in den USA. Diese sind größer, runder, gelb bis rot bis violett gefärbt und haben einen steinklebenden Kern, der sich schwerer lösen lässt. Pflaumen werden heute in den gemäßigten Zonen beider Erdhalbkugeln angebaut.',
+          'Pflaumen sind eine klimakterische Frucht — sie verderben nach der Reife rasch und sind deshalb schwer zu handhaben. Vor der Entwicklung moderner Transporttechniken lag die Lösung für dieses Lager- und Transportproblem vermutlich im Trocknen — daher die Backpflaume. Die Sorten d\'Agen, Hungarian, Italian und Sugar werden wegen ihres hohen Zuckergehalts für Backpflaumen verwendet, besonders beliebt in Kalifornien und Frankreich.',
+        ],
+      },
+      {
+        titel: 'Herstellung',
+        text: [
+          'Nach der Ernte werden die Pflaumen gewaschen und anschließend in Heißluft-Tunneltrocknern bei 85 bis 90 °C für 18 Stunden getrocknet, wobei ihr Feuchtigkeitsgehalt von etwa 75 auf 20 Prozent sinkt. Die Lufttemperatur ist dabei bewusst schonend gewählt, um extreme Farbveränderungen oder verbrannte Aromen zu vermeiden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Die Chemie der Backpflaume unterscheidet sich stark von der einer Pflaume, die keine solche Verarbeitung durchlaufen hat. Der Trocknungsprozess verändert die in der Frucht vorhandenen flüchtigen Verbindungen ebenso wie die Zuckerarten erheblich. Manche Aromen der frischen Frucht gehen verloren, während neue durch Hitze und Trocknung entstehen.',
+          'Maillard-Reaktionen spielen für das besondere Backpflaumen-Aroma eine große Rolle. Während der Verarbeitung lässt die Hitze Zucker und Aminosäuren miteinander reagieren und Bräunungsstoffe sowie eine ganze Reihe weiterer flüchtiger Verbindungen bilden. Furfural, Methyl-5-furan, Acetylfuran, Acetyl-2-pyrrol und Hydroxymethylfurfural entstehen alle auf diesem Weg. Eine der wirkungsvollsten Aromaverbindungen in Backpflaumen ist Benzaldehyd, das vermutlich während der Verarbeitung durch den Abbau von Amygdalin bei Erhitzung entsteht. Diese fruchtig-nussige Verbindung ist auch charakteristisch für Mandeln. Eine Vielzahl weiterer Verbindungen trägt zum Aroma bei, darunter blumige Noten wie β-Ionon, holziges Linalool und Nonanal, Methylcinnamat sowie γ-Decalacton.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Backpflaume als „den süßen, leicht braunen, blumigen, muffigen und überreifen Eindruck dunkler Frucht, den man mit getrockneten Pflaumen verbindet“. Im Kaffee begegnet einem oft ein warmes, reichhaltiges Backpflaumen-Aroma, in vielen Kaffeearten. Feine Robustas werden für ihren Backpflaumen-Charakter geschätzt, den man sowohl in gewaschenen als auch in natural aufbereiteten Kaffees findet.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Fruchtige, fermentationsbetonte Kaffees, besonders naturals, können Backpflaume in Duft und Aroma zeigen. Das Kontinuum von Frucht über dunkle Frucht bis hin zu getrockneter, weiniger Frucht ist bekanntermaßen ein Ergebnis von Fermentationsart und -dauer, und Backpflaume ist in vielen natural aufbereiteten Kaffees deutlich zu erkennen. Studien haben den natural-Prozess mit erhöhten Pyrazin-Werten im Kaffee in Verbindung gebracht, die nussige, erdige und süße Aromen beitragen können.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Maillard-Reaktionen spielen sowohl bei Kaffee als auch bei Backpflaumen eine Rolle, weshalb sich manche der braunen, karamellisierten Aromen zweifellos überschneiden. Furane und Furanone, die beim Rösten entstehen, überschneiden sich mit dem typischen Backpflaumen-Aroma und riechen süß, buttrig, brotartig oder nach brauner Würze. Auch Aldehyde bilden sich, darunter Nonanal und Linalool, die zu holzigen Aromen beitragen, sowie Benzaldehyd, das mandelartig (und vielleicht auch backpflaumenartig) riecht.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 9, original: 'Rosine' },
+      { nummer: 11, original: 'Kirsche' },
+      { nummer: 7, original: 'Schwarze Johannisbeere' },
+      { nummer: 22, original: 'Weinig' },
+      { nummer: 3, original: 'Rose' },
+    ],
+  },
+
+  {
+    nummer: 11,
+    name: 'Kirsche',
+    nameOriginal: 'Cherry',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Die Süßkirsche ist eine milde, herbe Frucht. Das Aroma ist fruchtig, dunkel und leicht säuerlich, mit Noten von Vanille und Rose.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Die Frucht der Untergattung Cerasus innerhalb der Gattung Prunus. Süßkirschen gehören zur Art Prunus avium. Kirschen zählen zur Familie der Rosengewächse, zu der auch viele andere Früchte gehören, darunter Apfel, Pfirsich, Himbeere, Erdbeere, Birne und Aprikose.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Der Kirschbaum stammt aus der Region zwischen Kaspischem und Schwarzem Meer sowie aus Asien und wächst in gemäßigten Klimazonen. Es gibt im Wesentlichen drei kommerziell angebaute Kirschbaum-Typen: süß, sauer und Kreuzungen aus beiden. Der Baum hat unverwechselbare, ovale, gesägte Blätter mit zugespitzter Spitze. Die Rinde ist glatt, purpurbraun gefärbt, mit auffälligen waagerechten Korkporen. Die Süßkirsche selbst ist eine fleischige Steinfrucht an einem langen Stiel, herzförmig, etwa 2 Zentimeter im Durchmesser. Beliebte Sorten sind „Bing“, „Rainier“ und „Queen Anne“, die Farbe reicht von Gelb bis Dunkelrot.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das Kirscharoma umfasst eine große Zahl organischer Verbindungen, darunter Aldehyde, Alkohole, Ester, Säuren und Terpene. Das typische Kirscharoma wird von Benzaldehyd dominiert, einem süßen, leicht bitteren Mandelduft. Benzylalkohol trägt ebenfalls einen süßen, blumigen Duft bei. Weitere nennenswerte Verbindungen sind Linalool mit blumig-holzigem Duft. Eugenol kann eine leicht würzige, nelkenartige Note beisteuern. Hexanal und Hexanol tragen grüne, krautig-grasige Noten bei, und Phenylacetaldehyd sorgt für eine grüne, süße, blumig-honigartige Note.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Kirsche als „die saure, fruchtige, leicht bittere, blumige Note, die man mit Kirschen verbindet“. Der dunkle, süße Duft der Kirsche ist eine unverwechselbare Note in jedem Kaffee und verleiht ihm eine Tiefe und Süße, die in vielen Märkten geschätzt wird. Ostafrikanische und afrikanische Kaffees aus Äthiopien, Kenia und Burundi zeigen dieses Merkmal häufig. Welche Art von Wechselwirkung zwischen Genetik und Umwelt das verursacht, ist noch nicht geklärt.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Klar ist, dass sich intensive, dunkle Fruchtaromen wie Kirsche mit fruchtbetonten Verarbeitungsmethoden erzeugen lassen. Natural aufbereitete äthiopische Kaffees können ein beerenartiges Aroma besitzen, das auch Kirsche einschließt. Anaerobe Fermentationsmethoden, gefolgt von einer Trocknungstechnik mit Frucht auf dem Pergament, sind dafür am wahrscheinlichsten verantwortlich. Milchsäurebakterien erhöhen nachweislich die Menge an Benzaldehyd und Phenylacetaldehyd im Kaffee — beide finden sich in vielen Verarbeitungsarten, einschließlich gewaschener und anaerob fermentierter Kaffees.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 17, original: 'Pfirsich' },
+      { nummer: 16, original: 'Apfel' },
+      { nummer: 5, original: 'Himbeere' },
+      { nummer: 3, original: 'Rose' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 53, original: 'Mandel' },
+    ],
+  },
+
+  {
+    nummer: 12,
+    name: 'Ananas',
+    nameOriginal: 'Pineapple',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Ananas hat ein süßes, saftiges, moschusartig-fruchtiges Aroma mit Noten von Honig oder sogar Kokosnuss.',
+      'Ananas hat ein ausgesprochen apfelartiges Aroma, das sowohl süß als auch sauer wirkt, mit kräftiger Fruchtnote, Vanille, Gewürznelke und karamellisierter Süße. Reif entwickelt sie eine alkoholisch-sherryartige Qualität.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die große, aromatische Frucht der Pflanze Ananas comosus.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Ananas ist eine niedrig wachsende, tropische Pflanze aus der Familie der Bromeliengewächse. Sie ist eine ausdauernde, einkeimblättrige Pflanze und wird 1 bis 2 Meter hoch. Ihre stacheligen, dicken, langen Blätter bilden eine dichte Rosette, aus der die große, fleischige Frucht mit einer Blattkrone obenauf wächst. Die Pflanze bildet einen Blütenstand, bei dem jede Blüte eine eigene kleine Frucht bildet — der gesamte Fruchtstand reift zu einer einzigen Masse heran, der Ananas. Diese ungewöhnliche Formation heißt botanisch Sammelfrucht, bei der die Einzelfrüchtchen in zwei ineinandergreifenden Spiralen angeordnet sind. In der Wildnis wird die Blüte meist von Kolibris bestäubt, in der kommerziellen Kultivierung ist Bestäubung aber unerwünscht, weil sie Samen bildet, welche die Fruchtqualität mindern.',
+          'Die Pflanze stammt ursprünglich aus Südamerika, wird heute aber auch in Asien, Brasilien, Costa Rica und Hawaii angebaut. Es gibt derzeit mehr als 100 Ananassorten weltweit. Eine der beliebtesten ist als Cayenne oder Smooth Cayenne bekannt.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Die Analyse alter mesoamerikanischer Sprachen deutet darauf hin, dass die Ananas schon vor mehr als 3.000 Jahren als wichtige Handelsfrucht über einen ganzen Kontinent hinweg gehandelt wurde. Dieser Schätzung nach wurde sie vermutlich erstmals vor 6.000 bis 10.000 Jahren kultiviert. Nach Europa brachte sie kein Geringerer als Christoph Kolumbus, der ihr Ende des 15. Jahrhunderts in der Karibik begegnete. Die Spanier führten sie in der Folge auf den Philippinen, in Hawaii und Guam ein. Im 18. und 19. Jahrhundert genoss die Ananas einen luxuriösen Status, der ihr weit verbreitetes Auftauchen als Motiv in der dekorativen Kunst befeuerte. Als der Welthandel in den folgenden Jahrhunderten aber leichter und schneller wurde, verlor die Ananas ihren Nimbus und ist heute, unabhängig von der Jahreszeit, ein gewöhnlicher Anblick in jedem Supermarkt der nördlichen Erdhalbkugel.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'In der Ananas wurden Hunderte flüchtige Verbindungen identifiziert, doch nur ein kleiner Teil davon trägt zu ihrem einzigartigen Aroma bei. Ihr faszinierender Duft entsteht aus einer komplexen Mischung fruchtiger Ester, durchdringender Schwefelverbindungen, Anklängen von Vanille oder Gewürznelke sowie mehreren sauerstoffhaltigen Kohlenstoffringen, die karamellige, moschusartige Qualitäten hervorrufen. Das chemische Bukett umfasst Alkohole, Aldehyde, Ester, Ketone, Lactone, Terpene und Terpenoide, Kohlenwasserstoffe und weitere Stoffe. Das charakteristische Ananasaroma entsteht unter anderem durch Carbonsäureester wie Ethyl-3-(methylthio)propanoat und Methyl-3-(methylthio)propanoat. Weitere wichtige Ester sind Ethylhexenoat, Methylhexanoat, Furaneol und Methyl-2-methylbutyrat. Nennenswerte Lactone sind δ-Octalacton und δ-Decalacton, die Kokosnuss- und Pfirsicharomen beisteuern.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Das WCR Sensory Lexicon beschreibt Ananas als „die süße, leicht scharfe, fruchtige Note, die man mit Ananas verbindet“. Traditionell war es üblich, Ananas-Säure und -Süße in Kaffees aus Kolumbien wie auch aus Äthiopien zu finden. Diese Kaffees erwerben dieses Aroma zweifellos auf unterschiedlichen Wegen: Äthiopische naturals haben einen großen genetischen Einfluss auf den Geschmack, während kolumbianische Kaffees traditionell gewaschen und von der standardisierten, von der FNC (Federación Nacional de Cafeteros de Colombia) geregelten Sorte sind. Wo auch immer Ananas auftritt, verleiht sie eine besondere Eigenschaft, die weltweit geschätzt wird.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Zweifellos sind Verarbeitungsentscheidungen, besonders Fermentationen, für dieses Aroma im Kaffee verantwortlich. Mit mehr Fermentation entstehen mehr fruchtige Ester und andere Stoffwechselprodukte von Mikroorganismen. Welche genauen Verbindungen ein Ananasaroma im Kaffee verleihen, ist zweifellos eine komplexe Mischung, doch einige bestimmte Noten wurden gezielt als fruchtähnlich identifiziert. Zum Beispiel haben bestimmte Ester wie Propylpropanoat ein blumig-ananasartiges Aroma. Pentatonsäure verleiht einen apfel- oder ananasartigen Duft, während 2-Butensäure eine karamellisierte Ananas-Süße beitragen kann. Furaneol wurde nachweislich als Beitrag zu Ananasaromen in Honey-Kaffees identifiziert. Ananasnoten werden häufig bei anaerob verarbeiteten Kaffees beschrieben, einschließlich solcher mit einer Phase kohlensäuregestützter Mazeration (Carbonic Maceration). Kaffees aus aller Welt, verarbeitet mit allen Arten von Fermentation, haben das Potenzial, dieses wirklich aufregende Aroma zu zeigen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 16, original: 'Apfel' },
+      { nummer: 13, original: 'Mango' },
+      { nummer: 14, original: 'Melone' },
+      { nummer: 15, original: 'Banane' },
+      { nummer: 19, original: 'Zitrone' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 59, original: 'Karamellisiert' },
+    ],
+  },
+
+  {
+    nummer: 13,
+    name: 'Mango',
+    nameOriginal: 'Mango',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Mango hat einen Duft, der saftig, süß und blumig ist, mit einem Honigaroma und Noten von Gras, Apfel, Kiefer oder Kräutern.',
+      'Sie wird roh, geschnitten oder als Dessert gegessen und lässt sich zu Pickles, Konfitüren, Chutneys und anderen Konserven verarbeiten. In der thailändischen Küche ist Mango mit klebrigem Reis beliebt. In Indien und Sri Lanka wird sie in Currygerichten verwendet und mit Joghurt als Getränk. In Mittelamerika findet sie sich in lokalen Salaten und Ceviche und wird frisch mit Chili-Limetten-Pulver gegessen. Sie wird auch gekocht und in verschiedenen Desserts gebacken, etwa Puddings, Kuchen, Cremes und Smoothies. Ihr Duft kann viele schöne Erinnerungen wecken.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Mangos sind die Frucht des Baums Mangifera indica, aus der Familie der Sumachgewächse (Anacardiaceae), zu der auch Cashew, Sumach, Marula, Pistazie, Giftefeu und Gifteiche gehören.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Der Mangobaum ist tief verwurzelt, langlebig und immergrün, wird bis zu 27 Meter hoch und 24 Meter breit. Er ist heimisch in Süd- und Südostasien. Ausgewachsene Äste tragen Hunderte kleiner weißer Blüten, bestäubt von Bienen, Fliegen oder Wespen — nur relativ wenige sind weiblich und tragen Frucht. Die Frucht ist botanisch eine Steinfrucht. Reife Früchte wiegen bis zu 1,3 Kilogramm, sind länglich, gelb oder rot, mit glatter, fester Schale. Das Fruchtfleisch ist blassgelb oder orange und faserig. Ein einzelner, kommerziell angebauter Baum kann mehr als 40 Jahre lang Früchte tragen.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Der Mangobaum stammt vermutlich aus der Indo-Burma-Malaiischen Region Asiens. In Indien spielt Mango eine heilige Rolle und wird dort seit mehr als 4.000 Jahren kultiviert. In alten Ayurveda-Texten gilt Mango als Aphrodisiakum. Sie reiste mit Reisenden von Asien in den Nahen Osten, nach Ostafrika und Südamerika, beginnend vor fast 2.000 Jahren. Es gibt Belege für den Mangobaum in China ab dem 7. Jahrhundert. Später, ab dem 15. Jahrhundert, verbreiteten portugiesische und spanische Kolonialisten sie über die ganze tropische und subtropische Welt. Sie brachten Mango erstmals aus Goa (einem indischen Bundesstaat, früher portugiesische Kolonie) nach Afrika, im 16. Jahrhundert, und verschifften sie auf portugiesischen Schiffen von Südafrika nach Brasilien bis zum frühen 18. Jahrhundert. Von Brasilien aus verbreitete sie sich weiter in die Karibik.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Der Duft der Mango zeigt an, wie gut ihre Qualität ist, und trägt maßgeblich zu ihrer weltweiten Beliebtheit bei. Der unverwechselbare Duft dieser Frucht ist eine große chemische Mischung aus flüchtigen Alkoholen, Terpenen, Estern, Aldehyden und Ketonen, unter anderem. Terpen-Kohlenwasserstoffe gelten als die wichtigste Gruppe der Mango-Duftstoffe, darunter δ-3-Caren, Limonen, Terpinolen, Myrcen, Ocimen und α-Phellandren. Diese Terpene verleihen der Mango ihren moschusartigen, zitrischen, süßen, holzigen oder harzigen Duft. Fruchtige Ester bauen das saftig-sirupartige Aroma auf, darunter Ethylacetat, Ethylbutanoat und Methylbutyrat, oft beschrieben als nach Apfel und Ananas riechend. Lactone wie γ- und δ-Octalactone bringen einen fruchtigen, pfirsich- und kokosnussartigen Duft ein. Die Komplexität dieses Aromas und seine Variation zwischen den Sorten der Frucht sind erheblich.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Eine Mango-Note im Kaffee hat meist eine kräftige, intensiv fruchtige Süße, die honigartig und sirupartig wirkt.',
+        ],
+      },
+      {
+        titel: 'Pflanze und Nachernte-Verarbeitung',
+        text: [
+          'Mango-Aromen finden sich nur in den fruchtbetontesten Kaffees, etwa solchen, die natural oder anaerob verarbeitet wurden. Natural aufbereitete Kaffees aus Äthiopien und experimentell verarbeitete Kaffees können eine reiche, sirupartige Mango-Süße und -Säure haben. Kolumbien gilt als Vorreiter bei Innovationen in der Nachernte-Verarbeitung und hat viele experimentelle, anaerobe und andere neue Verarbeitungsmethoden hervorgebracht, die zu Kaffees mit solchen Fruchtnoten wie Mango führen.',
+          'Wichtig zu wissen: Diese Verarbeitungsmethoden stehen oft nur den fortschrittlichsten Kaffee-Erzeugern zur Verfügung. Die Risiken bei der Anpassung an neue Techniken tragen meist jene Erzeuger und Verarbeiter, die einen guten, verlässlichen Markt haben, der hohe Aufpreise zahlt, und die den Raum zum Experimentieren, den Zugang zu Informationen und das Kapital für Infrastruktur-Investitionen haben — sie sind es, die den Weg bereiten. Wo auch immer diese Innovatoren zu Hause sind, dort liegt die Speerspitze der Kaffee-Aromagestaltung.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 16, original: 'Apfel' },
+      { nummer: 17, original: 'Pfirsich' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 4, original: 'Jasmin' },
+      { nummer: 3, original: 'Rose' },
+      { nummer: 30, original: 'Kiefer' },
+      { nummer: 25, original: 'Frisches Gras' },
+    ],
+  },
+
+  {
+    nummer: 14,
+    name: 'Melone',
+    nameOriginal: 'Melon',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Je nach Sorte kann Melone ähnlich riechen wie Banane oder Ananas. Oder sie kann grasig, grün und frisch duften. Andere Sorten erinnern an dunklere Frucht, pfirsichartig mit cremigen, buttrigen oder karamellisierten Düften. Manchmal riecht Melone auch moschusartig oder nach Honig.',
+      'Die Beliebtheit dieser Frucht hängt zweifellos mit ihrem charakteristischen Duft zusammen. Melonen sind für ihren leichten, kühlen, hellen und fruchtigen Duft bekannt.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: ['Die Frucht von Cucumis melo, einer einjährigen Ranke aus der Familie der Kürbisgewächse.'],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Melonen brauchen Wärme und Bestäubung. Botanisch ist die Melone eine Beere, deren Größe, Form und Farbe je nach Sorte variiert. Melonen lassen sich in zwei Gruppen einteilen, die sich teils über den Duft definieren: die eine weniger aromatisch, meist glattschalig, langsam reifend; die andere aromatisch, mit rauer, genetzter Schale, schnell reifend. Die aromatischen Melonen sind allgemein als Netzmelonen (Muskmelons) bekannt. Sie sind rund und von Natur aus reich an Wasser und Zucker. Zu den gängigen Sorten zählen Netzmelonen, Cantaloupe, Honigmelone, Schlangenmelone, Mango-Melone und asiatische Einlegemelonen.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Woher die Pflanze ursprünglich stammt, ist unklar — eine Hypothese besagt Afrika. Man geht davon aus, dass Melonen ursprünglich im Iran kultiviert wurden, wo sie bis heute in großen Mengen angebaut werden.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Untersuchungen haben in verschiedenen Melonensorten mehr als 300 unterschiedliche flüchtige Verbindungen nachgewiesen, wobei eine einzelne Sorte mehr als 100 Aromastoffe zeigen kann. Ein großer Teil der beitragenden Verbindungen sind Ester, Aldehyde und Alkohole. Wichtige Ester sind Ethylbutanoat, Ethylbutyrat, Propylacetat und Propylpropanoat. Diese Ester verleihen süße, fruchtige Noten wie Ananas, Erdbeere und sogar reichhaltiges Karamell. Der frische, gurkenartige Duft mancher Melonen ist bekanntermaßen mit dem Aldehyd 2-Nonenal verbunden. Benzaldehyd und Phenylacetaldehyd sind weitere wichtige Aldehyde, die typischerweise blumig und fruchtig riechen, manchmal wie Aprikose. Nonenal kann grasig oder grün wirken, auf moschusartige Weise. Alkohole wie 2-Methyl-1-butanol, 1-Hexanol, 1-Octanol, (Z)-3-Hexen-1-ol und Nonadienal stehen für einige der grünen, grasigen, frischen, wässrigen Aromen, die für Melonen typisch sind.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Fruchtige Verbindungen wie die der Melone sind im Kaffee generell ein Produkt der Fermentation während der Nachernte-Verarbeitung. Es wurde gezeigt, dass, ähnlich wie die fruchtigen Noten der Melone, Ester von Hefen im Kaffee gebildet werden. Mikroben sind außerdem dafür bekannt, Alkohole, Ketone und Ester zu erzeugen, besonders — aber nicht nur — in natural aufbereitetem Kaffee. Diese fruchtigen Noten im Kaffee reichen von Melone und Ananas bis zu Banane, die alle potenziell zu einem melonenartigen Aroma beitragen können. Duftende Alkohole wie 1-Octanol und 1-Hexanol wurden in grünem Kaffee als grüne, fettige, kokosnussartige Aromen identifiziert, die auch in Melonen häufig vorkommen. Diese Bestandteile liegen in grünem Kaffee oft in höherer Menge vor, bauen sich aber beim Rösten ab. Hellere Röstprofile bewahren tendenziell mehr dieser Aromen in der Tasse.',
+        ],
+      },
+      {
+        titel: 'Röstung',
+        text: [
+          'Aldehyde im Kaffee entstehen meist erst beim Rösten und entwickeln Süße und fruchtige Noten durch den Abbau von Aminosäuren. Das kann zu karamellisierten, buttrigen und pfirsichartigen Noten beitragen, ähnlich wie bei bestimmten Melonensorten. Ketone, deren Menge beim Rösten zunimmt, wirken typischerweise buttrig, angetrieben von Diacetyl und ähnlichen Verbindungen. Das Zusammenspiel dieser Aromen kann zweifellos einen melonenartigen Duft in vielen Kaffees aufbauen.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 26, original: 'Gurke' },
+      { nummer: 15, original: 'Banane' },
+      { nummer: 12, original: 'Ananas' },
+      { nummer: 43, original: 'Butter' },
+      { nummer: 59, original: 'Karamellisiert' },
+      { nummer: 1, original: 'Honig' },
+      { nummer: 60, original: 'Vanille' },
+    ],
+  },
+
+  {
+    nummer: 15,
+    name: 'Banane',
+    nameOriginal: 'Banana',
+    kategorieId: 'fruchtig',
+    kategorieLabel: 'Fruchtig',
+    beschreibung: [
+      'Bananen haben Aromen, die süß, holzig, vanillig und blumig sind, können aber grüne Noten zeigen, besonders bevor sie vollständig reif sind.',
+    ],
+    abschnitte: [
+      {
+        titel: 'Taxonomie',
+        text: [
+          'Bananen sind die Frucht einer Pflanze der Gattung Musa. Die meisten heute kultivierten Bananen stammen von M. acuminata (Dessertbanane), M. balbisiana (Kochbanane/Plantain) und ihren Kreuzungen. Es gibt Berichten zufolge mehr als 1.000 Bananensorten weltweit, doch die meisten weltweit verkauften Bananen gehören zu einer einzigen Sorte, der Cavendish.',
+        ],
+      },
+      {
+        titel: 'Die Pflanze',
+        text: [
+          'Die Gattung Musa ist in Südostasien heimisch. Obwohl sie baumähnlich aussieht, ist sie eigentlich eine große krautige Pflanze, die aus einer Knolle und einem Scheinstamm aus vielen Blattstielen wächst. Der Blütenstand muss nicht bestäubt werden, um Früchte zu bilden. Die Früchte wachsen aufwärts in Büscheln von 10 bis 20 Stück nahe der Spitze der Pflanze. Weil die fleischige Banane aus einer einzelnen Blüte und einem einzelnen Fruchtknoten entsteht, gilt sie botanisch als Beere. Die Frucht ist unterschiedlich groß, farbig und fest, meist länglich und gebogen, mit weichem, stärkereichem Fruchtfleisch unter einer Schale, die beim Reifen die Farbe wechselt. In der Wildnis enthält die Frucht mehrere schwarze Samen, die aber in den kultivierten Sorten weggezüchtet wurden. Die Frucht enthält viel Vitamin A und C, Mineralstoffe wie Phosphor, Calcium und Kalium sowie Kohlenhydrate.',
+        ],
+      },
+      {
+        titel: 'Geschichte',
+        text: [
+          'Die Gattung Musa wurde vermutlich erstmals vor rund 4.000 Jahren in der Gegend von Papua-Neuguinea kultiviert. Die Pflanze verbreitete sich in der Region und schließlich bis nach Afrika und in den Rest Asiens. Spanier und Portugiesen brachten die Frucht in verschiedene Kolonien und bauten sie dort in Plantagen an. Globale Handelsrouten verbreiteten die beliebte Frucht weiter. Lange nachdem sich Europäer für diese und andere tropische Arten zu begeistern begannen, wurde die Cavendish-Banane im 19. Jahrhundert in Gewächshäusern in England gezüchtet.',
+          'Bis Mitte des 20. Jahrhunderts stammten die meisten Bananen von der Sorte „Gross Michel“, die in Ostafrika gezüchtet worden war. In den 1950er-Jahren wurde diese Sorte jedoch fast vollständig durch die Panamakrankheit vernichtet, verursacht durch den Pilz Fusarium oxysporum. Von da an gewann die Cavendish-Banane zunehmend an Bedeutung. Durch die Monokultur-Anbauweise der Banane, gepaart mit den seit Jahrhunderten genutzten klonalen Vermehrungstechniken, trägt die Banane heute ein deutliches genetisches Risiko. Viele Wissenschaftler glauben, es sei nur eine Frage der Zeit, bis ein neuer Pilz oder eine andere Krankheit auch die Cavendish-Banane schwer trifft.',
+        ],
+      },
+      {
+        titel: 'Chemie',
+        text: [
+          'Das Aroma der Bananenfrucht wird von duftenden Estern dominiert. Isoamylacetat gilt oft als der wichtigste Aroma-Ester der Banane. Auch Amylbutyrat, Amylacetate, Ethylacetat, Ethylbutyrat und Hexanal tragen wesentlich zum Aroma bei. Weitere flüchtige Verbindungen wie Alkohole, Säuren, Ketone und Aldehyde steuern ebenfalls zum Duft bei.',
+        ],
+      },
+    ],
+    imKaffee: [
+      {
+        titel: '',
+        text: [
+          'Der unverwechselbare Bananenduft ist im Kaffee ungewöhnlich. Tritt er in Balance auf, kann er deshalb eine vorteilhafte fruchtige Eigenschaft sein. Wirkt der Bananenduft dagegen schwipsig-alkoholisch, überwältigend und überreif, kann er für manche Märkte zu intensiv sein.',
+        ],
+      },
+      {
+        titel: 'Nachernte-Verarbeitung',
+        text: [
+          'Bananenaromen finden sich gelegentlich in natural aufbereitetem Kaffee. So sind manche feinen Robusta-Kaffees, die auf diese Weise verarbeitet wurden, für ihre positiven Bananennoten bekannt.',
+          'Intensive Fruchtnoten, darunter auch Banane, werden häufig zur Beschreibung anaerober Fermentationen verwendet, manchmal gefolgt von natural-Trocknung. Die sauerstoffarme Umgebung begünstigt nicht das Wachstum fadenbildender Pilze wie Aspergillus und Penicillium, was den Stoffwechsel sauerstoffarm liebender Bakterien und toleranter Hefen begünstigt. Verfahren mit ganzer Frucht oder kohlensäuregestützter Mazeration (Carbonic Maceration) unter Sauerstoffmangel fördern bestimmte Mikroorganismen (darunter Milchsäurebakterien) und damit bestimmte Stoffwechselprodukte, die in den Kaffeesamen gelangen. Gleichzeitig kann die Umgebung um den Kaffeesamen dessen Stoffwechselprozesse verändern und so Geschmacks- und Aromavorstufen weiter beeinflussen. Solche Kaffees zeigen tendenziell besonders intensive fruchtige Eigenschaften. Auch co-fermentierte Kaffees gelten als besonders fruchtig und enthalten oft Aromen von Früchten, die in der Nähe oder unter ähnlichen Umweltbedingungen wachsen, etwa Banane.',
+        ],
+      },
+    ],
+    verwandte: [
+      { nummer: 13, original: 'Mango' },
+      { nummer: 12, original: 'Ananas' },
+      { nummer: 16, original: 'Apfel' },
+      { nummer: 57, original: 'Brauner Zucker' },
+      { nummer: 1, original: 'Honig' },
+    ],
+  },
 ];
 
 /** Wie viele Flaeschchen das Set insgesamt hat — die 60 des Le-Nez-Kartons. */
