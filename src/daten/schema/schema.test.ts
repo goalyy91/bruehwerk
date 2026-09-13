@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset, Uebung } from './index';
+import { Kaffee, Bruehgeraet, Muehle, Shot, Profil, Gussplan, GussBaustein, Groessen, Tasting, Aromaset, Uebung, Uebungsantwort, Uebungsdurchgang } from './index';
 import { MUEHLE_K6, BRUEHGERAET_MOZZAFIATO, BRUEHGERAET_BIALETTI_1 } from '../stammdaten';
 import { AROMASET_SCA, AROMASET_LENEZ } from '../aromen';
 
@@ -270,5 +270,99 @@ describe('Uebung — zwei Aufgabenarten statt einer (Aromapaket, Etappe 3)', () 
     expect(ergebnis.success).toBe(true);
     if (!ergebnis.success) return;
     expect(ergebnis.data).not.toHaveProperty('aussenseiter');
+  });
+});
+
+describe('Uebung — Leitner-Felder, Aromapaket Etappe 6 (Neubau nach Lastenheft)', () => {
+  const NEU = { id: 'u1', setId: 's1', aromaId: 'flaeschchen-21' };
+
+  it('ein Altdatensatz ohne box/stufe/familienSerie bleibt lesbar — box/stufe fehlen, familienSerie startet bei 0', () => {
+    const alt = { ...NEU, versuche: 7, treffer: 3, letzterVersuch: 1000 };
+    const ergebnis = Uebung.safeParse(alt);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.box).toBeUndefined();
+    expect(ergebnis.data.stufe).toBeUndefined();
+    expect(ergebnis.data.familienSerie).toBe(0);
+  });
+
+  it('ein vollstaendiger neuer Datensatz mit Box, Faelligkeit, Stufe und Familienserie ist gueltig', () => {
+    const voll = { ...NEU, box: 3, faellig: 2000, stufe: 'b', familienSerie: 2 };
+    const ergebnis = Uebung.safeParse(voll);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data).toMatchObject({ box: 3, faellig: 2000, stufe: 'b', familienSerie: 2 });
+  });
+
+  it('eine Box ausserhalb von 1..5 faellt durch', () => {
+    expect(Uebung.safeParse({ ...NEU, box: 6 }).success).toBe(false);
+    expect(Uebung.safeParse({ ...NEU, box: 0 }).success).toBe(false);
+  });
+
+  it('eine unbekannte Stufe faellt durch', () => {
+    expect(Uebung.safeParse({ ...NEU, stufe: 'd' }).success).toBe(false);
+  });
+});
+
+describe('Uebungsantwort — ein Datensatz je Antwort, Aromapaket Etappe 6', () => {
+  const BASIS = {
+    id: 'a1',
+    durchgangId: 'd1',
+    setId: 's1',
+    aromaId: 'flaeschchen-21',
+    form: 'freierAbruf',
+    stufe: 'c',
+    zeitstempel: 1000,
+  };
+
+  it('eine gescorte Antwort mit Ergebnis ist gueltig, unerwarteteNummer defaultet auf false', () => {
+    const ergebnis = Uebungsantwort.safeParse({ ...BASIS, getipptId: 'flaeschchen-21', ergebnis: 'richtig' });
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.unerwarteteNummer).toBe(false);
+  });
+
+  it('eine "reverse"-Antwort ohne Ergebnis ist gueltig — ungescort, siehe Dateikopf', () => {
+    const ergebnis = Uebungsantwort.safeParse({ ...BASIS, form: 'reverse' });
+    expect(ergebnis.success).toBe(true);
+  });
+
+  it('eine unbekannte Uebungsform faellt durch', () => {
+    expect(Uebungsantwort.safeParse({ ...BASIS, form: 'kontrastpaar' }).success).toBe(false);
+  });
+});
+
+describe('Uebungsdurchgang — der laufende oder abgeschlossene Durchgang, Aromapaket Etappe 6', () => {
+  const NORMAL = {
+    id: 'd1',
+    setId: 's1',
+    verdeckt: Array.from({ length: 12 }, (_, i) => `flaeschchen-${i + 1}`),
+    abgefragt: Array.from({ length: 8 }, (_, i) => `flaeschchen-${i + 1}`),
+    zusatz: Array.from({ length: 4 }, (_, i) => `flaeschchen-${i + 9}`),
+    begonnenAm: 1000,
+  };
+
+  it('ein neuer normaler Durchgang bekommt Art "normal" und Status "bereitlegen" als Standard, beantwortet startet leer', () => {
+    const ergebnis = Uebungsdurchgang.safeParse(NORMAL);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.art).toBe('normal');
+    expect(ergebnis.data.status).toBe('bereitlegen');
+    expect(ergebnis.data.beantwortet).toEqual([]);
+  });
+
+  it('ein Kontrastdurchgang mit nur zwei verdeckten Fläschchen und leerem Zusatz ist gueltig', () => {
+    const kontrast = {
+      id: 'd2',
+      setId: 's1',
+      art: 'kontrast',
+      verdeckt: ['flaeschchen-51', 'flaeschchen-53'],
+      abgefragt: ['flaeschchen-51', 'flaeschchen-53'],
+      begonnenAm: 1000,
+    };
+    const ergebnis = Uebungsdurchgang.safeParse(kontrast);
+    expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.zusatz).toEqual([]);
   });
 });
