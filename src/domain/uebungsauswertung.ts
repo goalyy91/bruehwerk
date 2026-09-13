@@ -19,7 +19,8 @@
  * Leitner-Bewegung (die bleibt allein in domain/leitner.ts/domain/uebung.ts).
  */
 import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
-import type { AromaOption } from './uebung';
+import type { AromaOption, EffektiverZustand } from './uebung';
+import type { Kennzahl } from './hinweise';
 
 const MS_PRO_TAG = 24 * 60 * 60 * 1000;
 const MS_PRO_WOCHE = 7 * MS_PRO_TAG;
@@ -142,4 +143,73 @@ export function zielfrequenzAbgleich(
   const faktischProWoche = durchgaengeBegonnenAm.length / wochen;
   const weichtAb = Math.abs(faktischProWoche - zielProWoche) / zielProWoche > 1 / 3;
   return { faktischProWoche, weichtAb };
+}
+
+// ---- Kennzahlen-Pool für die Übersicht -------------------------------------
+
+/**
+ * Aromapaket, Etappe 9 (Livebetrieb-Rückmeldung: "Boxen ohne Namen" auf der
+ * Übungsmodus-Übersicht sagen niemandem etwas, der nicht die interne
+ * Leitner-Mechanik kennt). Ersetzt die rohe Fünf-Boxen-Liste dort durch
+ * dasselbe Muster, das die Bar für ihre Kennzahl-Kacheln schon hat
+ * (`domain/hinweise.ts::Kennzahl` + `waehleKennzahlen`) — ein Pool ehrlicher
+ * Fakten, zwei werden beim Öffnen zufällig gezogen. Kein Wert ohne
+ * ausreichende Datenbasis (K64), wie beim Kaffee-Pool.
+ */
+export interface UebungsKennzahlEingabe {
+  readonly eingefuehrteZustaende: readonly EffektiverZustand[];
+  readonly antworten: readonly Uebungsantwort[];
+  readonly durchgaengeBegonnenAm: readonly number[];
+  readonly aromen: readonly AromaOption[];
+  /** kategorieId -> Familienname, vom Aufrufer aufgelöst (domain/ kennt das Aromaset nicht). */
+  readonly familienLabels: ReadonlyMap<string, string>;
+  readonly gesamtAnzahlAromen: number;
+  readonly jetzt: number;
+}
+
+/** Ab Box 4 gilt ein Aroma als "sicher" — dieselbe Grenze, die vorher als Boxenverteilung auf der Übersicht stand. */
+const SICHER_AB_BOX = 4;
+
+/** Kleinste Stichprobe, ab der eine Familien-/Reverse-Quote nicht wie geraten wirkt — dieselbe Zahl wie sonst im Aromapaket (z. B. KONTRASTDURCHGANG_SCHWELLE). */
+const KENNZAHL_MINDEST_STICHPROBE = 3;
+
+export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly Kennzahl[] {
+  const { eingefuehrteZustaende, antworten, durchgaengeBegonnenAm, aromen, familienLabels, gesamtAnzahlAromen, jetzt } = eingabe;
+  const pool: Kennzahl[] = [];
+  const labelVon = (aromaId: string) => aromen.find((a) => a.id === aromaId)?.label ?? aromaId;
+
+  if (eingefuehrteZustaende.length > 0) {
+    const sicher = eingefuehrteZustaende.filter((z) => z.box >= SICHER_AB_BOX).length;
+    pool.push({ label: 'Sicher gelernt', wert: `${sicher} von ${gesamtAnzahlAromen}` });
+  }
+
+  const dieseWoche = durchgaengeBegonnenAm.filter((ts) => jetzt - ts < MS_PRO_WOCHE).length;
+  if (dieseWoche > 0) {
+    pool.push({ label: 'Durchgänge diese Woche', wert: String(dieseWoche) });
+  }
+
+  const familienQuoten = familienTrefferquote(antworten, aromen).filter((f) => f.versuche >= KENNZAHL_MINDEST_STICHPROBE);
+  if (familienQuoten.length > 0) {
+    const beste = [...familienQuoten].sort((a, b) => b.richtig / b.versuche - a.richtig / a.versuche)[0]!;
+    pool.push({ label: 'Stärkste Familie', wert: familienLabels.get(beste.kategorieId) ?? beste.kategorieId });
+  }
+
+  const matrix = verwechslungsmatrix(antworten);
+  if (matrix.length > 0) {
+    const top = matrix[0]!;
+    pool.push({ label: 'Meistverwechselt', wert: `${labelVon(top.tatsaechlichId)} ↔ ${labelVon(top.getipptId)}` });
+  }
+
+  if (durchgaengeBegonnenAm.length > 0) {
+    const wochenDabei = Math.floor((jetzt - Math.min(...durchgaengeBegonnenAm)) / MS_PRO_WOCHE);
+    if (wochenDabei >= 1) pool.push({ label: 'Dabei seit', wert: `${wochenDabei} Woche${wochenDabei === 1 ? '' : 'n'}` });
+  }
+
+  const reverseAntworten = antworten.filter((a) => a.form === 'reverse' && a.ergebnis !== undefined);
+  if (reverseAntworten.length >= KENNZAHL_MINDEST_STICHPROBE) {
+    const richtig = reverseAntworten.filter((a) => a.ergebnis === 'richtig').length;
+    pool.push({ label: 'Reverse-Trefferquote', wert: `${richtig} von ${reverseAntworten.length}` });
+  }
+
+  return pool;
 }

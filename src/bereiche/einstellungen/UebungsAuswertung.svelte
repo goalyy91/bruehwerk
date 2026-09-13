@@ -17,7 +17,7 @@
     langsameRichtigeAntworten,
     zielfrequenzAbgleich,
   } from '../../domain/uebungsauswertung';
-  import type { AromaOption } from '../../domain/uebung';
+  import { effektiverZustand, type AromaOption } from '../../domain/uebung';
   import { EINSTELLUNGEN_ID, type AppEinstellungen } from '../../daten/schema';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
@@ -58,6 +58,23 @@
   );
 
   const langsame = $derived(langsameRichtigeAntworten(antworten));
+
+  // Die Fünf-Boxen-Aufschlüsselung, umgezogen von der Übungsmodus-Übersicht
+  // hierher (Livebetrieb-Rückmeldung: rohe Box-Nummern sind "wichtig
+  // manchmal", nicht auf den ersten Blick — die Übersicht zeigt seitdem
+  // stattdessen rotierende Kennzahlen, domain/uebungsauswertung.ts::
+  // uebungsKennzahlenPool). Eigenes `jetzt` statt des oben schon vorhandenen:
+  // dieselbe Absicht ("einmal beim Öffnen"), nur an dieser Stelle gebraucht.
+  const zustaendeJetzt = Date.now();
+  const boxenZeilen = $derived(
+    ([1, 2, 3, 4, 5] as const).map((box) => ({
+      label: `Box ${box}`,
+      wert: alleAromen
+        .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === set?.id && u.aromaId === a.id), zustaendeJetzt))
+        .filter((z) => z.eingefuehrt && z.box === box).length,
+    })),
+  );
+  const zeigeBoxenverteilung = $derived(boxenZeilen.some((z) => z.wert > 0));
 
   // Einmal beim Öffnen — kein Timer, die Statistik muss nicht live mitzählen.
   const jetzt = Date.now();
@@ -118,6 +135,11 @@
       statt gewusst.
     </p>
   {/if}
+{/if}
+
+{#if zeigeBoxenverteilung}
+  <h2>Boxenverteilung</h2>
+  <Werteliste zeilen={boxenZeilen} />
 {/if}
 
 <h2>Zielfrequenz</h2>
