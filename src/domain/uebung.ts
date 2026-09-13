@@ -1,47 +1,38 @@
 /**
- * Uebungsmodus — konzept.md:810-812 plus Aromapaket, Etappe 4. Zwei
- * Aufgabenarten (daten/schema/uebung.ts::UEBUNGSARTEN) statt einer, eine
- * gemeinsame Auswahl-Logik, die aus Trefferquote, "wie lange her" und der
- * Verwechslungsliste entscheidet, was als Naechstes drankommt.
- *
- * Eine dritte Art ("Aussenseiter" — zwei aus einer Kategorie, eins aus einer
- * anderen) ist nachtraeglich wieder raus: bei Le Nez sind die Nummern strikt
- * nach Kategorie sortiert (Sauer/Fermentiert = 21-23, Sonstiges = 33-40, …).
- * Die Segment-Beschriftung zeigt zwangslaeufig die Nummer, nicht den Namen —
- * damit war der Aussenseiter allein am Zahlenabstand erkennbar, ganz ohne zu
- * riechen. Eine Uebung, die man ohne Nase loesen kann, ist keine.
+ * Uebungsmodus — Aromapaket, Etappe 6 (Neubau nach Lastenheft, docs/konzept.md
+ * "Übungsmodus"). Ersetzt die erste Fassung (konzept.md, bis Paket 05): die
+ * zeigte die Fläschchennummer vor der Antwort — wer regelmäßig übt, lernt
+ * dabei die Nummer statt den Geruch. Diese Fassung kehrt die Reihenfolge um:
+ * erst raten, dann ablesen.
  *
  * Reines TypeScript, kein idb, kein Svelte (tests/schichten.test.ts erzwingt
  * das) — jede Funktion bekommt ihre Daten explizit uebergeben, auch die
- * Kategorie und die "verwandten" Aromen (aus aroma-datenblaetter.ts), statt
- * sie sich selbst zu besorgen. Der Zufall wird injiziert (Default
+ * Kategorie (aus daten/aromen.ts). Der Zufall wird injiziert (Default
  * Math.random), damit die Auswahl selbst testbar ist, ohne echten Zufall
- * nachzubilden.
+ * nachzubilden — ebenso `jetzt`, ohne Default.
  *
- * Aromapaket, Etappe 6 (Neubau nach Lastenheft, docs/konzept.md
- * "Übungsmodus"): ab dem Abschnitt "Zusammenstellung eines
- * Übungsdurchgangs" unten kommt die neue Logik dazu — welche zwölf Aromen
- * ein Durchgang verdeckt bereitlegt. Alles darüber (Aufgabe,
- * aufgabeBenennen, aufgabeUnterscheiden, naechstesZiel, naechsteAufgabe,
- * zielGewicht) gehört noch dem **alten** Übungsmodus-Bildschirm
- * (bereiche/einstellungen/Uebungsmodus.svelte) und bleibt bewusst stehen,
- * bis Etappe 3 diesen Bildschirm ersetzt — sonst bräche der noch aktive
- * Bildschirm mitten in einem Zwischenschritt. `bereinigteQuote` und
- * `gesamtquote` bleiben dagegen dauerhaft: sie füttern
- * `domain/leitner.ts::startBox` bei der Übernahme des Altbestands.
+ * Drei Teile:
+ *  1. Trefferquote (bereinigteQuote/gesamtquote) — historisch aus der ersten
+ *     Fassung, lebt weiter: sie füttert domain/leitner.ts::startBox bei der
+ *     Übernahme eines Altbestands ohne `box`.
+ *  2. Zusammenstellung eines Übungsdurchgangs (planeDurchgang) — welche
+ *     zwölf Aromen verdeckt bereitliegen.
+ *  3. Auswertung einer Antwort (werteAntwortAus) — Ergebnis und
+ *     Leitner-Bewegung, nachdem die Nummer feststeht.
  */
 import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
+import type { Uebungsergebnis } from '../daten/schema/uebungsantwort';
 import type { Box } from './leitner';
-import { startBox, istEingefuehrt, einfuehrungErlaubt } from './leitner';
+import { startBox, istEingefuehrt, einfuehrungErlaubt, bewegeBox, naechsteFaelligkeit } from './leitner';
 
 export interface AromaOption {
   readonly id: string;
   readonly label: string;
   readonly nummer?: number;
-  /** Id der SCA-Kategorie (daten/aromen.ts) — Fallback-Partner fuer "Unterscheiden" ohne Datenblatt. */
+  /** Id der SCA-Kategorie (daten/aromen.ts) — die Familie aus dem Lastenheft. */
   readonly kategorieId?: string;
-  /** Ids der laut Datenblatt verwandten Aromen — Grundlage fuer "Unterscheiden". */
+  /** Ids der laut Datenblatt verwandten Aromen — Rohstoff für den Kontrastdurchgang (Etappe 4). */
   readonly verwandte?: readonly string[];
 }
 
@@ -66,21 +57,9 @@ export interface GesamtStand {
   readonly familienSerie?: number;
 }
 
-/** Eine Aufgabe, gleich welcher Art — der Bildschirm kennt nur diese Form, nicht die einzelnen Arten. */
-export interface Aufgabe {
-  readonly art: Uebungsart;
-  /** Die Flaeschchen, die gerochen werden sollen, in Riechreihenfolge. */
-  readonly riechen: readonly AromaOption[];
-  readonly frage: string;
-  /** Antwortmoeglichkeiten — bei "benennen" alle bekannten Aromen, sonst nur die riechenden. */
-  readonly optionen: readonly AromaOption[];
-  /** Die Id aus `optionen`/`riechen`, die richtig ist — bindet die Statistik immer an das Ziel-Aroma. */
-  readonly richtigeId: string;
-}
-
 // ---- Trefferquote, um den Zufall bereinigt -------------------------------
 
-/** Wie viele Optionen im Schnitt zur Wahl stehen, je Aufgabenart — 1 aus 60 ist praktisch kein Raten. */
+/** Wie viele Optionen im Schnitt zur Wahl stehen, je alter Aufgabenart — 1 aus 60 ist praktisch kein Raten. */
 const RATEWAHRSCHEINLICHKEIT: Record<Uebungsart, number> = {
   benennen: 1 / 60,
   unterscheiden: 1 / 2,
@@ -103,7 +82,8 @@ export function bereinigteQuote(stand: TrefferStand, art: Uebungsart): number {
 /**
  * Eine Sicherheit ueber beide Aufgabenarten, gewichtet nach Versuchen je Art
  * — eine Art mit 20 Versuchen sagt mehr als eine mit 2. Ohne jeden Versuch: 0
- * (wie ein nie geuebtes Aroma).
+ * (wie ein nie geuebtes Aroma). Historische Groesse aus der ersten Fassung —
+ * lebt weiter als Eingabe fuer domain/leitner.ts::startBox.
  */
 export function gesamtquote(stand: GesamtStand): number {
   let versucheGesamt = 0;
@@ -116,65 +96,9 @@ export function gesamtquote(stand: GesamtStand): number {
   return versucheGesamt === 0 ? 0 : summe / versucheGesamt;
 }
 
-// ---- Auswahl des Ziel-Aromas: Sicherheit UND "wie lange her" -------------
+// ---- Kleiner Zufallshelfer, injizierbar wie ueberall hier -----------------
 
-/** Halbwertszeit in Tagen fuer "wie lange nicht mehr geuebt" — kuerzer als bei
- * Getraenken (60 Tage, domain/ranking.ts): ein Geruchsgedaechtnis verblasst
- * schneller als eine Trinkgewohnheit. */
-export const UEBUNG_HALBWERTSZEIT_TAGE = 14;
-
-const MS_PRO_TAG = 24 * 60 * 60 * 1000;
-
-/** 1 = eben erst geuebt, faellt gegen 0 ueber mehrere Halbwertszeiten. Nie geuebt: 0 ("unendlich lange her"). */
-function frische(letzterVersuch: number | undefined, jetzt: number, halbwertszeitTage = UEBUNG_HALBWERTSZEIT_TAGE): number {
-  if (letzterVersuch === undefined) return 0;
-  const tage = (jetzt - letzterVersuch) / MS_PRO_TAG;
-  return Math.pow(2, -tage / halbwertszeitTage);
-}
-
-/**
- * Ein nie geuebtes Aroma bekommt volles Gewicht (1). Ein perfekt sitzendes
- * bekommt nicht 0, sondern ein Mindestgewicht — sonst verschwaende es
- * dauerhaft aus der Ziehung, sobald es einmal gut sass. Danach der groessere
- * von zwei Gruenden, wieder dranzukommen: schwach ODER lange her (nicht
- * addiert — beides zusammen soll nicht staerker wiegen als der schlimmere
- * der beiden Gruende allein).
- */
-const MINDESTGEWICHT = 0.15;
-
-export function zielGewicht(stand: GesamtStand | undefined, jetzt: number): number {
-  if (!stand) return 1;
-  const unsicherheit = 1 - gesamtquote(stand);
-  const vergessenheit = 1 - frische(stand.letzterVersuch, jetzt);
-  return Math.max(MINDESTGEWICHT, unsicherheit, vergessenheit);
-}
-
-/** Gewichtete Zufallsauswahl eines Ziel-Aromas. `zufall()` liefert einen Wert in [0, 1) — Default Math.random. */
-export function naechstesZiel(
-  aromen: readonly AromaOption[],
-  staende: ReadonlyMap<string, GesamtStand>,
-  jetzt: number,
-  zufall: () => number = Math.random,
-): AromaOption | undefined {
-  if (aromen.length === 0) return undefined;
-  const gewichte = aromen.map((a) => zielGewicht(staende.get(a.id), jetzt));
-  const summe = gewichte.reduce((s, g) => s + g, 0);
-  let ziel = zufall() * summe;
-  for (let i = 0; i < aromen.length; i++) {
-    ziel -= gewichte[i]!;
-    if (ziel <= 0) return aromen[i];
-  }
-  return aromen[aromen.length - 1];
-}
-
-// ---- Kleine Zufallshelfer, injizierbar wie ueberall hier -----------------
-
-function ziehe<T>(liste: readonly T[], zufall: () => number): T | undefined {
-  if (liste.length === 0) return undefined;
-  return liste[Math.floor(zufall() * liste.length)];
-}
-
-/** Fisher-Yates mit injiziertem Zufall — Optionen sollen nicht immer in derselben Reihenfolge stehen. */
+/** Fisher-Yates mit injiziertem Zufall — Reihenfolgen sollen nicht immer gleich stehen (echte Zufallsreihenfolge, keine Blöcke). */
 function gemischt<T>(liste: readonly T[], zufall: () => number): T[] {
   const kopie = [...liste];
   for (let i = kopie.length - 1; i > 0; i--) {
@@ -184,123 +108,9 @@ function gemischt<T>(liste: readonly T[], zufall: () => number): T[] {
   return kopie;
 }
 
-// ---- Die zwei Aufgabenarten ------------------------------------------------
-
-/**
- * Übung 1 — ein Fläschchen riechen, aus allen bekannten Aromen benennen.
- * `frage` nennt bewusst keine Nummer — die zeigt der Bildschirm separat im
- * "riechen"-Kopf, hier steht nur die eigentliche Frage.
- */
-export function aufgabeBenennen(ziel: AromaOption, alleAromen: readonly AromaOption[]): Aufgabe {
-  return {
-    art: 'benennen',
-    riechen: [ziel],
-    frage: 'Welches Aroma ist das?',
-    optionen: alleAromen,
-    richtigeId: ziel.id,
-  };
-}
-
-/**
- * Übung 2 — zwei verwandte Fläschchen riechen, ein Name ist vorgegeben.
- * `ziel` ist immer der gesuchte Name (`richtigeId`), `partner` das zweite,
- * verwechselbare Fläschchen.
- */
-export function aufgabeUnterscheiden(ziel: AromaOption, partner: AromaOption, zufall: () => number = Math.random): Aufgabe {
-  const zwei = gemischt([ziel, partner], zufall);
-  return {
-    art: 'unterscheiden',
-    riechen: zwei,
-    frage: `Welches der beiden ist „${ziel.label}“?`,
-    optionen: zwei,
-    richtigeId: ziel.id,
-  };
-}
-
-// ---- Die gezielte Auswahl: welche Art passt zu diesem Ziel? --------------
-
-/** Ab wie vielen Verwechslungen mit demselben Aroma gilt sie als auffällig genug für eine gezielte Übung 2. */
-const SCHWELLE_VERWECHSLUNGSPARTNER = 2;
-
-/** Das am häufigsten verwechselte Aroma, wenn es die Schwelle erreicht — sonst undefined. */
-function staerksterVerwechslungspartner(
-  verwechslungen: Readonly<Record<string, number>>,
-  nachId: ReadonlyMap<string, AromaOption>,
-): AromaOption | undefined {
-  let bestId: string | undefined;
-  let bestAnzahl = 0;
-  for (const [id, anzahl] of Object.entries(verwechslungen)) {
-    if (anzahl > bestAnzahl && nachId.has(id)) {
-      bestId = id;
-      bestAnzahl = anzahl;
-    }
-  }
-  if (bestId === undefined || bestAnzahl < SCHWELLE_VERWECHSLUNGSPARTNER) return undefined;
-  return nachId.get(bestId);
-}
-
-/** Ein Partner für "Unterscheiden": zuerst ein echter Verwandter (Datenblatt), sonst irgendwer aus derselben Kategorie. Bevorzugt, wen die Verwechslungsliste tatsächlich nennt. */
-function findePartnerFuerUnterscheiden(
-  ziel: AromaOption,
-  alleAromen: readonly AromaOption[],
-  nachId: ReadonlyMap<string, AromaOption>,
-  verwechslungen: Readonly<Record<string, number>>,
-  zufall: () => number,
-): AromaOption | undefined {
-  const verwandte = (ziel.verwandte ?? []).map((id) => nachId.get(id)).filter((a): a is AromaOption => a !== undefined);
-  if (verwandte.length > 0) {
-    const bevorzugt = [...verwandte].sort((a, b) => (verwechslungen[b.id] ?? 0) - (verwechslungen[a.id] ?? 0))[0]!;
-    return (verwechslungen[bevorzugt.id] ?? 0) > 0 ? bevorzugt : ziehe(verwandte, zufall);
-  }
-  if (!ziel.kategorieId) return undefined;
-  const gleicheKategorie = alleAromen.filter((a) => a.id !== ziel.id && a.kategorieId === ziel.kategorieId);
-  if (gleicheKategorie.length === 0) return undefined;
-  const meistverwechselt = [...gleicheKategorie].sort((a, b) => (verwechslungen[b.id] ?? 0) - (verwechslungen[a.id] ?? 0))[0]!;
-  return (verwechslungen[meistverwechselt.id] ?? 0) > 0 ? meistverwechselt : ziehe(gleicheKategorie, zufall);
-}
-
-/**
- * Zieht ein Ziel-Aroma und entscheidet, welche Aufgabenart dazu passt:
- *
- * 1. Ein einzelnes Aroma wird auffällig oft verwechselt UND ist laut
- *    Datenblatt damit verwandt → "Unterscheiden" genau mit diesem Paar.
- * 2. Sonst: meistens "Benennen", gelegentlich "Unterscheiden" (wenn ein
- *    Partner bekannt ist — echter Verwandter oder sonst irgendwer aus
- *    derselben Kategorie). Reicht der Vorrat dafür nicht, fällt es auf
- *    "Benennen" zurück — das geht immer, solange überhaupt Aromen vorliegen.
- */
-export function naechsteAufgabe(
-  alleAromen: readonly AromaOption[],
-  staende: ReadonlyMap<string, GesamtStand>,
-  jetzt: number,
-  zufall: () => number = Math.random,
-): Aufgabe | undefined {
-  const ziel = naechstesZiel(alleAromen, staende, jetzt, zufall);
-  if (!ziel) return undefined;
-
-  const nachId = new Map(alleAromen.map((a) => [a.id, a] as const));
-  const verwechslungen = staende.get(ziel.id)?.verwechslungen ?? {};
-
-  const verwechslungspartner = staerksterVerwechslungspartner(verwechslungen, nachId);
-  if (verwechslungspartner && (ziel.verwandte ?? []).includes(verwechslungspartner.id)) {
-    return aufgabeUnterscheiden(ziel, verwechslungspartner, zufall);
-  }
-
-  if (zufall() < 0.15) {
-    const partner = findePartnerFuerUnterscheiden(ziel, alleAromen, nachId, verwechslungen, zufall);
-    if (partner) return aufgabeUnterscheiden(ziel, partner, zufall);
-  }
-  return aufgabeBenennen(ziel, alleAromen);
-}
-
 // ============================================================================
-// Aromapaket, Etappe 6 — Zusammenstellung eines Übungsdurchgangs
-//
-// Ab hier die neue Logik: welche zwölf Aromen ein Durchgang verdeckt
-// bereitlegt (acht abgefragt, vier Zusatzfläschchen), nicht mehr "welches
-// einzelne Aroma kommt jetzt dran". Der Bildschirm (Etappe 3) entscheidet
-// pro Item selbst, welche Übungsform und Frage daraus wird — diese Datei
-// kennt nur die Auswahl, nicht die Frage.
+// Zusammenstellung eines Übungsdurchgangs — welche zwölf Aromen verdeckt
+// bereitliegen (acht abgefragt, vier Zusatzfläschchen).
 // ============================================================================
 
 /** Der aufgelöste Leitner-Zustand eines Aromas — Altbestand ohne `box`/`stufe` eingerechnet. */
@@ -365,12 +175,10 @@ const ANTEIL_NIEDRIG = 0.5; // Box 1-2, faellig
 const ANTEIL_NEU = 0.2;
 const NEU_MAX = 2; // Lastenheft Abschnitt 6: "maximal 2 pro Sitzung"
 
-/**
- * Der am stärksten dokumentierte Verwechslungspartner eines Aromas, wenn er
- * die Schwelle erreicht — dieselbe Schwelle wie beim alten "Unterscheiden"
- * oben (`SCHWELLE_VERWECHSLUNGSPARTNER`), absichtlich wiederverwendet statt
- * verdoppelt.
- */
+/** Ab wie vielen Verwechslungen mit demselben Aroma gilt sie als auffällig genug, um bevorzugt zu werden bzw. einen Kontrastdurchgang (Etappe 4) freizuschalten. */
+const SCHWELLE_VERWECHSLUNGSPARTNER = 2;
+
+/** Der am stärksten dokumentierte Verwechslungspartner eines Aromas, wenn er die Schwelle erreicht — sonst undefined. */
 function staerksterPartnerId(stand: GesamtStand | undefined): string | undefined {
   if (!stand) return undefined;
   let bestId: string | undefined;
@@ -424,11 +232,11 @@ function nachUeberfaelligkeitMitVerwechslungsvorzug(kandidaten: readonly Kandida
  * Reine Auswahl, kein Rendern: das Ergebnis nennt nur, *welche* Aromen
  * gezogen werden. Was der Bildschirm daraus an Fragen macht (Familie,
  * Aroma-in-Familie, freier Abruf — je nach `effektiverZustand(...).stufe`
- * des einzelnen Aromas beim Ziehen), entscheidet Etappe 3, nicht diese
- * Funktion. Insbesondere baut diese Funktion **keine** Liste von Namen für
- * eine Auswahl im Bildschirm — die Antwort-/Nummernliste dort umfasst immer
- * alle 60, sonst verriete ihre Kürzung den Kandidatenkreis (CLAUDE.md,
- * "Übungsmodus: verdecktes Ziehen, keine offene Nummer").
+ * des einzelnen Aromas beim Planen), entscheidet der Aufrufer. Insbesondere
+ * baut diese Funktion **keine** Liste von Namen für eine Auswahl im
+ * Bildschirm — die Antwort-/Nummernliste dort umfasst immer alle 60, sonst
+ * verriete ihre Kürzung den Kandidatenkreis (CLAUDE.md, "Übungsmodus:
+ * verdecktes Ziehen, keine offene Nummer").
  */
 export function planeDurchgang(
   alleAromen: readonly AromaOption[],
@@ -502,4 +310,82 @@ export function planeDurchgang(
     .map((k) => k.option);
 
   return { abgefragt, zusatz };
+}
+
+// ============================================================================
+// Auswertung einer Antwort — nachdem die Nummer feststeht.
+// ============================================================================
+
+/**
+ * Was eine Antwort ausmacht: die gezeigte Form (`geplanteStufe`, bestimmt
+ * *vor* dem Riechen — siehe Kopfkommentar des Bildschirms zum Konflikt
+ * zwischen "Form muss vorher feststehen" und "Identität erst nachher
+ * bekannt") und die Tipps, die sie hervorgebracht hat, dazu das tatsächlich
+ * aufgedeckte Aroma samt seinem eigenen, unabhängigen Stand.
+ */
+export interface AntwortEingabe {
+  readonly geplanteStufe: UebungStufe;
+  /** Getippte Familie — bei Stufe A und B gefragt, bei C nicht vorhanden. */
+  readonly tipFamilieId?: string;
+  /** Getipptes Aroma — bei Stufe B (nach Familienwahl) und C gefragt, bei A nicht vorhanden. */
+  readonly tipAromaId?: string;
+  readonly tatsaechlicheAromaId: string;
+  readonly tatsaechlicheFamilieId: string | undefined;
+  readonly tatsaechlicherStand: GesamtStand | undefined;
+}
+
+export interface AntwortAuswertung {
+  readonly ergebnis: Uebungsergebnis;
+  readonly box: Box;
+  readonly faellig: number;
+  readonly stufe: UebungStufe;
+  readonly familienSerie: number;
+}
+
+/** Ab wie vielen Treffern in Folge (Stufe A, Familie) auf Stufe B geschaltet wird — Lastenheft Abschnitt 3. */
+const FAMILIENSERIE_SCHWELLE = 3;
+
+/**
+ * Wertet eine Antwort aus, **nachdem** die Nummer bekannt ist — vorher kann
+ * die App nicht wissen, gegen welches Aroma sie überhaupt prüft. Die
+ * Leitner-Bewegung (Box, Fälligkeit, Stufe, Familienserie) bezieht sich
+ * immer auf das **tatsächliche** Aroma, nicht auf das für diesen Platz im
+ * Durchgang ursprünglich geplante — beide können auseinanderfallen, wenn
+ * beim Bereitlegen etwas danebenging oder einfach ein anderes von den zwölf
+ * gegriffen wurde. Die *Form* der Frage (`geplanteStufe`) bleibt trotzdem
+ * die vorher gezeigte: sie legt nur fest, *wie* die Tipps zu einem Ergebnis
+ * werden, nicht mehr.
+ */
+export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): AntwortAuswertung {
+  const { geplanteStufe, tipFamilieId, tipAromaId, tatsaechlicheAromaId, tatsaechlicheFamilieId, tatsaechlicherStand } = eingabe;
+  const zustand = effektiverZustand(tatsaechlicherStand, jetzt);
+  const familieRichtig = tipFamilieId !== undefined && tipFamilieId === tatsaechlicheFamilieId;
+
+  let ergebnis: Uebungsergebnis;
+  if (geplanteStufe === 'c') {
+    ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : 'falsch';
+  } else if (geplanteStufe === 'a') {
+    ergebnis = familieRichtig ? 'richtig' : 'falsch';
+  } else {
+    ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : familieRichtig ? 'teilweise' : 'falsch';
+  }
+
+  const box = bewegeBox(zustand.box, ergebnis);
+  const faellig = naechsteFaelligkeit(box, jetzt);
+
+  // familienSerie zaehlt nur, solange das TATSAECHLICHE Aroma noch auf
+  // Stufe A steht — unabhaengig von `geplanteStufe`. Ein Aroma, das laengst
+  // auf B oder C steht, aber durch einen Bereitlegen-Fehlgriff mit der
+  // Stufe-A-Form gefragt wurde, macht dadurch keinen Rueckschritt.
+  let familienSerie = tatsaechlicherStand?.familienSerie ?? 0;
+  let stufe = zustand.stufe;
+  if (zustand.stufe === 'a') {
+    familienSerie = familieRichtig ? familienSerie + 1 : 0;
+    if (familienSerie >= FAMILIENSERIE_SCHWELLE) {
+      stufe = 'b';
+      familienSerie = 0;
+    }
+  }
+
+  return { ergebnis, box, faellig, stufe, familienSerie };
 }
