@@ -1,16 +1,20 @@
 /**
- * Begrüßung auf dem Bar-Screen — Paket 07 (docs/konzept.md:1181).
+ * Begrüßung auf dem Bar- und dem Übungsmodus-Screen — Paket 07
+ * (docs/konzept.md:1181) bzw. Aromapaket, Etappe 9 (Livebetrieb-Rückmeldung:
+ * die Übungsmodus-Übersicht hatte keinen Kopf, der Raum beansprucht).
  *
  * Sechs Tageszeit-Fenster, je zwei Formulierungen im Pool, damit sich der
- * Satz nicht abnutzt. Ein Kontext-Override (offene Bestellung), sonst
- * keiner — ein "seit X Tagen nichts geloggt"-Satz wurde bewusst verworfen:
- * er löst keine Handlung aus, nur ein Streak-Schuldgefühl, und widerspricht
- * damit im Ton der eigenen "keine Gamification"-Regel.
+ * Satz nicht abnutzt — geteilte Infrastruktur für beide Screens
+ * (`tageszeitVon`). Jeder Screen hat eigene Kontext-Overrides und einen
+ * eigenen Sätze-Pool: ein "seit X Tagen nichts geloggt/geübt"-Satz wurde für
+ * beide bewusst verworfen — er löst keine Handlung aus, nur ein
+ * Streak-Schuldgefühl, und widerspricht damit im Ton der eigenen "keine
+ * Gamification"-Regel.
  *
  * Wichtige Grenze, die hier NICHT gilt: die Koffein-Vorbelegung
  * (domain/ranking.ts::vorbelegung) darf nicht von der Tageszeit abhängen
  * ("würde die Historie halbieren") — das betrifft eine andere Funktion und
- * bleibt davon unberührt. Diese Begrüßung ist reiner Text, kein Datenwert.
+ * bleibt davon unberührt. Diese Begrüßungen sind reiner Text, kein Datenwert.
  */
 
 export type Tageszeit = 'frueh' | 'vormittag' | 'mittag' | 'nachmittag' | 'abend' | 'nacht';
@@ -54,6 +58,37 @@ export function begruessung(
   }
   const { key, label } = tageszeitVon(jetzt.getHours());
   const [a, b] = SAETZE[key];
+  const satz = zufall() < 0.5 ? a : b;
+  return { label, satz };
+}
+
+const UEBUNGS_SAETZE: Record<Tageszeit, [string, string]> = {
+  frueh: ['Die Nase ist morgens am wachsten.', 'Früh dran — ein paar Aromen vor dem ersten Kaffee?'],
+  vormittag: ['Ein guter Moment für die Nase.', 'Der Vormittag hat noch Platz für ein paar Aromen.'],
+  mittag: ['Kurze Pause, kurzer Durchgang.', 'Mittagspause — passt auch für ein paar Aromen.'],
+  nachmittag: ['Der Nachmittag hat noch Platz für ein paar Aromen.', 'Zeit für eine Runde Riechen?'],
+  abend: ['Der Abend hat noch Platz zum Üben.', 'Ein ruhiger Moment für die Nase.'],
+  nacht: ['Spät dran — auch die Nase braucht Ruhe.', 'Noch wach? Ein kurzer Durchgang geht auch jetzt.'],
+};
+
+/**
+ * Begrüßung der Übungsmodus-Übersicht. Zwei Kontext-Overrides statt einem —
+ * `geradeAbgeschlossen` sticht `nochNichtsEingefuehrt`, beide stechen die
+ * Tageszeit. Reihenfolge wie bei `begruessung()`.
+ */
+export function uebungsBegruessung(
+  jetzt: Date,
+  kontext: { geradeAbgeschlossen: boolean; nochNichtsEingefuehrt: boolean },
+  zufall: () => number = Math.random,
+): { label?: string; satz: string } {
+  if (kontext.geradeAbgeschlossen) {
+    return { satz: zufall() < 0.5 ? 'Gut gemacht eben.' : 'Die Nase hat gerade was gelernt.' };
+  }
+  if (kontext.nochNichtsEingefuehrt) {
+    return { satz: zufall() < 0.5 ? 'Bereit für die ersten Aromen?' : '60 Aromen warten — fang irgendwo an.' };
+  }
+  const { key, label } = tageszeitVon(jetzt.getHours());
+  const [a, b] = UEBUNGS_SAETZE[key];
   const satz = zufall() < 0.5 ? a : b;
   return { label, satz };
 }

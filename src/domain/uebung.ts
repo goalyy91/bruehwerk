@@ -316,6 +316,31 @@ export function planeDurchgang(
   return { abgefragt, zusatz };
 }
 
+/**
+ * Reverse-Vorschlag für die Übungsmodus-Übersicht (Aromapaket, Etappe 9 —
+ * Julians eigener Vorschlag: "Aromen für Reverse vorschlagen, bei denen man
+ * sich schwer tut"). Schwertun heißt hier: niedrigste Box unter den
+ * eingeführten Aromen — dieselbe Bedeutung, die "schwierig" im übrigen
+ * Aromapaket schon hat (planeDurchgang bevorzugt genau diese Aromen). Bei
+ * mehreren Kandidaten auf derselben Box wird zufällig gezogen. Ohne
+ * eingeführtes Aroma: kein Vorschlag.
+ */
+export function reverseVorschlag(
+  alleAromen: readonly AromaOption[],
+  staende: ReadonlyMap<string, GesamtStand>,
+  jetzt: number,
+  zufall: () => number = Math.random,
+): AromaOption | undefined {
+  const eingefuehrt = alleAromen
+    .map((option) => ({ option, zustand: effektiverZustand(staende.get(option.id), jetzt) }))
+    .filter((k) => k.zustand.eingefuehrt);
+  if (eingefuehrt.length === 0) return undefined;
+
+  const niedrigsteBox = Math.min(...eingefuehrt.map((k) => k.zustand.box));
+  const kandidaten = eingefuehrt.filter((k) => k.zustand.box === niedrigsteBox);
+  return gemischt(kandidaten, zufall)[0]!.option;
+}
+
 // ============================================================================
 // Auswertung einer Antwort — nachdem die Nummer feststeht.
 // ============================================================================
