@@ -11,10 +11,16 @@
  * Sammlungen wachsen bei jeder Antwort gemeinsam — `Uebung` bekommt die neue
  * Box/Stufe, `Uebungsantwort` haelt das Ereignis fest, aus dem sie folgt.
  *
- * `ergebnis` fehlt bei der Uebungsform "reverse": die ist ausdruecklich
- * ungescort (Lastenheft Abschnitt 4) und darf die Boxen/die Auswertung nicht
- * beeinflussen — ein Datensatz ohne Ergebnis wird dort schlicht nicht
- * mitgezaehlt.
+ * Bei "reverse" traegt `ergebnis` die Selbsteinschaetzung ("getroffen" als
+ * `richtig`, "daneben" als `falsch`, nie `teilweise`) — reine Auskunft fuer
+ * spaetere Kalibrierungs-Auswertung, ausdruecklich OHNE Leitner-Wirkung: der
+ * Bildschirm schreibt bei "reverse" nie in die Sammlung `uebung` (siehe
+ * Uebungsmodus.svelte). Ungescort heisst hier also "ohne Folgen fuer Box/
+ * Faelligkeit", nicht "ohne jede Auskunft".
+ *
+ * `stufe` fehlt bei "kontrast" und "reverse" — beide sind nicht an eine der
+ * drei Lernstufen A/B/C gebunden, jedes beteiligte Aroma behaelt seine
+ * eigene, unabhaengig davon.
  */
 import { z } from 'zod';
 import { Id, Zeitpunkt } from './common';
@@ -38,15 +44,19 @@ export const Uebungsantwort = z.object({
   /** Fehlt, wenn "reverse" ohne Fläschchensuche abgebrochen wurde. */
   getipptId: Id.optional(),
   form: z.enum(UEBUNGSFORMEN),
-  stufe: z.enum(['a', 'b', 'c']),
-  /** Fehlt bei "reverse" — siehe Dateikopf. */
+  /** Fehlt bei "kontrast" und "reverse" — siehe Dateikopf. */
+  stufe: z.enum(['a', 'b', 'c']).optional(),
+  /** Fehlt bei "reverse" (Selbsteinschaetzung statt Bewertung) — siehe Dateikopf. */
   ergebnis: z.enum(UEBUNGSERGEBNISSE).optional(),
   zeitstempel: Zeitpunkt,
   antwortdauerMs: z.number().int().nonnegative().optional(),
   /**
-   * true, wenn die beim Bereitlegen tatsaechlich gegriffene Nummer von der
-   * geplanten abwich (Lastenheft Abschnitt 10, Punkt 5: die Wahrheit muss
-   * eintragbar bleiben, auch wenn beim Bereitlegen etwas danebenging).
+   * true, wenn die abgelesene Nummer zu keinem der verdeckten Fläschchen
+   * dieses Durchgangs gehört — ein echter, seltener Fehler beim Bereitlegen
+   * (Lastenheft Abschnitt 10, Punkt 5). **Nicht** dasselbe wie "ein anderes
+   * als das app-intern zur Formwahl herangezogene Aroma" — das ist bei
+   * blindem Ziehen der Regelfall und rechtfertigt keine eigene Markierung
+   * (siehe Uebungsmodus.svelte, Kopfkommentar).
    */
   unerwarteteNummer: z.boolean().default(false),
 });

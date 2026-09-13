@@ -31,6 +31,29 @@
   // volle, unsortierte 60er-Liste — nie nur die zwölf dieses Durchgangs. Beides
   // würde den Kandidatenkreis verraten (CLAUDE.md, "Übungsmodus: verdecktes
   // Ziehen, keine offene Nummer").
+  //
+  // Aromapaket, Etappe 7: zwei weitere Durchgangsarten, eigene Phasen
+  // ('kontrast'/'reverse'), beide von der Übersicht aus gestartet, `art` am
+  // Durchgang entscheidet in `bereitgelegt()`, wohin es weitergeht.
+  //
+  // Kontrastdurchgang — die eine bewusste Ausnahme von "nie Namen vor der
+  // Antwort": die App nennt vor dem Riechen beide Namen des Paares. Ohne das
+  // wäre es nur ein zufällig auf zwei Fläschchen verengter freier Abruf, und
+  // die eigentliche Leistung — zwei ähnliche Gerüche direkt gegeneinander
+  // abwägen — fände nicht statt (CLAUDE.md, "Was nie sichtbar wird" im Plan-
+  // Dokument dieses Umbaus). Eine einzige Zuordnungsfrage danach, nicht zwei
+  // Einzelfragen — die zweite wäre nach der ersten durch Ausschluss geschenkt.
+  //
+  // Reverse — ungescort, ohne jede Wirkung auf Box/Fälligkeit: kein Aufruf
+  // von `schreiben('uebung', …)` in reverseAufloesen(). Nicht blind: du
+  // suchst das Fläschchen gezielt (Name + Nummer stehen offen), das ist der
+  // Witz der Übung.
+  //
+  // Bekannte Lücke: die harte Obergrenze von 10 Riechvorgängen (Lastenheft
+  // Abschnitt 2) gilt hier nur je einzelnem Durchgang (8 normal, 2 Kontrast,
+  // 1 Reverse) — nicht kumulativ über mehrere hintereinander gestartete
+  // Durchgänge einer Sitzung. Eine sitzungsweite Zählung bräuchte einen
+  // eigenen Zustand über Durchgänge hinweg, den es bewusst noch nicht gibt.
   import { bestand, schreiben } from '../bestand.svelte';
   import { neueId } from '../../daten/id';
   import { flaeschchenId } from '../../daten/aromen';
@@ -39,6 +62,8 @@
     planeDurchgang,
     effektiverZustand,
     werteAntwortAus,
+    verwechslungspaare,
+    werteKontrastAus,
     DURCHGANG_GROESSE,
     type AromaOption,
     type GesamtStand,
@@ -47,6 +72,7 @@
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
+  import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
   import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
@@ -119,9 +145,16 @@
   );
   const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.map((z) => z.box)));
 
-  // ---- Phasen: Übersicht → Bereitlegen → Item (×8) → Ende ------------------
+  // Das am staerksten dokumentierte Verwechslungspaar, wenn eins die Schwelle
+  // erreicht — die Grundlage fuer das Kontrastdurchgang-Angebot auf der
+  // Uebersicht (Lastenheft Abschnitt 8).
+  const kontrastKandidat = $derived(verwechslungspaare(bekannteStaende)[0]);
+  const kontrastKandidatLabelA = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.aId)?.label ?? '');
+  const kontrastKandidatLabelB = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.bId)?.label ?? '');
 
-  type Phase = 'uebersicht' | 'bereitlegen' | 'item' | 'ende';
+  // ---- Phasen: Übersicht → Bereitlegen → Item (×8) / Kontrast / Reverse → Ende
+
+  type Phase = 'uebersicht' | 'bereitlegen' | 'item' | 'kontrast' | 'reverse' | 'ende';
   let phase = $state<Phase>('uebersicht');
   let durchgang = $state<SammlungWert['uebungsdurchgang'] | undefined>(undefined);
   let index = $state(0);
@@ -152,15 +185,47 @@
     }
   }
 
-  // Nummern der zwölf Verdeckten, aufsteigend — reine Anzeige fürs
-  // Bereitlegen, nie Namen (die verrieten mehr, als das Lastenheft für diesen
-  // Schritt als unproblematisch nennt: "die Zuordnung Reihenfolge → Nummer
-  // unbekannt" reicht, eine Namensliste wäre etwas anderes).
+  async function kontrastdurchgangStarten() {
+    if (!set || !kontrastKandidat) return;
+    const jetzt = Date.now();
+    const neu: SammlungWert['uebungsdurchgang'] = {
+      id: neueId(),
+      setId: set.id,
+      art: 'kontrast',
+      status: 'bereitlegen',
+      verdeckt: [kontrastKandidat.aId, kontrastKandidat.bId],
+      abgefragt: [kontrastKandidat.aId, kontrastKandidat.bId],
+      zusatz: [],
+      beantwortet: [],
+      begonnenAm: jetzt,
+    };
+    try {
+      await schreiben('uebungsdurchgang', neu);
+      durchgang = neu;
+      phase = 'bereitlegen';
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  // Nummern der Verdeckten, aufsteigend — reine Anzeige fürs Bereitlegen, nie
+  // Namen (die verrieten mehr, als das Lastenheft für diesen Schritt als
+  // unproblematisch nennt: "die Zuordnung Reihenfolge → Nummer unbekannt"
+  // reicht, eine Namensliste wäre etwas anderes). Gilt fuer "normal" (zwoelf)
+  // und "kontrast" (zwei) gleichermassen — der Kontrastdurchgang nennt die
+  // NAMEN separat als Ansage, siehe Vorlage weiter unten.
   const bereitlegenNummern = $derived(
     (durchgang?.verdeckt ?? [])
       .map((id) => alleAromen.find((a) => a.id === id)?.nummer)
       .filter((n): n is number => n !== undefined)
       .sort((a, b) => a - b),
+  );
+
+  /** Die zwei Aromen eines Kontrastdurchgangs, in der beim Start festgelegten (beliebigen, aber stabilen) Reihenfolge. */
+  const kontrastOptionen = $derived(
+    durchgang?.art === 'kontrast'
+      ? durchgang.verdeckt.map((id) => alleAromen.find((a) => a.id === id)).filter((a): a is AromaOption => a !== undefined)
+      : [],
   );
 
   async function bereitgelegt() {
@@ -169,9 +234,18 @@
     try {
       await schreiben('uebungsdurchgang', aktualisiert);
       durchgang = aktualisiert;
-      index = 0;
-      naechstesItemVorbereiten();
-      phase = 'item';
+      if (aktualisiert.art === 'kontrast') {
+        kontrastSchritt = 'erstesRiechen';
+        kontrastReihenfolge = '';
+        kontrastErsteNummer = '';
+        kontrastAuswertung = undefined;
+        kontrastUnerwartet = false;
+        phase = 'kontrast';
+      } else {
+        index = 0;
+        naechstesItemVorbereiten();
+        phase = 'item';
+      }
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -356,6 +430,210 @@
     naechstesItemVorbereiten();
   }
 
+  // ---- Kontrastdurchgang: zwei Fläschchen, eine Zuordnungsfrage -----------
+  // (Aromapaket, Etappe 7) — Ablauf laut Lastenheft Abschnitt 6: erstes
+  // Fläschchen riechen, NICHT auflösen; Riechpause (hier am wichtigsten: zwei
+  // ähnliche Gerüche direkt hintereinander sind genau der Fall, für den
+  // Geruchsadaptation gemacht ist); zweites riechen; eine Zuordnungsfrage;
+  // Nummer des zuerst gezogenen eintragen, das zweite folgt aus den zwei
+  // verdeckten Ids.
+
+  let kontrastSchritt = $state<'erstesRiechen' | 'zweitesRiechen' | 'frage' | 'nummer' | 'aufgeloest'>('erstesRiechen');
+  let kontrastReihenfolge = $state('');
+  let kontrastErsteNummer = $state('');
+  let kontrastUnerwartet = $state(false);
+  let kontrastAuswertung = $state<
+    { readonly ergebnis: 'richtig' | 'falsch'; readonly ersteOption: AromaOption; readonly zweiteOption: AromaOption } | undefined
+  >(undefined);
+
+  const kontrastFrageOptionen = $derived(
+    kontrastOptionen.length === 2
+      ? [
+          { wert: 'a-zuerst', label: `erst ${kontrastOptionen[0]!.label}, dann ${kontrastOptionen[1]!.label}` },
+          { wert: 'b-zuerst', label: `erst ${kontrastOptionen[1]!.label}, dann ${kontrastOptionen[0]!.label}` },
+        ]
+      : [],
+  );
+
+  function kontrastErstesGerochen() {
+    kontrastSchritt = 'zweitesRiechen';
+    starteRiechpause();
+  }
+
+  async function kontrastAufloesen() {
+    if (!durchgang || !set || !kontrastErsteNummer || kontrastOptionen.length !== 2) return;
+    const [optA, optB] = kontrastOptionen as [AromaOption, AromaOption];
+    const ersteId = kontrastErsteNummer;
+    const jetzt = Date.now();
+
+    if (!durchgang.verdeckt.includes(ersteId)) {
+      // Seltener echter Bereitlegen-Fehler (siehe Kopfkommentar zu
+      // unerwarteteNummer weiter oben): bei nur zwei Verdeckten trägt "das
+      // jeweils andere" als Grundlage für die zweite Identität nicht mehr.
+      // Kein Absturz, keine erfundene zweite Identität — der Durchgang endet
+      // hier unbewertet, ehrlich benannt.
+      try {
+        const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
+          ...durchgang,
+          beantwortet: [ersteId],
+          status: 'abgeschlossen',
+          abgeschlossenAm: jetzt,
+        };
+        await schreiben('uebungsdurchgang', durchgangAktualisiert);
+        durchgang = durchgangAktualisiert;
+        await schreiben('uebungsantwort', {
+          id: neueId(),
+          durchgangId: durchgang.id,
+          setId: set.id,
+          aromaId: ersteId,
+          form: 'kontrast',
+          zeitstempel: jetzt,
+          unerwarteteNummer: true,
+        });
+      } catch (e) {
+        fehler = e instanceof Error ? e.message : String(e);
+        return;
+      }
+      kontrastUnerwartet = true;
+      kontrastSchritt = 'aufgeloest';
+      return;
+    }
+
+    const ersteOption = ersteId === optA.id ? optA : optB;
+    const zweiteOption = ersteId === optA.id ? optB : optA;
+    const gewaehlteAWarErste = kontrastReihenfolge === 'a-zuerst';
+    const tatsaechlichAWarErste = ersteId === optA.id;
+    const richtigeReihenfolge = gewaehlteAWarErste === tatsaechlichAWarErste;
+
+    const aStand = staende.get(optA.id);
+    const bStand = staende.get(optB.id);
+    const auswertung = werteKontrastAus(richtigeReihenfolge, aStand, bStand, jetzt);
+
+    try {
+      const bisherigeA = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optA.id);
+      await schreiben('uebung', {
+        id: bisherigeA?.id ?? neueId(),
+        setId: set.id,
+        aromaId: optA.id,
+        benennen: bisherigeA?.benennen ?? { versuche: 0, treffer: 0 },
+        unterscheiden: bisherigeA?.unterscheiden ?? { versuche: 0, treffer: 0 },
+        verwechslungen: bisherigeA?.verwechslungen ?? {},
+        letzterVersuch: jetzt,
+        box: auswertung.aBox,
+        faellig: auswertung.aFaellig,
+        stufe: bisherigeA?.stufe,
+        familienSerie: bisherigeA?.familienSerie ?? 0,
+      });
+      const bisherigeB = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optB.id);
+      await schreiben('uebung', {
+        id: bisherigeB?.id ?? neueId(),
+        setId: set.id,
+        aromaId: optB.id,
+        benennen: bisherigeB?.benennen ?? { versuche: 0, treffer: 0 },
+        unterscheiden: bisherigeB?.unterscheiden ?? { versuche: 0, treffer: 0 },
+        verwechslungen: bisherigeB?.verwechslungen ?? {},
+        letzterVersuch: jetzt,
+        box: auswertung.bBox,
+        faellig: auswertung.bFaellig,
+        stufe: bisherigeB?.stufe,
+        familienSerie: bisherigeB?.familienSerie ?? 0,
+      });
+
+      for (const option of [optA, optB]) {
+        await schreiben('uebungsantwort', {
+          id: neueId(),
+          durchgangId: durchgang.id,
+          setId: set.id,
+          aromaId: option.id,
+          form: 'kontrast',
+          ergebnis: auswertung.ergebnis,
+          zeitstempel: jetzt,
+          unerwarteteNummer: false,
+        });
+      }
+
+      const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
+        ...durchgang,
+        beantwortet: [optA.id, optB.id],
+        status: 'abgeschlossen',
+        abgeschlossenAm: jetzt,
+      };
+      await schreiben('uebungsdurchgang', durchgangAktualisiert);
+      durchgang = durchgangAktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+      return;
+    }
+
+    kontrastAuswertung = { ergebnis: auswertung.ergebnis, ersteOption, zweiteOption };
+    kontrastSchritt = 'aufgeloest';
+  }
+
+  // ---- Reverse: Name zuerst, dann gezielt suchen — ungescort -------------
+  // (Aromapaket, Etappe 7). Kein Bereitlegen (nicht blind), keine Wirkung
+  // auf Box/Fälligkeit (siehe Kopfkommentar).
+
+  let reverseSchritt = $state<'wahl' | 'riechen' | 'einschaetzung' | 'fertig'>('wahl');
+  let reverseAromaId = $state('');
+  let reverseBegonnenAm = $state(0);
+  let reverseEinschaetzung = $state('');
+
+  const reverseOption = $derived(alleAromen.find((a) => a.id === reverseAromaId));
+
+  async function reverseDurchgangStarten() {
+    if (!set || !reverseAromaId) return;
+    const jetzt = Date.now();
+    const neu: SammlungWert['uebungsdurchgang'] = {
+      id: neueId(),
+      setId: set.id,
+      art: 'reverse',
+      status: 'laufend',
+      verdeckt: [reverseAromaId],
+      abgefragt: [reverseAromaId],
+      zusatz: [],
+      beantwortet: [],
+      begonnenAm: jetzt,
+    };
+    try {
+      await schreiben('uebungsdurchgang', neu);
+      durchgang = neu;
+      reverseBegonnenAm = jetzt;
+      reverseSchritt = 'riechen';
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  async function reverseAufloesen() {
+    if (!durchgang || !set || !reverseAromaId || !reverseEinschaetzung) return;
+    const jetzt = Date.now();
+    try {
+      await schreiben('uebungsantwort', {
+        id: neueId(),
+        durchgangId: durchgang.id,
+        setId: set.id,
+        aromaId: reverseAromaId,
+        form: 'reverse',
+        ergebnis: reverseEinschaetzung === 'getroffen' ? 'richtig' : 'falsch',
+        zeitstempel: jetzt,
+        antwortdauerMs: Math.max(0, jetzt - reverseBegonnenAm),
+        unerwarteteNummer: false,
+      });
+      const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
+        ...durchgang,
+        beantwortet: [reverseAromaId],
+        status: 'abgeschlossen',
+        abgeschlossenAm: jetzt,
+      };
+      await schreiben('uebungsdurchgang', durchgangAktualisiert);
+      durchgang = durchgangAktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+      return;
+    }
+    reverseSchritt = 'fertig';
+  }
+
   // ---- Ende: was sass, was nicht — die Zusatzfläschchen bleiben unaufgeloest
 
   const ERGEBNIS_TEXT: Record<'richtig' | 'teilweise' | 'falsch', string> = {
@@ -375,7 +653,23 @@
   function zurueckZurUebersicht() {
     durchgang = undefined;
     item = undefined;
+    kontrastSchritt = 'erstesRiechen';
+    kontrastReihenfolge = '';
+    kontrastErsteNummer = '';
+    kontrastUnerwartet = false;
+    kontrastAuswertung = undefined;
+    reverseSchritt = 'wahl';
+    reverseAromaId = '';
+    reverseEinschaetzung = '';
     phase = 'uebersicht';
+  }
+
+  /** Übersicht → Reverse: Aromawahl zurücksetzen, kein Durchgang bis zur Bestätigung. */
+  function reverseUeben() {
+    reverseSchritt = 'wahl';
+    reverseAromaId = '';
+    reverseEinschaetzung = '';
+    phase = 'reverse';
   }
 </script>
 
@@ -397,14 +691,25 @@
     </div>
     <div class="knopfreihe">
       <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
+      {#if kontrastKandidat}
+        <Knopf onKlick={kontrastdurchgangStarten}>kontrastdurchgang: {kontrastKandidatLabelA} oder {kontrastKandidatLabelB}</Knopf>
+      {/if}
+      <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="block">
-      <p class="frage-satz">
-        Lege diese {bereitlegenNummern.length} Fläschchen verdeckt bereit — so, dass du beim Greifen nicht erkennen kannst, welches du
-        gerade in der Hand hältst.
-      </p>
+      {#if durchgang?.art === 'kontrast' && kontrastOptionen.length === 2}
+        <p class="frage-satz">Dieser Durchgang: {kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}.</p>
+        <p class="frage-satz">
+          Lege diese zwei Fläschchen verdeckt bereit — so, dass du hinterher nicht weißt, welches du zuerst gezogen hast.
+        </p>
+      {:else}
+        <p class="frage-satz">
+          Lege diese {bereitlegenNummern.length} Fläschchen verdeckt bereit — so, dass du beim Greifen nicht erkennen kannst, welches du
+          gerade in der Hand hältst.
+        </p>
+      {/if}
       <div class="nummernliste">
         {#each bereitlegenNummern as nummer (nummer)}
           <span class="nummer">{nummer}</span>
@@ -493,6 +798,87 @@
         </div>
       </div>
     {/if}
+    {#if fehler}<p class="fehler">{fehler}</p>{/if}
+  {:else if phase === 'kontrast' && kontrastOptionen.length === 2}
+    <div class="frage-block">
+      {#if kontrastSchritt === 'erstesRiechen'}
+        <p class="frage-satz">Zieh das erste der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={kontrastErstesGerochen}>gerochen</Knopf>
+        </div>
+      {:else if kontrastSchritt === 'zweitesRiechen'}
+        <p class="frage-satz">Zieh das zweite, ohne hinzusehen — riech daran.</p>
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'frage')} deaktiviert={pauseRest > 0}>
+            {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+          </Knopf>
+        </div>
+      {:else if kontrastSchritt === 'frage'}
+        <p class="frage-titel">Welches war welches?</p>
+        <Segment optionen={kontrastFrageOptionen} wert={kontrastReihenfolge} onWahl={(w) => (kontrastReihenfolge = w)} />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'nummer')} deaktiviert={!kontrastReihenfolge}>weiter</Knopf>
+        </div>
+      {:else if kontrastSchritt === 'nummer'}
+        <p class="frage-satz">Jetzt die Augen auf — welche Nummer hattest du zuerst gezogen?</p>
+        <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
+        </div>
+      {:else if kontrastSchritt === 'aufgeloest'}
+        {#if kontrastUnerwartet}
+          <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieser Durchgang bleibt unbewertet.</p>
+        {:else if kontrastAuswertung}
+          <p class="ergebnis" class:richtig={kontrastAuswertung.ergebnis === 'richtig'}>
+            {#if kontrastAuswertung.ergebnis === 'richtig'}
+              Richtig — erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+            {:else}
+              Daneben — es war erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+            {/if}
+          </p>
+        {/if}
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+        </div>
+      {/if}
+    </div>
+    {#if fehler}<p class="fehler">{fehler}</p>{/if}
+  {:else if phase === 'reverse'}
+    <div class="frage-block">
+      {#if reverseSchritt === 'wahl'}
+        <p class="frage-satz">Welches Aroma willst du reverse üben?</p>
+        <AuswahlListe optionen={namenOptionen} wert={reverseAromaId} onWahl={(w) => (reverseAromaId = w)} platzhalter="Aroma suchen …" suchbar />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={reverseDurchgangStarten} deaktiviert={!reverseAromaId}>weiter</Knopf>
+        </div>
+      {:else if reverseSchritt === 'riechen' && reverseOption}
+        <p class="frage-titel">{reverseOption.label}</p>
+        <p class="frage-satz">
+          Stell dir vor, wie es riecht. Dann öffne Nr. {reverseOption.nummer} und riech.
+        </p>
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={() => (reverseSchritt = 'einschaetzung')}>gerochen</Knopf>
+        </div>
+      {:else if reverseSchritt === 'einschaetzung'}
+        <p class="frage-titel">Getroffen?</p>
+        <Segment
+          optionen={[
+            { wert: 'getroffen', label: 'getroffen' },
+            { wert: 'daneben', label: 'daneben' },
+          ]}
+          wert={reverseEinschaetzung}
+          onWahl={(w) => (reverseEinschaetzung = w)}
+        />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={reverseAufloesen} deaktiviert={!reverseEinschaetzung}>fertig</Knopf>
+        </div>
+      {:else if reverseSchritt === 'fertig'}
+        <p class="frage-satz">Selbsteinschätzung gespeichert — ohne Wirkung auf die Boxen, reine Übung.</p>
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+        </div>
+      {/if}
+    </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'ende'}
     <div class="block">
