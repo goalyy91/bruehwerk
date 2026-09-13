@@ -294,6 +294,54 @@ Das RPM-Feld erscheint nur, wenn die gebundene Mühle eine Drehzahl hat
 (`Muehle.rpmEinstellbar`). Eine Handmühle hat keine, und ein leeres Feld wäre
 kein Zustand, sondern eine offene Frage.
 
+### Übungsmodus: verdecktes Ziehen, keine offene Nummer — `domain/leitner.ts`, `domain/uebung.ts` (Aromapaket Etappe 6)
+
+**Die App gibt den Kandidatenkreis eines Übungsdurchgangs zu keinem Zeitpunkt
+preis.** Ein Übungsdurchgang besteht aus zwölf verdeckt bereitgelegten
+Fläschchen — acht werden abgefragt, vier Zusatzfläschchen nie geöffnet. Die
+Nummer eines gezogenen Fläschchens erscheint **immer erst nach der Antwort**,
+über die volle, unsortierte Liste aller 60 — nie über eine Liste, die nur die
+zwölf enthält. Wer das „vereinfacht" (etwa: Auswahl aus den zwölf Namen statt
+aus allen 60), macht ab dem zweiten Item ein Ausschlussverfahren aus der
+Übung, keine Geruchsfrage mehr — genau der Fehler, den dieser Neubau der
+ersten Fassung des Übungsmodus behoben hat (die zeigte die Nummer *vor* der
+Antwort).
+
+Zwei eng begrenzte Ausnahmen sind bewusst und stehen nicht zur Disposition:
+
+- **Stufe B** (Aroma innerhalb der selbst gewählten Familie) grenzt auf 3–16
+  Kandidaten ein — die Einschränkung kommt aus der eigenen Antwort, nicht aus
+  der Zusammenstellung des Durchgangs.
+- **Der Kontrastdurchgang** nennt vor dem Riechen beide Namen des Paares
+  („dieser Durchgang: Mandel oder Haselnuss"). Ohne das wäre die Übung ein
+  freier Abruf, zufällig auf zwei Fläschchen verengt — die eigentliche
+  Leistung, zwei ähnliche Gerüche direkt gegeneinander abzuwägen, fände nicht
+  statt.
+
+**Leitner mit fünf Boxen, Intervalle fix — nicht an die Trainingshäufigkeit
+angepasst:**
+
+| Box | Nächste Fälligkeit |
+| --- | --- |
+| 1 | sofort |
+| 2 | +2 Tage |
+| 3 | +5 Tage |
+| 4 | +12 Tage |
+| 5 | +30 Tage |
+
+Richtig → eine Box hoch. Falsch → zurück auf 1. **Teilerfolg (Familie
+richtig, Aroma falsch) → nur eine Box runter, nicht auf Null.** Wer die
+Familie trifft, hat den Geruch grundsätzlich verortet; das auf Null zu
+setzen würde echten Teil-Fortschritt verwerfen.
+
+**Die Intervalle bleiben absichtlich stur.** Eine App, die eine faule Woche
+als Präferenz läse und die Intervalle streckt, löst eine Abwärtsspirale aus:
+weniger Erinnerungen, noch weniger Training. Was sich stattdessen anpasst,
+ist die **Einführung neuer Aromen** — sie stoppt, sobald 30 % der bereits
+eingeführten Aromen in Box 1–2 stehen. Der Boxenzustand ist der bessere
+Regler als der Kalender, und braucht die tatsächliche Trainingsfrequenz dafür
+nicht zu kennen.
+
 ---
 
 ## Was bewusst nicht gebaut wird
@@ -306,6 +354,14 @@ irgendwann etwas, das mit Absicht fehlt.
   mitlaufende Uhr erzeugt Druck. Zeit erscheint an genau zwei Stellen: als
   Ergebniswert im Shot und als Vorabschätzung einer Bestellung — beides Zahlen
   zum Ansehen, keine, die laufen.
+
+  **Ausdrückliche Ausnahme: die Riechpause im Übungsmodus** (`domain/leitner.ts`,
+  Aromapaket Etappe 6). Zwischen zwei Fläschchen erzwingt ein Rückwärtszähler auf
+  dem „weiter"-Knopf 25 Sekunden Pause. Das ist kein Widerspruch zur Regel oben,
+  sondern ihr Zweck gespiegelt: die Uhr dort erzeugt Tempo, diese hier verhindert
+  es — ohne Pause sinkt die Wahrnehmungsschärfe der Nase messbar, und die App
+  würde Ermüdung statt Können messen. Keine andere Stelle der App bekommt einen
+  Timer aus dieser Ausnahme heraus.
 - **Kein Urteil in der Bestellung** (K57, K58), **kein Abschluss-Bildschirm**,
   **kein Personengitter**. Wenn fünf Getränke fertig sind und Leute warten, ist
   das der schlechteste Moment für ein Urteil. Bewertet wird ausschließlich über
@@ -348,6 +404,15 @@ Commits.
 | **Durchgang** | Bezugsgruppe, Batch |
 | **Nachklang** | Abgang |
 | **Auffälligkeit** | Defekt, Fehler |
+| **Übungsdurchgang** (Aroma-Training) | Session, Runde, Übung |
+| **verdeckt bereitlegen** (Aroma-Training) | in den Beutel legen, in die Box legen |
+| **Zusatzfläschchen** (Aroma-Training) | Distraktor |
+
+Die letzten drei Zeilen betreffen den Übungsmodus: „Übungsdurchgang" ist die neue
+Sitzungseinheit — weder „Runde" (schon oben an Bestellung vergeben) noch „Übung"
+(schon der Trefferstand je Aroma, `daten/schema/uebung.ts`). „Verdeckt
+bereitlegen" und „Zusatzfläschchen" formulieren die Anforderung, nicht das
+Hilfsmittel — die App legt sich weder auf Beutel noch Box fest.
 
 Feste Reihenfolge überall, wo Werte nebeneinander stehen:
 **Output → Preinfusion → Zeit** (K5).
