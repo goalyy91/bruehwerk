@@ -165,6 +165,8 @@ export interface UebungsKennzahlEingabe {
   readonly familienLabels: ReadonlyMap<string, string>;
   readonly gesamtAnzahlAromen: number;
   readonly jetzt: number;
+  /** Optional — nur gesetzt, wenn in den Einstellungen ein Wochenziel hinterlegt ist. Lässt "Durchgänge diese Woche" das Ziel mitnennen. */
+  readonly zielProWoche?: number;
 }
 
 /** Ab Box 4 gilt ein Aroma als "sicher" — dieselbe Grenze, die vorher als Boxenverteilung auf der Übersicht stand. */
@@ -174,7 +176,7 @@ const SICHER_AB_BOX = 4;
 const KENNZAHL_MINDEST_STICHPROBE = 3;
 
 export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly Kennzahl[] {
-  const { eingefuehrteZustaende, antworten, durchgaengeBegonnenAm, aromen, familienLabels, gesamtAnzahlAromen, jetzt } = eingabe;
+  const { eingefuehrteZustaende, antworten, durchgaengeBegonnenAm, aromen, familienLabels, gesamtAnzahlAromen, jetzt, zielProWoche } = eingabe;
   const pool: Kennzahl[] = [];
   const labelVon = (aromaId: string) => aromen.find((a) => a.id === aromaId)?.label ?? aromaId;
 
@@ -185,7 +187,7 @@ export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly
 
   const dieseWoche = durchgaengeBegonnenAm.filter((ts) => jetzt - ts < MS_PRO_WOCHE).length;
   if (dieseWoche > 0) {
-    pool.push({ label: 'Durchgänge diese Woche', wert: String(dieseWoche) });
+    pool.push({ label: 'Durchgänge diese Woche', wert: zielProWoche ? `${dieseWoche} von ${zielProWoche}` : String(dieseWoche) });
   }
 
   const familienQuoten = familienTrefferquote(antworten, aromen).filter((f) => f.versuche >= KENNZAHL_MINDEST_STICHPROBE);

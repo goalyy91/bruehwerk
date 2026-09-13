@@ -66,13 +66,15 @@
     werteAntwortAus,
     verwechslungspaare,
     werteKontrastAus,
+    reverseVorschlag,
     DURCHGANG_GROESSE,
     type AromaOption,
     type GesamtStand,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
-  import { uebungsKennzahlenPool } from '../../domain/uebungsauswertung';
+  import { uebungsKennzahlenPool, zielfrequenzAbgleich } from '../../domain/uebungsauswertung';
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
+  import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -168,19 +170,62 @@
   const familienLabels = $derived(new Map(familien.map((f) => [f.wert, f.label] as const)));
 
   let kennzahlenAuswahl = $state<readonly Kennzahl[]>([]);
+
+  // Begrüßung analog zur Bar (domain/begruessung.ts::uebungsBegruessung) —
+  // Livebetrieb-Rückmeldung: die Übersicht hatte keinen Kopf, der Raum
+  // beansprucht. Gezogen im selben Effekt wie die Kennzahlen, nicht als
+  // eigener Top-Level-`const` wie bei der Bar: dort remountet die Komponente
+  // bei jeder Rückkehr komplett, hier teilen sich Übersicht und laufende
+  // Aktivität dieselbe Komponente über den `aktiv`-Umschalter.
+  let begruessungsText = $state<{ label?: string; satz: string }>({ satz: '' });
+
+  // Reverse-Vorschlag (Julians Idee): ein zufällig gezogenes Aroma aus der
+  // niedrigsten Box unter den eingeführten — "damit tust du dich schwer".
+  // Zusätzlich zum bestehenden "reverse üben"-Knopf, nicht statt ihm.
+  let reverseVorschlagOption = $state<AromaOption | undefined>(undefined);
+
+  // Zielfrequenz-Hinweis, zurückgeholt von der Statistik-Seite auf die
+  // Übersicht: domain/uebungsauswertung.ts::zielfrequenzAbgleich ist laut
+  // eigenem Kopfkommentar "ausschließlich für den Hinweis auf der
+  // Übersicht" gedacht — er schlägt vor, das Ziel zu senken, nicht mehr zu
+  // üben, und erscheint erst nach einigen Wochen Geschichte.
+  let zielfrequenzHinweis = $state<string | undefined>(undefined);
+
   $effect(() => {
     if (aktiv || !set) return;
     untrack(() => {
+      const jetzt = Date.now();
+      const eigeneDurchgaenge = bestand.uebungsdurchgaenge.filter((d) => d.setId === set.id);
+      const durchgaengeBegonnenAm = eigeneDurchgaenge.map((d) => d.begonnenAm);
+      const zielProWoche = bestand.einstellungen?.uebungZielProWoche;
+
       const pool = uebungsKennzahlenPool({
         eingefuehrteZustaende,
         antworten: bestand.uebungsantworten.filter((a) => a.setId === set.id),
-        durchgaengeBegonnenAm: bestand.uebungsdurchgaenge.filter((d) => d.setId === set.id).map((d) => d.begonnenAm),
+        durchgaengeBegonnenAm,
         aromen: alleAromen,
         familienLabels,
         gesamtAnzahlAromen: alleAromen.length,
-        jetzt: Date.now(),
+        jetzt,
+        zielProWoche,
       });
       kennzahlenAuswahl = waehleKennzahlen(pool, 2);
+
+      const kuerzlichAbgeschlossen = eigeneDurchgaenge.some(
+        (d) => d.status === 'abgeschlossen' && d.abgeschlossenAm !== undefined && jetzt - d.abgeschlossenAm < 15 * 60_000,
+      );
+      begruessungsText = uebungsBegruessung(new Date(jetzt), {
+        geradeAbgeschlossen: kuerzlichAbgeschlossen,
+        nochNichtsEingefuehrt: eingefuehrteZustaende.length === 0,
+      });
+
+      reverseVorschlagOption = reverseVorschlag(alleAromen, bekannteStaende, jetzt);
+
+      const abgleich = zielProWoche ? zielfrequenzAbgleich(zielProWoche, durchgaengeBegonnenAm, jetzt) : undefined;
+      zielfrequenzHinweis =
+        abgleich?.weichtAb && zielProWoche
+          ? `Faktisch ${abgleich.faktischProWoche.toFixed(1)}× pro Woche statt ${zielProWoche}× — Ziel anpassen?`
+          : undefined;
     });
   });
 
@@ -758,6 +803,23 @@
     navigation.gehe({ name: 'uebungLaufend' });
   }
 
+  /**
+   * Übersicht → Reverse, direkt mit dem vorgeschlagenen Aroma — überspringt
+   * den Such-Schritt ('wahl'). Reihenfolge ist hier der Kniff: erst
+   * schreiben (reverseDurchgangStarten legt den Durchgang an und setzt
+   * reverseSchritt = 'riechen'), erst danach navigieren. Der anschließende
+   * Remount (siehe versucheWiederaufnahme()) liest den frisch geschriebenen
+   * Durchgang zurück und stellt genau diesen Riechen-Schritt wieder her —
+   * keine eigene Zustandsmaschine nötig.
+   */
+  async function reverseVorschlagUeben() {
+    if (!reverseVorschlagOption) return;
+    reverseAromaId = reverseVorschlagOption.id;
+    phase = 'reverse';
+    await reverseDurchgangStarten();
+    navigation.gehe({ name: 'uebungLaufend' });
+  }
+
   // ---- Wiederaufnehmen nach einem Neu-Mount --------------------------------
   // Rahmen.svelte baut bei jedem Routenwechsel per {#key zuPfad(route)} neu
   // auf, auch zwischen 'uebung' und 'uebungLaufend' — ein Wechsel dorthin ist
@@ -819,6 +881,10 @@
   {:else if alleAromen.length === 0}
     <p class="hinweis">Noch keine Fläschchen erfasst.</p>
   {:else if !aktiv}
+    <header class="begruessungsblock">
+      {#if begruessungsText.label}<p class="tageszeit-label">{begruessungsText.label}</p>{/if}
+      <p class="begruessung">{begruessungsText.satz}</p>
+    </header>
     {#if kennzahlenAuswahl.length > 0}
       <div class="kennzahl-raster" class:einzeln={kennzahlenAuswahl.length === 1}>
         {#each kennzahlenAuswahl as fakt (fakt.label)}
@@ -832,6 +898,9 @@
     {#if sperreAktiv}
       <p class="hinweis">Erst festigen, dann Neues.</p>
     {/if}
+    {#if zielfrequenzHinweis}
+      <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
+    {/if}
     <div class="knopfreihe">
       <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
       {#if kontrastKandidat}
@@ -839,6 +908,17 @@
       {/if}
       <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
     </div>
+    {#if reverseVorschlagOption}
+      <div class="reverse-vorschlag">
+        <p class="hinweis">Schwer getan mit: {reverseVorschlagOption.label}</p>
+        <div class="knopfreihe">
+          <Knopf onKlick={reverseVorschlagUeben}>reverse üben: {reverseVorschlagOption.label}</Knopf>
+          {#if reverseVorschlagOption.nummer !== undefined && datenblattZu(reverseVorschlagOption.nummer)}
+            <Knopf onKlick={() => (datenblatt = datenblattZu(reverseVorschlagOption!.nummer!))}>Datenblatt ansehen</Knopf>
+          {/if}
+        </div>
+      </div>
+    {/if}
     <div class="block">
       <Blattliste>
         <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
@@ -1062,6 +1142,31 @@
   .block {
     margin-bottom: var(--r4);
   }
+  /* Begrüßung — 1:1 aus Bar.svelte übernommen (dort ausführlich begründet:
+     Abstand/Umbruch statt groesserer Schrift fuer Praesenz). Dritter
+     Aufrufer desselben Musters nach den Kennzahl-Kacheln. Fuellt zusammen
+     mit der Reverse-Vorschlag-Zeile unten die Flaeche, die vorher leer
+     unter den Knoepfen stand (Livebetrieb-Rueckmeldung "sieht leer aus"). */
+  .begruessungsblock {
+    padding: var(--r3) 0 var(--r3);
+  }
+  .tageszeit-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-label);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
+    color: var(--akzent);
+    margin: 0 0 6px;
+  }
+  .begruessung {
+    font-size: var(--fs-titel);
+    font-weight: var(--gw-titel);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
+    max-width: 22ch;
+    margin: 0;
+  }
   /* Kennzahl-Kacheln — 1:1 aus Bar.svelte übernommen (dort ausführlich
      begründet: Zeilenklammerung, Mindestbreite gegen horizontales Scrollen
      auf dem S25, kurze statt umgebrochener Labels). Zwei rotierende Fakten
@@ -1172,6 +1277,14 @@
     align-items: center;
     gap: var(--r2);
     margin-top: var(--r3);
+  }
+  /* Reverse-Vorschlag — zusaetzliche Zeile unter der Knopfreihe, der
+     bestehende "reverse üben"-Knopf bleibt unveraendert (Julians Vorschlag,
+     als Ergaenzung statt Ersatz). Mehr Abstand nach oben als .knopfreihe
+     zueinander, damit die Zeile als eigener Block liest, nicht als Fortsetzung
+     der Knopfreihe. */
+  .reverse-vorschlag {
+    margin-top: var(--r5);
   }
   .hinweis {
     color: var(--gedaempft);

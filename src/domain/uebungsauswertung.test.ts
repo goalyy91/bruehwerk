@@ -168,6 +168,15 @@ describe('uebungsKennzahlenPool — sechs Fakten, jeder erst ab ausreichender Da
     expect(dieseWoche).toContainEqual({ label: 'Durchgänge diese Woche', wert: '2' });
   });
 
+  it('mit gesetztem Wochenziel nennt "Durchgänge diese Woche" das Ziel mit, sonst bleibt es bei der reinen Zahl', () => {
+    const begonnen = [JETZT - 1 * TAG, JETZT - 2 * TAG];
+    const ohneZiel = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: begonnen });
+    expect(ohneZiel).toContainEqual({ label: 'Durchgänge diese Woche', wert: '2' });
+
+    const mitZiel = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: begonnen, zielProWoche: 4 });
+    expect(mitZiel).toContainEqual({ label: 'Durchgänge diese Woche', wert: '2 von 4' });
+  });
+
   it('Staerkste Familie erst ab Mindeststichprobe, waehlt die hoechste Quote', () => {
     const zuWenig = [ANTWORT_KENNZAHL({ aromaId: 'mandel', form: 'familie', ergebnis: 'richtig' })];
     expect(uebungsKennzahlenPool({ ...LEER, antworten: zuWenig }).find((k) => k.label === 'Stärkste Familie')).toBeUndefined();

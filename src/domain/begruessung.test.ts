@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { begruessung, tageszeitVon } from './begruessung';
+import { begruessung, tageszeitVon, uebungsBegruessung } from './begruessung';
 
 describe('Tageszeit-Fenster', () => {
   it('ordnet jede Grenzstunde ihrem Fenster zu', () => {
@@ -42,5 +42,42 @@ describe('Begrüßung', () => {
     const ergebnis = begruessung(jetzt, { offeneBestellung: true }, () => 0);
     expect(ergebnis.label).toBeUndefined();
     expect(ergebnis.satz).toBe('Die Bestellung von vorhin wartet noch.');
+  });
+});
+
+describe('uebungsBegruessung', () => {
+  const KEIN_KONTEXT = { geradeAbgeschlossen: false, nochNichtsEingefuehrt: false };
+
+  it('nennt ein Tageszeit-Label und einen Satz aus dem Uebungs-Pool, ohne Kontext', () => {
+    const jetzt = new Date(2026, 7, 30, 15, 0);
+    const ergebnis = uebungsBegruessung(jetzt, KEIN_KONTEXT, () => 0);
+    expect(ergebnis.label).toBe('Nachmittag');
+    expect(ergebnis.satz).toBe('Der Nachmittag hat noch Platz für ein paar Aromen.');
+  });
+
+  it('waehlt den zweiten Satz des Fensters, wenn der Zufall darueber liegt', () => {
+    const jetzt = new Date(2026, 7, 30, 15, 0);
+    const ergebnis = uebungsBegruessung(jetzt, KEIN_KONTEXT, () => 0.9);
+    expect(ergebnis.satz).toBe('Zeit für eine Runde Riechen?');
+  });
+
+  it('geradeAbgeschlossen sticht die Tageszeit und traegt kein Label', () => {
+    const jetzt = new Date(2026, 7, 30, 15, 0);
+    const ergebnis = uebungsBegruessung(jetzt, { geradeAbgeschlossen: true, nochNichtsEingefuehrt: false }, () => 0);
+    expect(ergebnis.label).toBeUndefined();
+    expect(ergebnis.satz).toBe('Gut gemacht eben.');
+  });
+
+  it('nochNichtsEingefuehrt sticht die Tageszeit, wenn nichts gerade abgeschlossen wurde', () => {
+    const jetzt = new Date(2026, 7, 30, 15, 0);
+    const ergebnis = uebungsBegruessung(jetzt, { geradeAbgeschlossen: false, nochNichtsEingefuehrt: true }, () => 0);
+    expect(ergebnis.label).toBeUndefined();
+    expect(ergebnis.satz).toBe('Bereit für die ersten Aromen?');
+  });
+
+  it('geradeAbgeschlossen hat Vorrang vor nochNichtsEingefuehrt', () => {
+    const jetzt = new Date(2026, 7, 30, 15, 0);
+    const ergebnis = uebungsBegruessung(jetzt, { geradeAbgeschlossen: true, nochNichtsEingefuehrt: true }, () => 0);
+    expect(ergebnis.satz).toBe('Gut gemacht eben.');
   });
 });

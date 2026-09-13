@@ -10,6 +10,7 @@ import {
   verwechslungspaare,
   werteKontrastAus,
   KONTRASTDURCHGANG_SCHWELLE,
+  reverseVorschlag,
   type AromaOption,
   type GesamtStand,
   type TrefferStand,
@@ -366,5 +367,41 @@ describe('werteKontrastAus — eine gemeinsame Zuordnungsfrage, kein "teilweise"
     expect(auswertung.ergebnis).toBe('falsch');
     expect(auswertung.aBox).toBe(1);
     expect(auswertung.bBox).toBe(1);
+  });
+});
+
+describe('reverseVorschlag — schwierigstes eingefuehrtes Aroma fuer die Uebersicht', () => {
+  it('ohne eingefuehrtes Aroma: kein Vorschlag', () => {
+    const alle = aromen('n', 3); // keine Staende -> nicht eingefuehrt
+    expect(reverseVorschlag(alle, new Map(), JETZT)).toBeUndefined();
+  });
+
+  it('waehlt ein Aroma aus der niedrigsten Box, nicht aus einer hoeheren', () => {
+    const alle = aromen('a', 3);
+    const staende = new Map<string, GesamtStand>([
+      ['a1', STAND({ benennen: { versuche: 5, treffer: 5 }, box: 1, faellig: JETZT - TAG })],
+      ['a2', STAND({ benennen: { versuche: 5, treffer: 5 }, box: 3, faellig: JETZT - TAG })],
+      ['a3', STAND({ benennen: { versuche: 5, treffer: 5 }, box: 4, faellig: JETZT - TAG })],
+    ]);
+    const vorschlag = reverseVorschlag(alle, staende, JETZT);
+    expect(vorschlag?.id).toBe('a1');
+  });
+
+  it('ignoriert nicht eingefuehrte Aromen, auch wenn sie rechnerisch Box 1 waeren', () => {
+    const eingefuehrt = aromen('e', 1);
+    const nichtEingefuehrt = aromen('n', 1);
+    const alle = [...eingefuehrt, ...nichtEingefuehrt];
+    const staende = new Map<string, GesamtStand>([['e1', STAND({ benennen: { versuche: 5, treffer: 5 }, box: 3, faellig: JETZT - TAG })]]);
+    const vorschlag = reverseVorschlag(alle, staende, JETZT);
+    expect(vorschlag?.id).toBe('e1');
+  });
+
+  it('bei Gleichstand auf derselben Box wird zufaellig gezogen (mit festem Zufall deterministisch)', () => {
+    const alle = aromen('a', 3);
+    const staende = new Map<string, GesamtStand>(
+      alle.map((a): [string, GesamtStand] => [a.id, STAND({ benennen: { versuche: 5, treffer: 5 }, box: 2, faellig: JETZT - TAG })]),
+    );
+    expect(reverseVorschlag(alle, staende, JETZT, () => 0)?.id).toBe('a2');
+    expect(reverseVorschlag(alle, staende, JETZT, () => 0.99)?.id).toBe('a1');
   });
 });
