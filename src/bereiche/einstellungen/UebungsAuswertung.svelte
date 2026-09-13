@@ -66,9 +66,24 @@
   // uebungsKennzahlenPool). Eigenes `jetzt` statt des oben schon vorhandenen:
   // dieselbe Absicht ("einmal beim Öffnen"), nur an dieser Stelle gebraucht.
   const zustaendeJetzt = Date.now();
+
+  // Namen statt roher Boxnummern (Livebetrieb-Rückmeldung: "Boxen heißen
+  // immer noch Box 1-5" — derselbe Befund, der die Übersicht schon zu den
+  // Kennzahl-Kacheln oben geführt hat, jetzt an der letzten Stelle, wo er
+  // noch stand). "Sicher" für Box 4 bewusst wortgleich mit der Kennzahl
+  // "Sicher gelernt" (domain/uebungsauswertung.ts::SICHER_AB_BOX = 4) —
+  // dieselbe Schwelle, derselbe Begriff. Reine Anzeige: der Box-Typ (1-5)
+  // in domain/leitner.ts bleibt unangetastet.
+  const BOX_NAMEN: Record<1 | 2 | 3 | 4 | 5, string> = {
+    1: 'Neu',
+    2: 'In Übung',
+    3: 'Festigt sich',
+    4: 'Sicher',
+    5: 'Gemeistert',
+  };
   const boxenZeilen = $derived(
     ([1, 2, 3, 4, 5] as const).map((box) => ({
-      label: `Box ${box}`,
+      label: BOX_NAMEN[box],
       wert: alleAromen
         .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === set?.id && u.aromaId === a.id), zustaendeJetzt))
         .filter((z) => z.eingefuehrt && z.box === box).length,
