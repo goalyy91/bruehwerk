@@ -43,6 +43,8 @@ export const Uebungsantwort = z.object({
   aromaId: Id,
   /** Fehlt, wenn "reverse" ohne Fläschchensuche abgebrochen wurde. */
   getipptId: Id.optional(),
+  /** Getippte Familie bei Stufe A/B — Rohstoff für den Ende-Screen ("welche Familie hast du gewählt, welche wäre richtig gewesen"). Fehlt bei Stufe C (kein Familientipp) sowie bei "kontrast"/"reverse". */
+  getipptFamilieId: Id.optional(),
   form: z.enum(UEBUNGSFORMEN),
   /** Fehlt bei "kontrast" und "reverse" — siehe Dateikopf. */
   stufe: z.enum(['a', 'b', 'c']).optional(),
