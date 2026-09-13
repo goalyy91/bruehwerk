@@ -315,6 +315,8 @@
     readonly ergebnis: 'richtig' | 'teilweise' | 'falsch';
     readonly tatsaechlicheOption: AromaOption;
     readonly unerwarteteNummer: boolean;
+    /** Nur gesetzt, wenn ein Familientipp danebenlag (Stufe A/B, ergebnis "falsch") — welche Familie es gewesen wäre. */
+    readonly korrekteFamilie?: string;
   }
   let letzteAuswertung = $state<LetzteAuswertung | undefined>(undefined);
 
@@ -345,6 +347,22 @@
 
   const aromenDerGewaehltenFamilie = $derived(
     tipFamilie ? alleAromen.filter((a) => a.kategorieId === tipFamilie).map((a) => ({ wert: a.id, label: a.label })) : [],
+  );
+
+  /**
+   * Eingefrorene Zusammenfassung des Tipp-Schritts, sobald `itemPhase` weiter
+   * ist als 'raten' — der Block selbst bleibt stehen statt zu verschwinden
+   * (Livebetrieb-Rückmeldung: "baut sich über einen Screen hinweg auf" statt
+   * sich bei jedem Schritt zu ersetzen, siehe Template weiter unten).
+   */
+  const tippZusammenfassung = $derived(
+    !item
+      ? ''
+      : item.formStufe === 'a'
+        ? `Deine Familie: ${familieVon(tipFamilie)}`
+        : item.formStufe === 'b'
+          ? `Deine Familie: ${familieVon(tipFamilie)} · dein Aroma: ${aromenDerGewaehltenFamilie.find((a) => a.wert === tipAroma)?.label ?? ''}`
+          : `Dein Tipp: ${namenOptionen.find((a) => a.wert === tipAroma)?.label ?? ''}`,
   );
 
   function familieGewaehlt(wert: string) {
@@ -435,6 +453,7 @@
         setId: set.id,
         aromaId: tatsaechlicheId,
         getipptId: item.formStufe === 'a' ? undefined : tipAroma || undefined,
+        getipptFamilieId: tipFamilie || undefined,
         form: item.formStufe === 'a' ? 'familie' : item.formStufe === 'b' ? 'aromaInFamilie' : 'freierAbruf',
         stufe: item.formStufe,
         ergebnis: auswertung.ergebnis,
@@ -458,7 +477,15 @@
       return;
     }
 
-    letzteAuswertung = { ergebnis: auswertung.ergebnis, tatsaechlicheOption, unerwarteteNummer };
+    // Bei Stufe A/B mit falscher Familie: die richtige nennen — bei
+    // "teilweise" war die Familie schon richtig (nur das Aroma nicht), bei
+    // Stufe C gab es gar keinen Familientipp.
+    const korrekteFamilie =
+      auswertung.ergebnis === 'falsch' && item.formStufe !== 'c' && tatsaechlicheOption.kategorieId
+        ? familieVon(tatsaechlicheOption.kategorieId)
+        : undefined;
+
+    letzteAuswertung = { ergebnis: auswertung.ergebnis, tatsaechlicheOption, unerwarteteNummer, korrekteFamilie };
     itemPhase = 'aufgeloest';
     // Keine Pause nach dem letzten Item — niemand riecht danach noch etwas,
     // fuer das sich die Nase erholen muesste.
@@ -691,7 +718,13 @@
     (durchgang?.beantwortet ?? []).map((aromaId) => {
       const antwort = bestand.uebungsantworten.find((a) => a.durchgangId === durchgang?.id && a.aromaId === aromaId);
       const option = alleAromen.find((a) => a.id === aromaId);
-      return { label: option?.label ?? '?', wert: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '' };
+      // Nur bei Stufe A/B (Familientipp) — Stufe C (freier Abruf) hat keine
+      // Familie getippt, bleibt ohne Hinweiszeile.
+      const hinweis =
+        antwort && (antwort.form === 'familie' || antwort.form === 'aromaInFamilie') && antwort.getipptFamilieId
+          ? `getippt: ${familieVon(antwort.getipptFamilieId)} · richtig: ${familieVon(option?.kategorieId)}`
+          : undefined;
+      return { label: option?.label ?? '?', wert: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '', hinweis };
     }),
   );
 
@@ -838,8 +871,8 @@
   {:else if phase === 'item' && item}
     <p class="fortschritt">{index + 1} von {DURCHGANG_GROESSE}</p>
 
-    {#if itemPhase === 'raten'}
-      <div class="frage-block">
+    <div class="frage-block">
+      {#if itemPhase === 'raten'}
         <p class="frage-satz">Zieh eins, ohne hinzusehen — riech daran.</p>
         {#if item.formStufe === 'a'}
           <p class="frage-titel">Welche Familie ist das?</p>
@@ -872,16 +905,26 @@
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={zurNummer} deaktiviert={!tippVollstaendig}>weiter</Knopf>
         </div>
-      </div>
-    {:else if itemPhase === 'nummer'}
+      {:else}
+        <p class="hinweis">{tippZusammenfassung}</p>
+      {/if}
+    </div>
+
+    {#if itemPhase === 'nummer' || itemPhase === 'aufgeloest'}
       <div class="frage-block">
-        <p class="frage-satz">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
-        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={aufloesen} deaktiviert={!tipNummer}>auflösen</Knopf>
-        </div>
+        {#if itemPhase === 'nummer'}
+          <p class="frage-satz">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
+          <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={aufloesen} deaktiviert={!tipNummer}>auflösen</Knopf>
+          </div>
+        {:else}
+          <p class="hinweis">Gelesene Nummer: {nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}</p>
+        {/if}
       </div>
-    {:else if letzteAuswertung}
+    {/if}
+
+    {#if itemPhase === 'aufgeloest' && letzteAuswertung}
       <div class="frage-block">
         <p class="ergebnis" class:richtig={letzteAuswertung.ergebnis === 'richtig'}>
           {#if letzteAuswertung.ergebnis === 'richtig'}
@@ -892,6 +935,9 @@
             Das war „{letzteAuswertung.tatsaechlicheOption.label}“.
           {/if}
         </p>
+        {#if letzteAuswertung.korrekteFamilie}
+          <p class="hinweis">Richtige Familie wäre gewesen: {letzteAuswertung.korrekteFamilie}.</p>
+        {/if}
         {#if letzteAuswertung.unerwarteteNummer}
           <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
         {/if}
@@ -962,7 +1008,13 @@
     <div class="frage-block">
       {#if reverseSchritt === 'wahl'}
         <p class="frage-satz">Welches Aroma willst du reverse üben?</p>
-        <AuswahlListe optionen={namenOptionen} wert={reverseAromaId} onWahl={(w) => (reverseAromaId = w)} platzhalter="Aroma suchen …" suchbar />
+        <AuswahlListe
+          optionen={nummernOptionen}
+          wert={reverseAromaId}
+          onWahl={(w) => (reverseAromaId = w)}
+          platzhalter="Aroma oder Nummer suchen …"
+          suchbar
+        />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={reverseDurchgangStarten} deaktiviert={!reverseAromaId}>weiter</Knopf>
         </div>
