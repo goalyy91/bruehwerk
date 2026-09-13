@@ -7,6 +7,9 @@ import {
   planeDurchgang,
   DURCHGANG_GROESSE,
   werteAntwortAus,
+  verwechslungspaare,
+  werteKontrastAus,
+  KONTRASTDURCHGANG_SCHWELLE,
   type AromaOption,
   type GesamtStand,
   type TrefferStand,
@@ -306,5 +309,62 @@ describe('werteAntwortAus — formStufe stammt von einem anderen Aroma als dem t
     expect(auswertung.ergebnis).toBe('richtig'); // die gezeigte Form (A) wird korrekt ausgewertet
     expect(auswertung.stufe).toBe('c'); // bleibt auf C, kein Rueckschritt durch die andere Form
     expect(auswertung.familienSerie).toBe(0); // wird nicht hochgezaehlt — das Aroma ist laengst ueber Stufe A hinaus
+  });
+});
+
+// ============================================================================
+// Aromapaket, Etappe 7 — Kontrastdurchgang
+// ============================================================================
+
+describe('verwechslungspaare — Schwelle, Richtungs-Dedup, Sortierung (Lastenheft Abschnitt 8)', () => {
+  it('unter der Schwelle taucht kein Paar auf', () => {
+    const staende = new Map<string, GesamtStand>([['mandel', STAND({ verwechslungen: { haselnuss: KONTRASTDURCHGANG_SCHWELLE - 1 } })]]);
+    expect(verwechslungspaare(staende)).toEqual([]);
+  });
+
+  it('an der Schwelle taucht das Paar auf', () => {
+    const staende = new Map<string, GesamtStand>([['mandel', STAND({ verwechslungen: { haselnuss: KONTRASTDURCHGANG_SCHWELLE } })]]);
+    const paare = verwechslungspaare(staende);
+    expect(paare).toHaveLength(1);
+    expect(paare[0]).toMatchObject({ aId: 'mandel', bId: 'haselnuss', anzahl: KONTRASTDURCHGANG_SCHWELLE });
+  });
+
+  it('eine in beide Richtungen dokumentierte Verwechslung zaehlt als EIN Paar mit der hoeheren Zahl, nicht als Summe', () => {
+    const staende = new Map<string, GesamtStand>([
+      ['mandel', STAND({ verwechslungen: { haselnuss: 5 } })],
+      ['haselnuss', STAND({ verwechslungen: { mandel: 3 } })],
+    ]);
+    const paare = verwechslungspaare(staende);
+    expect(paare).toHaveLength(1);
+    expect(paare[0]!.anzahl).toBe(5);
+  });
+
+  it('mehrere Paare stehen absteigend nach Haeufigkeit', () => {
+    const staende = new Map<string, GesamtStand>([
+      ['mandel', STAND({ verwechslungen: { haselnuss: 3 } })],
+      ['teer', STAND({ verwechslungen: { gummi: 7 } })],
+    ]);
+    const paare = verwechslungspaare(staende);
+    expect(paare.map((p) => p.anzahl)).toEqual([7, 3]);
+  });
+});
+
+describe('werteKontrastAus — eine gemeinsame Zuordnungsfrage, kein "teilweise" (Lastenheft Abschnitt 6)', () => {
+  it('richtige Reihenfolge bewegt beide Boxen eine hoch, jede von ihrer eigenen aus', () => {
+    const a = STAND({ box: 2, faellig: JETZT - TAG });
+    const b = STAND({ box: 4, faellig: JETZT - TAG });
+    const auswertung = werteKontrastAus(true, a, b, JETZT);
+    expect(auswertung.ergebnis).toBe('richtig');
+    expect(auswertung.aBox).toBe(3);
+    expect(auswertung.bBox).toBe(5);
+  });
+
+  it('falsche Reihenfolge wirft beide Boxen auf 1 zurueck', () => {
+    const a = STAND({ box: 2, faellig: JETZT - TAG });
+    const b = STAND({ box: 4, faellig: JETZT - TAG });
+    const auswertung = werteKontrastAus(false, a, b, JETZT);
+    expect(auswertung.ergebnis).toBe('falsch');
+    expect(auswertung.aBox).toBe(1);
+    expect(auswertung.bBox).toBe(1);
   });
 });

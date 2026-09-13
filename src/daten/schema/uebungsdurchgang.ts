@@ -16,6 +16,10 @@
  * (Lastenheft, "Kontrastpaar") legt nur zwei Fläschchen verdeckt bereit, mit
  * `art: 'kontrast'`. `abgefragt` und `zusatz` sind disjunkte Teilmengen von
  * `verdeckt`; bei `art: 'kontrast'` ist `zusatz` leer, `abgefragt` beide.
+ * `art: 'reverse'` (Aromapaket Etappe 7) traegt genau ein Aroma in
+ * `verdeckt`/`abgefragt` — nicht blind gezogen, sondern gezielt gesucht
+ * (Lastenheft Abschnitt 4), aber derselbe Datensatz-Rahmen reicht dafuer,
+ * ohne eine eigene Sammlung zu rechtfertigen.
  *
  * Reihenfolge, in der tatsaechlich gezogen wurde, steht in `beantwortet` —
  * nur diese Ids duerfen in `Uebungsantwort.aromaId` als "zu diesem Durchgang
@@ -25,7 +29,7 @@
 import { z } from 'zod';
 import { Id, Zeitpunkt } from './common';
 
-export const DURCHGANG_ARTEN = ['normal', 'kontrast'] as const;
+export const DURCHGANG_ARTEN = ['normal', 'kontrast', 'reverse'] as const;
 export type DurchgangArt = (typeof DURCHGANG_ARTEN)[number];
 
 export const DURCHGANG_STATUS = ['bereitlegen', 'laufend', 'abgeschlossen'] as const;
@@ -36,11 +40,11 @@ export const Uebungsdurchgang = z.object({
   setId: Id,
   art: z.enum(DURCHGANG_ARTEN).default('normal'),
   status: z.enum(DURCHGANG_STATUS).default('bereitlegen'),
-  /** Alle verdeckt bereitgelegten Aroma-Ids — 12 bei "normal", 2 bei "kontrast". */
+  /** Alle verdeckt bereitgelegten Aroma-Ids — 12 bei "normal", 2 bei "kontrast", 1 bei "reverse". */
   verdeckt: z.array(Id),
-  /** Teilmenge von `verdeckt`, die tatsächlich abgefragt wird (8 bzw. 2). */
+  /** Teilmenge von `verdeckt`, die tatsächlich abgefragt wird (8 bzw. 2 bzw. 1). */
   abgefragt: z.array(Id),
-  /** Teilmenge von `verdeckt`, die nie geöffnet wird — leer bei "kontrast". */
+  /** Teilmenge von `verdeckt`, die nie geöffnet wird — leer bei "kontrast"/"reverse". */
   zusatz: z.array(Id).default([]),
   /** Teilmenge von `abgefragt`, in Ziehreihenfolge, die schon dran war. */
   beantwortet: z.array(Id).default([]),

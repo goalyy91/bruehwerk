@@ -11,7 +11,7 @@
  * Math.random), damit die Auswahl selbst testbar ist, ohne echten Zufall
  * nachzubilden — ebenso `jetzt`, ohne Default.
  *
- * Drei Teile:
+ * Fünf Teile:
  *  1. Trefferquote (bereinigteQuote/gesamtquote) — historisch aus der ersten
  *     Fassung, lebt weiter: sie füttert domain/leitner.ts::startBox bei der
  *     Übernahme eines Altbestands ohne `box`.
@@ -19,6 +19,10 @@
  *     zwölf Aromen verdeckt bereitliegen.
  *  3. Auswertung einer Antwort (werteAntwortAus) — Ergebnis und
  *     Leitner-Bewegung, nachdem die Nummer feststeht.
+ *  4. Verwechslungspaare (verwechslungspaare) — welche Aromen sich ein
+ *     Kontrastdurchgang vornehmen darf (Aromapaket, Etappe 7).
+ *  5. Auswertung eines Kontrastdurchgangs (werteKontrastAus) — eine
+ *     gemeinsame Entscheidung für zwei Aromen statt einer einzelnen.
  */
 import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
@@ -392,4 +396,91 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
   }
 
   return { ergebnis, box, faellig, stufe, familienSerie };
+}
+
+// ============================================================================
+// Verwechslungspaare — welche Aromen sich ein Kontrastdurchgang vornehmen
+// darf (Aromapaket, Etappe 7).
+// ============================================================================
+
+/** Ab wie vielen dokumentierten Verwechslungen ein Paar für einen Kontrastdurchgang infrage kommt — Lastenheft Abschnitt 8. */
+export const KONTRASTDURCHGANG_SCHWELLE = 3;
+
+export interface Verwechslungspaar {
+  readonly aId: string;
+  readonly bId: string;
+  /** Die höhere der beiden Richtungen — siehe verwechslungspaare(). */
+  readonly anzahl: number;
+}
+
+/**
+ * Alle Verwechslungspaare, die die Schwelle erreichen, absteigend nach
+ * Häufigkeit — die Grundlage dafür, welchen Kontrastdurchgang die App
+ * anbietet. Liest `GesamtStand.verwechslungen` direkt (dieselbe laufend
+ * gepflegte Liste, die schon `planeDurchgang` für den Verwechslungsvorzug
+ * nutzt) statt eine eigene Auswertung aus `Uebungsantwort` aufzubauen — die
+ * ausführlichere, gerichtete Verwechslungsmatrix aus dem Antwortprotokoll
+ * ist Sache von domain/uebungsauswertung.ts (Etappe 8), nicht dieser hier.
+ *
+ * Eine Verwechslung kann in beide Richtungen dokumentiert sein (A tippt B,
+ * UND B tippt A) — das zählt als **ein** Paar, nicht zwei, mit der höheren
+ * der beiden Zahlen. Eine Summe wäre hier falsch: sie würde ein Paar, bei
+ * dem nur eine Richtung tatsächlich oft verwechselt wird, künstlich
+ * aufwerten.
+ */
+export function verwechslungspaare(staende: ReadonlyMap<string, GesamtStand>): readonly Verwechslungspaar[] {
+  const gesehen = new Set<string>();
+  const paare: Verwechslungspaar[] = [];
+  for (const [aId, stand] of staende) {
+    for (const [bId, anzahlHin] of Object.entries(stand.verwechslungen)) {
+      const schluessel = [aId, bId].sort().join('|');
+      if (gesehen.has(schluessel)) continue;
+      gesehen.add(schluessel);
+      const anzahlRueck = staende.get(bId)?.verwechslungen[aId] ?? 0;
+      const anzahl = Math.max(anzahlHin, anzahlRueck);
+      if (anzahl >= KONTRASTDURCHGANG_SCHWELLE) paare.push({ aId, bId, anzahl });
+    }
+  }
+  return paare.sort((a, b) => b.anzahl - a.anzahl);
+}
+
+// ============================================================================
+// Auswertung eines Kontrastdurchgangs — eine gemeinsame Entscheidung für
+// zwei Aromen (Aromapaket, Etappe 7).
+// ============================================================================
+
+export interface KontrastAuswertung {
+  readonly ergebnis: 'richtig' | 'falsch';
+  readonly aBox: Box;
+  readonly aFaellig: number;
+  readonly bBox: Box;
+  readonly bFaellig: number;
+}
+
+/**
+ * Wertet einen Kontrastdurchgang aus: **eine** Zuordnungsfrage ("welches war
+ * welches") über zwei Aromen hinweg, nicht zwei Einzelfragen — das zweite
+ * wäre nach dem ersten durch Ausschluss geschenkt (Lastenheft Abschnitt 6).
+ * Deshalb kein `teilweise`: entweder beide richtig zugeordnet, oder beide
+ * verwechselt — eine binäre Unterscheidungsleistung kennt keine Zwischenstufe.
+ *
+ * Beide Aromen bewegen sich **gemeinsam in dieselbe Richtung**, aber jedes
+ * von seiner **eigenen** Box aus — ein Kontrastdurchgang bevorzugt zwar
+ * Aromen mit dokumentierter Verwechslung (`verwechslungspaare`), das sagt
+ * aber nichts darüber, dass beide zufällig denselben Fortschritt hätten.
+ * Berührt bewusst weder `stufe` noch `familienSerie`: ein Kontrastdurchgang
+ * ist keine Familien-Übung und bewegt diesen Fortschritt nicht.
+ */
+export function werteKontrastAus(
+  richtigeReihenfolge: boolean,
+  aStand: GesamtStand | undefined,
+  bStand: GesamtStand | undefined,
+  jetzt: number,
+): KontrastAuswertung {
+  const ergebnis: 'richtig' | 'falsch' = richtigeReihenfolge ? 'richtig' : 'falsch';
+  const aZustand = effektiverZustand(aStand, jetzt);
+  const bZustand = effektiverZustand(bStand, jetzt);
+  const aBox = bewegeBox(aZustand.box, ergebnis);
+  const bBox = bewegeBox(bZustand.box, ergebnis);
+  return { ergebnis, aBox, aFaellig: naechsteFaelligkeit(aBox, jetzt), bBox, bFaellig: naechsteFaelligkeit(bBox, jetzt) };
 }

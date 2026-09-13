@@ -322,9 +322,17 @@ describe('Uebungsantwort — ein Datensatz je Antwort, Aromapaket Etappe 6', () 
     expect(ergebnis.data.unerwarteteNummer).toBe(false);
   });
 
-  it('eine "reverse"-Antwort ohne Ergebnis ist gueltig — ungescort, siehe Dateikopf', () => {
-    const ergebnis = Uebungsantwort.safeParse({ ...BASIS, form: 'reverse' });
+  it('eine "reverse"-Antwort traegt die Selbsteinschaetzung als Ergebnis, ohne stufe', () => {
+    const { stufe: _stufe, ...ohneStufe } = BASIS;
+    const ergebnis = Uebungsantwort.safeParse({ ...ohneStufe, form: 'reverse', ergebnis: 'richtig' });
     expect(ergebnis.success).toBe(true);
+    if (!ergebnis.success) return;
+    expect(ergebnis.data.stufe).toBeUndefined();
+  });
+
+  it('eine "kontrast"-Antwort ohne stufe ist gueltig — Kontrastpaare sind an keine Lernstufe gebunden', () => {
+    const { stufe: _stufe, ...ohneStufe } = BASIS;
+    expect(Uebungsantwort.safeParse({ ...ohneStufe, form: 'kontrast', ergebnis: 'falsch' }).success).toBe(true);
   });
 
   it('eine unbekannte Uebungsform faellt durch', () => {
@@ -364,5 +372,17 @@ describe('Uebungsdurchgang — der laufende oder abgeschlossene Durchgang, Aroma
     expect(ergebnis.success).toBe(true);
     if (!ergebnis.success) return;
     expect(ergebnis.data.zusatz).toEqual([]);
+  });
+
+  it('ein Reverse-Durchgang mit genau einem Aroma ist gueltig', () => {
+    const reverse = {
+      id: 'd3',
+      setId: 's1',
+      art: 'reverse',
+      verdeckt: ['flaeschchen-21'],
+      abgefragt: ['flaeschchen-21'],
+      begonnenAm: 1000,
+    };
+    expect(Uebungsdurchgang.safeParse(reverse).success).toBe(true);
   });
 });
