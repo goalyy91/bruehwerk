@@ -17,9 +17,23 @@
  * sie sich selbst zu besorgen. Der Zufall wird injiziert (Default
  * Math.random), damit die Auswahl selbst testbar ist, ohne echten Zufall
  * nachzubilden.
+ *
+ * Aromapaket, Etappe 6 (Neubau nach Lastenheft, docs/konzept.md
+ * "Übungsmodus"): ab dem Abschnitt "Zusammenstellung eines
+ * Übungsdurchgangs" unten kommt die neue Logik dazu — welche zwölf Aromen
+ * ein Durchgang verdeckt bereitlegt. Alles darüber (Aufgabe,
+ * aufgabeBenennen, aufgabeUnterscheiden, naechstesZiel, naechsteAufgabe,
+ * zielGewicht) gehört noch dem **alten** Übungsmodus-Bildschirm
+ * (bereiche/einstellungen/Uebungsmodus.svelte) und bleibt bewusst stehen,
+ * bis Etappe 3 diesen Bildschirm ersetzt — sonst bräche der noch aktive
+ * Bildschirm mitten in einem Zwischenschritt. `bereinigteQuote` und
+ * `gesamtquote` bleiben dagegen dauerhaft: sie füttern
+ * `domain/leitner.ts::startBox` bei der Übernahme des Altbestands.
  */
-import type { Uebungsart } from '../daten/schema/uebung';
+import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
+import type { Box } from './leitner';
+import { startBox, istEingefuehrt, einfuehrungErlaubt } from './leitner';
 
 export interface AromaOption {
   readonly id: string;
@@ -43,6 +57,13 @@ export interface GesamtStand {
   /** Id des stattdessen getippten Aromas -> wie oft (nur bei "benennen" befuellt). */
   readonly verwechslungen: Readonly<Record<string, number>>;
   readonly letzterVersuch?: number;
+  // Aromapaket, Etappe 6 — Leitner-Zustand aus daten/schema/uebung.ts, hier
+  // durchgereicht statt neu erfunden. Optional: fehlt bei einem Altbestand,
+  // der noch nicht migriert ist (siehe effektiverZustand() unten).
+  readonly box?: Box;
+  readonly faellig?: number;
+  readonly stufe?: UebungStufe;
+  readonly familienSerie?: number;
 }
 
 /** Eine Aufgabe, gleich welcher Art — der Bildschirm kennt nur diese Form, nicht die einzelnen Arten. */
@@ -270,4 +291,215 @@ export function naechsteAufgabe(
     if (partner) return aufgabeUnterscheiden(ziel, partner, zufall);
   }
   return aufgabeBenennen(ziel, alleAromen);
+}
+
+// ============================================================================
+// Aromapaket, Etappe 6 — Zusammenstellung eines Übungsdurchgangs
+//
+// Ab hier die neue Logik: welche zwölf Aromen ein Durchgang verdeckt
+// bereitlegt (acht abgefragt, vier Zusatzfläschchen), nicht mehr "welches
+// einzelne Aroma kommt jetzt dran". Der Bildschirm (Etappe 3) entscheidet
+// pro Item selbst, welche Übungsform und Frage daraus wird — diese Datei
+// kennt nur die Auswahl, nicht die Frage.
+// ============================================================================
+
+/** Der aufgelöste Leitner-Zustand eines Aromas — Altbestand ohne `box`/`stufe` eingerechnet. */
+export interface EffektiverZustand {
+  readonly box: Box;
+  readonly faellig: number;
+  readonly stufe: UebungStufe;
+  readonly eingefuehrt: boolean;
+}
+
+const LEERER_STAND: GesamtStand = {
+  benennen: { versuche: 0, treffer: 0 },
+  unterscheiden: { versuche: 0, treffer: 0 },
+  verwechslungen: {},
+};
+
+/**
+ * Löst den gespeicherten Stand eines Aromas in seinen tatsächlichen
+ * Leitner-Zustand auf. Ein Altbestand ohne `box` bekommt seine Startbox aus
+ * der historischen Trefferquote (`domain/leitner.ts::startBox`) — aber nur,
+ * wenn er überhaupt schon eingeführt ist; ein nie geübtes Aroma landet immer
+ * auf Box 1, unabhängig von seiner (dann ohnehin leeren) Quote. Ein Aroma
+ * ohne `faellig` gilt als sofort fällig — es war noch nie in der neuen
+ * Mechanik dran.
+ */
+export function effektiverZustand(stand: GesamtStand | undefined, jetzt: number): EffektiverZustand {
+  const s = stand ?? LEERER_STAND;
+  const eingefuehrt = istEingefuehrt(s);
+  const box = s.box ?? (eingefuehrt ? startBox(s) : 1);
+  const faellig = s.faellig ?? jetzt;
+  const stufe = s.stufe ?? 'a';
+  return { box, faellig, stufe, eingefuehrt };
+}
+
+/** Rundengröße aus dem Lastenheft, Abschnitt 6 — acht abgefragte Items je Durchgang. */
+export const DURCHGANG_GROESSE = 8;
+
+/**
+ * Gesamtgröße der verdeckt bereitgelegten Menge (Lastenheft Abschnitt 2:
+ * "Beutelgröße ≈ Rundengröße × 1,5, mindestens +3"). Bei acht Abgefragten
+ * macht das zwölf — vier Zusatzfläschchen, die nie geöffnet werden und die
+ * Restunsicherheit bis zum letzten Item aufrechthalten.
+ */
+export function verdeckteGesamtgroesse(durchgangsGroesse: number = DURCHGANG_GROESSE): number {
+  return Math.max(Math.round(durchgangsGroesse * 1.5), durchgangsGroesse + 3);
+}
+
+export interface DurchgangsPlan {
+  /** Die acht (bzw. `durchgangsGroesse`) tatsächlich abgefragten Aromen, in Ziehreihenfolge — bereits gemischt, keine Blöcke. */
+  readonly abgefragt: readonly AromaOption[];
+  /** Die nie geöffneten Zusatzfläschchen — werden nie aufgelöst. */
+  readonly zusatz: readonly AromaOption[];
+}
+
+interface Kandidat {
+  readonly option: AromaOption;
+  readonly stand: GesamtStand | undefined;
+  readonly zustand: EffektiverZustand;
+}
+
+const ANTEIL_NIEDRIG = 0.5; // Box 1-2, faellig
+const ANTEIL_NEU = 0.2;
+const NEU_MAX = 2; // Lastenheft Abschnitt 6: "maximal 2 pro Sitzung"
+
+/**
+ * Der am stärksten dokumentierte Verwechslungspartner eines Aromas, wenn er
+ * die Schwelle erreicht — dieselbe Schwelle wie beim alten "Unterscheiden"
+ * oben (`SCHWELLE_VERWECHSLUNGSPARTNER`), absichtlich wiederverwendet statt
+ * verdoppelt.
+ */
+function staerksterPartnerId(stand: GesamtStand | undefined): string | undefined {
+  if (!stand) return undefined;
+  let bestId: string | undefined;
+  let bestAnzahl = 0;
+  for (const [id, anzahl] of Object.entries(stand.verwechslungen)) {
+    if (anzahl > bestAnzahl) {
+      bestId = id;
+      bestAnzahl = anzahl;
+    }
+  }
+  return bestAnzahl >= SCHWELLE_VERWECHSLUNGSPARTNER ? bestId : undefined;
+}
+
+/**
+ * Sortiert einen Kandidatenpool nach "am längsten überfällig zuerst"
+ * (Lastenheft Abschnitt 7), mit einem Vorzug davor: **beide** Hälften eines
+ * dokumentierten Verwechslungspaares rücken gemeinsam nach vorn, wenn beide
+ * im selben Pool stehen (Lastenheft Abschnitt 6, "verwechselte Paare
+ * bevorzugt in denselben Durchgang") — nicht nur die Seite, die die
+ * Verwechslung eingetragen hat, sonst würde genau der Partner ausgeschlossen
+ * bleiben, um dessentwillen der Vorzug überhaupt existiert. Wirkt bewusst
+ * nur innerhalb einer Box-Kategorie (Niedrig/Hoch) — ein Vorzug über
+ * Kategorien hinweg würde die 50/30/20-Mischung verwässern, die selbst
+ * schon eine Absicht ist.
+ */
+function nachUeberfaelligkeitMitVerwechslungsvorzug(kandidaten: readonly Kandidat[], jetzt: number): Kandidat[] {
+  const idsImPool = new Set(kandidaten.map((k) => k.option.id));
+  const gepaart = new Set<string>();
+  for (const k of kandidaten) {
+    const partnerId = staerksterPartnerId(k.stand);
+    if (partnerId && idsImPool.has(partnerId)) {
+      gepaart.add(k.option.id);
+      gepaart.add(partnerId);
+    }
+  }
+  return [...kandidaten].sort((a, b) => {
+    const aVorzug = gepaart.has(a.option.id) ? 0 : 1;
+    const bVorzug = gepaart.has(b.option.id) ? 0 : 1;
+    if (aVorzug !== bVorzug) return aVorzug - bVorzug;
+    return jetzt - a.zustand.faellig - (jetzt - b.zustand.faellig); // absteigend: am laengsten ueberfaellig zuerst
+  });
+}
+
+/**
+ * Stellt einen Übungsdurchgang zusammen: acht abgefragte Aromen aus der
+ * Mischung ~50 % fällig Box 1–2, ~30 % fällig Box 3–5, ~20 % (max. 2) neu
+ * (Lastenheft Abschnitt 6), plus die Zusatzfläschchen bis zur vollen
+ * verdeckten Menge. `alleAromen` ist bewusst der volle Bestand, nicht nur
+ * die eingeführten — nur so lässt sich "noch nie dran" überhaupt feststellen.
+ *
+ * Reine Auswahl, kein Rendern: das Ergebnis nennt nur, *welche* Aromen
+ * gezogen werden. Was der Bildschirm daraus an Fragen macht (Familie,
+ * Aroma-in-Familie, freier Abruf — je nach `effektiverZustand(...).stufe`
+ * des einzelnen Aromas beim Ziehen), entscheidet Etappe 3, nicht diese
+ * Funktion. Insbesondere baut diese Funktion **keine** Liste von Namen für
+ * eine Auswahl im Bildschirm — die Antwort-/Nummernliste dort umfasst immer
+ * alle 60, sonst verriete ihre Kürzung den Kandidatenkreis (CLAUDE.md,
+ * "Übungsmodus: verdecktes Ziehen, keine offene Nummer").
+ */
+export function planeDurchgang(
+  alleAromen: readonly AromaOption[],
+  staende: ReadonlyMap<string, GesamtStand>,
+  jetzt: number,
+  durchgangsGroesse: number = DURCHGANG_GROESSE,
+  zufall: () => number = Math.random,
+): DurchgangsPlan {
+  const kandidaten: Kandidat[] = alleAromen.map((option) => {
+    const stand = staende.get(option.id);
+    return { option, stand, zustand: effektiverZustand(stand, jetzt) };
+  });
+
+  const eingefuehrt = kandidaten.filter((k) => k.zustand.eingefuehrt);
+  const nichtEingefuehrt = kandidaten.filter((k) => !k.zustand.eingefuehrt);
+
+  const faelligNiedrig = eingefuehrt.filter((k) => k.zustand.box <= 2 && k.zustand.faellig <= jetzt);
+  const faelligHoch = eingefuehrt.filter((k) => k.zustand.box >= 3 && k.zustand.faellig <= jetzt);
+  // Fallback, falls insgesamt zu wenige faellige Aromen vorhanden sind (z. B.
+  // ganz am Anfang) — sonst kaeme ein Durchgang nie auf seine Groesse.
+  // Aufsteigend nach Faelligkeit: am wenigsten verfrueht zuerst.
+  const nichtFaellig = [...eingefuehrt].filter((k) => k.zustand.faellig > jetzt).sort((a, b) => a.zustand.faellig - b.zustand.faellig);
+
+  const niedrigSortiert = nachUeberfaelligkeitMitVerwechslungsvorzug(faelligNiedrig, jetzt);
+  const hochSortiert = nachUeberfaelligkeitMitVerwechslungsvorzug(faelligHoch, jetzt);
+
+  const neuErlaubt = einfuehrungErlaubt(eingefuehrt.map((k) => k.zustand.box));
+  const zielNeu = neuErlaubt ? Math.min(NEU_MAX, Math.round(durchgangsGroesse * ANTEIL_NEU), nichtEingefuehrt.length) : 0;
+  const neu = gemischt(nichtEingefuehrt, zufall).slice(0, zielNeu);
+
+  const zielNiedrig = Math.min(niedrigSortiert.length, Math.round(durchgangsGroesse * ANTEIL_NIEDRIG));
+  const genommenNiedrig = niedrigSortiert.slice(0, zielNiedrig);
+
+  const restNachNiedrig = durchgangsGroesse - neu.length - genommenNiedrig.length;
+  const genommenHoch = hochSortiert.slice(0, Math.max(0, restNachNiedrig));
+
+  const ausgewaehlt: Kandidat[] = [...neu, ...genommenNiedrig, ...genommenHoch];
+
+  // Rückstau-Auffüllung, am längsten überfällig zuerst: erst mit weiteren
+  // fälligen Kandidaten (aus welcher Box auch immer noch übrig ist), dann
+  // mit dem nicht-fälligen Fallback, zuletzt notfalls mit nicht eingeführten
+  // Aromen — Letzteres nur relevant bei einem winzigen Bestand (Tests, ganz
+  // neue Installation mit wenigen Aromen), nicht im Regelbetrieb bei 60.
+  const fuelleAuf = (pool: readonly Kandidat[]) => {
+    if (ausgewaehlt.length >= durchgangsGroesse) return;
+    const bereits = new Set(ausgewaehlt.map((k) => k.option.id));
+    for (const k of pool) {
+      if (ausgewaehlt.length >= durchgangsGroesse) break;
+      if (bereits.has(k.option.id)) continue;
+      ausgewaehlt.push(k);
+      bereits.add(k.option.id);
+    }
+  };
+  fuelleAuf([...niedrigSortiert, ...hochSortiert]);
+  fuelleAuf(nichtFaellig);
+  fuelleAuf(nichtEingefuehrt);
+
+  const abgefragt = gemischt(ausgewaehlt, zufall).map((k) => k.option);
+
+  // Zusatzfläschchen: aus allen Boxen, unabhängig von Fälligkeit — ihre
+  // Zusammensetzung darf nichts über die acht Abgefragten verraten
+  // (Lastenheft Abschnitt 6). Bevorzugt aus eingeführten Aromen; nur bei
+  // einem sehr kleinen Bestand faellt der Pool auf alle uebrigen zurueck.
+  const gewaehlteIds = new Set(ausgewaehlt.map((k) => k.option.id));
+  const zusatzAnzahl = verdeckteGesamtgroesse(durchgangsGroesse) - durchgangsGroesse;
+  const zusatzPoolEingefuehrt = eingefuehrt.filter((k) => !gewaehlteIds.has(k.option.id));
+  const zusatzPool =
+    zusatzPoolEingefuehrt.length >= zusatzAnzahl ? zusatzPoolEingefuehrt : kandidaten.filter((k) => !gewaehlteIds.has(k.option.id));
+  const zusatz = gemischt(zusatzPool, zufall)
+    .slice(0, Math.min(zusatzAnzahl, zusatzPool.length))
+    .map((k) => k.option);
+
+  return { abgefragt, zusatz };
 }
