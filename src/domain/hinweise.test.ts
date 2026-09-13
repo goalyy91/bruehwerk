@@ -4,6 +4,7 @@ import {
   sortiereUndDeckeln,
   restmengeUnbekannt,
   dialinOffen,
+  uebungFaellig,
   kennzahlenPool,
   waehleKennzahlen,
   meistgenutzteKaffeeId,
@@ -11,11 +12,29 @@ import {
 } from './hinweise';
 
 describe('prioritaetsRang', () => {
-  it('ordnet die fuenf Arten wie in der Tabelle aus dem Plan', () => {
+  it('ordnet die sechs Arten wie in der Tabelle aus dem Plan', () => {
+    expect(prioritaetsRang('uebungFaellig')).toBeLessThan(prioritaetsRang('knapp'));
     expect(prioritaetsRang('knapp')).toBeLessThan(prioritaetsRang('alt'));
     expect(prioritaetsRang('alt')).toBeLessThan(prioritaetsRang('restUnbekannt'));
     expect(prioritaetsRang('restUnbekannt')).toBeLessThan(prioritaetsRang('dialinOffen'));
     expect(prioritaetsRang('dialinOffen')).toBeLessThan(prioritaetsRang('beobachtung'));
+  });
+});
+
+describe('uebungFaellig — Aromapaket Etappe 8, Prio A: verdrängt sogar "knapp"', () => {
+  const JETZT = 1_700_000_000_000;
+  const TAG = 24 * 60 * 60 * 1000;
+
+  it('kein eingefuehrtes Aroma: keine Meldung', () => {
+    expect(uebungFaellig([{ eingefuehrt: false, faellig: JETZT - TAG }], JETZT)).toBe(false);
+  });
+
+  it('eingefuehrt, aber noch nicht faellig: keine Meldung', () => {
+    expect(uebungFaellig([{ eingefuehrt: true, faellig: JETZT + TAG }], JETZT)).toBe(false);
+  });
+
+  it('mindestens ein eingefuehrtes, faelliges Aroma reicht', () => {
+    expect(uebungFaellig([{ eingefuehrt: true, faellig: JETZT + TAG }, { eingefuehrt: true, faellig: JETZT - TAG }], JETZT)).toBe(true);
   });
 });
 

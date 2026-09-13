@@ -27,12 +27,14 @@
     sortiereUndDeckeln,
     restmengeUnbekannt,
     dialinOffen,
+    uebungFaellig,
     kennzahlenPool,
     waehleKennzahlen,
     meistgenutzteKaffeeId,
     type MeldungsArt,
     type Kennzahl,
   } from '../../domain/hinweise';
+  import { effektiverZustand } from '../../domain/uebung';
   import Knopf from '../../muster/Knopf.svelte';
   import VorbelegteFrage from '../../muster/VorbelegteFrage.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
@@ -44,6 +46,7 @@
     onOeffnenProfil,
     onOeffnenBeobachtungen,
     onOeffnenShot,
+    onOeffnenUebung,
   }: {
     onOeffnenBestellung: () => void;
     onOeffnenKaffee: (kaffeeId: string) => void;
@@ -51,6 +54,8 @@
     onOeffnenBeobachtungen: () => void;
     /** Fastway (Etappe 9, Block A) — Kachel antippen springt direkt zum Shot. */
     onOeffnenShot: (kaffeeId: string, profilId: string) => void;
+    /** Aromapaket, Etappe 8 — Prio-A-Meldung "uebungFaellig" öffnet den Übungsmodus. */
+    onOeffnenUebung: () => void;
   } = $props();
 
   /** Rückmeldung 2026-09-06: 1-2 sichtbar, optimiert fürs Galaxy S25 — kein Scrollen auf dem Dashboard. */
@@ -139,14 +144,36 @@
   }
 
   /**
-   * Meldungs-Kandidaten, Etappe 8 (domain/hinweise.ts) — fünf Arten, priorisiert
+   * Meldungs-Kandidaten, Etappe 8 (domain/hinweise.ts) — sechs Arten, priorisiert
    * und auf MAX_MELDUNGEN gedeckelt (sortiereUndDeckeln). Ersetzt die alte
    * "bestandHinweise", die eine Bohne ohne Einwaage stillschweigend übersprang
    * (rest === undefined -> return undefined) statt die Lücke selbst zu meckern.
+   * "uebungFaellig" kam mit dem Aromapaket, Etappe 8, dazu — Prio A, siehe
+   * domain/hinweise.ts.
    */
   const meldungsKandidaten = $derived.by((): MeldungsAnzeige[] => {
     const jetzt = Date.now();
     const kandidaten: MeldungsAnzeige[] = [];
+
+    // Prio A (Aromapaket, Etappe 8): mindestens ein eingeführtes Aroma ist
+    // fällig. Dieselbe Extraktion (Aromaset -> Ids mit Nummer) wie
+    // bereiche/einstellungen/Uebungsmodus.svelte, hier nur so weit, wie die
+    // boolesche Frage "ist etwas fällig" sie braucht — kein Name, keine Box.
+    const uebungsSet = bestand.aromasets.find((a) => a.vialNummern);
+    if (uebungsSet) {
+      const uebungsZustaende = uebungsSet.kategorien
+        .flatMap((k) => k.gruppen.flatMap((g) => g.aromen))
+        .filter((a) => a.nummer !== undefined)
+        .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === uebungsSet.id && u.aromaId === a.id), jetzt));
+      if (uebungFaellig(uebungsZustaende, jetzt)) {
+        kandidaten.push({
+          art: 'uebungFaellig',
+          name: 'Aroma-Training',
+          meta: 'Fällig',
+          onKlick: onOeffnenUebung,
+        });
+      }
+    }
 
     for (const k of bestand.kaffees.filter((k2) => k2.aktiv && k2.aktuelleChargeId)) {
       const charge = bestand.chargen.find((c) => c.id === k.aktuelleChargeId);
@@ -453,7 +480,12 @@
             class="bestandkarte"
             class:kritisch={eintrag.art === 'knapp'}
             class:achtung={eintrag.art === 'alt'}
-            class:info={eintrag.art === 'restUnbekannt' || eintrag.art === 'dialinOffen' || eintrag.art === 'beobachtung'}
+            class:info={
+              eintrag.art === 'restUnbekannt' ||
+              eintrag.art === 'dialinOffen' ||
+              eintrag.art === 'beobachtung' ||
+              eintrag.art === 'uebungFaellig'
+            }
             onclick={eintrag.onKlick}
           >
             <div class="bestandkarte-text">
