@@ -12,3 +12,5 @@ export * from './getraenk';
 export * from './bestellung';
 export * from './einstellungen';
 export * from './uebung';
+export * from './uebungsantwort';
+export * from './uebungsdurchgang';

@@ -24,6 +24,8 @@ class Bestand {
   tastings = $state<SammlungWert['tasting'][]>([]);
   aromasets = $state<SammlungWert['aromaset'][]>([]);
   uebungen = $state<SammlungWert['uebung'][]>([]);
+  uebungsantworten = $state<SammlungWert['uebungsantwort'][]>([]);
+  uebungsdurchgaenge = $state<SammlungWert['uebungsdurchgang'][]>([]);
   beobachtungen = $state<SammlungWert['beobachtung'][]>([]);
   getraenke = $state<SammlungWert['getraenk'][]>([]);
   personen = $state<SammlungWert['person'][]>([]);
@@ -68,6 +70,8 @@ class Bestand {
         tastings,
         aromasets,
         uebungen,
+        uebungsantworten,
+        uebungsdurchgaenge,
         beobachtungen,
         muehlen,
         bruehgeraete,
@@ -91,6 +95,8 @@ class Bestand {
         alle('tasting'),
         alle('aromaset'),
         alle('uebung'),
+        alle('uebungsantwort'),
+        alle('uebungsdurchgang'),
         alle('beobachtung'),
         alle('muehle'),
         alle('bruehgeraet'),
@@ -114,6 +120,8 @@ class Bestand {
       this.tastings = tastings;
       this.aromasets = aromasets;
       this.uebungen = uebungen;
+      this.uebungsantworten = uebungsantworten;
+      this.uebungsdurchgaenge = uebungsdurchgaenge;
       this.beobachtungen = beobachtungen;
       this.muehlen = muehlen;
       this.bruehgeraete = bruehgeraete;
@@ -257,6 +265,10 @@ function listeFuer(sammlung: Sammlung): unknown[] | undefined {
       return bestand.aromasets;
     case 'uebung':
       return bestand.uebungen;
+    case 'uebungsantwort':
+      return bestand.uebungsantworten;
+    case 'uebungsdurchgang':
+      return bestand.uebungsdurchgaenge;
     case 'beobachtung':
       return bestand.beobachtungen;
     case 'getraenk':

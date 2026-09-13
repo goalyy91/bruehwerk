@@ -154,6 +154,15 @@
         ...zaehler,
         verwechslungen,
         letzterVersuch: Date.now(),
+        // Box/Fälligkeit/Stufe/Familienserie gehören der Leitner-Mechanik
+        // (Aromapaket Etappe 6, domain/leitner.ts) — dieser Bildschirm hier
+        // ist die alte Fassung und rührt sie nicht an. Unverändert
+        // durchreichen, sonst ginge ein schon migrierter Stand mit jedem
+        // Tipp wieder verloren, bevor Etappe 3 diesen Bildschirm ersetzt.
+        box: bisher?.box,
+        faellig: bisher?.faellig,
+        stufe: bisher?.stufe,
+        familienSerie: bisher?.familienSerie ?? 0,
       });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);

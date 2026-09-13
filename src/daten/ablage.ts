@@ -34,6 +34,8 @@ import {
   AppEinstellungen,
   Beobachtung,
   Uebung,
+  Uebungsantwort,
+  Uebungsdurchgang,
 } from './schema';
 
 /** Wert-Typ je Sammlung, abgeleitet aus WertVon (db.ts) statt neu getippt. */
@@ -63,6 +65,8 @@ export const SCHEMA_FUER: { [S in Sammlung]: ZodType<SammlungWert[S]> } = {
   einstellungen: AppEinstellungen,
   beobachtung: Beobachtung,
   uebung: Uebung,
+  uebungsantwort: Uebungsantwort,
+  uebungsdurchgang: Uebungsdurchgang,
 };
 
 export class SchreibFehler extends Error {
