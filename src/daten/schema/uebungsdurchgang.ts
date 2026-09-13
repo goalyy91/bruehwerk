@@ -32,7 +32,8 @@ import { Id, Zeitpunkt } from './common';
 export const DURCHGANG_ARTEN = ['normal', 'kontrast', 'reverse'] as const;
 export type DurchgangArt = (typeof DURCHGANG_ARTEN)[number];
 
-export const DURCHGANG_STATUS = ['bereitlegen', 'laufend', 'abgeschlossen'] as const;
+/** "abgebrochen" — absichtlich beendet, ohne fertig zu sein (Aromapaket, Livebetrieb-Rückmeldung: sonst kein Weg, einen unfertigen Durchgang loszuwerden, siehe Uebungsmodus.svelte::durchgangAbbrechen). Bereits beantwortete Items bleiben als echte Uebungsantwort-Einträge stehen. */
+export const DURCHGANG_STATUS = ['bereitlegen', 'laufend', 'abgeschlossen', 'abgebrochen'] as const;
 export type DurchgangStatus = (typeof DURCHGANG_STATUS)[number];
 
 export const Uebungsdurchgang = z.object({

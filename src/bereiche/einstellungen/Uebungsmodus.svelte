@@ -83,6 +83,7 @@
   import Werteliste from '../../muster/Werteliste.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
+  import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
 
   let {
@@ -249,8 +250,27 @@
   let fehler = $state('');
   let datenblatt = $state<AromaDatenblatt | undefined>(undefined);
 
+  /**
+   * Höchstens ein laufender Durchgang je Set — ein alter, nie beendeter
+   * (vor "abbrechen" weiter unten der Normalfall bei jedem Verlassen
+   * mitten drin) wird beim Start eines neuen automatisch mitbeendet, statt
+   * liegen zu bleiben und irgendwann zufällig statt des neuen gefunden zu
+   * werden (`db.getAll` liefert nach UUID-Schlüssel, nicht nach Zeit —
+   * siehe versucheWiederaufnahme() weiter unten).
+   */
+  async function alteLaufendeDurchgaengeAufraeumen() {
+    if (!set) return;
+    const alte = bestand.uebungsdurchgaenge.filter(
+      (d) => d.setId === set!.id && (d.status === 'bereitlegen' || d.status === 'laufend'),
+    );
+    for (const alt of alte) {
+      await schreiben('uebungsdurchgang', { ...alt, status: 'abgebrochen', abgeschlossenAm: Date.now() });
+    }
+  }
+
   async function durchgangStarten() {
     if (!set) return;
+    await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
     const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt);
     const neu: SammlungWert['uebungsdurchgang'] = {
@@ -276,6 +296,7 @@
 
   async function kontrastdurchgangStarten() {
     if (!set || !kontrastKandidat) return;
+    await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
@@ -699,6 +720,7 @@
 
   async function reverseDurchgangStarten() {
     if (!set || !reverseAromaId) return;
+    await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
@@ -794,6 +816,24 @@
     onZurueck();
   }
 
+  /**
+   * Bricht den laufenden Durchgang absichtlich ab (Kopfzeile-Kontextmenü,
+   * nur waehrend er noch offen ist) — bisher gab es dafuer keinen Weg,
+   * jedes Verlassen mitten drin liess einen ewig unfertigen Datensatz
+   * zurueck. Bereits beantwortete Items bleiben als echte Uebungsantwort-
+   * Eintraege stehen, nur die Huelle endet.
+   */
+  async function durchgangAbbrechen() {
+    if (!durchgang) return;
+    try {
+      await schreiben('uebungsdurchgang', { ...durchgang, status: 'abgebrochen', abgeschlossenAm: Date.now() });
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+      return;
+    }
+    zurueckZurUebersicht();
+  }
+
   /** Übersicht → Reverse: Aromawahl zurücksetzen, kein Durchgang bis zur Bestätigung. */
   function reverseUeben() {
     reverseSchritt = 'wahl';
@@ -831,10 +871,48 @@
   // Datenbank zurück, aber ein noch nicht abgeschickter Einzeltipp (gewählte
   // Familie, angefangene Kontrastdurchgang-Eingabe) nicht — man landet am
   // Anfang des aktuellen Items/Schritts, nicht mitten in der Eingabe.
+  // Wichtig: db.getAll (daten/ablage.ts) liefert Datensaetze nach UUID-
+  // Schluessel (daten/id.ts::neueId), nicht nach Zeit — bei mehr als einem
+  // unfertigen Durchgang waere ein blosses .find() Gluecksspiel. Kommt seit
+  // alteLaufendeDurchgaengeAufraeumen() (oben) im Normalfall nicht mehr vor,
+  // aber Altbestand aus der Zeit davor kann noch mehrere unfertige
+  // Durchgaenge enthalten — deshalb bewusst nach zuletzt begonnen aufgeloest,
+  // nicht auf "kommt nie vor" vertraut.
   function versucheWiederaufnahme() {
     if (!set) return;
-    const laufender = bestand.uebungsdurchgaenge.find((d) => d.setId === set.id && d.status !== 'abgeschlossen');
+    const eigene = bestand.uebungsdurchgaenge.filter((d) => d.setId === set!.id);
+
+    const laufende = eigene.filter((d) => d.status === 'bereitlegen' || d.status === 'laufend');
+    const laufender = laufende.reduce<(typeof laufende)[number] | undefined>(
+      (bisher, d) => (!bisher || d.begonnenAm > bisher.begonnenAm ? d : bisher),
+      undefined,
+    );
     if (!laufender) {
+      // Kein laufender Durchgang mehr — evtl. gerade eben (normal) fertig
+      // geworden, aber durch einen Neu-Mount (z. B. Bildschirmsperre) noch
+      // nicht angesehen: die Ende-Zusammenfassung ginge sonst ersatzlos
+      // verloren (Livebetrieb-Rückmeldung "Zusammenfassung kam nicht").
+      // Kurzes Fenster, damit ein laengst betrachteter Abschluss nicht
+      // Wochen spaeter ungefragt wieder aufploppt. Nur "normal": Kontrast/
+      // Reverse loesen synchron im selben Funktionsaufruf auf (kein Remount
+      // dazwischen im Normalfall), und ihre genaue Auflösungs-Formulierung
+      // laesst sich aus den gespeicherten Daten nicht mehr rekonstruieren —
+      // anders als rundenZeilen, das vollstaendig aus Uebungsantwort neu
+      // gebaut wird.
+      const ENDE_ANSICHT_FENSTER_MS = 5 * 60_000;
+      const geradeFertig = eigene
+        .filter((d) => d.art === 'normal' && d.status === 'abgeschlossen' && d.abgeschlossenAm !== undefined)
+        .filter((d) => Date.now() - d.abgeschlossenAm! < ENDE_ANSICHT_FENSTER_MS)
+        .reduce<(typeof eigene)[number] | undefined>(
+          (bisher, d) => (!bisher || d.abgeschlossenAm! > bisher.abgeschlossenAm! ? d : bisher),
+          undefined,
+        );
+      if (geradeFertig) {
+        durchgang = geradeFertig;
+        index = geradeFertig.beantwortet.length;
+        phase = 'ende';
+        return;
+      }
       // Kein Treffer — z. B. ein wiederhergestellter Verlaufseintrag nach
       // echtem Prozess-Neustart, fuer den auch die IndexedDB nichts
       // Laufendes mehr kennt. Sauber zurueck statt eines leeren Bildschirms.
@@ -869,12 +947,41 @@
   $effect(() => {
     if (aktiv && !durchgang) versucheWiederaufnahme();
   });
+
+  // ---- Datenblatt-Overlay: Hardware-Zurück schliesst nur das Overlay ------
+  // (Livebetrieb-Rückmeldung: bisher poppte Zurueck durch die ganze
+  // 'uebungLaufend'-Route, weil das Overlay keinen eigenen Verlaufs-Eintrag
+  // hatte.) navigation.ueberlagerungOeffnen()/-Schliessen() (navigation.svelte.ts)
+  // geben ihm genau einen.
+  $effect(() => {
+    if (!datenblatt) return;
+    navigation.ueberlagerungOeffnen();
+    let ueberHardwareZurueck = false;
+    const schliessen = () => {
+      ueberHardwareZurueck = true;
+      datenblatt = undefined;
+    };
+    window.addEventListener('popstate', schliessen);
+    return () => {
+      window.removeEventListener('popstate', schliessen);
+      // Geschlossen ueber den Pfeil im Datenblatt (datenblatt = undefined
+      // direkt gesetzt), nicht ueber Hardware-Zurueck — dann steht der
+      // zusaetzliche Verlaufs-Eintrag noch und muss selbst abgeraeumt werden.
+      if (!ueberHardwareZurueck) navigation.ueberlagerungSchliessen();
+    };
+  });
 </script>
 
 {#if datenblatt}
   <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
-  <Kopfzeile titel="Übungsmodus" {onZurueck} />
+  <Kopfzeile titel="Übungsmodus" {onZurueck}>
+    {#snippet aktion()}
+      {#if aktiv && durchgang && durchgang.status !== 'abgeschlossen'}
+        <Kontextmenue eintraege={[{ text: 'abbrechen', kritisch: true, onWahl: durchgangAbbrechen }]} />
+      {/if}
+    {/snippet}
+  </Kopfzeile>
 
   {#if !set}
     <p class="hinweis">Noch keine Aromen mit Fläschchennummern erfasst.</p>
@@ -895,21 +1002,23 @@
         {/each}
       </div>
     {/if}
-    {#if sperreAktiv}
-      <p class="hinweis">Erst festigen, dann Neues.</p>
-    {/if}
-    {#if zielfrequenzHinweis}
-      <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
-    {/if}
-    <div class="knopfreihe">
-      <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
-      {#if kontrastKandidat}
-        <Knopf onKlick={kontrastdurchgangStarten}>kontrastdurchgang: {kontrastKandidatLabelA} oder {kontrastKandidatLabelB}</Knopf>
+    <div class="frage-block">
+      {#if sperreAktiv}
+        <p class="hinweis">Erst festigen, dann Neues.</p>
       {/if}
-      <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
+      {#if zielfrequenzHinweis}
+        <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
+      {/if}
+      <div class="knopfreihe">
+        <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
+        {#if kontrastKandidat}
+          <Knopf onKlick={kontrastdurchgangStarten}>kontrastdurchgang: {kontrastKandidatLabelA} oder {kontrastKandidatLabelB}</Knopf>
+        {/if}
+        <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
+      </div>
     </div>
     {#if reverseVorschlagOption}
-      <div class="reverse-vorschlag">
+      <div class="frage-block">
         <p class="hinweis">Schwer getan mit: {reverseVorschlagOption.label}</p>
         <div class="knopfreihe">
           <Knopf onKlick={reverseVorschlagUeben}>reverse üben: {reverseVorschlagOption.label}</Knopf>
@@ -926,7 +1035,7 @@
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
-    <div class="block">
+    <div class="frage-block">
       {#if durchgang?.art === 'kontrast' && kontrastOptionen.length === 2}
         <p class="frage-satz">Dieser Durchgang: {kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}.</p>
         <p class="frage-satz">
@@ -943,9 +1052,9 @@
           <span class="nummer">{nummer}</span>
         {/each}
       </div>
-    </div>
-    <div class="knopfreihe">
-      <Knopf stufe="primaer" onKlick={bereitgelegt}>liegt bereit</Knopf>
+      <div class="knopfreihe">
+        <Knopf stufe="primaer" onKlick={bereitgelegt}>liegt bereit</Knopf>
+      </div>
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'item' && item}
@@ -1216,8 +1325,16 @@
     overflow: hidden;
     overflow-wrap: break-word;
   }
+  /* Weiße Fläche wie Bar.svelte (.fastway-frage, Getränke-Kacheln) statt
+     freien Texts auf der Seitenfläche — Livebetrieb-Rückmeldung "sieht nicht
+     sonderlich schön aus". Trägt jeden Schritt der laufenden Übung
+     (Bereitlegen, jeder der drei gestapelten Item-Blöcke, Kontrast, Reverse)
+     sowie auf der Übersicht die Knopfreihe und den Reverse-Vorschlag. */
   .frage-block {
     margin-bottom: var(--r5);
+    background: var(--blatt);
+    border-radius: var(--r-karte);
+    padding: var(--r4);
   }
   .fortschritt {
     font-family: var(--schrift-sans);
@@ -1277,14 +1394,6 @@
     align-items: center;
     gap: var(--r2);
     margin-top: var(--r3);
-  }
-  /* Reverse-Vorschlag — zusaetzliche Zeile unter der Knopfreihe, der
-     bestehende "reverse üben"-Knopf bleibt unveraendert (Julians Vorschlag,
-     als Ergaenzung statt Ersatz). Mehr Abstand nach oben als .knopfreihe
-     zueinander, damit die Zeile als eigener Block liest, nicht als Fortsetzung
-     der Knopfreihe. */
-  .reverse-vorschlag {
-    margin-top: var(--r5);
   }
   .hinweis {
     color: var(--gedaempft);

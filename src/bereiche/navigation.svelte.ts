@@ -98,6 +98,29 @@ class Navigation {
     this.#stelleScrollWieder();
   }
 
+  /**
+   * Ein Overlay wie das Aromadatenblatt in einer laufenden Übung
+   * (Uebungsmodus.svelte) liegt ÜBER der aktuellen Route, nicht als eigene
+   * Route (dort bewusst: kein neuer Screen je Phase). Ohne eigenen
+   * history-Eintrag poppt Hardware-Zurück (Geste/System-Knopf/Browser-Pfeil)
+   * aber direkt durch die ganze Route statt nur das Overlay weg — Rückmeldung
+   * "vom Datenblatt kommt man aufs Dashboard, nicht einen Schritt zurück".
+   * Diese zwei Methoden geben einem Overlay einen einzigen zusätzlichen
+   * Verlaufs-Schritt auf demselben Pfad (`location.href` unverändert, `zuPfad`
+   * ändert sich nicht — kein Remount durch Rahmen.svelte).
+   */
+  ueberlagerungOeffnen(): void {
+    this.#tiefe += 1;
+    history.pushState({ tiefe: this.#tiefe } satisfies VerlaufsZustand, '', location.href);
+  }
+
+  /** Schliesst eine per ueberlagerungOeffnen() offene Ueberlagerung, wenn sie
+   *  ueber ein eigenes Bedienelement (nicht Hardware-Zurueck) geschlossen
+   *  wird — das laeuft stattdessen ganz normal ueber den popstate-Horcher. */
+  ueberlagerungSchliessen(): void {
+    if (this.#tiefe > 0) history.back();
+  }
+
   /** Tab-Wechsel in der unteren Leiste — auf die Wurzel des Bereichs. */
   tabWechsel(bereich: Bereich): void {
     const wurzel = wurzelVon(bereich);
