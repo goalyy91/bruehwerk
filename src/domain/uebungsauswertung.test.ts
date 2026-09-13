@@ -4,11 +4,12 @@ import {
   familienTrefferquote,
   langsameRichtigeAntworten,
   zielfrequenzAbgleich,
+  uebungsKennzahlenPool,
   LANGSAM_SCHWELLE_MS,
   ZIELFREQUENZ_MINDESTWOCHEN,
 } from './uebungsauswertung';
 import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
-import type { AromaOption } from './uebung';
+import type { AromaOption, EffektiverZustand } from './uebung';
 
 const TAG = 24 * 60 * 60 * 1000;
 const WOCHE = 7 * TAG;
@@ -120,4 +121,112 @@ describe('zielfrequenzAbgleich — nur fuer den Hinweis, nie fuer die Intervalle
     const abgleich = zielfrequenzAbgleich(4, begonnen, JETZT);
     expect(abgleich?.weichtAb).toBe(true);
   });
+});
+
+describe('uebungsKennzahlenPool — sechs Fakten, jeder erst ab ausreichender Datenbasis (K64)', () => {
+  const AROMEN: AromaOption[] = [
+    { id: 'mandel', label: 'Mandel', kategorieId: 'nussig-kakao' },
+    { id: 'haselnuss', label: 'Haselnuss', kategorieId: 'nussig-kakao' },
+    { id: 'himbeere', label: 'Himbeere', kategorieId: 'fruchtig' },
+  ];
+  const FAMILIEN_LABELS = new Map([
+    ['nussig-kakao', 'Nussig/Kakao'],
+    ['fruchtig', 'Fruchtig'],
+  ]);
+  const ZUSTAND = (ueber: Partial<EffektiverZustand> = {}): EffektiverZustand => ({
+    box: 1,
+    faellig: JETZT,
+    stufe: 'a',
+    eingefuehrt: true,
+    ...ueber,
+  });
+  const LEER = {
+    eingefuehrteZustaende: [] as EffektiverZustand[],
+    antworten: [] as Uebungsantwort[],
+    durchgaengeBegonnenAm: [] as number[],
+    aromen: AROMEN,
+    familienLabels: FAMILIEN_LABELS,
+    gesamtAnzahlAromen: 60,
+    jetzt: JETZT,
+  };
+
+  it('ganz ohne Datenbasis: leerer Pool', () => {
+    expect(uebungsKennzahlenPool(LEER)).toEqual([]);
+  });
+
+  it('Gesamtfortschritt nur ab mindestens einem eingefuehrten Aroma, "sicher" ab Box 4', () => {
+    const zustaende = [ZUSTAND({ box: 4 }), ZUSTAND({ box: 3 }), ZUSTAND({ box: 5 })];
+    const pool = uebungsKennzahlenPool({ ...LEER, eingefuehrteZustaende: zustaende });
+    expect(pool).toContainEqual({ label: 'Sicher gelernt', wert: '2 von 60' });
+  });
+
+  it('Aktivitaet diese Woche nur bei mindestens einem Durchgang in den letzten 7 Tagen', () => {
+    const zuAlt = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: [JETZT - 8 * TAG] });
+    expect(zuAlt.find((k) => k.label === 'Durchgänge diese Woche')).toBeUndefined();
+
+    const dieseWoche = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: [JETZT - 8 * TAG, JETZT - 1 * TAG, JETZT - 2 * TAG] });
+    expect(dieseWoche).toContainEqual({ label: 'Durchgänge diese Woche', wert: '2' });
+  });
+
+  it('Staerkste Familie erst ab Mindeststichprobe, waehlt die hoechste Quote', () => {
+    const zuWenig = [ANTWORT_KENNZAHL({ aromaId: 'mandel', form: 'familie', ergebnis: 'richtig' })];
+    expect(uebungsKennzahlenPool({ ...LEER, antworten: zuWenig }).find((k) => k.label === 'Stärkste Familie')).toBeUndefined();
+
+    const genug = [
+      ANTWORT_KENNZAHL({ aromaId: 'mandel', form: 'familie', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ aromaId: 'haselnuss', form: 'familie', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ aromaId: 'mandel', form: 'familie', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ aromaId: 'himbeere', form: 'familie', ergebnis: 'falsch' }),
+      ANTWORT_KENNZAHL({ aromaId: 'himbeere', form: 'familie', ergebnis: 'falsch' }),
+      ANTWORT_KENNZAHL({ aromaId: 'himbeere', form: 'familie', ergebnis: 'falsch' }),
+    ];
+    const pool = uebungsKennzahlenPool({ ...LEER, antworten: genug });
+    expect(pool).toContainEqual({ label: 'Stärkste Familie', wert: 'Nussig/Kakao' });
+  });
+
+  it('Meistverwechselt nur, wenn die Verwechslungsmatrix ueberhaupt ein Paar liefert', () => {
+    const ohne = uebungsKennzahlenPool({ ...LEER, antworten: [ANTWORT_KENNZAHL({ ergebnis: 'richtig' })] });
+    expect(ohne.find((k) => k.label === 'Meistverwechselt')).toBeUndefined();
+
+    const mit = [ANTWORT_KENNZAHL({ aromaId: 'mandel', getipptId: 'haselnuss', ergebnis: 'falsch' })];
+    const pool = uebungsKennzahlenPool({ ...LEER, antworten: mit });
+    expect(pool).toContainEqual({ label: 'Meistverwechselt', wert: 'Mandel ↔ Haselnuss' });
+  });
+
+  it('Dabei seit nur ab mindestens einer Woche seit dem ersten Durchgang', () => {
+    const zuFrisch = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: [JETZT - 3 * TAG] });
+    expect(zuFrisch.find((k) => k.label === 'Dabei seit')).toBeUndefined();
+
+    const pool = uebungsKennzahlenPool({ ...LEER, durchgaengeBegonnenAm: [JETZT - 2 * WOCHE] });
+    expect(pool).toContainEqual({ label: 'Dabei seit', wert: '2 Wochen' });
+  });
+
+  it('Reverse-Trefferquote nur ab Mindeststichprobe gewerteter Reverse-Antworten', () => {
+    const zuWenig = [
+      ANTWORT_KENNZAHL({ form: 'reverse', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ form: 'reverse', ergebnis: 'richtig' }),
+    ];
+    expect(uebungsKennzahlenPool({ ...LEER, antworten: zuWenig }).find((k) => k.label === 'Reverse-Trefferquote')).toBeUndefined();
+
+    const genug = [
+      ANTWORT_KENNZAHL({ form: 'reverse', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ form: 'reverse', ergebnis: 'richtig' }),
+      ANTWORT_KENNZAHL({ form: 'reverse', ergebnis: 'falsch' }),
+    ];
+    const pool = uebungsKennzahlenPool({ ...LEER, antworten: genug });
+    expect(pool).toContainEqual({ label: 'Reverse-Trefferquote', wert: '2 von 3' });
+  });
+
+  function ANTWORT_KENNZAHL(ueber: Partial<Uebungsantwort>): Uebungsantwort {
+    return {
+      id: 'a1',
+      durchgangId: 'd1',
+      setId: 's1',
+      aromaId: 'mandel',
+      form: 'freierAbruf',
+      zeitstempel: JETZT,
+      unerwarteteNummer: false,
+      ...ueber,
+    };
+  }
 });

@@ -233,8 +233,12 @@
       <Verhalten onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
-    {:else if route.name === 'uebung'}
-      <Uebungsmodus onZurueck={() => navigation.zurueck()} onOeffnenStatistik={() => navigation.gehe({ name: 'uebungStatistik' })} />
+    {:else if route.name === 'uebung' || route.name === 'uebungLaufend'}
+      <Uebungsmodus
+        aktiv={route.name === 'uebungLaufend'}
+        onZurueck={() => navigation.zurueck()}
+        onOeffnenStatistik={() => navigation.gehe({ name: 'uebungStatistik' })}
+      />
     {:else if route.name === 'uebungStatistik'}
       <UebungsAuswertung onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'personen'}

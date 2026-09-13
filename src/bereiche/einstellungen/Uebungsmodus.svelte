@@ -54,7 +54,9 @@
   // 1 Reverse) — nicht kumulativ über mehrere hintereinander gestartete
   // Durchgänge einer Sitzung. Eine sitzungsweite Zählung bräuchte einen
   // eigenen Zustand über Durchgänge hinweg, den es bewusst noch nicht gibt.
+  import { untrack } from 'svelte';
   import { bestand, schreiben } from '../bestand.svelte';
+  import { navigation } from '../navigation.svelte';
   import { neueId } from '../../daten/id';
   import { flaeschchenId } from '../../daten/aromen';
   import type { SammlungWert } from '../../daten/ablage';
@@ -69,6 +71,8 @@
     type GesamtStand,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
+  import { uebungsKennzahlenPool } from '../../domain/uebungsauswertung';
+  import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
@@ -79,7 +83,16 @@
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
 
-  let { onZurueck, onOeffnenStatistik }: { onZurueck: () => void; onOeffnenStatistik: () => void } = $props();
+  let {
+    aktiv,
+    onZurueck,
+    onOeffnenStatistik,
+  }: {
+    /** true = eine Aktivität läuft gerade (Route 'uebungLaufend'), false = Übersicht (Route 'uebung'). */
+    aktiv: boolean;
+    onZurueck: () => void;
+    onOeffnenStatistik: () => void;
+  } = $props();
 
   // Der Uebungsmodus fragt Flaeschchennummern ab — das ergibt nur bei einem
   // Set mit vialNummern einen Sinn. Heute ohnehin nur AROMASET_LENEZ.
@@ -130,22 +143,46 @@
   const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer} — ${a.label}` })));
   const namenOptionen = $derived(alleAromen.map((a) => ({ wert: a.id, label: a.label })));
 
-  // ---- Übersicht: Boxenverteilung als ruhige Auskunft, keine Farbe (K69) ---
+  // ---- Übersicht: Kennzahl-Kacheln statt roher Boxenliste --------------
+  // (Livebetrieb-Rückmeldung: "Boxen ohne Namen" sagen niemandem etwas, der
+  // die interne Leitner-Mechanik nicht kennt — und die Zahl, die die
+  // "durchgang starten"-Entscheidung tragen würde, stand dort ohnehin nicht;
+  // die App mischt beim Start automatisch aus fälligen, neuen und nötigenfalls
+  // auch nicht-fälligen Aromen, die genaue Verteilung ändert daran nichts.)
+  // Die volle Fünf-Boxen-Aufschlüsselung steht jetzt auf der Statistik-Seite
+  // (UebungsAuswertung.svelte) — "wichtig manchmal", nicht auf den ersten
+  // Blick. Hier stattdessen dasselbe Muster wie die Bar-Kennzahl-Kacheln
+  // (domain/hinweise.ts::Kennzahl + waehleKennzahlen): zwei zufällig aus
+  // einem Pool ehrlicher Fakten gezogen, einmal je Aufruf der Übersicht.
 
   let uebersichtJetzt = $state(Date.now());
   $effect(() => {
-    if (phase === 'uebersicht') uebersichtJetzt = Date.now();
+    if (!aktiv) uebersichtJetzt = Date.now();
   });
 
   const zustaende = $derived(alleAromen.map((a) => effektiverZustand(staende.get(a.id), uebersichtJetzt)));
   const eingefuehrteZustaende = $derived(zustaende.filter((z) => z.eingefuehrt));
-  const boxenZeilen = $derived(
-    ([1, 2, 3, 4, 5] as const).map((box) => ({
-      label: `Box ${box}`,
-      wert: eingefuehrteZustaende.filter((z) => z.box === box).length,
-    })),
-  );
   const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.map((z) => z.box)));
+
+  /** kategorieId -> Familienname, fuer domain/uebungsauswertung.ts::uebungsKennzahlenPool — die Domäne kennt das Aromaset selbst nicht. */
+  const familienLabels = $derived(new Map(familien.map((f) => [f.wert, f.label] as const)));
+
+  let kennzahlenAuswahl = $state<readonly Kennzahl[]>([]);
+  $effect(() => {
+    if (aktiv || !set) return;
+    untrack(() => {
+      const pool = uebungsKennzahlenPool({
+        eingefuehrteZustaende,
+        antworten: bestand.uebungsantworten.filter((a) => a.setId === set.id),
+        durchgaengeBegonnenAm: bestand.uebungsdurchgaenge.filter((d) => d.setId === set.id).map((d) => d.begonnenAm),
+        aromen: alleAromen,
+        familienLabels,
+        gesamtAnzahlAromen: alleAromen.length,
+        jetzt: Date.now(),
+      });
+      kennzahlenAuswahl = waehleKennzahlen(pool, 2);
+    });
+  });
 
   // Das am staerksten dokumentierte Verwechslungspaar, wenn eins die Schwelle
   // erreicht — die Grundlage fuer das Kontrastdurchgang-Angebot auf der
@@ -156,8 +193,12 @@
 
   // ---- Phasen: Übersicht → Bereitlegen → Item (×8) / Kontrast / Reverse → Ende
 
-  type Phase = 'uebersicht' | 'bereitlegen' | 'item' | 'kontrast' | 'reverse' | 'ende';
-  let phase = $state<Phase>('uebersicht');
+  // 'uebersicht' gehört nicht mehr dazu — das ist jetzt `!aktiv` (Route
+  // 'uebung'), keine Phase mehr. Startwert ohne Bedeutung: gerendert wird
+  // er erst, sobald `aktiv` wahr ist, und dann setzt genau der Weg dorthin
+  // (Start-Funktion oder versucheWiederaufnahme()) ihn ohnehin neu.
+  type Phase = 'bereitlegen' | 'item' | 'kontrast' | 'reverse' | 'ende';
+  let phase = $state<Phase>('bereitlegen');
   let durchgang = $state<SammlungWert['uebungsdurchgang'] | undefined>(undefined);
   let index = $state(0);
   let fehler = $state('');
@@ -182,6 +223,7 @@
       await schreiben('uebungsdurchgang', neu);
       durchgang = neu;
       phase = 'bereitlegen';
+      navigation.gehe({ name: 'uebungLaufend' });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -205,6 +247,7 @@
       await schreiben('uebungsdurchgang', neu);
       durchgang = neu;
       phase = 'bereitlegen';
+      navigation.gehe({ name: 'uebungLaufend' });
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
     }
@@ -652,6 +695,13 @@
     }),
   );
 
+  /**
+   * Verlässt die laufende Aktivität — dieselbe Bewegung wie der
+   * Kopfzeile-Pfeil (`onZurueck` = `navigation.zurueck()`), nicht ein
+   * zweiter Weg zum selben Ziel: von der Route 'uebungLaufend' aus landet
+   * das zuverlässig auf 'uebung', egal ob per echtem Verlauf-Zurück oder
+   * (ohne eigene Tiefe) über elternVon.
+   */
   function zurueckZurUebersicht() {
     durchgang = undefined;
     item = undefined;
@@ -663,7 +713,7 @@
     reverseSchritt = 'wahl';
     reverseAromaId = '';
     reverseEinschaetzung = '';
-    phase = 'uebersicht';
+    onZurueck();
   }
 
   /** Übersicht → Reverse: Aromawahl zurücksetzen, kein Durchgang bis zur Bestätigung. */
@@ -672,7 +722,58 @@
     reverseAromaId = '';
     reverseEinschaetzung = '';
     phase = 'reverse';
+    navigation.gehe({ name: 'uebungLaufend' });
   }
+
+  // ---- Wiederaufnehmen nach einem Neu-Mount --------------------------------
+  // Rahmen.svelte baut bei jedem Routenwechsel per {#key zuPfad(route)} neu
+  // auf, auch zwischen 'uebung' und 'uebungLaufend' — ein Wechsel dorthin ist
+  // also immer ein frischer Componenten-Start, nicht die Fortsetzung des
+  // Zustands von eben. Ohne dieses Nachziehen stünde hier bei jedem
+  // Rücksprung aus einer Unteransicht (z. B. dem Datenblatt) oder jeder
+  // Bildschirmsperre-Rückkehr ein leerer Bereitlegen-Bildschirm ohne
+  // `durchgang`. Bewusst *grob*: der laufende Durchgang selbst kommt aus der
+  // Datenbank zurück, aber ein noch nicht abgeschickter Einzeltipp (gewählte
+  // Familie, angefangene Kontrastdurchgang-Eingabe) nicht — man landet am
+  // Anfang des aktuellen Items/Schritts, nicht mitten in der Eingabe.
+  function versucheWiederaufnahme() {
+    if (!set) return;
+    const laufender = bestand.uebungsdurchgaenge.find((d) => d.setId === set.id && d.status !== 'abgeschlossen');
+    if (!laufender) {
+      // Kein Treffer — z. B. ein wiederhergestellter Verlaufseintrag nach
+      // echtem Prozess-Neustart, fuer den auch die IndexedDB nichts
+      // Laufendes mehr kennt. Sauber zurueck statt eines leeren Bildschirms.
+      onZurueck();
+      return;
+    }
+    durchgang = laufender;
+    if (laufender.status === 'bereitlegen') {
+      phase = 'bereitlegen';
+      return;
+    }
+    if (laufender.art === 'kontrast') {
+      kontrastSchritt = 'erstesRiechen';
+      kontrastReihenfolge = '';
+      kontrastErsteNummer = '';
+      kontrastAuswertung = undefined;
+      kontrastUnerwartet = false;
+      phase = 'kontrast';
+    } else if (laufender.art === 'reverse') {
+      reverseAromaId = laufender.verdeckt[0] ?? '';
+      reverseBegonnenAm = Date.now();
+      reverseEinschaetzung = '';
+      reverseSchritt = 'riechen';
+      phase = 'reverse';
+    } else {
+      index = laufender.beantwortet.length;
+      naechstesItemVorbereiten();
+      phase = 'item';
+    }
+  }
+
+  $effect(() => {
+    if (aktiv && !durchgang) versucheWiederaufnahme();
+  });
 </script>
 
 {#if datenblatt}
@@ -684,13 +785,20 @@
     <p class="hinweis">Noch keine Aromen mit Fläschchennummern erfasst.</p>
   {:else if alleAromen.length === 0}
     <p class="hinweis">Noch keine Fläschchen erfasst.</p>
-  {:else if phase === 'uebersicht'}
-    <div class="block">
-      <Werteliste zeilen={boxenZeilen} />
-      {#if sperreAktiv}
-        <p class="hinweis">Erst festigen, dann Neues.</p>
-      {/if}
-    </div>
+  {:else if !aktiv}
+    {#if kennzahlenAuswahl.length > 0}
+      <div class="kennzahl-raster" class:einzeln={kennzahlenAuswahl.length === 1}>
+        {#each kennzahlenAuswahl as fakt (fakt.label)}
+          <div class="kennzahl-kachel">
+            <span class="kennzahl-label">{fakt.label}</span>
+            <span class="zahl kennzahl-zahl">{fakt.wert}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    {#if sperreAktiv}
+      <p class="hinweis">Erst festigen, dann Neues.</p>
+    {/if}
     <div class="knopfreihe">
       <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
       {#if kontrastKandidat}
@@ -901,6 +1009,55 @@
 <style>
   .block {
     margin-bottom: var(--r4);
+  }
+  /* Kennzahl-Kacheln — 1:1 aus Bar.svelte übernommen (dort ausführlich
+     begründet: Zeilenklammerung, Mindestbreite gegen horizontales Scrollen
+     auf dem S25, kurze statt umgebrochener Labels). Zwei rotierende Fakten
+     aus domain/uebungsauswertung.ts::uebungsKennzahlenPool statt der
+     rohen Fünf-Boxen-Liste, die vorher hier stand (die volle Aufschlüsselung
+     lebt jetzt auf der Statistik-Seite). */
+  .kennzahl-raster {
+    margin-bottom: var(--r4);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--r-kachelabstand);
+  }
+  .kennzahl-raster.einzeln {
+    grid-template-columns: 1fr;
+  }
+  .kennzahl-kachel {
+    background: var(--blatt);
+    border-radius: var(--r-kachel);
+    padding: 12px 16px 11px;
+    min-height: 100px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .kennzahl-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: var(--label-spacing-kachel);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .kennzahl-zahl {
+    font-size: var(--fs-wert);
+    line-height: 1.15;
+    color: var(--tinte);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: break-word;
   }
   .frage-block {
     margin-bottom: var(--r5);
