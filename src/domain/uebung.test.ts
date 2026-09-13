@@ -219,7 +219,7 @@ describe('planeDurchgang — verwechselte Paare bevorzugt in denselben Durchgang
 
 describe('werteAntwortAus — Stufe C (freier Abruf): nur richtig oder falsch, nie teilweise', () => {
   const BASIS = {
-    geplanteStufe: 'c' as const,
+    formStufe: 'c' as const,
     tatsaechlicheAromaId: 'mandel',
     tatsaechlicheFamilieId: 'nussig-kakao',
     tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG }),
@@ -240,7 +240,7 @@ describe('werteAntwortAus — Stufe C (freier Abruf): nur richtig oder falsch, n
 
 describe('werteAntwortAus — Stufe A (Familie): richtig oder falsch, keine Aroma-Frage', () => {
   const BASIS = {
-    geplanteStufe: 'a' as const,
+    formStufe: 'a' as const,
     tatsaechlicheAromaId: 'erbsenschote',
     tatsaechlicheFamilieId: 'gruen-pflanzlich',
     tatsaechlicherStand: STAND({ box: 1, faellig: JETZT - TAG, familienSerie: 1 }),
@@ -271,7 +271,7 @@ describe('werteAntwortAus — Stufe A (Familie): richtig oder falsch, keine Arom
 
 describe('werteAntwortAus — Stufe B (Aroma in der Familie): teilweise bei richtiger Familie, falschem Aroma', () => {
   const BASIS = {
-    geplanteStufe: 'b' as const,
+    formStufe: 'b' as const,
     tatsaechlicheAromaId: 'haselnuss',
     tatsaechlicheFamilieId: 'nussig-kakao',
     tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG }),
@@ -296,15 +296,15 @@ describe('werteAntwortAus — Stufe B (Aroma in der Familie): teilweise bei rich
   });
 });
 
-describe('werteAntwortAus — Bereitlegen-Fehlgriff: die Form war fuer einen anderen Platz gedacht', () => {
-  it('geplant war Stufe A (Familienform gezeigt), das tatsaechliche Aroma steht laengst auf Stufe C — familienSerie bleibt unberuehrt', () => {
+describe('werteAntwortAus — formStufe stammt von einem anderen Aroma als dem tatsaechlich gezogenen (der Regelfall bei blindem Ziehen, nicht die Ausnahme)', () => {
+  it('formStufe war A (Familienform gezeigt), das tatsaechliche Aroma steht laengst auf Stufe C — familienSerie bleibt unberuehrt', () => {
     const stand = STAND({ box: 5, faellig: JETZT - TAG, stufe: 'c', familienSerie: 0 });
     const auswertung = werteAntwortAus(
-      { geplanteStufe: 'a', tipFamilieId: 'nussig-kakao', tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao', tatsaechlicherStand: stand },
+      { formStufe: 'a', tipFamilieId: 'nussig-kakao', tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao', tatsaechlicherStand: stand },
       JETZT,
     );
     expect(auswertung.ergebnis).toBe('richtig'); // die gezeigte Form (A) wird korrekt ausgewertet
-    expect(auswertung.stufe).toBe('c'); // bleibt auf C, kein Rueckschritt durch den Fehlgriff
+    expect(auswertung.stufe).toBe('c'); // bleibt auf C, kein Rueckschritt durch die andere Form
     expect(auswertung.familienSerie).toBe(0); // wird nicht hochgezaehlt — das Aroma ist laengst ueber Stufe A hinaus
   });
 });

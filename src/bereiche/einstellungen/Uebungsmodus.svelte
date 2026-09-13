@@ -9,15 +9,22 @@
   // die erste Fassung das Datenblatt-Overlay mit einem eigenen $state-Feld
   // gelöst hat, nicht mit einer zweiten Navigations-Ebene.
   //
-  // Die Form je Item (Familie / Familie-dann-Aroma / freier Abruf) richtet
-  // sich nach der Stufe, die für den an dieser Stelle des Durchgangs GEPLANTEN
-  // Aromas gilt (`domain/uebung.ts::effektiverZustand`, zum Planungszeitpunkt
-  // aufgelöst) — nicht nach dem, was am Ende tatsächlich aus der Nummer folgt.
-  // Beides kann auseinanderfallen (irgendein anderes von den zwölf gegriffen,
-  // oder beim Bereitlegen vertauscht), und das ist kein Fehler: die Form kann
-  // nicht von einer Identität abhängen, die vor der Auflösung niemand kennt,
-  // App eingeschlossen. `domain/uebung.ts::werteAntwortAus` wertet danach immer
-  // gegen das TATSÄCHLICHE Aroma aus, nie gegen das geplante — siehe dort.
+  // Die Form je Item (Familie / Familie-dann-Aroma / freier Abruf) kommt aus
+  // `item.formQuelleId` — dem Aroma an dieser Stelle von `durchgang.abgefragt`
+  // — und dessen Stufe (`domain/uebung.ts::effektiverZustand`, zum
+  // Planungszeitpunkt aufgelöst). Wichtig: **das ist keine Vorhersage, welches
+  // Fläschchen gleich gezogen wird**, nur ein Mittel, überhaupt vorab eine
+  // Form zeigen zu können. Bei einem echten blinden Griff aus zwölf
+  // ununterscheidbaren Fläschchen ist es sogar der Regelfall, dass ein
+  // *anderes* Aroma gezogen wird als das, dessen Stufe die Form geliefert hat
+  // — nicht die Ausnahme. `domain/uebung.ts::werteAntwortAus` wertet deshalb
+  // immer gegen das TATSÄCHLICHE, aufgedeckte Aroma aus, nie gegen die Quelle
+  // der Form (siehe dort, Kopfkommentar zu `AntwortEingabe`).
+  //
+  // `unerwarteteNummer` ist etwas anderes als dieser Regelfall: es feuert nur,
+  // wenn die abgelesene Nummer zu keinem der zwölf verdeckten Fläschchen
+  // dieses Durchgangs gehört — ein echter, seltener Fehler beim Bereitlegen
+  // (Lastenheft Abschnitt 10, Punkt 5), kein normales Ziehergebnis.
   //
   // Was während eines Items nie zu sehen ist: die Nummer des laufenden
   // Fläschchens (nur "3 von 8"), und die Antwort-/Nummernliste ist immer die
@@ -173,8 +180,9 @@
   // ---- Ein Item: raten → nummer → aufgeloest --------------------------------
 
   interface AktuellesItem {
-    readonly geplanteId: string;
-    readonly geplanteStufe: 'a' | 'b' | 'c';
+    /** Das Aroma, dessen Stufe die Form dieses Platzes bestimmt hat — keine Vorhersage, was gezogen wird (siehe Kopfkommentar). */
+    readonly formQuelleId: string;
+    readonly formStufe: 'a' | 'b' | 'c';
   }
   let item = $state<AktuellesItem | undefined>(undefined);
   let itemPhase = $state<'raten' | 'nummer' | 'aufgeloest'>('raten');
@@ -199,7 +207,7 @@
       return;
     }
     const stufe = effektiverZustand(staende.get(id), Date.now()).stufe;
-    item = { geplanteId: id, geplanteStufe: stufe };
+    item = { formQuelleId: id, formStufe: stufe };
     itemPhase = 'raten';
     itemBegonnenAm = Date.now();
     tipFamilie = '';
@@ -209,9 +217,9 @@
   }
 
   const tippVollstaendig = $derived(
-    item?.geplanteStufe === 'a'
+    item?.formStufe === 'a'
       ? tipFamilie !== ''
-      : item?.geplanteStufe === 'b'
+      : item?.formStufe === 'b'
         ? tipFamilie !== '' && tipAroma !== ''
         : tipAroma !== '',
   );
@@ -261,7 +269,7 @@
 
     const auswertung = werteAntwortAus(
       {
-        geplanteStufe: item.geplanteStufe,
+        formStufe: item.formStufe,
         tipFamilieId: tipFamilie || undefined,
         tipAromaId: tipAroma || undefined,
         tatsaechlicheAromaId: tatsaechlicheId,
@@ -270,7 +278,12 @@
       },
       jetzt,
     );
-    const unerwarteteNummer = tatsaechlicheId !== item.geplanteId;
+    // Ein echter Bereitlegen-Fehler (Lastenheft Abschnitt 10, Punkt 5) — die
+    // abgelesene Nummer gehoert zu keinem der zwoelf verdeckten Flaeschchen
+    // dieses Durchgangs. NICHT dasselbe wie "ein anderes als item.formQuelleId
+    // gezogen" — das ist bei blindem Ziehen der Regelfall, siehe Kopfkommentar,
+    // und verdient keine Meldung.
+    const unerwarteteNummer = !durchgang.verdeckt.includes(tatsaechlicheId);
 
     // Verwechslungsliste nur, wenn wirklich ein falsches Aroma benannt wurde
     // (Stufe B/C) — bei Stufe A gibt es keinen konkreten falschen Namen,
@@ -302,9 +315,9 @@
         durchgangId: durchgang.id,
         setId: set.id,
         aromaId: tatsaechlicheId,
-        getipptId: item.geplanteStufe === 'a' ? undefined : tipAroma || undefined,
-        form: item.geplanteStufe === 'a' ? 'familie' : item.geplanteStufe === 'b' ? 'aromaInFamilie' : 'freierAbruf',
-        stufe: item.geplanteStufe,
+        getipptId: item.formStufe === 'a' ? undefined : tipAroma || undefined,
+        form: item.formStufe === 'a' ? 'familie' : item.formStufe === 'b' ? 'aromaInFamilie' : 'freierAbruf',
+        stufe: item.formStufe,
         ergebnis: auswertung.ergebnis,
         zeitstempel: jetzt,
         antwortdauerMs: Math.max(0, jetzt - itemBegonnenAm),
@@ -408,12 +421,12 @@
     {#if itemPhase === 'raten'}
       <div class="frage-block">
         <p class="frage-satz">Zieh eins, ohne hinzusehen — riech daran.</p>
-        {#if item.geplanteStufe === 'a'}
+        {#if item.formStufe === 'a'}
           <p class="frage-titel">Welche Familie ist das?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={(w) => (tipFamilie = w)} platzhalter="Familie wählen …" />
           {/key}
-        {:else if item.geplanteStufe === 'b'}
+        {:else if item.formStufe === 'b'}
           <p class="frage-titel">Welche Familie ist das?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={familieGewaehlt} platzhalter="Familie wählen …" />
@@ -460,7 +473,7 @@
           {/if}
         </p>
         {#if letzteAuswertung.unerwarteteNummer}
-          <p class="hinweis">Nicht das geplante Fläschchen für diesen Platz — kein Problem, gewertet wird, was es wirklich war.</p>
+          <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
         {/if}
         {#if letzteAuswertung.tatsaechlicheOption.verwandte && letzteAuswertung.tatsaechlicheOption.verwandte.length > 0}
           <p class="verwandte">

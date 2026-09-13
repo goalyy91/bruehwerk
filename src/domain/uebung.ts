@@ -317,14 +317,20 @@ export function planeDurchgang(
 // ============================================================================
 
 /**
- * Was eine Antwort ausmacht: die gezeigte Form (`geplanteStufe`, bestimmt
- * *vor* dem Riechen — siehe Kopfkommentar des Bildschirms zum Konflikt
- * zwischen "Form muss vorher feststehen" und "Identität erst nachher
- * bekannt") und die Tipps, die sie hervorgebracht hat, dazu das tatsächlich
- * aufgedeckte Aroma samt seinem eigenen, unabhängigen Stand.
+ * Was eine Antwort ausmacht: `formStufe` bestimmt die gezeigte Form (Familie
+ * / Familie-dann-Aroma / freier Abruf), festgelegt *vor* dem Riechen, weil
+ * die App da noch nicht wissen kann, welches der zwölf verdeckten Fläschchen
+ * gleich gezogen wird. **`formStufe` ist keine Vorhersage, welches Aroma
+ * gezogen wird** — bei einem echten blinden Griff aus zwölf ununterscheid-
+ * baren Fläschchen ist das sogar der Regelfall: praktisch jeder Griff trifft
+ * ein anderes Aroma als das, dessen Stufe zufällig die Form dieses Platzes
+ * bestimmt hat. `formStufe` ist nur ein Mittel, überhaupt *irgendeine*
+ * sinnvolle Form zeigen zu können, ohne Identität vorwegzunehmen — mehr
+ * nicht. Bewertet wird unten ausschließlich gegen das tatsächlich
+ * aufgedeckte Aroma, nie gegen das, dessen Stufe die Form geliefert hat.
  */
 export interface AntwortEingabe {
-  readonly geplanteStufe: UebungStufe;
+  readonly formStufe: UebungStufe;
   /** Getippte Familie — bei Stufe A und B gefragt, bei C nicht vorhanden. */
   readonly tipFamilieId?: string;
   /** Getipptes Aroma — bei Stufe B (nach Familienwahl) und C gefragt, bei A nicht vorhanden. */
@@ -349,22 +355,20 @@ const FAMILIENSERIE_SCHWELLE = 3;
  * Wertet eine Antwort aus, **nachdem** die Nummer bekannt ist — vorher kann
  * die App nicht wissen, gegen welches Aroma sie überhaupt prüft. Die
  * Leitner-Bewegung (Box, Fälligkeit, Stufe, Familienserie) bezieht sich
- * immer auf das **tatsächliche** Aroma, nicht auf das für diesen Platz im
- * Durchgang ursprünglich geplante — beide können auseinanderfallen, wenn
- * beim Bereitlegen etwas danebenging oder einfach ein anderes von den zwölf
- * gegriffen wurde. Die *Form* der Frage (`geplanteStufe`) bleibt trotzdem
- * die vorher gezeigte: sie legt nur fest, *wie* die Tipps zu einem Ergebnis
- * werden, nicht mehr.
+ * immer auf das **tatsächliche** Aroma — `formStufe` hat damit nichts zu
+ * tun, sie hat nur die Form geliefert (siehe Kopfkommentar zu
+ * `AntwortEingabe`). Das gilt für jede Antwort, nicht nur für den seltenen
+ * Fall eines echten Bereitlegen-Fehlers.
  */
 export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): AntwortAuswertung {
-  const { geplanteStufe, tipFamilieId, tipAromaId, tatsaechlicheAromaId, tatsaechlicheFamilieId, tatsaechlicherStand } = eingabe;
+  const { formStufe, tipFamilieId, tipAromaId, tatsaechlicheAromaId, tatsaechlicheFamilieId, tatsaechlicherStand } = eingabe;
   const zustand = effektiverZustand(tatsaechlicherStand, jetzt);
   const familieRichtig = tipFamilieId !== undefined && tipFamilieId === tatsaechlicheFamilieId;
 
   let ergebnis: Uebungsergebnis;
-  if (geplanteStufe === 'c') {
+  if (formStufe === 'c') {
     ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : 'falsch';
-  } else if (geplanteStufe === 'a') {
+  } else if (formStufe === 'a') {
     ergebnis = familieRichtig ? 'richtig' : 'falsch';
   } else {
     ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : familieRichtig ? 'teilweise' : 'falsch';
@@ -374,9 +378,9 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
   const faellig = naechsteFaelligkeit(box, jetzt);
 
   // familienSerie zaehlt nur, solange das TATSAECHLICHE Aroma noch auf
-  // Stufe A steht — unabhaengig von `geplanteStufe`. Ein Aroma, das laengst
-  // auf B oder C steht, aber durch einen Bereitlegen-Fehlgriff mit der
-  // Stufe-A-Form gefragt wurde, macht dadurch keinen Rueckschritt.
+  // Stufe A steht — unabhaengig von `formStufe`. Ein Aroma, das laengst auf
+  // B oder C steht, aber (der Regelfall) mit der Stufe-A-Form gefragt wurde,
+  // macht dadurch keinen Rueckschritt.
   let familienSerie = tatsaechlicherStand?.familienSerie ?? 0;
   let stufe = zustand.stufe;
   if (zustand.stufe === 'a') {
