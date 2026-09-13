@@ -75,9 +75,11 @@
   import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
   import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
 
-  let { onZurueck }: { onZurueck: () => void } = $props();
+  let { onZurueck, onOeffnenStatistik }: { onZurueck: () => void; onOeffnenStatistik: () => void } = $props();
 
   // Der Uebungsmodus fragt Flaeschchennummern ab — das ergibt nur bei einem
   // Set mit vialNummern einen Sinn. Heute ohnehin nur AROMASET_LENEZ.
@@ -695,6 +697,11 @@
         <Knopf onKlick={kontrastdurchgangStarten}>kontrastdurchgang: {kontrastKandidatLabelA} oder {kontrastKandidatLabelB}</Knopf>
       {/if}
       <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
+    </div>
+    <div class="block">
+      <Blattliste>
+        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
+      </Blattliste>
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}

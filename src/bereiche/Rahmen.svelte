@@ -46,6 +46,7 @@
   import Verkostungsblatt from './tasting/Verkostungsblatt.svelte';
   import Verkostungsbogen from './tasting/Verkostungsbogen.svelte';
   import Uebungsmodus from './einstellungen/Uebungsmodus.svelte';
+  import UebungsAuswertung from './einstellungen/UebungsAuswertung.svelte';
   import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
   import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
   import Personen from './einstellungen/Personen.svelte';
@@ -132,6 +133,7 @@
         onOeffnenProfil={(kaffeeId, profilId) => navigation.gehe({ name: 'profil', kaffeeId, profilId })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenShot={(kaffeeId, profilId) => navigation.gehe({ name: 'shot', kaffeeId, profilId })}
+        onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
       />
     {:else if route.name === 'bestellungAufnehmen'}
       <BestellungAufnehmen
@@ -232,7 +234,9 @@
     {:else if route.name === 'beobachtungen'}
       <Beobachtungen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'uebung'}
-      <Uebungsmodus onZurueck={() => navigation.zurueck()} />
+      <Uebungsmodus onZurueck={() => navigation.zurueck()} onOeffnenStatistik={() => navigation.gehe({ name: 'uebungStatistik' })} />
+    {:else if route.name === 'uebungStatistik'}
+      <UebungsAuswertung onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'personen'}
       <Personen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}

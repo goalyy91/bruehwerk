@@ -1,0 +1,123 @@
+import { describe, it, expect } from 'vitest';
+import {
+  verwechslungsmatrix,
+  familienTrefferquote,
+  langsameRichtigeAntworten,
+  zielfrequenzAbgleich,
+  LANGSAM_SCHWELLE_MS,
+  ZIELFREQUENZ_MINDESTWOCHEN,
+} from './uebungsauswertung';
+import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
+import type { AromaOption } from './uebung';
+
+const TAG = 24 * 60 * 60 * 1000;
+const WOCHE = 7 * TAG;
+const JETZT = 1_700_000_000_000;
+
+const ANTWORT = (ueber: Partial<Uebungsantwort>): Uebungsantwort => ({
+  id: 'a1',
+  durchgangId: 'd1',
+  setId: 's1',
+  aromaId: 'mandel',
+  form: 'freierAbruf',
+  zeitstempel: JETZT,
+  unerwarteteNummer: false,
+  ...ueber,
+});
+
+describe('verwechslungsmatrix — gerichtet, aus dem Antwortprotokoll', () => {
+  it('eine richtige Antwort traegt nichts zur Matrix bei, auch mit getipptId gesetzt', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', getipptId: 'mandel', ergebnis: 'richtig' })];
+    expect(verwechslungsmatrix(antworten)).toEqual([]);
+  });
+
+  it('eine falsche Antwort ohne getipptId (z. B. Stufe A) traegt nichts bei', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', ergebnis: 'falsch' })];
+    expect(verwechslungsmatrix(antworten)).toEqual([]);
+  });
+
+  it('X fuer Y gehalten zaehlt getrennt von Y fuer X gehalten — gerichtet, keine Summe', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', getipptId: 'haselnuss', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'haselnuss', getipptId: 'mandel', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'haselnuss', getipptId: 'mandel', ergebnis: 'falsch' }),
+    ];
+    const matrix = verwechslungsmatrix(antworten);
+    expect(matrix).toEqual([
+      { tatsaechlichId: 'haselnuss', getipptId: 'mandel', anzahl: 2 },
+      { tatsaechlichId: 'mandel', getipptId: 'haselnuss', anzahl: 1 },
+    ]);
+  });
+});
+
+describe('familienTrefferquote — nur Stufe A/B, teilweise zaehlt als Familie getroffen', () => {
+  const AROMEN: AromaOption[] = [
+    { id: 'mandel', label: 'Mandel', kategorieId: 'nussig-kakao' },
+    { id: 'haselnuss', label: 'Haselnuss', kategorieId: 'nussig-kakao' },
+    { id: 'himbeere', label: 'Himbeere', kategorieId: 'fruchtig' },
+  ];
+
+  it('freier Abruf (Stufe C) traegt keine Familienaussage bei', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig' })];
+    expect(familienTrefferquote(antworten, AROMEN)).toEqual([]);
+  });
+
+  it('"teilweise" (Stufe B, Familie richtig, Aroma falsch) zaehlt als Familie getroffen', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', form: 'aromaInFamilie', ergebnis: 'teilweise' })];
+    const quote = familienTrefferquote(antworten, AROMEN);
+    expect(quote).toEqual([{ kategorieId: 'nussig-kakao', richtig: 1, versuche: 1 }]);
+  });
+
+  it('mehrere Aromen derselben Familie zaehlen zusammen', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', form: 'familie', ergebnis: 'richtig' }),
+      ANTWORT({ aromaId: 'haselnuss', form: 'familie', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'himbeere', form: 'familie', ergebnis: 'richtig' }),
+    ];
+    const quote = familienTrefferquote(antworten, AROMEN);
+    expect(quote).toContainEqual({ kategorieId: 'nussig-kakao', richtig: 1, versuche: 2 });
+    expect(quote).toContainEqual({ kategorieId: 'fruchtig', richtig: 1, versuche: 1 });
+  });
+});
+
+describe('langsameRichtigeAntworten — Hinweis, kein Eingriff', () => {
+  it('richtig und unter der Schwelle faellt nicht auf', () => {
+    const antworten = [ANTWORT({ ergebnis: 'richtig', antwortdauerMs: LANGSAM_SCHWELLE_MS - 1 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([]);
+  });
+
+  it('richtig und ueber der Schwelle faellt auf', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', ergebnis: 'richtig', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([{ aromaId: 'mandel', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1 }]);
+  });
+
+  it('falsch und langsam faellt nicht auf — nur richtige Antworten sind hier interessant', () => {
+    const antworten = [ANTWORT({ ergebnis: 'falsch', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1000 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([]);
+  });
+});
+
+describe('zielfrequenzAbgleich — nur fuer den Hinweis, nie fuer die Intervalle', () => {
+  it('vor der Mindestwochenzahl gibt es keinen Abgleich', () => {
+    const begonnen = [JETZT - (ZIELFREQUENZ_MINDESTWOCHEN - 1) * WOCHE];
+    expect(zielfrequenzAbgleich(4, begonnen, JETZT)).toBeUndefined();
+  });
+
+  it('ohne jeden Durchgang gibt es keinen Abgleich', () => {
+    expect(zielfrequenzAbgleich(4, [], JETZT)).toBeUndefined();
+  });
+
+  it('nahe am Ziel: kein Abweichungs-Hinweis', () => {
+    // 4 Wochen, Ziel 4/Woche -> 16 Durchgaenge treffen genau
+    const begonnen = Array.from({ length: 16 }, (_, i) => JETZT - 4 * WOCHE + i * (4 * WOCHE) / 16);
+    const abgleich = zielfrequenzAbgleich(4, begonnen, JETZT);
+    expect(abgleich?.weichtAb).toBe(false);
+  });
+
+  it('deutlich unter dem Ziel: Abweichungs-Hinweis', () => {
+    // 4 Wochen, Ziel 4/Woche, aber nur 3 Durchgaenge insgesamt (0,75/Woche)
+    const begonnen = [JETZT - 3 * WOCHE, JETZT - 2 * WOCHE, JETZT - 1 * WOCHE];
+    const abgleich = zielfrequenzAbgleich(4, begonnen, JETZT);
+    expect(abgleich?.weichtAb).toBe(true);
+  });
+});

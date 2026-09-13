@@ -36,6 +36,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'setupBearbeiten', id: 's1' },
   { name: 'tempReferenz' },
   { name: 'uebung' },
+  { name: 'uebungStatistik' },
   { name: 'personen' },
 ];
 
@@ -104,6 +105,10 @@ describe('route — elternVon', () => {
 
   it('uebung -> einstellungen', () => {
     expect(elternVon({ name: 'uebung' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
+  it('uebungStatistik -> uebung', () => {
+    expect(elternVon({ name: 'uebungStatistik' })).toEqual({ name: 'uebung' } satisfies Route);
   });
 
   it('personen -> einstellungen', () => {

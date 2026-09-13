@@ -20,9 +20,16 @@
  */
 
 /** Reihenfolge ist Bedeutung — Index 0 verdrängt jede andere Art zuerst. */
-export type MeldungsArt = 'knapp' | 'alt' | 'restUnbekannt' | 'dialinOffen' | 'beobachtung';
+export type MeldungsArt = 'uebungFaellig' | 'knapp' | 'alt' | 'restUnbekannt' | 'dialinOffen' | 'beobachtung';
 
-const PRIORITAET: readonly MeldungsArt[] = ['knapp', 'alt', 'restUnbekannt', 'dialinOffen', 'beobachtung'];
+/**
+ * "uebungFaellig" auf Position 0 (Aromapaket, Etappe 8) — verdrängt an einem
+ * Tag mit fälligem Training und knapper Bohne die Bohnen-Meldung auf
+ * "weitere". Das ist gewollt, nicht übersehen: eine Übung, die man ohne
+ * Erinnerung liegen lässt, kostet Trainingsfortschritt, der sich nicht
+ * nachholen lässt, während "knapp" noch ein paar Tage Luft hat.
+ */
+const PRIORITAET: readonly MeldungsArt[] = ['uebungFaellig', 'knapp', 'alt', 'restUnbekannt', 'dialinOffen', 'beobachtung'];
 
 export function prioritaetsRang(art: MeldungsArt): number {
   const index = PRIORITAET.indexOf(art);
@@ -71,6 +78,17 @@ export function restmengeUnbekannt(charge: { readonly einwaage?: number; readonl
  */
 export function dialinOffen(profil: { readonly modus: 'dialin' | 'eingefahren' }, eigeneShotAnzahl: number, schwelle = 5): boolean {
   return profil.modus === 'dialin' && eigeneShotAnzahl >= schwelle;
+}
+
+/**
+ * Prio A (Aromapaket, Etappe 8): mindestens ein eingeführtes Aroma ist
+ * fällig. `zustaende` kommt vom Aufrufer (Bar.svelte) über
+ * `domain/uebung.ts::effektiverZustand` je Aroma — diese Datei kennt kein
+ * Aroma, keine Box, keinen Übungsstand selbst, nur die boolesche Frage
+ * "ist etwas fällig".
+ */
+export function uebungFaellig(zustaende: readonly { readonly eingefuehrt: boolean; readonly faellig: number }[], jetzt: number): boolean {
+  return zustaende.some((z) => z.eingefuehrt && z.faellig <= jetzt);
 }
 
 // ---------------------------------------------------------------------------

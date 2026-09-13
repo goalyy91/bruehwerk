@@ -46,6 +46,7 @@ export type Route =
   | { name: 'setupNeu' }
   | { name: 'setupBearbeiten'; id: string }
   | { name: 'uebung' }
+  | { name: 'uebungStatistik' }
   | { name: 'personen' };
 
 export const START: Route = { name: 'bar' };
@@ -120,6 +121,8 @@ export function zuPfad(route: Route): string {
       return '/einstellungen/geraete/bruehgeraet/temperatur';
     case 'uebung':
       return '/einstellungen/uebung';
+    case 'uebungStatistik':
+      return '/einstellungen/uebung/statistik';
     case 'personen':
       return '/einstellungen/personen';
   }
@@ -170,6 +173,7 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 2 && t[1] === 'musterblatt') return { name: 'musterblatt' };
     if (t.length === 2 && t[1] === 'beobachtungen') return { name: 'beobachtungen' };
     if (t.length === 2 && t[1] === 'uebung') return { name: 'uebung' };
+    if (t.length === 3 && t[1] === 'uebung' && t[2] === 'statistik') return { name: 'uebungStatistik' };
     if (t.length === 2 && t[1] === 'personen') return { name: 'personen' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
     if (t.length === 2 && t[1] === 'verhalten') return { name: 'verhalten' };
@@ -244,6 +248,8 @@ export function elternVon(route: Route): Route | undefined {
     case 'uebung':
     case 'personen':
       return { name: 'einstellungen' };
+    case 'uebungStatistik':
+      return { name: 'uebung' };
     case 'muehle':
     case 'muehleNeu':
     case 'bruehgeraet':
@@ -307,6 +313,7 @@ export function tabVon(route: Route): Bereich {
     case 'setupBearbeiten':
     case 'tempReferenz':
     case 'uebung':
+    case 'uebungStatistik':
     case 'personen':
       return 'einstellungen';
   }

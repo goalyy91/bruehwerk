@@ -43,6 +43,16 @@ export const AppEinstellungen = z.object({
    * `:root:not([data-theme])`, und das Telefon entscheidet.
    */
   thema: z.enum(['system', 'hell', 'dunkel']).default('system'),
+  /**
+   * Aromapaket, Etappe 8 — Zielfrequenz fürs Aroma-Training in Durchgängen
+   * je Woche. Steuert ausschließlich den Abgleich-Hinweis auf der
+   * Übungsmodus-Übersicht ("Ziel 4×/Woche, faktisch 1,8× — Ziel anpassen?"),
+   * nie die Leitner-Intervalle oder die Zusammenstellung eines Durchgangs
+   * (Lastenheft Abschnitt 7: "für Erinnerungen, nicht für den Algorithmus").
+   * Optional statt mit Default: ungesetzt heißt "noch keine Zielfrequenz
+   * gewählt", nicht "0× pro Woche gewollt".
+   */
+  uebungZielProWoche: z.number().positive().optional(),
 });
 export type AppEinstellungen = z.infer<typeof AppEinstellungen>;
 
