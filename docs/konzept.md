@@ -864,9 +864,89 @@ Der Kopf nennt den Shot — *„Dial-in, Shot 3 von 5"*. Das ist kein Schmuck: i
 >
 > Der volle Bogen ist für echte Verkostungen. Für den Alltag reicht das Urteil aus der Shot-Erfassung — *daneben · okay · sehr gut* — plus bei Bedarf die Symptom-Chips. Derselbe Datensatz, nur flacher gefüllt, und beides landet in derselben Auswertung. Ein voller Bogen, den du nach dem dritten Tag nicht mehr ausfüllst, wäre der eigentliche Verlust.
 
-#### Übungsmodus  ·  *bestätigt · Paket 05*
+#### Übungsmodus  ·  *bestätigt · Paket 05, Neubau Aromapaket Etappe 6*
 
-Die App kennt die Fläschchennummern. Sie zieht eine Zufallsnummer, du tippst deinen Tipp, sie deckt auf — und führt die Trefferquote je Aroma fort. Damit übst du bevorzugt, was du zuletzt *nicht* getroffen hast, und es entsteht nebenbei eine ehrliche Auskunft darüber, welchen deiner Verkostungsnotizen du trauen kannst.
+Die erste Fassung zog eine Zufallsnummer und zeigte sie an, bevor du geantwortet hast.
+Das hat einen Konstruktionsfehler, der erst nach einigen Wochen sichtbar wurde: wer
+regelmäßig übt, lernt die **Nummer**, nicht den Geruch. Eine dritte Aufgabenart
+(„Aussenseiter") war schon vorher aus demselben Grund wieder ausgebaut worden — bei Le
+Nez sind die Nummern strikt nach Familie sortiert, und der Aussenseiter war allein am
+Zahlenabstand lösbar, ganz ohne zu riechen. Der Rest der ersten Fassung hatte dasselbe
+Problem, nur weniger auffällig.
+
+> **Verdecktes Ziehen statt offener Nummer**
+>
+> Die App nennt eine Menge von zwölf Fläschchennummern — acht, die abgefragt werden,
+> vier Zusatzfläschchen, die nie geöffnet werden. Du legst alle zwölf so bereit, dass du
+> beim Greifen nicht siehst, welches du erwischst — womit das gelingt, entscheidet die
+> Person, nicht die App. Erst *nach* der Antwort liest du die Nummer ab und trägst sie
+> ein, über dieselbe durchsuchbare Liste aller 60, die auch der freie Abruf benutzt —
+> ohne jede Hervorhebung, wer von den zwölf schon dran war. Genau das ist der Punkt: die
+> App verrät den Kandidatenkreis eines Durchgangs zu keinem Zeitpunkt. Die vier
+> Zusatzfläschchen werden nie aufgelöst — ohne sie wäre das letzte Item durch Ausschluss
+> erraten, das vorletzte fast.
+
+Die neue Einheit — ein Satz von zwölf Fläschchen, davon acht abgefragt — heißt
+**Übungsdurchgang** (kurz *der Durchgang*), bewusst nicht „Runde": das Wort ist in der
+Sprachtabelle schon als falscher Begriff für *Bestellung* vergeben. „Übung" wiederum
+bleibt der bestehende Trefferstand je Aroma.
+
+**Drei Lernstufen, je Aroma einzeln geführt.** Erfahrene Verkoster ordnen hierarchisch
+ein — erst die Familie, dann das Einzelaroma:
+
+| Stufe | Frage | Freischaltung |
+| --- | --- | --- |
+| A — Familie | eine von neun Familien | dreimal in Folge richtig → Stufe B |
+| B — Aroma in der Familie | Familie wählen, dann ein Aroma *aus dieser Familie* — 3 bis 16 Kandidaten je nach Familiengröße | automatisch nach A |
+| C — Freier Abruf | Aroma aus allen 60, suchbar | die einzige Stufe, die wirklich prüft, ob ein Geruch *gekonnt* wird |
+
+Stufe B ist damit zugleich die Multiple-Choice-Form aus dem Lastenheft: eine freie Liste
+aus vier bis sechs Namen wäre blind unmöglich, weil die App die richtige Antwort zum
+Antwortzeitpunkt selbst nicht kennt. Die Familie, die du selbst gewählt hast, ist das
+einzige Eingrenzungsmittel, das ohne dieses Wissen auskommt.
+
+**Spaced Repetition — Leitner, fünf Boxen, fixe Intervalle:**
+
+| Box | Nächste Fälligkeit |
+| --- | --- |
+| 1 | sofort |
+| 2 | +2 Tage |
+| 3 | +5 Tage |
+| 4 | +12 Tage |
+| 5 | +30 Tage |
+
+Richtig bewegt eine Box hoch, falsch zurück auf 1. Ein **Teilerfolg** — Familie richtig,
+Aroma falsch — bewegt nur **eine** Box runter, nicht auf Null: wer die Familie trifft,
+hat den Geruch grundsätzlich verortet. Die Intervalle selbst sind **bewusst nicht
+adaptiv** — die Vergessenskurve kennt den Trainingskalender nicht, und eine App, die aus
+einer faulen Woche eine Präferenz läse, würde die Intervalle strecken und noch weniger
+Erinnerungen auslösen. Was sich der Trainingshäufigkeit anpasst, ist stattdessen die
+**Einführung neuer Aromen**: sie stoppt, sobald 30 % der bereits eingeführten Aromen in
+Box 1–2 stehen, und läuft von selbst wieder an, sobald diese sich leeren. Der Boxenzustand
+ist der bessere Regler als der Kalender.
+
+**Die Riechpause ist die eine Ausnahme von „kein Timer".** Zwischen zwei Fläschchen
+liegen 25 Sekunden, erzwungen über einen Rückwärtszähler auf dem „weiter"-Knopf — siehe
+die Ausnahme in `CLAUDE.md`. Der Zähler erzeugt kein Tempo, er verhindert es: ohne Pause
+sinkt die Wahrnehmungsschärfe messbar, und die App würde Ermüdung statt Können messen.
+Harte Obergrenze: 10 Riechvorgänge je Übungsdurchgang.
+
+**Kontrastdurchgang** — die gezielte Übung gegen dokumentierte Verwechslungen, ab drei
+Verwechslungen eines Paares angeboten. Hier gilt eine bewusste, eng begrenzte Ausnahme
+vom verdeckten Prinzip: die App nennt **vor** dem Riechen beide Namen („dieser
+Durchgang: Mandel oder Haselnuss") — ohne das wäre es nur ein freier Abruf, zufällig auf
+zwei Fläschchen verengt, und die eigentliche Leistung, zwei ähnliche Gerüche direkt
+gegeneinander abzuwägen, fände nicht statt. Beide werden nacheinander blind gezogen,
+dann eine einzige Zuordnungsfrage: „welches war welches" — nie zwei Einzelfragen, sonst
+wäre die zweite durch Ausschluss geschenkt. Läuft immer als eigener Durchgang, nie unter
+die acht Items eines normalen gemischt.
+
+**Reverse** — ungescort, kein Einfluss auf die Boxen: die App zeigt einen Namen, du
+suchst das Fläschchen selbst und schätzt danach „getroffen / daneben" ein. Stärkt die
+Verknüpfung in Gegenrichtung.
+
+Verwandte Noten aus dem Datenblatt erscheinen **immer erst nach der Auflösung** — vorher
+wären sie ein Rateschema, danach festigen sie das assoziative Netz.
 
 ## Getränke
 
