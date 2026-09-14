@@ -197,7 +197,13 @@
     untrack(() => {
       const jetzt = Date.now();
       const eigeneDurchgaenge = bestand.uebungsdurchgaenge.filter((d) => d.setId === set.id);
-      const durchgaengeBegonnenAm = eigeneDurchgaenge.map((d) => d.begonnenAm);
+      // Backlog 2026-09-14: nur tatsaechlich beendete "normal"-Durchgaenge
+      // zaehlen fuer Kennzahl/Zielabgleich — sonst verfaelscht ein
+      // abgebrochener oder noch laufender Durchgang die Zaehlbasis. Dieselbe
+      // Filterung wie UebungsAuswertung.svelte::durchgaengeBegonnenAm.
+      const durchgaengeBegonnenAm = eigeneDurchgaenge
+        .filter((d) => d.art === 'normal' && d.status === 'abgeschlossen')
+        .map((d) => d.begonnenAm);
       const zielProWoche = bestand.einstellungen?.uebungZielProWoche;
 
       const pool = uebungsKennzahlenPool({

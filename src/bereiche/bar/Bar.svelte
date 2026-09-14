@@ -27,7 +27,7 @@
     sortiereUndDeckeln,
     restmengeUnbekannt,
     dialinOffen,
-    uebungFaellig,
+    anzahlUebungFaellig,
     kennzahlenPool,
     waehleKennzahlen,
     meistgenutzteKaffeeId,
@@ -165,11 +165,16 @@
         .flatMap((k) => k.gruppen.flatMap((g) => g.aromen))
         .filter((a) => a.nummer !== undefined)
         .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === uebungsSet.id && u.aromaId === a.id), jetzt));
-      if (uebungFaellig(uebungsZustaende, jetzt)) {
+      const anzahlFaellig = anzahlUebungFaellig(uebungsZustaende, jetzt);
+      if (anzahlFaellig > 0) {
         kandidaten.push({
           art: 'uebungFaellig',
           name: 'Aroma-Training',
-          meta: 'Fällig',
+          // Backlog 2026-09-14: Zahl statt nur "Fällig" — sonst wirkt die
+          // Meldung neben der Wochenziel-Kennzahl ("6 von 2 Durchgänge")
+          // widersprüchlich, obwohl beides unabhängige Groessen sind
+          // (Leitner-Box-Faelligkeit je Aroma vs. Wochenziel).
+          meta: anzahlFaellig === 1 ? '1 Aroma fällig' : `${anzahlFaellig} Aromen fällig`,
           onKlick: onOeffnenUebung,
         });
       }

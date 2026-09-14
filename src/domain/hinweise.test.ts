@@ -5,6 +5,7 @@ import {
   restmengeUnbekannt,
   dialinOffen,
   uebungFaellig,
+  anzahlUebungFaellig,
   kennzahlenPool,
   waehleKennzahlen,
   meistgenutzteKaffeeId,
@@ -35,6 +36,29 @@ describe('uebungFaellig — Aromapaket Etappe 8, Prio A: verdrängt sogar "knapp
 
   it('mindestens ein eingefuehrtes, faelliges Aroma reicht', () => {
     expect(uebungFaellig([{ eingefuehrt: true, faellig: JETZT + TAG }, { eingefuehrt: true, faellig: JETZT - TAG }], JETZT)).toBe(true);
+  });
+});
+
+describe('anzahlUebungFaellig — Backlog 2026-09-14: Zahl fuer die Dashboard-Meldung', () => {
+  const JETZT = 1_700_000_000_000;
+  const TAG = 24 * 60 * 60 * 1000;
+
+  it('zaehlt nur eingefuehrte, faellige Aromen', () => {
+    expect(
+      anzahlUebungFaellig(
+        [
+          { eingefuehrt: false, faellig: JETZT - TAG },
+          { eingefuehrt: true, faellig: JETZT + TAG },
+          { eingefuehrt: true, faellig: JETZT - TAG },
+          { eingefuehrt: true, faellig: JETZT - TAG },
+        ],
+        JETZT,
+      ),
+    ).toBe(2);
+  });
+
+  it('ohne faellige Aromen: 0', () => {
+    expect(anzahlUebungFaellig([{ eingefuehrt: true, faellig: JETZT + TAG }], JETZT)).toBe(0);
   });
 });
 
