@@ -17,6 +17,7 @@
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Parameterkachel from '../../muster/Parameterkachel.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
+  import Gussplanansicht from '../../muster/Gussplanansicht.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import type { Shot } from '../../daten/schema';
 
@@ -46,6 +47,9 @@
   const profil = $derived(aktiv ? bestand.profile.find((p) => p.id === aktiv.profilId) : undefined);
   const bruehgeraet = $derived(profil ? bestand.bruehgeraetVon(profil.setupId) : undefined);
   const muehle = $derived(profil ? bestand.muehleVon(profil.setupId) : undefined);
+  // Backlog 2026-09-14: fehlte beim Abarbeiten komplett — K34 "Gussplan im
+  // Zubereitungsweg ansehbar". Dieselbe Ableitung wie ShotErfassung.svelte.
+  const gussplan = $derived(bestand.gusslpaene.find((g) => g.id === profil?.gussplanId));
 
   let input = $state(0);
   let mg = $state(0);
@@ -166,6 +170,14 @@
          Bei einem Doppelbezug nennt getraenkNamen() beide, mit "+" verbunden. -->
     <h1>{getraenkNamen(aktiv.positionIds)}</h1>
     <p class="meta">{kaffeeName(aktiv.kaffeeId)} · {profil.name}</p>
+
+    {#if bruehgeraet?.typ === 'pourover' && gussplan}
+      <!-- K34: Gussplan ist im Zubereitungsweg ansehbar, nur lesend — vor
+           den Einstellwerten, wie beim Alltagspfad (ShotErfassung.svelte). -->
+      <div class="block">
+        <Gussplanansicht bausteine={gussplan.bausteine} lesart={gussplan.lesart} />
+      </div>
+    {/if}
 
     <div class="block">
       <h2>Ziel</h2>
