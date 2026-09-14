@@ -81,6 +81,19 @@ export function dialinOffen(profil: { readonly modus: 'dialin' | 'eingefahren' }
 }
 
 /**
+ * Wie viele eingeführte Aromen fällig sind (Backlog 2026-09-14: die
+ * Dashboard-Meldung sagte nur "Fällig", ohne Zahl — das wirkte neben der
+ * Wochenziel-Kennzahl ("6 von 2 Durchgänge") widersprüchlich, obwohl beides
+ * unabhängige Größen sind (Leitner-Box-Fälligkeit je Aroma vs. Wochenziel,
+ * siehe domain/uebungsauswertung.ts::zielfrequenzAbgleich). Eine genannte
+ * Zahl macht sichtbar, dass es um einzelne Aromen geht, nicht um die
+ * Gesamtzahl der Durchgänge.
+ */
+export function anzahlUebungFaellig(zustaende: readonly { readonly eingefuehrt: boolean; readonly faellig: number }[], jetzt: number): number {
+  return zustaende.filter((z) => z.eingefuehrt && z.faellig <= jetzt).length;
+}
+
+/**
  * Prio A (Aromapaket, Etappe 8): mindestens ein eingeführtes Aroma ist
  * fällig. `zustaende` kommt vom Aufrufer (Bar.svelte) über
  * `domain/uebung.ts::effektiverZustand` je Aroma — diese Datei kennt kein
@@ -88,7 +101,7 @@ export function dialinOffen(profil: { readonly modus: 'dialin' | 'eingefahren' }
  * "ist etwas fällig".
  */
 export function uebungFaellig(zustaende: readonly { readonly eingefuehrt: boolean; readonly faellig: number }[], jetzt: number): boolean {
-  return zustaende.some((z) => z.eingefuehrt && z.faellig <= jetzt);
+  return anzahlUebungFaellig(zustaende, jetzt) > 0;
 }
 
 // ---------------------------------------------------------------------------
