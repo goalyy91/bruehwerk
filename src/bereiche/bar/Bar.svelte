@@ -320,10 +320,14 @@
   // der Fastway macht denselben Sprung, nur mit automatisch aufgeloester
   // Bohne/Profil statt manueller Navigation ueber Kaffees -> Profil.
   //
-  // Rueckfragen bleiben Ausnahme: nur wenn die Koffein-Vorbelegung selbst
-  // unsicher ist (vorbelegung().frage, K12 — Vorbelegung ja, Verschweigen
-  // nein) oder mehrere Bohnen gleichzeitig passen UND die zuletzt fuer
-  // dieses Getraenk verwendete nicht mehr dazugehoert.
+  // Backlog 2026-09-14, Nutzer-Entscheidung: die Kachel zeigt bereits die
+  // zuletzt fuer dieses Getraenk verwendete Bohne an (bohneFuerGetraenk()) —
+  // Fastway nimmt jetzt genau die, ohne jede Rueckfrage. Bewusster
+  // Konzeptbruch zu K45/K46 (Koffein wird vor der Bohne gefragt und filtert
+  // die Bohnenliste) fuer diesen einen Spezialfall. Koffein-/Bohnenfrage
+  // sind kein Normalfall mehr, sondern **Fallback**: sie greifen nur, wenn
+  // fuer dieses Getraenk noch nie eine Bohne verwendet wurde (Kachel zeigt
+  // keine) — dann fehlt die Grundlage fuer den direkten Sprung tatsaechlich.
   type FastwayPhase = 'koffein' | 'bohne';
   interface FastwayZustand {
     readonly getraenkId: string;
@@ -336,6 +340,13 @@
   async function kachelWaehlen(getraenkId: string): Promise<void> {
     fehler = '';
     fastway = undefined;
+    const bekannteBohneId = juengsteBohneIdFuerGetraenk(getraenkId);
+    if (bekannteBohneId) {
+      fastwaySpringen(getraenkId, bekannteBohneId);
+      return;
+    }
+    // Fallback: noch nie mit diesem Getraenk verwendet, keine Bohne auf der
+    // Kachel bekannt — hier braucht es wirklich eine Entscheidung.
     if (!standardPerson) return; // Kacheln erscheinen nur, wenn standardPerson existiert
     const eigenePositionenChronologisch = bestand.positionen
       .filter((p) => p.personId === standardPerson.id)
@@ -363,10 +374,11 @@
       fehler = 'Keine passende Bohne aktiv.';
       return;
     }
-    const juengsteId = juengsteBohneIdFuerGetraenk(getraenkId);
-    const juengsteTrifftZu = juengsteId !== undefined && optionen.some((k) => k.id === juengsteId);
-    if (optionen.length === 1 || juengsteTrifftZu) {
-      fastwaySpringen(getraenkId, juengsteTrifftZu ? juengsteId! : optionen[0]!.id);
+    // Nur im Fallback erreicht (kachelWaehlen hat bereits geprueft, dass
+    // keine Bohne fuer dieses Getraenk bekannt ist) — die einzig verbleibende
+    // Frage ist, ob genau eine Bohne passt.
+    if (optionen.length === 1) {
+      fastwaySpringen(getraenkId, optionen[0]!.id);
       return;
     }
     fastway = { getraenkId, phase: 'bohne', bohnenOptionen: optionen.map((k) => ({ id: k.id, name: k.name })) };
