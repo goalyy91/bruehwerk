@@ -998,6 +998,50 @@
       {#if begruessungsText.label}<p class="tageszeit-label">{begruessungsText.label}</p>{/if}
       <p class="begruessung">{begruessungsText.satz}</p>
     </header>
+    {#if sperreAktiv}
+      <p class="hinweis">Erst festigen, dann Neues.</p>
+    {/if}
+    <div class="jetzt-zone">
+      {#if zielfrequenzHinweis}
+        <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
+      {/if}
+      <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
+      <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
+    </div>
+
+    {#if kontrastKandidat || reverseVorschlagOption}
+      <div class="vorschlaege">
+        <h2>Vorschläge</h2>
+        <div class="bestandliste">
+          {#if kontrastKandidat}
+            <button type="button" class="bestandkarte" onclick={kontrastdurchgangStarten}>
+              <div class="bestandkarte-text">
+                <span class="bestandkarte-name">{kontrastKandidatLabelA} · {kontrastKandidatLabelB}</span>
+                <span class="bestandkarte-meta">oft verwechselt — als Kontrastdurchgang üben</span>
+              </div>
+            </button>
+          {/if}
+          {#if reverseVorschlagOption}
+            <button type="button" class="bestandkarte" onclick={reverseVorschlagUeben}>
+              <div class="bestandkarte-text">
+                <span class="bestandkarte-name">{reverseVorschlagOption.label}</span>
+                <span class="bestandkarte-meta">schwer getan — gezielt reverse üben</span>
+              </div>
+            </button>
+            {#if reverseVorschlagOption.nummer !== undefined && datenblattZu(reverseVorschlagOption.nummer)}
+              <Knopf stufe="still" onKlick={() => (datenblatt = datenblattZu(reverseVorschlagOption!.nummer!))}>Datenblatt ansehen</Knopf>
+            {/if}
+          {/if}
+        </div>
+      </div>
+    {/if}
+
+    <div class="block">
+      <Blattliste>
+        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
+      </Blattliste>
+    </div>
+
     {#if kennzahlenAuswahl.length > 0}
       <div class="kennzahl-raster" class:einzeln={kennzahlenAuswahl.length === 1}>
         {#each kennzahlenAuswahl as fakt (fakt.label)}
@@ -1008,37 +1052,6 @@
         {/each}
       </div>
     {/if}
-    <div class="frage-block">
-      {#if sperreAktiv}
-        <p class="hinweis">Erst festigen, dann Neues.</p>
-      {/if}
-      {#if zielfrequenzHinweis}
-        <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
-      {/if}
-      <div class="knopfreihe">
-        <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
-        {#if kontrastKandidat}
-          <Knopf onKlick={kontrastdurchgangStarten}>kontrastdurchgang: {kontrastKandidatLabelA} oder {kontrastKandidatLabelB}</Knopf>
-        {/if}
-        <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
-      </div>
-    </div>
-    {#if reverseVorschlagOption}
-      <div class="frage-block">
-        <p class="hinweis">Schwer getan mit: {reverseVorschlagOption.label}</p>
-        <div class="knopfreihe">
-          <Knopf onKlick={reverseVorschlagUeben}>reverse üben: {reverseVorschlagOption.label}</Knopf>
-          {#if reverseVorschlagOption.nummer !== undefined && datenblattZu(reverseVorschlagOption.nummer)}
-            <Knopf onKlick={() => (datenblatt = datenblattZu(reverseVorschlagOption!.nummer!))}>Datenblatt ansehen</Knopf>
-          {/if}
-        </div>
-      </div>
-    {/if}
-    <div class="block">
-      <Blattliste>
-        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
-      </Blattliste>
-    </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
@@ -1330,6 +1343,61 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     overflow-wrap: break-word;
+  }
+  /* Rückmeldung 2026-09-17: die Übersicht sollte denselben Dashboard-
+     Charakter haben wie Bar.svelte — eine klare Primäraktion ohne
+     Kartenrahmen (wie dort "Getränk wählen"), statt in einer Knopfreihe mit
+     zwei weiteren Aktionen zu stehen. */
+  .jetzt-zone {
+    margin: var(--r4) 0 var(--r5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--r3);
+  }
+  .vorschlaege {
+    margin-bottom: var(--r4);
+  }
+  /* Vorschlags-Karten — 1:1 aus Bar.svelte übernommen (.bestandkarte/
+     .bestandliste dort, Zeilen 712-781): Blattfläche + Schatten statt Rand,
+     Serif für den Namen. Kontrastdurchgang- und Reverse-Vorschlag sind
+     dieselbe Art Information wie Bars Bestandskarten — "das fällt gerade
+     auf", ganze Karte tippbar, keine eigene Bildsprache dafür nötig. Ohne
+     die dortigen Dringlichkeits-Farbvarianten (kritisch/achtung/info): hier
+     ist kein Vorschlag dringend. */
+  .bestandliste {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .bestandkarte {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 18px;
+    background: var(--blatt);
+    box-shadow: 0 6px 16px -10px var(--schatten-weich);
+    cursor: pointer;
+    text-align: left;
+    /* Serif bewusst: die Karte trägt einen Aroma- oder Paarnamen. */
+    font-family: var(--schrift);
+  }
+  .bestandkarte-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .bestandkarte-name {
+    font-size: 15.5px;
+    color: var(--tinte);
+    display: block;
+  }
+  .bestandkarte-meta {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    display: block;
+    margin-top: 3px;
   }
   /* Weiße Fläche wie Bar.svelte (.fastway-frage, Getränke-Kacheln) statt
      freien Texts auf der Seitenfläche — Livebetrieb-Rückmeldung "sieht nicht
