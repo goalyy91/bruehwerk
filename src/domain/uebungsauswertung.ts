@@ -18,7 +18,7 @@
  * liefert nur die Liste zum Ansehen, verändert nichts an der
  * Leitner-Bewegung (die bleibt allein in domain/leitner.ts/domain/uebung.ts).
  */
-import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
+import type { Uebungsantwort, Uebungsform } from '../daten/schema/uebungsantwort';
 import type { AromaOption, EffektiverZustand } from './uebung';
 import type { Kennzahl } from './hinweise';
 
@@ -90,8 +90,52 @@ export function familienTrefferquote(antworten: readonly Uebungsantwort[], arome
 
 // ---- Antwortdauer als Sicherheitsindikator ---------------------------------
 
-/** Ab welcher Antwortdauer eine richtige Antwort eher nach Raten/langem Zögern aussieht als nach sicherem Wissen. */
+/**
+ * Fester Fallback, solange fuer eine Aufgabenform noch zu wenig eigene
+ * Antwortzeit-Historie vorliegt (siehe `persoenlicheSchwelle` unten) — ohne
+ * ihn waere die allererste Antwort einer Form immer "normal", weil ein
+ * Median aus einem einzigen Wert nichts aussagt.
+ */
 export const LANGSAM_SCHWELLE_MS = 8000;
+
+/**
+ * Ab wie vielen eigenen richtigen Antworten derselben Form ein persoenlicher
+ * Referenzwert die feste Schwelle abloest — Nutzergespraech 2026-09-17:
+ * absolute Zeiten vermischen Person und Aufgabentyp ("1 aus 2 waehlen" ist
+ * schneller als "aus 60 frei benennen"), deshalb der eigene Median statt
+ * eines Werts fuer alle. Mit zu wenigen Antworten waere dieser Median aber
+ * selbst nur Rauschen — dieselbe Vorsicht wie bei `KENNZAHL_MINDEST_STICHPROBE`
+ * weiter unten, nur mit einer hoeheren Schwelle, weil eine Streuung (Median)
+ * mehr Stichprobe braucht als eine reine Zaehlung.
+ */
+export const ANTWORTDAUER_MINDEST_STICHPROBE = 15;
+
+/** Vielfaches des eigenen Medians, ab dem eine richtige Antwort "fuer diese Person, in dieser Form auffaellig langsam" gilt. */
+const PERSOENLICHE_SCHWELLE_FAKTOR = 2;
+
+function median(werte: readonly number[]): number {
+  const sortiert = [...werte].sort((a, b) => a - b);
+  const mitte = Math.floor(sortiert.length / 2);
+  return sortiert.length % 2 === 0 ? (sortiert[mitte - 1]! + sortiert[mitte]!) / 2 : sortiert[mitte]!;
+}
+
+/**
+ * Persoenliche Antwortzeit-Schwelle einer Aufgabenform: das Doppelte des
+ * eigenen Medians unter den bisherigen RICHTIGEN Antworten dieser Form.
+ * Getrennt je Form (nicht ein gemeinsamer Median ueber alle) — "familie",
+ * "aromaInFamilie" und "freierAbruf" haben grundverschiedene Antwortzeiten,
+ * ein gemeinsamer Wert wuerde die schnelle Form staendig als "auffaellig"
+ * markieren und die langsame nie. Faellt auf `LANGSAM_SCHWELLE_MS` zurueck,
+ * solange fuer diese Form weniger als `ANTWORTDAUER_MINDEST_STICHPROBE`
+ * richtige Antworten mit Zeit vorliegen.
+ */
+function persoenlicheSchwelle(antworten: readonly Uebungsantwort[], form: Uebungsform): number {
+  const zeiten = antworten
+    .filter((a) => a.form === form && a.ergebnis === 'richtig' && a.antwortdauerMs !== undefined)
+    .map((a) => a.antwortdauerMs!);
+  if (zeiten.length < ANTWORTDAUER_MINDEST_STICHPROBE) return LANGSAM_SCHWELLE_MS;
+  return median(zeiten) * PERSOENLICHE_SCHWELLE_FAKTOR;
+}
 
 export interface LangsameAntwort {
   readonly aromaId: string;
@@ -102,14 +146,22 @@ export interface LangsameAntwort {
  * Richtige Antworten mit auffällig langer Antwortdauer — ein Hinweis, kein
  * Urteil: lange Antwortzeit bei richtiger Antwort deutet auf Raten oder
  * starkes Zögern hin. Verändert bewusst nichts an der Box-Beförderung (siehe
- * Dateikopf) — reine Liste zum Ansehen.
+ * Dateikopf) — reine Liste zum Ansehen. "Auffällig" heißt seit dem
+ * Nutzergespräch 2026-09-17 "auffällig für diese Person, in dieser Form"
+ * (`persoenlicheSchwelle`), nicht mehr ein einzelner Wert für alle.
  */
-export function langsameRichtigeAntworten(
-  antworten: readonly Uebungsantwort[],
-  schwelleMs: number = LANGSAM_SCHWELLE_MS,
-): readonly LangsameAntwort[] {
+export function langsameRichtigeAntworten(antworten: readonly Uebungsantwort[]): readonly LangsameAntwort[] {
+  const schwellenProForm = new Map<Uebungsform, number>();
+  const schwelleFuer = (form: Uebungsform): number => {
+    let schwelle = schwellenProForm.get(form);
+    if (schwelle === undefined) {
+      schwelle = persoenlicheSchwelle(antworten, form);
+      schwellenProForm.set(form, schwelle);
+    }
+    return schwelle;
+  };
   return antworten
-    .filter((a) => a.ergebnis === 'richtig' && a.antwortdauerMs !== undefined && a.antwortdauerMs > schwelleMs)
+    .filter((a) => a.ergebnis === 'richtig' && a.antwortdauerMs !== undefined && a.antwortdauerMs > schwelleFuer(a.form))
     .map((a) => ({ aromaId: a.aromaId, antwortdauerMs: a.antwortdauerMs! }));
 }
 

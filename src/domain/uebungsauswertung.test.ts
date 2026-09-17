@@ -7,6 +7,7 @@ import {
   wochenfortschritt,
   uebungsKennzahlenPool,
   LANGSAM_SCHWELLE_MS,
+  ANTWORTDAUER_MINDEST_STICHPROBE,
   ZIELFREQUENZ_MINDESTWOCHEN,
 } from './uebungsauswertung';
 import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
@@ -96,6 +97,44 @@ describe('langsameRichtigeAntworten — Hinweis, kein Eingriff', () => {
   it('falsch und langsam faellt nicht auf — nur richtige Antworten sind hier interessant', () => {
     const antworten = [ANTWORT({ ergebnis: 'falsch', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1000 })];
     expect(langsameRichtigeAntworten(antworten)).toEqual([]);
+  });
+});
+
+describe('langsameRichtigeAntworten — persoenliche Schwelle je Form ab Mindeststichprobe', () => {
+  it('unter der Mindeststichprobe bleibt es bei der festen Schwelle, auch bei durchweg schnellen Antworten', () => {
+    // 14 sehr schnelle Antworten (500ms) und eine bei genau der festen Schwelle + 1 —
+    // ohne genug Stichprobe darf die letzte trotz winzigem eigenen Median nicht schon bei 1000ms auffallen.
+    const schnelle = Array.from({ length: ANTWORTDAUER_MINDEST_STICHPROBE - 1 }, () =>
+      ANTWORT({ ergebnis: 'richtig', antwortdauerMs: 500 }),
+    );
+    const antworten = [...schnelle, ANTWORT({ aromaId: 'mandel', ergebnis: 'richtig', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([{ aromaId: 'mandel', antwortdauerMs: LANGSAM_SCHWELLE_MS + 1 }]);
+  });
+
+  it('ab der Mindeststichprobe loest der eigene Median (× 2) die feste Schwelle ab — auch deutlich darunter', () => {
+    // Median 500ms -> persoenliche Schwelle 1000ms, weit unter den festen 8000ms.
+    const schnelle = Array.from({ length: ANTWORTDAUER_MINDEST_STICHPROBE }, () =>
+      ANTWORT({ ergebnis: 'richtig', antwortdauerMs: 500 }),
+    );
+    const antworten = [...schnelle, ANTWORT({ aromaId: 'mandel', ergebnis: 'richtig', antwortdauerMs: 1001 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([{ aromaId: 'mandel', antwortdauerMs: 1001 }]);
+  });
+
+  it('eine Form mit hohem eigenen Median toleriert Zeiten, die die feste Schwelle ueberschreiten wuerden', () => {
+    // Median 5000ms -> persoenliche Schwelle 10000ms: 9000ms faellt hier NICHT auf, obwohl es ueber den festen 8000ms liegt.
+    const langsame = Array.from({ length: ANTWORTDAUER_MINDEST_STICHPROBE }, () =>
+      ANTWORT({ form: 'freierAbruf', ergebnis: 'richtig', antwortdauerMs: 5000 }),
+    );
+    const antworten = [...langsame, ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig', antwortdauerMs: 9000 })];
+    expect(langsameRichtigeAntworten(antworten)).toEqual([]);
+  });
+
+  it('die Schwelle wird getrennt je Form berechnet — der niedrige Median einer Form markiert keine andere Form', () => {
+    const schnelleFamilie = Array.from({ length: ANTWORTDAUER_MINDEST_STICHPROBE }, () =>
+      ANTWORT({ form: 'familie', ergebnis: 'richtig', antwortdauerMs: 500 }),
+    );
+    const normalerFreierAbruf = ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig', antwortdauerMs: 4000 });
+    expect(langsameRichtigeAntworten([...schnelleFamilie, normalerFreierAbruf])).toEqual([]);
   });
 });
 
