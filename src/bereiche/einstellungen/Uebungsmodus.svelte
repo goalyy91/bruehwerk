@@ -1036,12 +1036,6 @@
       </div>
     {/if}
 
-    <div class="block">
-      <Blattliste>
-        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
-      </Blattliste>
-    </div>
-
     {#if kennzahlenAuswahl.length > 0}
       <div class="kennzahl-raster" class:einzeln={kennzahlenAuswahl.length === 1}>
         {#each kennzahlenAuswahl as fakt (fakt.label)}
@@ -1052,6 +1046,11 @@
         {/each}
       </div>
     {/if}
+    <div class="block">
+      <Blattliste>
+        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
+      </Blattliste>
+    </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
@@ -1302,7 +1301,7 @@
      rohen Fünf-Boxen-Liste, die vorher hier stand (die volle Aufschlüsselung
      lebt jetzt auf der Statistik-Seite). */
   .kennzahl-raster {
-    margin-bottom: var(--r4);
+    margin-bottom: var(--r3);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--r-kachelabstand);
@@ -1349,13 +1348,13 @@
      Kartenrahmen (wie dort "Getränk wählen"), statt in einer Knopfreihe mit
      zwei weiteren Aktionen zu stehen. */
   .jetzt-zone {
-    margin: var(--r4) 0 var(--r5);
+    margin: var(--r3) 0 var(--r4);
     display: flex;
     flex-direction: column;
     gap: var(--r3);
   }
   .vorschlaege {
-    margin-bottom: var(--r4);
+    margin-bottom: var(--r3);
   }
   /* Vorschlags-Karten — 1:1 aus Bar.svelte übernommen (.bestandkarte/
      .bestandliste dort, Zeilen 712-781): Blattfläche + Schatten statt Rand,
