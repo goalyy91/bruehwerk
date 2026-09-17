@@ -1248,8 +1248,17 @@ Regel K78.
 | **Bar** · Start | Bestellung aufnehmen, laufende Liste, Schnellzugriff auf dein Getränk |
 | **Kaffees** | Bestand, Eigenschaften, Chargen, Dial-in-Status, Profile samt Gussplan, Verlaufskurve, Erkenntnisse, laufende Cold-Brew-Ansätze |
 | **Historie** | Jeder Shot einzeln, mit Verkostung und Urteil. **Der einzige Ort, an dem bewertet wird** — nachträglich, einzeln, ohne Zeitdruck K32 K57 |
-| **Getränke** | Anlegen als Kopie, bearbeiten, ein- und ausblenden, Mengen, Gefäße und Reihenfolgen |
-| **Einstellungen** | Setups, Mühlen, Maschinen samt Temperatur-Referenz, Zubehör, Rüstzeiten und ihre Bündel, Spielräume, Personen, Aromaset, Begründungsschalter, offene Beobachtungen, Backup |
+| **Aromaschule** | Verdecktes Ziehen, Kontrast- und Reverse-Durchgänge, Leitner-Boxen je Le-Nez-Aroma, Trefferstatistik |
+| **Einstellungen** | Setups, Mühlen, Maschinen samt Temperatur-Referenz, Zubehör, Rüstzeiten und ihre Bündel, Spielräume, Personen, Getränke-Baukasten (anlegen als Kopie, bearbeiten, ein-/ausblenden, Mengen, Gefäße, Reihenfolgen), Aromaset, Begründungsschalter, offene Beobachtungen, Backup |
+
+> **Nachtrag 2026-09-17:** Getränke war ursprünglich ein eigener Bereich, ist
+> aber reine Verwaltungssache — Anlegen, Mengen, Ein-/Ausblenden — und zieht
+> deshalb zu den anderen Verwaltungsaufgaben nach Einstellungen um. Der
+> Zwei-Tap-Alltagspfad liest die Getränkedaten ohnehin direkt aus dem Bestand,
+> nie über diesen Bereich. An seiner Stelle wird der frühere „Übungsmodus"
+> (bis dahin nur über Einstellungen erreichbar) als **Aromaschule** einer der
+> fünf Hauptbereiche — bei regelmäßigem Training ein Alltagsziel, kein
+> Verwaltungsposten.
 
 > **Der Maßstab für den Alltag**
 >

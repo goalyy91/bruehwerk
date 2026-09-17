@@ -104,8 +104,8 @@ describe('route — elternVon', () => {
     expect(elternVon({ name: 'verkostungBearbeiten', shotId: 's1' })).toEqual({ name: 'verkostung', shotId: 's1' } satisfies Route);
   });
 
-  it('uebung -> einstellungen', () => {
-    expect(elternVon({ name: 'uebung' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  it('getraenke -> einstellungen', () => {
+    expect(elternVon({ name: 'getraenke' })).toEqual({ name: 'einstellungen' } satisfies Route);
   });
 
   it('uebungStatistik -> uebung', () => {
@@ -146,7 +146,7 @@ describe('route — elternVon', () => {
   });
 
   it('Tab-Wurzeln haben kein Eltern-Blatt', () => {
-    for (const route of [{ name: 'bar' }, { name: 'historie' }, { name: 'getraenke' }, { name: 'kaffees' }, { name: 'einstellungen' }] as Route[]) {
+    for (const route of [{ name: 'bar' }, { name: 'historie' }, { name: 'uebung' }, { name: 'kaffees' }, { name: 'einstellungen' }] as Route[]) {
       expect(elternVon(route)).toBeUndefined();
     }
   });
@@ -154,7 +154,7 @@ describe('route — elternVon', () => {
 
 describe('route — tabVon', () => {
   it.each(ALLE_ROUTEN)('%o gehoert zu einem der fuenf Bereiche', (route) => {
-    expect(['bar', 'historie', 'getraenke', 'kaffees', 'einstellungen']).toContain(tabVon(route));
+    expect(['bar', 'historie', 'aromaschule', 'kaffees', 'einstellungen']).toContain(tabVon(route));
   });
 
   it('Kaffees-Teilbaum gehoert komplett zu kaffees', () => {
@@ -176,11 +176,23 @@ describe('route — tabVon', () => {
     expect(tabVon({ name: 'setup', id: 's1' })).toBe('einstellungen');
     expect(tabVon({ name: 'tempReferenz' })).toBe('einstellungen');
   });
+
+  it('Getraenke-Teilbaum gehoert komplett zu einstellungen', () => {
+    expect(tabVon({ name: 'getraenke' })).toBe('einstellungen');
+    expect(tabVon({ name: 'getraenk', id: 'g1' })).toBe('einstellungen');
+    expect(tabVon({ name: 'getraenkNeu', vorlageId: 'g1' })).toBe('einstellungen');
+  });
+
+  it('Uebung-Teilbaum gehoert komplett zu aromaschule', () => {
+    expect(tabVon({ name: 'uebung' })).toBe('aromaschule');
+    expect(tabVon({ name: 'uebungLaufend' })).toBe('aromaschule');
+    expect(tabVon({ name: 'uebungStatistik' })).toBe('aromaschule');
+  });
 });
 
 describe('route — wurzelVon', () => {
   it('jeder Bereich fuehrt auf eine Route, deren tabVon wieder derselbe Bereich ist', () => {
-    for (const bereich of ['bar', 'historie', 'getraenke', 'kaffees', 'einstellungen'] as const) {
+    for (const bereich of ['bar', 'historie', 'aromaschule', 'kaffees', 'einstellungen'] as const) {
       expect(tabVon(wurzelVon(bereich))).toBe(bereich);
     }
   });

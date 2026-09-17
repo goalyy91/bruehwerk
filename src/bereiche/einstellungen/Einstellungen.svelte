@@ -23,11 +23,11 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenUebung, onOeffnenPersonen }: {
+  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenGetraenke, onOeffnenPersonen }: {
     onOeffnenGeraete: () => void;
     onOeffnenVerhalten: () => void;
     onOeffnenBeobachtungen: () => void;
-    onOeffnenUebung: () => void;
+    onOeffnenGetraenke: () => void;
     onOeffnenPersonen: () => void;
   } = $props();
 
@@ -64,7 +64,7 @@
   <Blattzeile label="Verhalten und Bestand" akzent onKlick={onOeffnenVerhalten} />
   <Blattzeile label="Personen verwalten" akzent onKlick={onOeffnenPersonen} />
   <Blattzeile label="Offene Beobachtungen" akzent onKlick={onOeffnenBeobachtungen} />
-  <Blattzeile label="Übungsmodus" akzent onKlick={onOeffnenUebung} />
+  <Blattzeile label="Getränke verwalten" akzent onKlick={onOeffnenGetraenke} />
 </Blattliste>
 
 <h2>Darstellung</h2>
