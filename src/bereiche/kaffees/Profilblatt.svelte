@@ -27,7 +27,7 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
-  import { achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
+  import { achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten, findeRegimewechsel } from '../../domain/auswertung';
   import { kanonischesAromaLabel } from '../../daten/aromen';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -120,12 +120,25 @@
     return gerundet.toFixed(nachkommastellen);
   }
 
+  // Temperaturwechsel als zweites Ereignis (Rueckmeldung 2026-09-17): ein
+  // Mahlgrad-Sprung direkt nach einer Temperaturaenderung ist keine
+  // Streuung, sondern die erwartbare Folge einer anderen Stellgroesse — die
+  // Kurve soll das nicht wie Rauschen aussehen lassen. Pour Over hat eine
+  // direkte Brühtemperatur (ist.temperatur), sonst zaehlt die Kesseleinstellung
+  // (ist.kt) — dieselbe Unterscheidung wie bei der Bruehgruppe-Kachel oben.
+  const verlaufTemperatur = $derived(
+    verlaufShots.map((s) => (bruehgeraet?.typ === 'pourover' ? s.ist.temperatur : s.ist.kt)),
+  );
+  const temperaturWechsel = $derived(findeRegimewechsel(verlaufTemperatur));
+  const letzterTemperaturWechsel = $derived(temperaturWechsel.at(-1));
+
   const verlaufPunkte = $derived(
     verlaufShots.map((s, i) => ({
       x: normiereFolge(i),
       y: normiereMg(s.ist.mg),
       zustand:
         s.urteil === 'daneben' ? ('kritisch' as const) : s.urteil === 'okay' ? ('achtung' as const) : ('gut' as const),
+      frueher: letzterTemperaturWechsel !== undefined && i < letzterTemperaturWechsel,
     })),
   );
   const verlaufAchsMarken = $derived.by((): readonly [string, string, string] => {
@@ -134,21 +147,32 @@
   });
   // Drei Muehle-Schritte als Cluster-Toleranz — grob genug, um "3,75/3,80/3,90"
   // als ein Band zu erkennen, eng genug, um zwei echt getrennte Bereiche
-  // nicht zu verschmelzen.
+  // nicht zu verschmelzen. Nur ueber die Shots seit dem letzten
+  // Temperaturwechsel (K40-Analogie zur Drehzahl, CLAUDE.md "Drehzahl ist die
+  // zweite Mahlachse"): ein toter Bereich, der bei einer anderen Temperatur
+  // gelernt wurde, gilt fuer die aktuelle nicht mehr.
   const verlaufTotzonen = $derived.by(() => {
     const spanne = mgSpanne;
     if (!spanne || spanne.max === spanne.min) return [];
     const toleranz = (muehle?.skala.schritt ?? (spanne.max - spanne.min) / 10) * 3;
+    const aktuelleShots =
+      letzterTemperaturWechsel !== undefined ? verlaufShots.slice(letzterTemperaturWechsel) : verlaufShots;
     return findeTotzonen(
-      verlaufShots.map((s) => ({ mg: s.ist.mg, daneben: s.urteil === 'daneben' })),
+      aktuelleShots.map((s) => ({ mg: s.ist.mg, daneben: s.urteil === 'daneben' })),
       toleranz,
     ).map((z) => ({ vonY: normiereMg(z.von), bisY: normiereMg(z.bis), wort: z.satz }));
   });
-  const verlaufEreignisse = $derived(
-    verlaufShots
+  const verlaufEreignisse = $derived([
+    ...verlaufShots
       .map((s, i) => ({ s, i }))
       .filter(({ s, i }) => i > 0 && s.chargeId !== verlaufShots[i - 1]!.chargeId)
-      .map(({ i }) => normiereFolge(i)),
+      .map(({ i }) => ({ x: normiereFolge(i), art: 'charge' as const })),
+    ...temperaturWechsel.map((i) => ({ x: normiereFolge(i), art: 'temperatur' as const })),
+  ]);
+  const temperaturHinweis = $derived(
+    letzterTemperaturWechsel !== undefined
+      ? 'Temperatur geändert — der Mahlgrad davor ist damit nicht vergleichbar.'
+      : undefined,
   );
 
   const gruppenTemperatur = $derived(
@@ -431,6 +455,9 @@
       totzonen={verlaufTotzonen}
       ereignisse={verlaufEreignisse}
     />
+    {#if temperaturHinweis}
+      <p class="hinweis-text">{temperaturHinweis}</p>
+    {/if}
   </section>
 
   {#if verkostungenChronologisch.length > 0}

@@ -90,6 +90,30 @@ export function haeufigsteAromen(eintraege: readonly AromaPfad[], limit = 5): re
     .slice(0, limit);
 }
 
+/**
+ * Indizes, an denen ein eingestellter Wert (Temperatur, spaeter Drehzahl)
+ * gegenueber dem direkten Vorgaenger wechselt — Grundlage fuer die
+ * Temperatur-Ereignismarken in der Verlaufskurve (Profilblatt.svelte).
+ *
+ * `undefined` zaehlt nie als Wechsel: migrierte Notion-Shots tragen oft kein
+ * `kt` (migrieren.ts), ein Wechsel wird nur gemeldet, wenn beide Werte
+ * bekannt sind und sich unterscheiden. Sonst waere jeder Uebergang von
+ * "unbekannt" zu "bekannt" faelschlich ein Ereignis.
+ *
+ * Kein Schwellwert: Temperatur ist ein eingestellter, kein gemessener Wert
+ * (K6/K34/K56, "Input und Mahlgrad haben keinen Spielraum ... dort ist jede
+ * Aenderung Absicht") — jede Abweichung zaehlt, auch 1 Grad.
+ */
+export function findeRegimewechsel(werte: readonly (number | undefined)[]): readonly number[] {
+  const wechsel: number[] = [];
+  for (let i = 1; i < werte.length; i++) {
+    const vorher = werte[i - 1];
+    const jetzt = werte[i];
+    if (vorher !== undefined && jetzt !== undefined && vorher !== jetzt) wechsel.push(i);
+  }
+  return wechsel;
+}
+
 export interface AuffaelligkeitsEreignis {
   readonly ts: number;
   readonly auffaelligkeitIds: readonly string[];
