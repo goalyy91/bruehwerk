@@ -316,15 +316,18 @@
       <div class="thema stapel" data-theme={theme}>
         <Verlaufskurve
           punkte={[
-            { x: 0.05, y: 0.3, zustand: 'kritisch' },
-            { x: 0.25, y: 0.35, zustand: 'achtung' },
+            { x: 0.05, y: 0.3, zustand: 'kritisch', frueher: true },
+            { x: 0.25, y: 0.35, zustand: 'achtung', frueher: true },
             { x: 0.5, y: 0.55 },
             { x: 0.75, y: 0.6 },
             { x: 0.95, y: 0.62 },
           ]}
           achsMarken={['3,60', '3,75', '3,90']}
           totzonen={[{ vonY: 0.25, bisY: 0.4, wort: 'toter Bereich' }]}
-          ereignisse={[0.5]}
+          ereignisse={[
+            { x: 0.3, art: 'charge' },
+            { x: 0.5, art: 'temperatur' },
+          ]}
         />
         <Verlaufskurve punkte={[]} achsMarken={['3,60', '3,75', '3,90']} />
       </div>

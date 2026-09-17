@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normiereReihe, achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten } from './auswertung';
+import { normiereReihe, achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten, findeRegimewechsel } from './auswertung';
 
 describe('normiereReihe', () => {
   it('leer bleibt leer', () => {
@@ -78,6 +78,29 @@ describe('haeufigsteAromen', () => {
     ]);
     expect(ergebnis[0]).toEqual({ label: 'Blaubeere', anzahl: 2 });
     expect(ergebnis[1]).toEqual({ label: 'Himbeere', anzahl: 1 });
+  });
+});
+
+describe('findeRegimewechsel — Grundlage der Temperatur-Ereignismarken', () => {
+  it('meldet den Index, an dem sich der Wert gegenueber dem Vorgaenger aendert', () => {
+    expect(findeRegimewechsel([93, 93, 96, 96])).toEqual([2]);
+  });
+
+  it('meldet mehrere Wechsel', () => {
+    expect(findeRegimewechsel([93, 96, 93])).toEqual([1, 2]);
+  });
+
+  it('ohne jede Aenderung gibt es keinen Wechsel', () => {
+    expect(findeRegimewechsel([93, 93, 93])).toEqual([]);
+  });
+
+  it('leere Reihe ergibt keinen Wechsel', () => {
+    expect(findeRegimewechsel([])).toEqual([]);
+  });
+
+  it('undefined zaehlt nie als Wechsel — migrierte Shots ohne kt duerfen kein Ereignis erzeugen', () => {
+    expect(findeRegimewechsel([undefined, undefined, 93, 93])).toEqual([]);
+    expect(findeRegimewechsel([93, undefined, 96])).toEqual([]);
   });
 });
 

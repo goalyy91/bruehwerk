@@ -15,10 +15,19 @@
   // Paket 04: totzone/ereignisX wurden zu totzonen[]/ereignisse[] — ein
   // Kaffee sammelt über Monate mehr als einen Chargenwechsel und ggf. mehr
   // als einen toten Bereich (K40). Rendering und Maße bleiben unveraendert.
+  //
+  // Zweiter Ereignistyp (Rueckmeldung 2026-09-17): ein Temperaturwechsel im
+  // Dial-in macht einen Mahlgrad-Sprung erklaerbar, der sonst wie Rauschen
+  // aussieht. Unterschieden wird ueber das Strichmuster, nicht ueber Farbe
+  // (K69 - keine neuen Zustandsfarben). Punkte vor dem letzten Wechsel
+  // kommen gedaempft (frueher), damit der Blick automatisch beim Teil landet,
+  // der gerade gilt — die Bedeutung selbst steht als Satz im Aufrufer
+  // (Profilblatt.svelte), nicht hier im Muster.
 
   type Zustand = 'gut' | 'achtung' | 'kritisch';
-  type Punkt = { x: number; y: number; zustand?: Zustand };
+  type Punkt = { x: number; y: number; zustand?: Zustand; frueher?: boolean };
   type TotzoneBand = { vonY: number; bisY: number; wort: string };
+  type Ereignis = { x: number; art?: 'charge' | 'temperatur' };
 
   let {
     punkte,
@@ -29,18 +38,32 @@
     punkte: Punkt[];
     achsMarken: readonly [string, string, string];
     totzonen?: TotzoneBand[];
-    ereignisse?: number[];
+    ereignisse?: Ereignis[];
   } = $props();
 
   const HOEHE = 180;
   const BREITE = 400;
 
-  const pfad = $derived(
-    punkte.length > 1
-      ? punkte
-          .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * BREITE} ${HOEHE - p.y * HOEHE}`)
-          .join(' ')
-      : '',
+  function pfadAus(teilpunkte: readonly Punkt[]): string {
+    return teilpunkte
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * BREITE} ${HOEHE - p.y * HOEHE}`)
+      .join(' ');
+  }
+
+  // Der letzte gedaempfte Punkt gehoert auch zum aktuellen Pfad, sonst
+  // entstuende eine Luecke zwischen den beiden Liniensegmenten. Kein
+  // findLastIndex (ES2023) — das Projekt zielt auf ES2022.
+  const trennindex = $derived.by(() => {
+    for (let i = punkte.length - 1; i >= 0; i--) {
+      if (punkte[i]!.frueher) return i;
+    }
+    return -1;
+  });
+  const pfadFrueher = $derived(
+    trennindex >= 0 ? pfadAus(punkte.slice(0, trennindex + 1)) : '',
+  );
+  const pfadAktuell = $derived(
+    punkte.length > 1 ? pfadAus(punkte.slice(Math.max(trennindex, 0))) : '',
   );
 </script>
 
@@ -79,11 +102,21 @@
             fill="url(#schraffur)"
           />
         {/each}
-        {#each ereignisse as x}
-          <line x1={x * BREITE} y1="0" x2={x * BREITE} y2={HOEHE} class="ereignis" />
+        {#each ereignisse as e}
+          <line
+            x1={e.x * BREITE}
+            y1="0"
+            x2={e.x * BREITE}
+            y2={HOEHE}
+            class="ereignis"
+            class:temperatur={e.art === 'temperatur'}
+          />
         {/each}
-        {#if pfad}
-          <path d={pfad} class="linie" fill="none" />
+        {#if pfadFrueher}
+          <path d={pfadFrueher} class="linie frueher" fill="none" />
+        {/if}
+        {#if pfadAktuell}
+          <path d={pfadAktuell} class="linie" fill="none" />
         {/if}
       </svg>
       <div class="totzone-woerter">
@@ -103,6 +136,7 @@
           class="punkt"
           class:achtung={p.zustand === 'achtung'}
           class:kritisch={p.zustand === 'kritisch'}
+          class:frueher={p.frueher}
           style:left={`${p.x * 100}%`}
           style:top={`${(1 - p.y) * 100}%`}
         ></span>
@@ -130,6 +164,9 @@
     stroke: var(--akzent);
     stroke-width: 1.5;
   }
+  .linie.frueher {
+    opacity: 0.4;
+  }
   .punkt {
     position: absolute;
     width: 7px;
@@ -137,6 +174,9 @@
     margin: -3.5px 0 0 -3.5px;
     border-radius: 50%;
     background: var(--tinte);
+  }
+  .punkt.frueher {
+    opacity: 0.4;
   }
   .punkt.achtung {
     background: linear-gradient(90deg, var(--achtung) 50%, transparent 50%);
@@ -180,6 +220,9 @@
     stroke: var(--gedaempft);
     stroke-width: 1;
     stroke-dasharray: 4 3;
+  }
+  .ereignis.temperatur {
+    stroke-dasharray: 1 3;
   }
   .achse {
     display: flex;
