@@ -134,7 +134,10 @@
 {#if importFehler}
   <p class="fehler">Import abgelehnt — kein Datensatz wurde geschrieben:</p>
   <ul class="fehlerliste">
-    {#each importFehler as f (f)}<li>{f}</li>{/each}
+    <!-- Kein Schluessel: zwei Datensaetze koennen an derselben Sache
+         scheitern und denselben Text ergeben — mit dem Text als Schluessel
+         bricht Svelte dabei ab (siehe muster/Verlaufskurve.svelte). -->
+    {#each importFehler as f}<li>{f}</li>{/each}
   </ul>
 {/if}
 
