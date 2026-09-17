@@ -11,7 +11,7 @@
   import Blattliste from '../../muster/Blattliste.svelte';
   import AktivKnopf from '../../muster/AktivKnopf.svelte';
 
-  let { onOeffnen }: { onOeffnen: (getraenkId: string) => void } = $props();
+  let { onOeffnen, onZurueck }: { onOeffnen: (getraenkId: string) => void; onZurueck: () => void } = $props();
 
   let nurAktive = $state(true);
 
@@ -25,7 +25,7 @@
   }
 </script>
 
-<Kopfzeile titel="Getränke" gross />
+<Kopfzeile titel="Getränke" gross {onZurueck} />
 
 <div class="metazeile">
   <p class="zaehlung">Getränk · {gefiltert.length} von {bestand.getraenke.length}</p>

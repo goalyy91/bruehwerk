@@ -981,7 +981,13 @@
 {#if datenblatt}
   <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
-  <Kopfzeile titel="Übungsmodus" {onZurueck}>
+  <!-- Aromaschule ist jetzt ein eigener Hauptbereich (Tab-Wurzel) — auf der
+       Übersicht deshalb kein Rückweg mehr, `gross` wie bei den anderen vier
+       Tab-Wurzeln (Kaffees/Historie/Einstellungen/Getränke). In der
+       laufenden Aktivität bleibt der Pfeil zurück zur Übersicht wie bisher,
+       ohne `gross` (dieselbe kleinere Kopfzeile, die die Item-/Kontrast-/
+       Reverse-Schritte schon immer hatten). -->
+  <Kopfzeile titel="Aromaschule" gross={!aktiv} onZurueck={aktiv ? onZurueck : undefined}>
     {#snippet aktion()}
       {#if aktiv && durchgang && durchgang.status !== 'abgeschlossen'}
         <Kontextmenue eintraege={[{ text: 'abbrechen', kritisch: true, onWahl: durchgangAbbrechen }]} />

@@ -58,7 +58,7 @@
     { id: 'bar', label: 'Bar', gebaut: true },
     { id: 'kaffees', label: 'Kaffees', gebaut: true },
     { id: 'historie', label: 'Historie', gebaut: true },
-    { id: 'getraenke', label: 'Getränke', gebaut: true },
+    { id: 'aromaschule', label: 'Aromaschule', gebaut: true },
     { id: 'einstellungen', label: 'Einstellungen', gebaut: true },
   ];
 
@@ -206,7 +206,10 @@
         onFertig={() => navigation.gehe({ name: 'verkostung', shotId: route.shotId })}
       />
     {:else if route.name === 'getraenke'}
-      <GetraenkeListe onOeffnen={(id) => navigation.gehe({ name: 'getraenk', id })} />
+      <GetraenkeListe
+        onOeffnen={(id) => navigation.gehe({ name: 'getraenk', id })}
+        onZurueck={() => navigation.zurueck()}
+      />
     {:else if route.name === 'getraenk'}
       <Getraenkeblatt
         getraenkId={route.id}
@@ -226,7 +229,7 @@
         onOeffnenGeraete={() => navigation.gehe({ name: 'geraete' })}
         onOeffnenVerhalten={() => navigation.gehe({ name: 'verhalten' })}
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
-        onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
+        onOeffnenGetraenke={() => navigation.gehe({ name: 'getraenke' })}
         onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
       />
     {:else if route.name === 'verhalten'}
@@ -326,8 +329,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4.5C8.7 5.9 6.5 8.9 6.5 12S8.7 18.1 12 19.5c3.3-1.4 5.5-4.4 5.5-7.5S15.3 5.9 12 4.5Z" /><path d="M12 6.1c-1.6 1.9-1 3.8.1 5.9s1.7 4 .1 5.9" /></svg>
           {:else if bereich.id === 'historie'}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12a8 8 0 1 1 2.6 5.9" /><path d="M4 6v6h6" /><path d="M12 8v4l3 2" /></svg>
-          {:else if bereich.id === 'getraenke'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12l-1.5 15a2 2 0 0 1-2 1.8h-5a2 2 0 0 1-2-1.8L6 3Z" /><path d="M5.3 8h13.4" /></svg>
+          {:else if bereich.id === 'aromaschule'}
+            <!-- Fläschchen — knüpft an das Le-Nez-Vokabular der Aromaschule
+                 selbst an (Fläschchennummer, verdecktes Ziehen), statt ein
+                 fremdes Symbol (Kappe/Mütze o. ä.) für "Schule" zu erfinden. -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3h6" /><path d="M10 3v6l-3.2 8.5A2 2 0 0 0 8.7 20h6.6a2 2 0 0 0 1.9-2.5L14 9V3" /><path d="M8.3 14h7.4" /></svg>
           {:else}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3" /><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.4-2-3.4-2.3.9a7.7 7.7 0 0 0-2.6-1.5L14 2.5h-4l-.5 2.6a7.7 7.7 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3l-2 1.4 2 3.4 2.3-.9c.8.65 1.65 1.15 2.6 1.5l.5 2.6h4l.5-2.6a7.7 7.7 0 0 0 2.6-1.5l2.3.9 2-3.4-2-1.4Z" /></svg>
           {/if}

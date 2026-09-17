@@ -9,7 +9,7 @@
  * jede Route ihrem Bereich in der unteren Leiste zu.
  */
 
-export type Bereich = 'bar' | 'kaffees' | 'historie' | 'getraenke' | 'einstellungen';
+export type Bereich = 'bar' | 'kaffees' | 'historie' | 'aromaschule' | 'einstellungen';
 
 export type Route =
   | { name: 'bar' }
@@ -214,9 +214,9 @@ export function elternVon(route: Route): Route | undefined {
   switch (route.name) {
     case 'bar':
     case 'historie':
-    case 'getraenke':
     case 'kaffees':
     case 'einstellungen':
+    case 'uebung':
       return undefined;
     case 'bestellungAufnehmen':
       return { name: 'bar' };
@@ -226,6 +226,8 @@ export function elternVon(route: Route): Route | undefined {
       return { name: 'bestellungPlan' };
     case 'historieShot':
       return { name: 'historie' };
+    case 'getraenke':
+      return { name: 'einstellungen' };
     case 'getraenk':
     case 'getraenkNeu':
       return { name: 'getraenke' };
@@ -249,7 +251,6 @@ export function elternVon(route: Route): Route | undefined {
     case 'verhalten':
     case 'musterblatt':
     case 'beobachtungen':
-    case 'uebung':
     case 'personen':
       return { name: 'einstellungen' };
     case 'uebungStatistik':
@@ -290,10 +291,10 @@ export function tabVon(route: Route): Bereich {
     case 'verkostung':
     case 'verkostungBearbeiten':
       return 'historie';
-    case 'getraenke':
-    case 'getraenk':
-    case 'getraenkNeu':
-      return 'getraenke';
+    case 'uebung':
+    case 'uebungStatistik':
+    case 'uebungLaufend':
+      return 'aromaschule';
     case 'kaffees':
     case 'kaffeeNeu':
     case 'kaffee':
@@ -317,10 +318,10 @@ export function tabVon(route: Route): Bereich {
     case 'setupNeu':
     case 'setupBearbeiten':
     case 'tempReferenz':
-    case 'uebung':
-    case 'uebungStatistik':
-    case 'uebungLaufend':
     case 'personen':
+    case 'getraenke':
+    case 'getraenk':
+    case 'getraenkNeu':
       return 'einstellungen';
   }
 }
@@ -331,8 +332,8 @@ export function wurzelVon(bereich: Bereich): Route {
       return { name: 'bar' };
     case 'historie':
       return { name: 'historie' };
-    case 'getraenke':
-      return { name: 'getraenke' };
+    case 'aromaschule':
+      return { name: 'uebung' };
     case 'kaffees':
       return { name: 'kaffees' };
     case 'einstellungen':
