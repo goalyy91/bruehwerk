@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normiereReihe, haeufigsteAromen, verschwundeneAuffaelligkeiten } from './auswertung';
+import { normiereReihe, achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten } from './auswertung';
 
 describe('normiereReihe', () => {
   it('leer bleibt leer', () => {
@@ -25,6 +25,29 @@ describe('normiereReihe', () => {
     expect(ergebnis[1]!.x).toBeCloseTo(1 / 14);
     expect(ergebnis[13]!.x).toBeCloseTo(13 / 14);
     expect(ergebnis[14]!.x).toBe(1);
+  });
+});
+
+describe('achsMarken', () => {
+  it('bei echter Spanne stehen drei Beschriftungen: min, Mitte, max', () => {
+    expect(achsMarken(60, 70, String)).toEqual(['60', '65', '70']);
+  });
+
+  it('ein einziger Messwert ergibt nur die mittlere Beschriftung, nicht dieselbe Zahl dreimal', () => {
+    expect(achsMarken(65, 65, String)).toEqual(['', '65', '']);
+  });
+
+  /**
+   * Der Fall, der muster/Verlaufskurve.svelte am 17.09.2026 abstuerzen liess:
+   * zwei verschiedene Mahlgrade koennen nach dem Runden auf die
+   * Muehlen-Schrittweite denselben Text ergeben (64 und 65 Klicks, Mitte
+   * 64,5 -> "65"). Zwei gleiche Beschriftungen sind hier ein zulaessiges
+   * Ergebnis — die Kurve muss sie aushalten (Fix dort: kein Schluessel mehr
+   * auf dem Beschriftungstext), nicht diese Funktion sie vermeiden.
+   */
+  it('darf zwei gleiche Beschriftungen liefern, wenn die Formatierung sie zusammenrundet', () => {
+    const rundeAufGanzzahl = (wert: number) => String(Math.round(wert));
+    expect(achsMarken(64, 65, rundeAufGanzzahl)).toEqual(['64', '65', '65']);
   });
 });
 

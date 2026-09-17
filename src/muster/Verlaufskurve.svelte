@@ -52,7 +52,13 @@
          oben) — deshalb als Spalte links, hoechster Wert oben, nicht als
          Zeile unter der Kurve (das laese sich wie eine x-Achse). -->
     <div class="achse">
-      {#each [...achsMarken].reverse() as marke (marke)}
+      <!-- Kein Schluessel: die drei Marken sind eine Position (oben/Mitte/
+           unten), kein Gegenstand mit Identitaet. Zwei gleiche Zahlen sind an
+           einer Achse ein zulaessiger Zustand (z. B. ein einzelner Shot, oder
+           zwei Mahlgrade, die auf dieselbe Muehlen-Schrittweite runden) — mit
+           `(marke)` als Schluessel brach Svelte dabei ab, genau wie es die
+           `punkte`-Schleife unten schon einmal tat (siehe Kommentar dort). -->
+      {#each [...achsMarken].reverse() as marke}
         <span class="marke">{marke}</span>
       {/each}
     </div>

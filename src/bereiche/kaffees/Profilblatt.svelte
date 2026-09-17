@@ -27,7 +27,7 @@
   import { kesselZuGruppe } from '../../domain/temperatur';
   import { EINHEIT, type GemesseneGroesse } from '../../domain/spielraum';
   import { findeTotzonen } from '../../domain/totzone';
-  import { haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
+  import { achsMarken, haeufigsteAromen, verschwundeneAuffaelligkeiten } from '../../domain/auswertung';
   import { kanonischesAromaLabel } from '../../daten/aromen';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
@@ -128,10 +128,9 @@
         s.urteil === 'daneben' ? ('kritisch' as const) : s.urteil === 'okay' ? ('achtung' as const) : ('gut' as const),
     })),
   );
-  const verlaufAchsMarken = $derived.by((): [string, string, string] => {
+  const verlaufAchsMarken = $derived.by((): readonly [string, string, string] => {
     const spanne = mgSpanne;
-    if (!spanne) return ['', '', ''];
-    return [formatMg(spanne.min), formatMg((spanne.min + spanne.max) / 2), formatMg(spanne.max)];
+    return spanne ? achsMarken(spanne.min, spanne.max, formatMg) : ['', '', ''];
   });
   // Drei Muehle-Schritte als Cluster-Toleranz — grob genug, um "3,75/3,80/3,90"
   // als ein Band zu erkennen, eng genug, um zwei echt getrennte Bereiche

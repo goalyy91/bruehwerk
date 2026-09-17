@@ -41,6 +41,24 @@ export function normiereReihe(punkte: readonly { readonly wert: number }[]): rea
   return punkte.map((p, i) => ({ x: i / (punkte.length - 1), wert: p.wert }));
 }
 
+/**
+ * Die drei Achsbeschriftungen der Verlaufskurve (kleinster/mittlerer/
+ * groesster Mahlgrad). Faellt die Spanne zusammen — ein einziger Shot, oder
+ * mehrere mit demselben Mahlgrad —, stuende dieselbe Zahl dreimal da; eine
+ * Beschriftung mittig ist die ehrlichere Aussage (Rueckmeldung 2026-09-17:
+ * genau dieser Fall liess muster/Verlaufskurve.svelte abstuerzen, siehe
+ * Kommentar dort — das hier behebt nur die redundante Anzeige, nicht den
+ * Absturz).
+ */
+export function achsMarken(
+  min: number,
+  max: number,
+  formatiere: (wert: number) => string,
+): readonly [string, string, string] {
+  if (min === max) return ['', formatiere(min), ''];
+  return [formatiere(min), formatiere((min + max) / 2), formatiere(max)];
+}
+
 export interface AromaPfad {
   readonly pfad: readonly string[];
   /**
