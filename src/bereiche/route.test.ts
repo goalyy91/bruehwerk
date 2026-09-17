@@ -39,6 +39,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'uebungStatistik' },
   { name: 'uebungLaufend' },
   { name: 'personen' },
+  { name: 'sicherungen' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {
@@ -120,6 +121,10 @@ describe('route — elternVon', () => {
     expect(elternVon({ name: 'personen' })).toEqual({ name: 'einstellungen' } satisfies Route);
   });
 
+  it('sicherungen -> einstellungen', () => {
+    expect(elternVon({ name: 'sicherungen' })).toEqual({ name: 'einstellungen' } satisfies Route);
+  });
+
   it('bestellungAbarbeiten -> bestellungPlan -> bestellungAufnehmen -> bar', () => {
     const abarbeiten: Route = { name: 'bestellungAbarbeiten' };
     const plan = elternVon(abarbeiten);
@@ -175,6 +180,7 @@ describe('route — tabVon', () => {
     expect(tabVon({ name: 'bruehgeraet', id: 'b1' })).toBe('einstellungen');
     expect(tabVon({ name: 'setup', id: 's1' })).toBe('einstellungen');
     expect(tabVon({ name: 'tempReferenz' })).toBe('einstellungen');
+    expect(tabVon({ name: 'sicherungen' })).toBe('einstellungen');
   });
 
   it('Getraenke-Teilbaum gehoert komplett zu einstellungen', () => {

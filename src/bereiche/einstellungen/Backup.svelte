@@ -17,63 +17,23 @@
   // Etappe 8, Block E (2026-09-06): die eigene "Backup"-Ueberschrift entfaellt
   // — Einstellungen.svelte traegt jetzt "Daten" als gemeinsame Ueberschrift
   // fuer Migration und Backup (vier Gruppen statt sieben).
+  //
+  // Rueckmeldung 2026-09-17: die Sicherungen-Liste (Restore-Punkte, die die
+  // App selbst vor jeder Aktualisierung anlegt) ist in einen eigenen Screen
+  // gezogen (Sicherungen.svelte) — hier bleibt nur noch die dritte Zeile,
+  // die dorthin fuehrt, neben Export/Import.
 
   import { exportiere, importiere, ImportFehler } from '../../daten/export';
-  import {
-    schnappschuesse,
-    schnappschussZurueckspielen,
-    type Schnappschuss,
-  } from '../../daten/schnappschuss';
   import { bestand } from '../bestand.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
+
+  let { onOeffnenSicherungen }: { onOeffnenSicherungen: () => void } = $props();
 
   let exportFehler = $state<string | undefined>(undefined);
   let importFehler = $state<string[] | undefined>(undefined);
   let importErfolg = $state(false);
   let dateiEingabe = $state<HTMLInputElement | undefined>();
-
-  // Die Sicherungen, die die App vor einer Aktualisierung selbst anlegt
-  // (daten/schnappschuss.ts). Sie liegen bewusst nicht im reaktiven Bestand:
-  // sie tragen jeweils eine vollstaendige Kopie und haben auf jedem anderen
-  // Bildschirm nichts verloren. Deshalb einmal beim Oeffnen gelesen.
-  let sicherungen = $state<Schnappschuss[]>([]);
-  let zurueckBestaetigen = $state<string | undefined>(undefined);
-  let zurueckFehler = $state<string | undefined>(undefined);
-  let zurueckErfolg = $state(false);
-
-  $effect(() => {
-    void schnappschuesse().then((liste) => (sicherungen = liste));
-  });
-
-  function wann(ts: number): string {
-    const d = new Date(ts);
-    return `${d.toLocaleDateString('de-DE')} ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
-  }
-
-  /** Zweiter Tap bestaetigt — dasselbe Muster wie in Kontextmenue.svelte. */
-  async function zurueckspielen(eintrag: Schnappschuss) {
-    if (zurueckBestaetigen !== eintrag.id) {
-      zurueckBestaetigen = eintrag.id;
-      return;
-    }
-    zurueckBestaetigen = undefined;
-    zurueckFehler = undefined;
-    zurueckErfolg = false;
-    try {
-      await schnappschussZurueckspielen(eintrag.id);
-      await bestand.laden();
-      zurueckErfolg = true;
-    } catch (fehler) {
-      if (fehler instanceof ImportFehler) {
-        zurueckFehler = fehler.einzelfehler
-          .map((e) => `${e.sammlung}[${e.index}]`)
-          .join(', ');
-      } else {
-        zurueckFehler = fehler instanceof Error ? fehler.message : String(fehler);
-      }
-    }
-  }
 
   async function datenExportieren() {
     exportFehler = undefined;
@@ -121,6 +81,7 @@
   <Blattliste>
     <Blattzeile label="Datei exportieren" akzent chevron={false} onKlick={datenExportieren} />
     <Blattzeile label="Datei importieren" akzent chevron={false} onKlick={() => dateiEingabe?.click()} />
+    <Blattzeile label="Sicherungen" akzent onKlick={onOeffnenSicherungen} />
   </Blattliste>
 </div>
 <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />
@@ -141,36 +102,6 @@
   </ul>
 {/if}
 
-<!-- Rückmeldung 2026-09-08: vor jeder Aktualisierung sichert die App selbst.
-     Hier steht, was dabei herauskam — und der Weg zurück, falls eine neue
-     Fassung etwas zerschossen hat. Die Liste erscheint erst, wenn es etwas
-     zu zeigen gibt: eine leere Überschrift „Sicherungen" auf einem frisch
-     eingerichteten Gerät wäre eine Frage ohne Antwort. -->
-{#if sicherungen.length > 0}
-  <h2>Sicherungen</h2>
-  <Blattliste>
-    {#each sicherungen as eintrag (eintrag.id)}
-      <button type="button" class="sicherung" onclick={() => void zurueckspielen(eintrag)}>
-        <span class="haupt">
-          <span class="wann">{wann(eintrag.erzeugtAm)}</span>
-          <span class="umfang">
-            {eintrag.anlass} · {eintrag.umfang.shots} Shots · {eintrag.umfang.kaffees} Kaffees
-          </span>
-        </span>
-        <span class="tat" class:scharf={zurueckBestaetigen === eintrag.id}>
-          {zurueckBestaetigen === eintrag.id ? 'wirklich?' : 'zurückspielen'}
-        </span>
-      </button>
-    {/each}
-  </Blattliste>
-  <p class="hinweis nachsatz">
-    Zurückspielen ersetzt den gesamten Bestand durch den Stand von damals. Was
-    seitdem dazugekommen ist, ist danach weg — exportiere im Zweifel vorher eine Datei.
-  </p>
-  {#if zurueckErfolg}<p class="hinweis">Sicherung zurückgespielt.</p>{/if}
-  {#if zurueckFehler}<p class="fehler">Zurückspielen abgelehnt — kein Datensatz wurde geschrieben: {zurueckFehler}</p>{/if}
-{/if}
-
 <style>
   .hinweis {
     font-family: var(--schrift-sans);
@@ -184,46 +115,6 @@
      die Blattliste dieser Datei trifft, nicht jede andere auf der Seite. */
   .aktionen :global(.blattliste) {
     margin-bottom: var(--r3);
-  }
-  .nachsatz {
-    margin-top: var(--r2);
-  }
-  .sicherung {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--r3);
-    min-height: var(--blattzeile);
-    padding: 0;
-    border: none;
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-  }
-  .haupt {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .wann {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-bedienwort);
-    color: var(--tinte);
-  }
-  .umfang {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-  }
-  .tat {
-    flex: none;
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--akzent);
-  }
-  .tat.scharf {
-    color: var(--kritisch);
   }
   .fehler {
     color: var(--kritisch);

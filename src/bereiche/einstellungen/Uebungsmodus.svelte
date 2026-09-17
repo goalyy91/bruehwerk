@@ -981,19 +981,20 @@
 {#if datenblatt}
   <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
-  <!-- Aromaschule ist jetzt ein eigener Hauptbereich (Tab-Wurzel) — auf der
-       Übersicht deshalb kein Rückweg mehr, `gross` wie bei den anderen vier
-       Tab-Wurzeln (Kaffees/Historie/Einstellungen/Getränke). In der
-       laufenden Aktivität bleibt der Pfeil zurück zur Übersicht wie bisher,
-       ohne `gross` (dieselbe kleinere Kopfzeile, die die Item-/Kontrast-/
-       Reverse-Schritte schon immer hatten). -->
-  <Kopfzeile titel="Aromaschule" gross={!aktiv} onZurueck={aktiv ? onZurueck : undefined}>
-    {#snippet aktion()}
-      {#if aktiv && durchgang && durchgang.status !== 'abgeschlossen'}
-        <Kontextmenue eintraege={[{ text: 'abbrechen', kritisch: true, onWahl: durchgangAbbrechen }]} />
-      {/if}
-    {/snippet}
-  </Kopfzeile>
+  <!-- Aromaschule ist ein eigener Hauptbereich (Tab-Wurzel) — auf der
+       Übersicht deshalb gar keine Kopfzeile, wie Bar.svelte: der Tab zeigt
+       den Namen schon aktiv an, die Begrüßung darunter trägt die
+       Headline-Rolle. In der laufenden Aktivität bleibt die kleine
+       Kopfzeile mit Rückweg wie bisher. -->
+  {#if aktiv}
+    <Kopfzeile titel="Aromaschule" {onZurueck}>
+      {#snippet aktion()}
+        {#if durchgang && durchgang.status !== 'abgeschlossen'}
+          <Kontextmenue eintraege={[{ text: 'abbrechen', kritisch: true, onWahl: durchgangAbbrechen }]} />
+        {/if}
+      {/snippet}
+    </Kopfzeile>
+  {/if}
 
   {#if !set}
     <p class="hinweis">Noch keine Aromen mit Fläschchennummern erfasst.</p>

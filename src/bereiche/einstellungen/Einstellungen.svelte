@@ -23,12 +23,13 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenGetraenke, onOeffnenPersonen }: {
+  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenGetraenke, onOeffnenPersonen, onOeffnenSicherungen }: {
     onOeffnenGeraete: () => void;
     onOeffnenVerhalten: () => void;
     onOeffnenBeobachtungen: () => void;
     onOeffnenGetraenke: () => void;
     onOeffnenPersonen: () => void;
+    onOeffnenSicherungen: () => void;
   } = $props();
 
   async function einstellungAendern<K extends keyof AppEinstellungen>(feld: K, wert: AppEinstellungen[K]) {
@@ -60,11 +61,11 @@
      die Wege hinein, die Darstellung und die Daten. -->
 <h2>Verwalten</h2>
 <Blattliste>
-  <Blattzeile label="Geräte verwalten" akzent onKlick={onOeffnenGeraete} />
-  <Blattzeile label="Verhalten und Bestand" akzent onKlick={onOeffnenVerhalten} />
-  <Blattzeile label="Personen verwalten" akzent onKlick={onOeffnenPersonen} />
-  <Blattzeile label="Offene Beobachtungen" akzent onKlick={onOeffnenBeobachtungen} />
   <Blattzeile label="Getränke verwalten" akzent onKlick={onOeffnenGetraenke} />
+  <Blattzeile label="Geräte verwalten" akzent onKlick={onOeffnenGeraete} />
+  <Blattzeile label="Personen verwalten" akzent onKlick={onOeffnenPersonen} />
+  <Blattzeile label="Verhalten und Bestand" akzent onKlick={onOeffnenVerhalten} />
+  <Blattzeile label="Offene Beobachtungen" akzent onKlick={onOeffnenBeobachtungen} />
 </Blattliste>
 
 <h2>Darstellung</h2>
@@ -92,22 +93,23 @@
 
 <h2>Daten</h2>
 <Migration />
-<Backup />
+<Backup {onOeffnenSicherungen} />
 <!-- Fund 2026-09-08: ohne ausdrückliche Anforderung darf der Browser die
      Datenbank bei Speicherdruck räumen. Angefragt wird beim Start
      (daten/speicher.ts); zugesagt wird sie nicht immer. Der Satz steht
      hier, weil „nicht dauerhaft" eine Nachricht ist, die man gesehen
      haben muss — solange es kein Cloud-Backup gibt, hängt dann alles am
-     Datei-Export darüber. -->
+     Datei-Export darüber. Rückmeldung 2026-09-17: Formulierung direkter,
+     weniger nach Browser-API-Status, Inhalt unverändert. -->
 <p class="erklaerung ausserhalb">
   {#if bestand.speicher === 'dauerhaft'}
-    Der Browser hat zugesagt, die Daten dauerhaft zu behalten.
+    Deine Daten bleiben auf diesem Gerät erhalten.
   {:else if bestand.speicher === 'nicht-dauerhaft'}
-    Der Browser behält sich vor, die Daten bei Speichermangel zu löschen —
-    exportiere regelmäßig eine Datei.
+    Bei wenig Speicherplatz könnte das Gerät deine Daten löschen —
+    exportiere hin und wieder eine Sicherungsdatei.
   {:else}
-    Dieser Browser sagt nicht, ob er die Daten dauerhaft behält —
-    exportiere regelmäßig eine Datei.
+    Unklar, ob deine Daten dauerhaft bleiben — exportiere hin und wieder
+    eine Sicherungsdatei, um sicherzugehen.
   {/if}
 </p>
 

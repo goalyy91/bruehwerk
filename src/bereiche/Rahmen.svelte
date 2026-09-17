@@ -50,6 +50,7 @@
   import GetraenkeListe from './getraenke/GetraenkeListe.svelte';
   import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
   import Personen from './einstellungen/Personen.svelte';
+  import Sicherungen from './einstellungen/Sicherungen.svelte';
   import BestellungAufnehmen from './bar/BestellungAufnehmen.svelte';
   import BestellungPlan from './bar/BestellungPlan.svelte';
   import BestellungAbarbeiten from './bar/BestellungAbarbeiten.svelte';
@@ -231,6 +232,7 @@
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenGetraenke={() => navigation.gehe({ name: 'getraenke' })}
         onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
+        onOeffnenSicherungen={() => navigation.gehe({ name: 'sicherungen' })}
       />
     {:else if route.name === 'verhalten'}
       <Verhalten onZurueck={() => navigation.zurueck()} />
@@ -246,6 +248,8 @@
       <UebungsAuswertung onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'personen'}
       <Personen onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'sicherungen'}
+      <Sicherungen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}
