@@ -38,7 +38,7 @@
   import { neueId } from '../../daten/id';
   import { SPIELRAUM_VORGABE } from '../../domain/spielraum';
   import { verhaeltnisZahl, ertragMl, fertigAbZeitpunkt } from '../../domain/coldbrew';
-  import { restGramm, geschaetzteBezuege, benoetigtProBezug } from '../../domain/vorrat';
+  import { restGramm, geschaetzteBezuege, benoetigtProBezug, altersTage } from '../../domain/vorrat';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Bohnen from '../../muster/Bohnen.svelte';
   import Sterne from '../../muster/Sterne.svelte';
@@ -630,15 +630,36 @@
         <p class="hinweis-panel">keine</p>
       {:else}
         {#each sichtbareChargen as charge (charge.id)}
-          <div class="chargenzeile" class:aktuelle={charge.id === kaffee.aktuelleChargeId}>
+          {@const istAktuell = charge.id === kaffee.aktuelleChargeId}
+          <div class="chargenzeile" class:aktuelle={istAktuell}>
             <div class="chargenzeile-kopf">
-              <!-- Rückmeldung 2026-09-04: keine Chargennummer mehr —
-                   Röstdatum ist die einzige Chargenbezeichnung, deshalb
-                   jetzt im Haupttext statt als kleines Meta daneben. -->
-              <span class="chargen-titel">{new Date(charge.roestdatum).toLocaleDateString('de-DE')}</span>
+              <!-- Rückmeldung 2026-09-17: Label über Wert, wie ueberall sonst
+                   im Blatt (siehe Kommentar zu den Kennzahlen oben) — ein
+                   nacktes Datum ohne Beschriftung war die einzige Ausnahme
+                   von der eigenen Regel. Dazu das Alter in Tagen
+                   (domain/vorrat.ts::altersTage, dieselbe Zahl, die
+                   Bar.svelte fuer Chargen schon zeigt) und, falls erfasst,
+                   Einwaage/eingefroren als Meta-Zeile. -->
+              <div class="chargen-info">
+                <span class="chargen-label">Röstdatum</span>
+                <span class="chargen-titel">
+                  {new Date(charge.roestdatum).toLocaleDateString('de-DE')}
+                  · {altersTage(charge.roestdatum, Date.now())} Tage
+                </span>
+                {#if charge.einwaage !== undefined || charge.eingefroren}
+                  <span class="chargen-meta">
+                    {#if charge.einwaage !== undefined}{charge.einwaage} g{/if}
+                    {#if charge.eingefroren}<span class="flagge">· eingefroren</span>{/if}
+                  </span>
+                {/if}
+              </div>
+              <!-- "aktuell" jetzt als eigenes Wort statt nur ueber
+                   Akzentfarbe am Datum — Farbe allein war die einzige
+                   Kennzeichnung und leicht zu uebersehen. -->
+              {#if istAktuell}<span class="chargen-status">aktuell</span>{/if}
             </div>
 
-            {#if charge.id === kaffee.aktuelleChargeId}
+            {#if istAktuell}
               <!-- Die grosse Bestandszahl stand bis 2026-09-07 hier — ganz
                    unten, hinter Profilen und Cold Brew. Sie ist in den
                    Kopfbereich gezogen (Zug B), weil "wie viel ist noch da"
@@ -650,9 +671,14 @@
                   <span class="bestand-unbekannt">Bestand unbekannt</span>
                 {/if}
                 {#if !korrekturOffen}
+                  <!-- Rückmeldung 2026-09-17: Knopf.svelte statt der
+                       lokalen .korrigieren-link-Klasse — die hatte keine
+                       --treffer-Mindesthoehe, anders als jeder andere Knopf
+                       in der App, und war dadurch schwer als Bedienelement
+                       erkennbar. -->
                   <span class="bestand-aktionen">
-                    <button type="button" class="korrigieren-link" onclick={() => (korrekturOffen = true)}>korrigieren</button>
-                    <button type="button" class="korrigieren-link" onclick={() => alsLeerMarkieren(charge)}>ist leer</button>
+                    <Knopf stufe="still" onKlick={() => (korrekturOffen = true)}>korrigieren</Knopf>
+                    <Knopf stufe="still" onKlick={() => alsLeerMarkieren(charge)}>ist leer</Knopf>
                   </span>
                 {/if}
               </div>
@@ -1010,16 +1036,39 @@
   }
   .chargenzeile-kopf {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: var(--r3);
-    min-height: 34px;
   }
-  .chargenzeile .chargen-titel {
-    flex: 1;
+  /* Rückmeldung 2026-09-17: Label über Wert (dieselbe Form wie
+     .kennzahl-label/.kennzahl-wert weiter oben) statt eines nackten Datums
+     — die einzige Stelle im Blatt, die bisher ohne Beschriftung auskam. */
+  .chargen-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
-  .chargenzeile.aktuelle .chargen-titel {
-    /* Rueckmeldung 2026-08-24: nicht mehr fett — "aktuelle" haebt sich ueber
-       die Akzentfarbe ab, nicht mehr ueber Schriftgewicht. */
+  .chargen-label {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: var(--label-spacing-kachel);
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .chargen-meta {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  /* "aktuell" als eigenes Wort statt nur Akzentfarbe am Datum (Rückmeldung
+     2026-09-17: Farbe allein war leicht zu übersehen, ein Wort ist
+     eindeutig). Der Titel selbst bleibt immer --tinte. */
+  .chargen-status {
+    flex: none;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-label);
+    letter-spacing: var(--label-spacing);
+    text-transform: uppercase;
     color: var(--akzent);
   }
   /* Redesign v2, Etappe 2 (Rueckmeldung 2026-09-04) — Bestand-Info und
@@ -1048,16 +1097,6 @@
     display: flex;
     align-items: center;
     gap: var(--r3);
-  }
-  .korrigieren-link {
-    flex: none;
-    padding: 4px 0;
-    border: none;
-    background: transparent;
-    color: var(--akzent);
-    font-family: var(--schrift-sans);
-    font-size: 13px;
-    cursor: pointer;
   }
   .anlage {
     display: flex;
