@@ -145,6 +145,35 @@ export function zielfrequenzAbgleich(
   return { faktischProWoche, weichtAb };
 }
 
+// ---- Wochenfortschritt (rollierend) -----------------------------------------
+
+export interface Wochenfortschritt {
+  readonly anzahl: number;
+  readonly ziel: number;
+  /** true, wenn die letzten sieben Tage unter dem Wochenziel liegen. */
+  readonly hinterher: boolean;
+}
+
+/**
+ * Rollierender 7-Tage-Fortschritt gegen das Wochenziel — für die
+ * Bar-Dashboard-Meldung ("hinkst du gerade hinterher", Rückmeldung
+ * 2026-09-17). Anders als zielfrequenzAbgleich() oben (Langzeit-Durchschnitt
+ * seit Trainingsbeginn, mindestens drei Wochen Geschichte nötig, für den
+ * "Ziel anpassen?"-Hinweis auf der Aromaschule-Übersicht) braucht diese
+ * Funktion keine Mindest-Trainingsgeschichte — sie beantwortet eine andere
+ * Frage ("bin ich diese Woche dran") und tut das immer, ab dem ersten Tag.
+ * Kein Kalenderwochen-Reset: "letzte sieben Tage" ist immer aktuell, ohne den
+ * künstlichen Montags-Cliff eines Kalenderwochen-Zählers.
+ */
+export function wochenfortschritt(
+  zielProWoche: number,
+  durchgaengeBegonnenAm: readonly number[],
+  jetzt: number,
+): Wochenfortschritt {
+  const anzahl = durchgaengeBegonnenAm.filter((ts) => jetzt - ts < MS_PRO_WOCHE).length;
+  return { anzahl, ziel: zielProWoche, hinterher: anzahl < zielProWoche };
+}
+
 // ---- Kennzahlen-Pool für die Übersicht -------------------------------------
 
 /**

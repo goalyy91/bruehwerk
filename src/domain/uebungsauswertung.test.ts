@@ -4,6 +4,7 @@ import {
   familienTrefferquote,
   langsameRichtigeAntworten,
   zielfrequenzAbgleich,
+  wochenfortschritt,
   uebungsKennzahlenPool,
   LANGSAM_SCHWELLE_MS,
   ZIELFREQUENZ_MINDESTWOCHEN,
@@ -120,6 +121,27 @@ describe('zielfrequenzAbgleich — nur fuer den Hinweis, nie fuer die Intervalle
     const begonnen = [JETZT - 3 * WOCHE, JETZT - 2 * WOCHE, JETZT - 1 * WOCHE];
     const abgleich = zielfrequenzAbgleich(4, begonnen, JETZT);
     expect(abgleich?.weichtAb).toBe(true);
+  });
+});
+
+describe('wochenfortschritt — rollierende letzte 7 Tage, keine Mindest-Geschichte', () => {
+  it('Ziel erreicht: nicht hinterher', () => {
+    const begonnen = [JETZT - 1 * TAG, JETZT - 2 * TAG, JETZT - 3 * TAG];
+    expect(wochenfortschritt(3, begonnen, JETZT)).toEqual({ anzahl: 3, ziel: 3, hinterher: false });
+  });
+
+  it('Ziel verfehlt: hinterher, mit der tatsaechlichen Zahl', () => {
+    const begonnen = [JETZT - 1 * TAG];
+    expect(wochenfortschritt(3, begonnen, JETZT)).toEqual({ anzahl: 1, ziel: 3, hinterher: true });
+  });
+
+  it('ohne jeden Durchgang: hinterher, sofort — keine Mindest-Trainingsgeschichte noetig', () => {
+    expect(wochenfortschritt(2, [], JETZT)).toEqual({ anzahl: 0, ziel: 2, hinterher: true });
+  });
+
+  it('nur Durchgaenge der letzten 7 Tage zaehlen — aelter faellt raus', () => {
+    const begonnen = [JETZT - 1 * TAG, JETZT - 2 * TAG, JETZT - 8 * TAG];
+    expect(wochenfortschritt(2, begonnen, JETZT)).toEqual({ anzahl: 2, ziel: 2, hinterher: false });
   });
 });
 

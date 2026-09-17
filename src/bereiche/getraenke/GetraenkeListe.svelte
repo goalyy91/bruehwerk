@@ -25,7 +25,7 @@
   }
 </script>
 
-<Kopfzeile titel="Getränke" gross {onZurueck} />
+<Kopfzeile titel="Getränke" {onZurueck} />
 
 <div class="metazeile">
   <p class="zaehlung">Getränk · {gefiltert.length} von {bestand.getraenke.length}</p>

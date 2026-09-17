@@ -35,6 +35,7 @@
     type Kennzahl,
   } from '../../domain/hinweise';
   import { effektiverZustand } from '../../domain/uebung';
+  import { wochenfortschritt } from '../../domain/uebungsauswertung';
   import Knopf from '../../muster/Knopf.svelte';
   import VorbelegteFrage from '../../muster/VorbelegteFrage.svelte';
   import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
@@ -155,28 +156,49 @@
     const jetzt = Date.now();
     const kandidaten: MeldungsAnzeige[] = [];
 
-    // Prio A (Aromapaket, Etappe 8): mindestens ein eingeführtes Aroma ist
-    // fällig. Dieselbe Extraktion (Aromaset -> Ids mit Nummer) wie
-    // bereiche/einstellungen/Uebungsmodus.svelte, hier nur so weit, wie die
-    // boolesche Frage "ist etwas fällig" sie braucht — kein Name, keine Box.
+    // Prio A: Aroma-Training. Rückmeldung 2026-09-17 — zeigt jetzt vorrangig
+    // den rollierenden Wochenabgleich (domain/uebungsauswertung.ts::
+    // wochenfortschritt), wenn ein Wochenziel eingestellt ist: "hinkst du
+    // gerade hinterher" ist die griffigere Frage für einen Dashboard-Anstoß
+    // als eine rohe Leitner-Box-Fälligkeit. Ohne eingestelltes Ziel bleibt
+    // die bisherige Fälligkeits-Meldung als Rückfall — niemand verliert den
+    // Hinweis ganz, nur weil kein Ziel hinterlegt ist.
     const uebungsSet = bestand.aromasets.find((a) => a.vialNummern);
     if (uebungsSet) {
-      const uebungsZustaende = uebungsSet.kategorien
-        .flatMap((k) => k.gruppen.flatMap((g) => g.aromen))
-        .filter((a) => a.nummer !== undefined)
-        .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === uebungsSet.id && u.aromaId === a.id), jetzt));
-      const anzahlFaellig = anzahlUebungFaellig(uebungsZustaende, jetzt);
-      if (anzahlFaellig > 0) {
-        kandidaten.push({
-          art: 'uebungFaellig',
-          name: 'Aroma-Training',
-          // Backlog 2026-09-14: Zahl statt nur "Fällig" — sonst wirkt die
-          // Meldung neben der Wochenziel-Kennzahl ("6 von 2 Durchgänge")
-          // widersprüchlich, obwohl beides unabhängige Groessen sind
-          // (Leitner-Box-Faelligkeit je Aroma vs. Wochenziel).
-          meta: anzahlFaellig === 1 ? '1 Aroma fällig' : `${anzahlFaellig} Aromen fällig`,
-          onKlick: onOeffnenUebung,
-        });
+      const zielProWoche = bestand.einstellungen?.uebungZielProWoche;
+      if (zielProWoche) {
+        const eigeneDurchgaenge = bestand.uebungsdurchgaenge.filter(
+          (d) => d.setId === uebungsSet.id && d.art === 'normal' && d.status === 'abgeschlossen',
+        );
+        const fortschritt = wochenfortschritt(zielProWoche, eigeneDurchgaenge.map((d) => d.begonnenAm), jetzt);
+        if (fortschritt.hinterher) {
+          kandidaten.push({
+            art: 'uebungFaellig',
+            name: 'Aroma-Training',
+            // Dieselbe Formulierung wie die Kennzahl "Durchgänge diese
+            // Woche" (domain/uebungsauswertung.ts::uebungsKennzahlenPool) —
+            // dieselbe Zahl, jetzt zusätzlich proaktiv hier sichtbar.
+            meta: `${fortschritt.anzahl} von ${fortschritt.ziel} Durchgänge diese Woche`,
+            onKlick: onOeffnenUebung,
+          });
+        }
+      } else {
+        // Dieselbe Extraktion (Aromaset -> Ids mit Nummer) wie
+        // bereiche/einstellungen/Uebungsmodus.svelte, hier nur so weit, wie
+        // die boolesche Frage "ist etwas fällig" sie braucht.
+        const uebungsZustaende = uebungsSet.kategorien
+          .flatMap((k) => k.gruppen.flatMap((g) => g.aromen))
+          .filter((a) => a.nummer !== undefined)
+          .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === uebungsSet.id && u.aromaId === a.id), jetzt));
+        const anzahlFaellig = anzahlUebungFaellig(uebungsZustaende, jetzt);
+        if (anzahlFaellig > 0) {
+          kandidaten.push({
+            art: 'uebungFaellig',
+            name: 'Aroma-Training',
+            meta: anzahlFaellig === 1 ? '1 Aroma fällig' : `${anzahlFaellig} Aromen fällig`,
+            onKlick: onOeffnenUebung,
+          });
+        }
       }
     }
 
@@ -483,12 +505,15 @@
   </div>
 </div>
 
-<!-- Zone "Bestand" — feste Zone statt Alles-oder-nichts (Etappe 8 Block A):
+<!-- Zone "Meldungen" (Rückmeldung 2026-09-17: hieß "Bestand", passte nicht
+     mehr zu allem, was hier erscheinen kann — Dial-in offen, Beobachtungen,
+     Aroma-Training, nicht nur Bohnenbestand) — feste Zone statt
+     Alles-oder-nichts (Etappe 8 Block A):
      1-2 Meldungen wenn vorhanden, sonst die Bohne, mit der gerade gearbeitet
      wird. Ganz ohne Daten (frische Installation) bleibt die Zone weg. -->
 {#if meldungen.sichtbar.length > 0 || ruhezustandBohne}
   <div class="abschnitt">
-    <h2>Bestand</h2>
+    <h2>Meldungen</h2>
     <div class="bestandliste">
       {#if meldungen.sichtbar.length > 0}
         {#each meldungen.sichtbar as eintrag (eintrag.art + eintrag.name)}
