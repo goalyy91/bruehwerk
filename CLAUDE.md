@@ -342,6 +342,25 @@ eingeführten Aromen in Box 1–2 stehen. Der Boxenzustand ist der bessere
 Regler als der Kalender, und braucht die tatsächliche Trainingsfrequenz dafür
 nicht zu kennen.
 
+### Meilenstein-Satz am Ende-Screen ist kein Zähler — `domain/meilenstein.ts` (2026-09-18)
+
+Der Ende-Screen eines Übungsdurchgangs zeigt höchstens **einen** Satz, und nur,
+wenn er wahr ist: „Fehlerfrei — alle acht.", „Bester Durchgang bisher." oder
+„„Erdbeere" zum ersten Mal getroffen." Bei einem schwachen Durchgang bleibt die
+Stelle **leer** — kein Trost, kein Ansporn, kein Countdown zum nächsten
+Erfolg. Das ist mit Absicht kein Widerspruch zu „keine Gamification"
+(`docs/ux-regeln.md`, Regel 10): dort verboten sind Punkte, Ränge, Serien und
+alles, was einen Zähler führt, der bei Null stehenbleibt und dadurch wie ein
+Vorwurf wirkt — genau das Muster, das `domain/begruessung.ts` für die
+Begrüßungssätze schon verwirft. Ein Satz, der nur bei echtem Anlass erscheint
+und sonst schweigt, führt keinen Zähler.
+
+**Wer das „vereinfacht" zu einem Fehlerfrei-Zähler oder einer Trefferserie,
+baut die Regel zurück, die dieser Abschnitt gerade erst zieht.** Die Kandidaten
+sind ausschließlich aus `uebungsantwort` rekonstruiert, nie aus einem
+mitgeführten Zustand — bewusst **kein** „sitzt jetzt sicher" (Box-Aufstieg),
+weil der Box-Stand vor dem Durchgang nirgends gespeichert ist.
+
 ---
 
 ## Was bewusst nicht gebaut wird

@@ -200,7 +200,16 @@ werden als reine Stammdaten — in **Historie**, **Kaffeeblatt** und **Erkenntni
 
 Grenzen, die aus dem Konzept bereits gelten und hier nicht verhandelt werden:
 
-- **Keine Gamification.**
+- **Keine Gamification** — präzisiert am 2026-09-18, nachdem der Aromaschule-
+  Ende-Screen einen ehrlichen Meilenstein-Satz bekam (domain/meilenstein.ts) und
+  sich zeigte, dass die bisherige Formulierung zu pauschal war, um diesen Fall
+  einzuordnen. **Verboten bleiben:** Punkte, Ränge, Serien/Streaks, Abzeichen zum
+  Sammeln, Fortschrittsbalken — jede Mechanik, die einen Zähler führt, der bei
+  Null stehenbleibt und dadurch wie ein Vorwurf wirkt (siehe
+  domain/begruessung.ts, dort ausführlich begründet). **Erlaubt ist** ehrliche,
+  aus echten Ereignissen nachprüfbare persönliche Rückmeldung im Rückblick,
+  außerhalb des Alltagspfads, die bei Misserfolg schweigt statt zu trösten oder
+  zu mahnen.
 - **Keine neuen Farben für Zustände** (K69) — kein „bald fällig"-Rot, keine
   Fortschrittsbalken.
 - **Nicht im Alltagspfad.** K57/K58 gelten weiter: kein Urteil unter Zeitdruck, kein
