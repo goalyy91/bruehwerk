@@ -73,6 +73,7 @@
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
   import { uebungsKennzahlenPool, zielfrequenzAbgleich } from '../../domain/uebungsauswertung';
+  import { meilensteinSatz } from '../../domain/meilenstein';
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
@@ -80,7 +81,6 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
-  import Werteliste from '../../muster/Werteliste.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
@@ -787,7 +787,26 @@
     falsch: 'daneben',
   };
 
-  const rundenZeilen = $derived(
+  /**
+   * `aromaId` als Feld, NICHT als Schluessel fuer das {#each} unten: dasselbe
+   * Aroma kann in `durchgang.beantwortet` zweimal stehen (wenn beim Ablesen
+   * zweimal dieselbe Nummer eingetippt wird — ein Bereitlegen-Fehler, siehe
+   * `unerwarteteNummer` oben, aber keiner, der die Auswertung verhindert).
+   * Vorher schluesselte hier `muster/Werteliste.svelte` ueber `zeile.label` —
+   * bei einem doppelten Aroma-Label ein doppelter Schluessel, und Svelte
+   * bricht beim Rendern ab. Der Aufrufer unten schluesselt stattdessen ueber
+   * den Index.
+   */
+  interface RundenZeile {
+    readonly aromaId: string;
+    readonly label: string;
+    readonly ergebnis: 'richtig' | 'teilweise' | 'falsch' | undefined;
+    readonly ergebnisText: string;
+    readonly hinweis?: string;
+    readonly nummer?: number;
+  }
+
+  const rundenZeilen = $derived<RundenZeile[]>(
     (durchgang?.beantwortet ?? []).map((aromaId) => {
       const antwort = bestand.uebungsantworten.find((a) => a.durchgangId === durchgang?.id && a.aromaId === aromaId);
       const option = alleAromen.find((a) => a.id === aromaId);
@@ -797,9 +816,39 @@
         antwort && (antwort.form === 'familie' || antwort.form === 'aromaInFamilie') && antwort.getipptFamilieId
           ? `getippt: ${familieVon(antwort.getipptFamilieId)} · richtig: ${familieVon(option?.kategorieId)}`
           : undefined;
-      return { label: option?.label ?? '?', wert: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '', hinweis };
+      return {
+        aromaId,
+        label: option?.label ?? '?',
+        ergebnis: antwort?.ergebnis,
+        ergebnisText: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '',
+        hinweis,
+        nummer: option?.nummer,
+      };
     }),
   );
+  const richtigAnzahl = $derived(rundenZeilen.filter((z) => z.ergebnis === 'richtig').length);
+
+  /**
+   * Hoechstens ein Meilenstein-Satz, nur wenn er wahr ist (domain/meilenstein.ts,
+   * dort ausfuehrlich begruendet: kein Zaehler, keine Serie — bei einem
+   * schwachen Durchgang bleibt die Stelle leer, das ist der Punkt). Nur bei
+   * abgeschlossenem "normal"-Durchgang, nicht waehrend eines Neu-Mounts, bei
+   * dem `durchgang` noch nicht geladen ist.
+   */
+  const meilenstein = $derived.by(() => {
+    const aktuellerDurchgang = durchgang;
+    if (!aktuellerDurchgang || aktuellerDurchgang.status !== 'abgeschlossen') return undefined;
+    const alleAntwortenDiesesSets = bestand.uebungsantworten.filter((a) => a.setId === aktuellerDurchgang.setId);
+    return meilensteinSatz({
+      durchgangAntworten: alleAntwortenDiesesSets.filter((a) => a.durchgangId === aktuellerDurchgang.id),
+      vorherigeAntworten: alleAntwortenDiesesSets.filter((a) => a.durchgangId !== aktuellerDurchgang.id),
+      labelVon: (id) => alleAromen.find((a) => a.id === id)?.label ?? id,
+    });
+  });
+
+  function datenblattVorhanden(nummer: number | undefined): boolean {
+    return nummer !== undefined && datenblattZu(nummer) !== undefined;
+  }
 
   /**
    * Verlässt die laufende Aktivität — dieselbe Bewegung wie der
@@ -1262,8 +1311,29 @@
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'ende'}
+    {#snippet rundenInhalt(zeile: RundenZeile)}
+      <span class="runden-haupt">
+        <span class="runden-label">{zeile.label}</span>
+        {#if zeile.hinweis}<span class="runden-hinweis">{zeile.hinweis}</span>{/if}
+      </span>
+      <span class="runden-ergebnis" class:richtig={zeile.ergebnis === 'richtig'}>{zeile.ergebnisText}</span>
+    {/snippet}
     <div class="block">
-      <Werteliste zeilen={rundenZeilen} />
+      <p class="ende-kopf">{richtigAnzahl} von {rundenZeilen.length} richtig</p>
+      {#if meilenstein}<p class="ende-meilenstein">{meilenstein}</p>{/if}
+      <Blattliste>
+        {#each rundenZeilen as zeile, index (index)}
+          {#if datenblattVorhanden(zeile.nummer)}
+            <button type="button" class="runden-zeile" onclick={() => (datenblatt = datenblattZu(zeile.nummer!))}>
+              {@render rundenInhalt(zeile)}
+            </button>
+          {:else}
+            <div class="runden-zeile runden-zeile-statisch">
+              {@render rundenInhalt(zeile)}
+            </div>
+          {/if}
+        {/each}
+      </Blattliste>
       <p class="hinweis">Die Zusatzfläschchen bleiben unaufgelöst.</p>
     </div>
     <div class="knopfreihe">
@@ -1479,6 +1549,64 @@
     color: var(--gedaempft);
     font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
+  }
+  /* Ende-Screen (Rueckmeldung 2026-09-18: vorher ueber muster/Werteliste.svelte
+     gebaut — ein Muster fuer Label+Zahl+Einheit, falsch fuer eine Ergebnis-
+     liste. Der Aromaname ist hier der Inhalt, nicht das Label. */
+  .ende-kopf {
+    font-size: var(--fs-urteil);
+    color: var(--tinte);
+    margin: 0 0 4px;
+  }
+  .ende-meilenstein {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-satz);
+    color: var(--gedaempft);
+    margin: 0 0 var(--r3);
+  }
+  .runden-zeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--r3);
+    width: 100%;
+    min-height: var(--blattzeile);
+    border: none;
+    background: transparent;
+    font-family: var(--schrift-sans);
+    text-align: left;
+    cursor: pointer;
+  }
+  .runden-zeile-statisch {
+    cursor: default;
+  }
+  .runden-haupt {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  /* Aromaname ist Inhalt, nicht Apparat — Serif nach der Projektregel
+     "Serif traegt den Inhalt, Sans nur den Apparat". Eigener Block ohne
+     cursor/background, deshalb ohne "Serif bewusst"-Vermerk noetig
+     (tests/bildsprache.test.ts prueft pro Block, nicht pro Zeile). */
+  .runden-label {
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .runden-hinweis {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .runden-ergebnis {
+    flex-shrink: 0;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--kritisch);
+  }
+  .runden-ergebnis.richtig {
+    color: var(--satz);
   }
   .fehler {
     color: var(--kritisch);

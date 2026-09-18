@@ -16,13 +16,45 @@
     familienTrefferquote,
     langsameRichtigeAntworten,
     zielfrequenzAbgleich,
+    antwortzeitVerlauf,
+    trefferquoteVerlauf,
+    abdeckungVerlauf,
+    volumenVerlauf,
+    stufenverteilung,
+    schwaechsteAromen,
+    uebungsartBilanz,
+    type VerlaufsPunkt,
   } from '../../domain/uebungsauswertung';
+  import { achsMarken } from '../../domain/auswertung';
   import { effektiverZustand, type AromaOption } from '../../domain/uebung';
+  import type { Uebungsform } from '../../daten/schema/uebungsantwort';
   import { EINSTELLUNGEN_ID, type AppEinstellungen } from '../../daten/schema';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
+  import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
+  import Segment from '../../muster/Segment.svelte';
+  import Blattliste from '../../muster/Blattliste.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
+  import Kontextmenue from '../../muster/Kontextmenue.svelte';
+  import Knopf from '../../muster/Knopf.svelte';
 
   let { onZurueck }: { onZurueck: () => void } = $props();
+
+  /** Gemeinsamer Default, wenn noch keine Einstellungen existieren — dieselbe Basis, die zielAendern() bisher inline hatte, jetzt einmal fuer beide Schreib-Funktionen unten. */
+  function basisEinstellungen(): AppEinstellungen {
+    return (
+      bestand.einstellungen ?? {
+        id: EINSTELLUNGEN_ID,
+        begruendungKoffein: true,
+        begruendungBohne: true,
+        sammelSchaeumen: 'einzeln',
+        bestandKnappBezuege: 2,
+        bestandFrischWochen: 8,
+        bestandEingefrorenMonate: 8,
+        thema: 'system',
+      }
+    );
+  }
 
   const set = $derived(bestand.aromasets.find((a) => a.vialNummern));
 
@@ -114,51 +146,237 @@
   ]);
 
   async function zielAendern(wert: number) {
-    const basis: AppEinstellungen =
-      bestand.einstellungen ?? {
-        id: EINSTELLUNGEN_ID,
-        begruendungKoffein: true,
-        begruendungBohne: true,
-        sammelSchaeumen: 'einzeln',
-        bestandKnappBezuege: 2,
-        bestandFrischWochen: 8,
-        bestandEingefrorenMonate: 8,
-        thema: 'system',
-      };
-    await schreiben('einstellungen', { ...basis, uebungZielProWoche: wert > 0 ? wert : undefined });
+    await schreiben('einstellungen', { ...basisEinstellungen(), uebungZielProWoche: wert > 0 ? wert : undefined });
   }
+
+  // ---- Editiermodus: einzelne Abschnitte ein-/ausblenden -------------------
+  // (Livebetrieb-Rueckmeldung 2026-09-18: "Vollprogramm, aber mit einem
+  // Editiermodus, in dem ich einzelne Teile ein- und ausblenden kann" — die
+  // Statistik ist mit den neuen Abschnitten unten lang geworden, das
+  // Interesse schwankt.) Gespeichert werden die AUSGEBLENDETEN Schluessel
+  // (daten/schema/einstellungen.ts::uebungStatistikAus), nicht die
+  // sichtbaren: "Feld nicht gesetzt" heisst dann "alles sichtbar", und ein
+  // spaeter ergaenzter Abschnitt erscheint von selbst statt zu fehlen.
+  const ABSCHNITTE: readonly { schluessel: string; titel: string }[] = [
+    { schluessel: 'entwicklung', titel: 'Entwicklung' },
+    { schluessel: 'abdeckung', titel: 'Abdeckung' },
+    { schluessel: 'lernstufen', titel: 'Lernstufen' },
+    { schluessel: 'was-haengt', titel: 'Was hängt' },
+    { schluessel: 'uebungsarten', titel: 'Übungsarten' },
+    { schluessel: 'volumen', titel: 'Volumen' },
+    { schluessel: 'verwechslungen', titel: 'Häufigste Verwechslungen' },
+    { schluessel: 'familien', titel: 'Familien-Trefferquote' },
+    { schluessel: 'boxen', titel: 'Boxenverteilung' },
+    { schluessel: 'zielfrequenz', titel: 'Zielfrequenz' },
+  ];
+
+  let bearbeiten = $state(false);
+  const ausgeblendet = $derived(new Set(bestand.einstellungen?.uebungStatistikAus ?? []));
+  function sichtbar(schluessel: string): boolean {
+    return !ausgeblendet.has(schluessel);
+  }
+  async function abschnittUmschalten(schluessel: string) {
+    const neu = ausgeblendet.has(schluessel)
+      ? [...ausgeblendet].filter((s) => s !== schluessel)
+      : [...ausgeblendet, schluessel];
+    await schreiben('einstellungen', { ...basisEinstellungen(), uebungStatistikAus: neu.length > 0 ? neu : undefined });
+  }
+
+  // ---- Entwicklung: Antwortzeit + Trefferquote, je Aufgabenform getrennt ---
+  // Getrennt gehalten (nie gemischt): die App erhoeht die Schwierigkeit,
+  // sobald ein Aroma sicherer sitzt (Stufe A -> B -> C), eine gemischte Kurve
+  // zeigte echten Fortschritt als Stillstand — dieselbe Begruendung wie bei
+  // domain/uebungsauswertung.ts::persoenlicheSchwelle.
+  const WOCHEN_VERLAUF = 8;
+  const FORM_OPTIONEN: readonly { wert: Uebungsform; label: string }[] = [
+    { wert: 'familie', label: 'Familie' },
+    { wert: 'aromaInFamilie', label: 'Aroma in Familie' },
+    { wert: 'freierAbruf', label: 'freier Abruf' },
+  ];
+  let entwicklungForm = $state<Uebungsform>('freierAbruf');
+
+  function formatSekunden(ms: number): string {
+    return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0).replace('.', ',')}s`;
+  }
+  function formatProzent(anteil: number): string {
+    return `${Math.round(anteil * 100)}%`;
+  }
+
+  /** Wochenpunkte -> Verlaufskurve-Koordinaten (x nach Wochenindex, y auf die eigene Wertspanne normiert). Unter zwei Wochen mit Datenbasis gibt es keine sinnvolle Kurve — undefined heisst "Satz statt Kurve zeigen" (siehe Vorlage). */
+  function zuKurve(
+    punkte: readonly VerlaufsPunkt[],
+    formatiere: (wert: number) => string,
+  ): { punkte: { x: number; y: number }[]; marken: readonly [string, string, string] } | undefined {
+    if (punkte.length < 2) return undefined;
+    const werte = punkte.map((p) => p.wert);
+    const min = Math.min(...werte);
+    const max = Math.max(...werte);
+    return {
+      punkte: punkte.map((p) => ({
+        x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 0.5,
+        y: max === min ? 0.5 : (p.wert - min) / (max - min),
+      })),
+      marken: achsMarken(min, max, formatiere),
+    };
+  }
+
+  const zeitVerlauf = $derived(zuKurve(antwortzeitVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF), formatSekunden));
+  const quoteVerlauf = $derived(zuKurve(trefferquoteVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF), formatProzent));
+
+  // ---- Abdeckung: kumulativ, wie viel vom Koffer schon mal richtig sass ----
+  const abdeckungPunkte = $derived(abdeckungVerlauf(antworten, jetzt, WOCHEN_VERLAUF));
+  const abdeckungKurve = $derived.by(() => {
+    if (alleAromen.length === 0) return undefined;
+    return {
+      punkte: abdeckungPunkte.map((p) => ({
+        x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 0.5,
+        y: p.wert / alleAromen.length,
+      })),
+      marken: achsMarken(0, alleAromen.length, (w) => String(Math.round(w))),
+    };
+  });
+  const abdeckungAktuell = $derived(abdeckungPunkte.at(-1)?.wert ?? 0);
+
+  // ---- Lernstufen: reine Umsortierung der effektiven Zustaende ------------
+  const eingefuehrteZustaendeStatistik = $derived(
+    alleAromen
+      .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === set?.id && u.aromaId === a.id), zustaendeJetzt))
+      .filter((z) => z.eingefuehrt),
+  );
+  const stufenZeilen = $derived.by(() => {
+    const v = stufenverteilung(eingefuehrteZustaendeStatistik);
+    return [
+      { label: 'Familie (A)', wert: v.a },
+      { label: 'Aroma in Familie (B)', wert: v.b },
+      { label: 'freier Abruf (C)', wert: v.c },
+    ];
+  });
+
+  // ---- Was haengt: schwaechste Aromen ab einer Mindestzahl Versuche -------
+  const WAS_HAENGT_MINDESTVERSUCHE = 2;
+  const schwaechsteZeilen = $derived(
+    schwaechsteAromen(antworten, WAS_HAENGT_MINDESTVERSUCHE)
+      .slice(0, ANZEIGE_GRENZE)
+      .map((e) => ({ label: labelVon(e.aromaId), wert: formatProzent(e.richtig / e.versuche) })),
+  );
+
+  // ---- Uebungsarten: Kontrast/Reverse getrennt, andere Groesse als normal --
+  const uebungsartZeilen = $derived.by(() => {
+    const bilanz = uebungsartBilanz(antworten);
+    const zeilen: { label: string; wert: string }[] = [];
+    if (bilanz.kontrast.versuche > 0) zeilen.push({ label: 'Kontrast', wert: `${bilanz.kontrast.richtig} von ${bilanz.kontrast.versuche}` });
+    if (bilanz.reverse.versuche > 0) zeilen.push({ label: 'Reverse (Selbsteinschätzung)', wert: `${bilanz.reverse.richtig} von ${bilanz.reverse.versuche}` });
+    return zeilen;
+  });
+
+  // ---- Volumen: Durchgaenge je rollierender Woche --------------------------
+  const volumenPunkteRoh = $derived(volumenVerlauf(durchgaengeBegonnenAm, jetzt, WOCHEN_VERLAUF));
+  const volumenKurve = $derived.by(() => {
+    const max = Math.max(...volumenPunkteRoh.map((p) => p.wert), 0);
+    if (max === 0) return undefined;
+    return {
+      punkte: volumenPunkteRoh.map((p) => ({
+        x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 0.5,
+        y: p.wert / max,
+      })),
+      marken: achsMarken(0, max, (w) => String(Math.round(w))),
+    };
+  });
 </script>
 
-<Kopfzeile titel="Statistik" {onZurueck} />
+<Kopfzeile titel="Statistik" {onZurueck}>
+  {#snippet aktion()}
+    {#if !bearbeiten}
+      <Kontextmenue eintraege={[{ text: 'Abschnitte wählen', onWahl: () => (bearbeiten = true) }]} />
+    {/if}
+  {/snippet}
+</Kopfzeile>
 
-{#if antworten.length === 0}
-  <p class="hinweis">Noch keine Übungsdurchgänge protokolliert.</p>
+{#if bearbeiten}
+  <p class="hinweis">Ausgeblendete Abschnitte verschwinden nur hier — an der Berechnung ändert sich nichts.</p>
+  <Blattliste>
+    {#each ABSCHNITTE as abschnitt (abschnitt.schluessel)}
+      <Schalter label={abschnitt.titel} an={sichtbar(abschnitt.schluessel)} onWahl={() => abschnittUmschalten(abschnitt.schluessel)} />
+    {/each}
+  </Blattliste>
+  <div class="knopfreihe">
+    <Knopf stufe="primaer" onKlick={() => (bearbeiten = false)}>fertig</Knopf>
+  </div>
 {:else}
-  {#if matrixZeilen.length > 0}
-    <h2>Häufigste Verwechslungen</h2>
-    <Werteliste zeilen={matrixZeilen} />
+  {#if antworten.length === 0}
+    <p class="hinweis">Noch keine Übungsdurchgänge protokolliert.</p>
+  {:else}
+    {#if sichtbar('entwicklung')}
+      <h2>Entwicklung</h2>
+      <Segment optionen={FORM_OPTIONEN} wert={entwicklungForm} onWahl={(w) => (entwicklungForm = w as Uebungsform)} />
+      <p class="kurven-titel">Antwortzeit</p>
+      {#if zeitVerlauf}
+        <Verlaufskurve punkte={zeitVerlauf.punkte} achsMarken={zeitVerlauf.marken} />
+      {:else}
+        <p class="hinweis">Noch zu wenig Geschichte für einen Verlauf.</p>
+      {/if}
+      <p class="kurven-titel">Trefferquote</p>
+      {#if quoteVerlauf}
+        <Verlaufskurve punkte={quoteVerlauf.punkte} achsMarken={quoteVerlauf.marken} />
+      {:else}
+        <p class="hinweis">Noch zu wenig Geschichte für einen Verlauf.</p>
+      {/if}
+    {/if}
+
+    {#if sichtbar('was-haengt') && schwaechsteZeilen.length > 0}
+      <h2>Was hängt</h2>
+      <Werteliste zeilen={schwaechsteZeilen} />
+    {/if}
+
+    {#if sichtbar('uebungsarten') && uebungsartZeilen.length > 0}
+      <h2>Übungsarten</h2>
+      <Werteliste zeilen={uebungsartZeilen} />
+    {/if}
+
+    {#if sichtbar('verwechslungen') && matrixZeilen.length > 0}
+      <h2>Häufigste Verwechslungen</h2>
+      <Werteliste zeilen={matrixZeilen} />
+    {/if}
+
+    {#if sichtbar('familien') && familienZeilen.length > 0}
+      <h2>Familien-Trefferquote</h2>
+      <Werteliste zeilen={familienZeilen} />
+    {/if}
+
+    {#if langsame.length > 0}
+      <p class="hinweis">
+        {langsame.length} richtige Antwort{langsame.length === 1 ? '' : 'en'} mit auffällig langer Antwortzeit — möglicherweise geraten
+        statt gewusst.
+      </p>
+    {/if}
   {/if}
 
-  {#if familienZeilen.length > 0}
-    <h2>Familien-Trefferquote</h2>
-    <Werteliste zeilen={familienZeilen} />
+  {#if sichtbar('abdeckung') && abdeckungKurve}
+    <h2>Abdeckung</h2>
+    <p class="hinweis">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
+    <Verlaufskurve punkte={abdeckungKurve.punkte} achsMarken={abdeckungKurve.marken} />
   {/if}
 
-  {#if langsame.length > 0}
-    <p class="hinweis">
-      {langsame.length} richtige Antwort{langsame.length === 1 ? '' : 'en'} mit auffällig langer Antwortzeit — möglicherweise geraten
-      statt gewusst.
-    </p>
+  {#if sichtbar('lernstufen') && eingefuehrteZustaendeStatistik.length > 0}
+    <h2>Lernstufen</h2>
+    <Werteliste zeilen={stufenZeilen} />
+  {/if}
+
+  {#if sichtbar('volumen') && volumenKurve}
+    <h2>Volumen</h2>
+    <Verlaufskurve punkte={volumenKurve.punkte} achsMarken={volumenKurve.marken} />
+  {/if}
+
+  {#if sichtbar('boxen') && zeigeBoxenverteilung}
+    <h2>Boxenverteilung</h2>
+    <Werteliste zeilen={boxenZeilen} />
+  {/if}
+
+  {#if sichtbar('zielfrequenz')}
+    <h2>Zielfrequenz</h2>
+    <Werteliste zeilen={zielZeilen} />
   {/if}
 {/if}
-
-{#if zeigeBoxenverteilung}
-  <h2>Boxenverteilung</h2>
-  <Werteliste zeilen={boxenZeilen} />
-{/if}
-
-<h2>Zielfrequenz</h2>
-<Werteliste zeilen={zielZeilen} />
 
 <style>
   h2 {
@@ -171,5 +389,15 @@
     color: var(--gedaempft);
     font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
+  }
+  .kurven-titel {
+    margin: var(--r3) 0 var(--r1);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .knopfreihe {
+    display: flex;
+    margin-top: var(--r3);
   }
 </style>

@@ -6,9 +6,17 @@ import {
   zielfrequenzAbgleich,
   wochenfortschritt,
   uebungsKennzahlenPool,
+  antwortzeitVerlauf,
+  trefferquoteVerlauf,
+  abdeckungVerlauf,
+  volumenVerlauf,
+  stufenverteilung,
+  schwaechsteAromen,
+  uebungsartBilanz,
   LANGSAM_SCHWELLE_MS,
   ANTWORTDAUER_MINDEST_STICHPROBE,
   ZIELFREQUENZ_MINDESTWOCHEN,
+  VERLAUF_MINDEST_STICHPROBE_JE_WOCHE,
 } from './uebungsauswertung';
 import type { Uebungsantwort } from '../daten/schema/uebungsantwort';
 import type { AromaOption, EffektiverZustand } from './uebung';
@@ -299,4 +307,144 @@ describe('uebungsKennzahlenPool — sechs Fakten, jeder erst ab ausreichender Da
       ...ueber,
     };
   }
+});
+
+describe('antwortzeitVerlauf — Median RICHTIGER Antworten je Woche und Form, unter Mindeststichprobe kein Punkt', () => {
+  it('unter der Mindeststichprobe je Woche: kein Punkt fuer diese Woche', () => {
+    const antworten = Array.from({ length: VERLAUF_MINDEST_STICHPROBE_JE_WOCHE - 1 }, () =>
+      ANTWORT({ ergebnis: 'richtig', antwortdauerMs: 1000 }),
+    );
+    expect(antwortzeitVerlauf(antworten, 'freierAbruf', JETZT, 1)).toEqual([]);
+  });
+
+  it('ab der Mindeststichprobe: Median der Zeiten dieser Woche', () => {
+    const antworten = [1000, 2000, 3000].map((ms) => ANTWORT({ ergebnis: 'richtig', antwortdauerMs: ms }));
+    expect(antwortzeitVerlauf(antworten, 'freierAbruf', JETZT, 1)).toEqual([{ wert: 2000, wocheIndex: 0 }]);
+  });
+
+  it('falsche Antworten und andere Formen zaehlen nicht mit', () => {
+    const antworten = [
+      ...[1000, 2000, 3000].map((ms) => ANTWORT({ ergebnis: 'richtig', antwortdauerMs: ms })),
+      ANTWORT({ ergebnis: 'falsch', antwortdauerMs: 50 }),
+      ANTWORT({ form: 'familie', ergebnis: 'richtig', antwortdauerMs: 50 }),
+    ];
+    expect(antwortzeitVerlauf(antworten, 'freierAbruf', JETZT, 1)).toEqual([{ wert: 2000, wocheIndex: 0 }]);
+  });
+
+  it('aeltere Woche liegt bei kleinerem wocheIndex — Reihenfolge aeltest zuerst', () => {
+    const aelter = Array.from({ length: VERLAUF_MINDEST_STICHPROBE_JE_WOCHE }, () =>
+      ANTWORT({ ergebnis: 'richtig', antwortdauerMs: 1000, zeitstempel: JETZT - 10 * TAG }),
+    );
+    const neu = Array.from({ length: VERLAUF_MINDEST_STICHPROBE_JE_WOCHE }, () =>
+      ANTWORT({ ergebnis: 'richtig', antwortdauerMs: 5000, zeitstempel: JETZT - 1 * TAG }),
+    );
+    const verlauf = antwortzeitVerlauf([...aelter, ...neu], 'freierAbruf', JETZT, 2);
+    expect(verlauf).toEqual([
+      { wert: 1000, wocheIndex: 0 },
+      { wert: 5000, wocheIndex: 1 },
+    ]);
+  });
+});
+
+describe('trefferquoteVerlauf — Quote je Woche und Form, "teilweise" zaehlt halb', () => {
+  it('unter der Mindeststichprobe: kein Punkt', () => {
+    const antworten = Array.from({ length: VERLAUF_MINDEST_STICHPROBE_JE_WOCHE - 1 }, () => ANTWORT({ ergebnis: 'richtig' }));
+    expect(trefferquoteVerlauf(antworten, 'freierAbruf', JETZT, 1)).toEqual([]);
+  });
+
+  it('richtig zaehlt voll, teilweise halb, falsch nichts', () => {
+    const antworten = [ANTWORT({ ergebnis: 'richtig' }), ANTWORT({ ergebnis: 'teilweise' }), ANTWORT({ ergebnis: 'falsch' }), ANTWORT({ ergebnis: 'falsch' })];
+    // (1 + 0.5 + 0 + 0) / 4 = 0.375
+    expect(trefferquoteVerlauf(antworten, 'freierAbruf', JETZT, 1)).toEqual([{ wert: 0.375, wocheIndex: 0 }]);
+  });
+});
+
+describe('abdeckungVerlauf — kumulativ, nur Stufe B/C mit echter Aroma-Identitaet', () => {
+  it('nur "aromaInFamilie" und "freierAbruf", nur richtig, waechst nie zurueck', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig', zeitstempel: JETZT - 10 * TAG }),
+      ANTWORT({ aromaId: 'haselnuss', form: 'aromaInFamilie', ergebnis: 'richtig', zeitstempel: JETZT - 1 * TAG }),
+      ANTWORT({ aromaId: 'himbeere', form: 'familie', ergebnis: 'richtig', zeitstempel: JETZT - 1 * TAG }), // Stufe A hat keine Aroma-Identitaet
+      ANTWORT({ aromaId: 'zeder', form: 'freierAbruf', ergebnis: 'falsch', zeitstempel: JETZT - 1 * TAG }),
+    ];
+    expect(abdeckungVerlauf(antworten, JETZT, 2)).toEqual([
+      { wert: 1, wocheIndex: 0 },
+      { wert: 2, wocheIndex: 1 },
+    ]);
+  });
+
+  it('dasselbe Aroma mehrfach richtig benannt zaehlt nur einmal', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig' }),
+      ANTWORT({ aromaId: 'mandel', form: 'freierAbruf', ergebnis: 'richtig' }),
+    ];
+    expect(abdeckungVerlauf(antworten, JETZT, 1)).toEqual([{ wert: 1, wocheIndex: 0 }]);
+  });
+});
+
+describe('volumenVerlauf — Durchgaenge je rollierender Woche', () => {
+  it('zaehlt je Woche, aelteste zuerst', () => {
+    const begonnen = [JETZT - 10 * TAG, JETZT - 1 * TAG, JETZT - 2 * TAG];
+    expect(volumenVerlauf(begonnen, JETZT, 2)).toEqual([
+      { wert: 1, wocheIndex: 0 },
+      { wert: 2, wocheIndex: 1 },
+    ]);
+  });
+
+  it('ohne Durchgaenge: jede Woche mit 0, kein leeres Array', () => {
+    expect(volumenVerlauf([], JETZT, 2)).toEqual([
+      { wert: 0, wocheIndex: 0 },
+      { wert: 0, wocheIndex: 1 },
+    ]);
+  });
+});
+
+describe('stufenverteilung — reine Umsortierung nach Lernstufe', () => {
+  it('zaehlt je Stufe, leere Stufe bleibt 0', () => {
+    const zustaende = [{ stufe: 'a' as const }, { stufe: 'a' as const }, { stufe: 'c' as const }];
+    expect(stufenverteilung(zustaende)).toEqual({ a: 2, b: 0, c: 1 });
+  });
+
+  it('ohne eingefuehrte Aromen: alles 0', () => {
+    expect(stufenverteilung([])).toEqual({ a: 0, b: 0, c: 0 });
+  });
+});
+
+describe('schwaechsteAromen — niedrigste Quote zuerst, erst ab Mindestversuchen', () => {
+  it('unter der Mindestzahl Versuche faellt ein Aroma ganz raus', () => {
+    const antworten = [ANTWORT({ aromaId: 'mandel', ergebnis: 'falsch' })];
+    expect(schwaechsteAromen(antworten, 2)).toEqual([]);
+  });
+
+  it('sortiert aufsteigend nach Trefferquote, "teilweise" zaehlt halb', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'gut', ergebnis: 'richtig' }),
+      ANTWORT({ aromaId: 'gut', ergebnis: 'richtig' }),
+      ANTWORT({ aromaId: 'mittel', ergebnis: 'richtig' }),
+      ANTWORT({ aromaId: 'mittel', ergebnis: 'teilweise' }),
+      ANTWORT({ aromaId: 'schlecht', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'schlecht', ergebnis: 'falsch' }),
+    ];
+    expect(schwaechsteAromen(antworten, 2)).toEqual([
+      { aromaId: 'schlecht', richtig: 0, versuche: 2 },
+      { aromaId: 'mittel', richtig: 1.5, versuche: 2 },
+      { aromaId: 'gut', richtig: 2, versuche: 2 },
+    ]);
+  });
+});
+
+describe('uebungsartBilanz — Kontrast und Reverse getrennt, unbewertete Antworten zaehlen nicht', () => {
+  it('trennt beide Formen und ignoriert Antworten ohne ergebnis (z. B. unerwartete Nummer)', () => {
+    const antworten = [
+      ANTWORT({ form: 'kontrast', ergebnis: 'richtig' }),
+      ANTWORT({ form: 'kontrast', ergebnis: 'falsch' }),
+      ANTWORT({ form: 'kontrast', ergebnis: undefined }),
+      ANTWORT({ form: 'reverse', ergebnis: 'richtig' }),
+      ANTWORT({ form: 'freierAbruf', ergebnis: 'richtig' }),
+    ];
+    expect(uebungsartBilanz(antworten)).toEqual({
+      kontrast: { richtig: 1, versuche: 2 },
+      reverse: { richtig: 1, versuche: 1 },
+    });
+  });
 });

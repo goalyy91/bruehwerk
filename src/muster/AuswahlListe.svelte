@@ -62,7 +62,6 @@
 
   let offen = $state(false);
   let suchtext = $state('');
-  let sucheingabe = $state<HTMLInputElement | undefined>(undefined);
 
   const gewaehlteOption = $derived(optionen.find((o) => o.wert === wert));
 
@@ -90,11 +89,11 @@
     if (!offen) suchtext = '';
   }
 
-  // Fokus direkt im Suchfeld, sobald die Liste aufklappt — kein Extra-Tap
-  // zum Lostippen.
-  $effect(() => {
-    if (offen && suchbar) sucheingabe?.focus();
-  });
+  // KEIN Auto-Fokus beim Aufklappen (Rueckmeldung Aromaschule 2026-09-18):
+  // ein sofort fokussiertes Suchfeld oeffnet auf dem Handy die Tastatur und
+  // deckt einen Grossteil der gerade erst sichtbar gewordenen Liste wieder
+  // zu. Die Liste steht deshalb erst mal ohne Tastatur da; wer tippen will,
+  // tippt bewusst ins Suchfeld (siehe onfocus dort).
 </script>
 
 <div class="auswahlfeld">
@@ -113,12 +112,12 @@
     <div class="liste" class:suchbar>
       {#if suchbar}
         <input
-          bind:this={sucheingabe}
           class="sucheingabe"
           type="text"
           placeholder="suchen …"
           value={suchtext}
           oninput={(e) => (suchtext = e.currentTarget.value)}
+          onfocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
         />
       {/if}
       <div class="optionen" class:hoehenbegrenzt={suchbar}>

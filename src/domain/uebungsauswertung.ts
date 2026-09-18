@@ -256,6 +256,170 @@ const SICHER_AB_BOX = 4;
 /** Kleinste Stichprobe, ab der eine Familien-/Reverse-Quote nicht wie geraten wirkt — dieselbe Zahl wie sonst im Aromapaket (z. B. KONTRASTDURCHGANG_SCHWELLE). */
 const KENNZAHL_MINDEST_STICHPROBE = 3;
 
+// ---- Verlaufskurven fuer die Statistik-Seite -------------------------------
+//
+// Aromapaket, Nachschaerfung (Livebetrieb-Rueckmeldung 2026-09-18): die
+// Statistik zeigte bisher nur den aktuellen Stand, keine Entwicklung — "werde
+// ich schneller, werde ich treffsicherer" liess sich nicht beantworten. Die
+// Funktionen hier liefern rollierende Wochen-Eimer rueckwaerts von `jetzt`,
+// kein Kalenderwochen-Reset (dieselbe Begruendung wie `wochenfortschritt`
+// oben: "letzte X Wochen" bleibt immer aktuell).
+//
+// Wichtig, aus demselben Grund wie bei `persoenlicheSchwelle`: Zeit- und
+// Trefferquoten-Verlauf trennen zwingend nach Aufgabenform. Die App erhoeht
+// die Schwierigkeit automatisch, sobald ein Aroma sicherer sitzt (Stufe
+// A -> B -> C, domain/uebung.ts::effektiverZustand) — eine gemischte Kurve
+// zeigte echten Fortschritt als Stillstand oder sogar als Verschlechterung.
+
+/** Kleinste Zahl richtiger Antworten in einem Wochen-Eimer, ab der ein Punkt gezeichnet wird (K64) — sonst waere ein Eimer mit einer Antwort nur Rauschen. */
+export const VERLAUF_MINDEST_STICHPROBE_JE_WOCHE = 3;
+
+/**
+ * Wochen-Eimer rueckwaerts von `jetzt`: Eimer 0 sind die letzten 7 Tage,
+ * Eimer 1 die sieben davor usw. — `wochen` Eimer insgesamt, aelteste zuerst
+ * (fuer eine von links nach rechts steigende Kurve).
+ */
+function wochenEimer<T extends { zeitstempel: number }>(eintraege: readonly T[], jetzt: number, wochen: number): T[][] {
+  const eimer: T[][] = Array.from({ length: wochen }, () => []);
+  for (const eintrag of eintraege) {
+    const alterMs = jetzt - eintrag.zeitstempel;
+    if (alterMs < 0) continue;
+    const index = Math.floor(alterMs / MS_PRO_WOCHE);
+    if (index < wochen) eimer[wochen - 1 - index]!.push(eintrag);
+  }
+  return eimer;
+}
+
+export interface VerlaufsPunkt {
+  readonly wert: number;
+  /** Wochen vor `jetzt`, 0 = aelteste dargestellte Woche. Fuer die Achsenbeschriftung des Aufrufers, kein eigener Zeitstempel. */
+  readonly wocheIndex: number;
+}
+
+/**
+ * Median der Antwortdauer RICHTIGER Antworten einer Form, je rollierender
+ * Woche — dieselbe "nur richtige Antworten zaehlen"-Regel wie bei
+ * `langsameRichtigeAntworten`: eine schnelle falsche Antwort ist kein
+ * Fortschritt. Wochen unter der Mindeststichprobe fehlen im Ergebnis
+ * (kein Punkt statt eines aus zu wenig Werten geratenen).
+ */
+export function antwortzeitVerlauf(
+  antworten: readonly Uebungsantwort[],
+  form: Uebungsform,
+  jetzt: number,
+  wochen: number,
+): readonly VerlaufsPunkt[] {
+  const richtige = antworten.filter((a) => a.form === form && a.ergebnis === 'richtig' && a.antwortdauerMs !== undefined);
+  return wochenEimer(richtige, jetzt, wochen)
+    .map((eimer, wocheIndex) => ({ eimer, wocheIndex }))
+    .filter(({ eimer }) => eimer.length >= VERLAUF_MINDEST_STICHPROBE_JE_WOCHE)
+    .map(({ eimer, wocheIndex }) => ({ wert: median(eimer.map((a) => a.antwortdauerMs!)), wocheIndex }));
+}
+
+/** Trefferquote (0–1) einer Form, je rollierender Woche — "teilweise" zaehlt als halber Treffer, dieselbe Gewichtung wie sonst nirgends noetig, weil diese Funktion (anders als familienTrefferquote) auch Stufe C mit einschliesst. */
+export function trefferquoteVerlauf(
+  antworten: readonly Uebungsantwort[],
+  form: Uebungsform,
+  jetzt: number,
+  wochen: number,
+): readonly VerlaufsPunkt[] {
+  const eigene = antworten.filter((a) => a.form === form && a.ergebnis !== undefined);
+  return wochenEimer(eigene, jetzt, wochen)
+    .map((eimer, wocheIndex) => ({ eimer, wocheIndex }))
+    .filter(({ eimer }) => eimer.length >= VERLAUF_MINDEST_STICHPROBE_JE_WOCHE)
+    .map(({ eimer, wocheIndex }) => {
+      const punkte = eimer.reduce((summe, a) => summe + (a.ergebnis === 'richtig' ? 1 : a.ergebnis === 'teilweise' ? 0.5 : 0), 0);
+      return { wert: punkte / eimer.length, wocheIndex };
+    });
+}
+
+/**
+ * Kumulativ: wie viele verschiedene Aromen wurden bis zum Ende jeder Woche
+ * schon mindestens einmal richtig benannt (Stufe B/C, `getipptId` gesetzt —
+ * Stufe A liefert keine Aroma-Identitaet, nur eine Familie). Waechst nie,
+ * faellt aber auch nie — ein einmal gezeigtes Wissen zaehlt weiter, auch wenn
+ * es spaeter vergessen wird (dafuer gibt es die Boxenverteilung).
+ */
+export function abdeckungVerlauf(antworten: readonly Uebungsantwort[], jetzt: number, wochen: number): readonly VerlaufsPunkt[] {
+  const treffer = antworten.filter((a) => a.ergebnis === 'richtig' && (a.form === 'aromaInFamilie' || a.form === 'freierAbruf'));
+  const eimer = wochenEimer(treffer, jetzt, wochen);
+  const bekannt = new Set<string>();
+  return eimer.map((woche, wocheIndex) => {
+    for (const a of woche) bekannt.add(a.aromaId);
+    return { wert: bekannt.size, wocheIndex };
+  });
+}
+
+/** Durchgaenge (art "normal", Beginn) je rollierender Woche — fuer den "in welchem Rhythmus uebe ich"-Verlauf, ohne die Mindest-Trainingsgeschichte von zielfrequenzAbgleich(). */
+export function volumenVerlauf(durchgaengeBegonnenAm: readonly number[], jetzt: number, wochen: number): readonly VerlaufsPunkt[] {
+  const eintraege = durchgaengeBegonnenAm.map((zeitstempel) => ({ zeitstempel }));
+  return wochenEimer(eintraege, jetzt, wochen).map((eimer, wocheIndex) => ({ wert: eimer.length, wocheIndex }));
+}
+
+// ---- Abdeckung nach Lernstufe -----------------------------------------------
+
+export interface StufenVerteilung {
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+}
+
+/** Anzahl eingefuehrter Aromen je Lernstufe — reine Umsortierung von effektiverZustand()-Ergebnissen, keine eigene Rechnung. */
+export function stufenverteilung(eingefuehrteZustaende: readonly { readonly stufe: 'a' | 'b' | 'c' }[]): StufenVerteilung {
+  const verteilung: StufenVerteilung = { a: 0, b: 0, c: 0 };
+  return eingefuehrteZustaende.reduce(
+    (acc, z) => ({ ...acc, [z.stufe]: acc[z.stufe] + 1 }),
+    verteilung,
+  );
+}
+
+// ---- Schwaechste Aromen ------------------------------------------------------
+
+export interface AromaQuote {
+  readonly aromaId: string;
+  readonly richtig: number;
+  readonly versuche: number;
+}
+
+/**
+ * Trefferquote je Aroma (nur als tatsaechliches Ziel gewertete Antworten,
+ * "richtig"/"teilweise" als 0.5 wie trefferquoteVerlauf), niedrigste Quote
+ * zuerst — "welche Aromen sollte ich mir vornehmen". Erst ab
+ * `mindestVersuche`, sonst waere ein einziger Fehlversuch schon "0 %" und
+ * stuende faelschlich oben.
+ */
+export function schwaechsteAromen(antworten: readonly Uebungsantwort[], mindestVersuche: number): readonly AromaQuote[] {
+  const zaehler = new Map<string, { richtig: number; versuche: number }>();
+  for (const a of antworten) {
+    if (a.ergebnis === undefined) continue;
+    const eintrag = zaehler.get(a.aromaId) ?? { richtig: 0, versuche: 0 };
+    eintrag.versuche += 1;
+    if (a.ergebnis === 'richtig') eintrag.richtig += 1;
+    else if (a.ergebnis === 'teilweise') eintrag.richtig += 0.5;
+    zaehler.set(a.aromaId, eintrag);
+  }
+  return [...zaehler.entries()]
+    .map(([aromaId, e]) => ({ aromaId, richtig: e.richtig, versuche: e.versuche }))
+    .filter((e) => e.versuche >= mindestVersuche)
+    .sort((a, b) => a.richtig / a.versuche - b.richtig / b.versuche);
+}
+
+// ---- Kontrast/Reverse-Bilanz -------------------------------------------------
+
+export interface UebungsartQuote {
+  readonly richtig: number;
+  readonly versuche: number;
+}
+
+/** Trefferquote fuer Kontrast- und Reverse-Durchgaenge getrennt — beide sind eigene Uebungsformen ohne Stufe (siehe daten/schema/uebungsantwort.ts), gehoeren deshalb nicht in familienTrefferquote() oder schwaechsteAromen(). */
+export function uebungsartBilanz(antworten: readonly Uebungsantwort[]): { readonly kontrast: UebungsartQuote; readonly reverse: UebungsartQuote } {
+  const bilanz = (form: 'kontrast' | 'reverse'): UebungsartQuote => {
+    const eigene = antworten.filter((a) => a.form === form && a.ergebnis !== undefined);
+    return { richtig: eigene.filter((a) => a.ergebnis === 'richtig').length, versuche: eigene.length };
+  };
+  return { kontrast: bilanz('kontrast'), reverse: bilanz('reverse') };
+}
+
 export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly Kennzahl[] {
   const { eingefuehrteZustaende, antworten, durchgaengeBegonnenAm, aromen, familienLabels, gesamtAnzahlAromen, jetzt, zielProWoche } = eingabe;
   const pool: Kennzahl[] = [];
