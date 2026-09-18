@@ -53,6 +53,14 @@ export const AppEinstellungen = z.object({
    * gewählt", nicht "0× pro Woche gewollt".
    */
   uebungZielProWoche: z.number().positive().optional(),
+  /**
+   * Aromapaket, Nachschärfung — welche Abschnitte der Übungsmodus-Statistik
+   * ausgeblendet sind (Schlüssel aus UebungsAuswertung.svelte). Bewusst die
+   * AUSGEBLENDETEN gespeichert, nicht die sichtbaren: "Feld nicht gesetzt"
+   * bedeutet dann "alles sichtbar", und ein später ergänzter Abschnitt
+   * erscheint von selbst statt stillschweigend zu fehlen.
+   */
+  uebungStatistikAus: z.array(z.string()).optional(),
 });
 export type AppEinstellungen = z.infer<typeof AppEinstellungen>;
 
