@@ -149,15 +149,45 @@ const REGELN: readonly RegelDefinition[] = [
 ];
 
 /**
+ * Rückmeldung 2026-09-19: "kt-zu-hoch" schlug KT −1 auch am Pour Over vor —
+ * ein Gerät ohne Kessel. Tippte man trotzdem auf "übernehmen", schrieb
+ * ShotErfassung.svelte `ziel.kt` in ein Profil, das das Feld gar nicht führt
+ * (gerechnet ab 0, also -1 °C, ein stiller Falschwert).
+ *
+ * `hatKesseltemperatur` statt eines Gerätetyps: domain/ kennt daten/schema/
+ * geraete.ts nicht, und die Frage, die hier zaehlt, ist wortwoertlich "hat
+ * das Geraet ueberhaupt eine Kesseltemperatur" — dieselbe Frage, die
+ * Bruehgeraet.ktEinstellbar (daten/) schon beantwortet, hier nur als
+ * primitiver Wert statt eines importierten Typs.
+ *
+ * Ohne Kessel bekommt die Regel dieselbe Behandlung wie "verteilung": keine
+ * aenderung() mehr (die Empfehlung ist keine Parameteraenderung, die
+ * "uebernehmen" schreiben koennte) und einen geraeteneutralen Text.
+ */
+function regelnFuer(hatKesseltemperatur: boolean): readonly RegelDefinition[] {
+  if (hatKesseltemperatur) return REGELN;
+  return REGELN.map((regel) =>
+    regel.id === 'kt-zu-hoch'
+      ? {
+          ...regel,
+          diagnose: 'Röstung wirkt zu intensiv',
+          empfehlungstext: 'Wassertemperatur oder Gießverhalten prüfen',
+          aenderung: undefined,
+        }
+      : regel,
+  );
+}
+
+/**
  * Spezifischste Regel gewinnt: bei mehreren passenden Regeln zaehlt die mit
  * den meisten geforderten Symptomen (z. B. "sauer+duenn+schnell" schlaegt
  * eine zweistellige Regel, die zufaellig ebenfalls passt). undefined, wenn
  * keine Auswahl-Kombination exakt im Regelwerk steht — diagnostiziere()
  * faellt dann auf das Achsen-Scoring zurueck, statt hier schon aufzugeben.
  */
-function diagnostiziereExakt(befunde: readonly Befund[]): Diagnose | undefined {
+function diagnostiziereExakt(befunde: readonly Befund[], hatKesseltemperatur: boolean): Diagnose | undefined {
   const ids = new Set(befunde.map((b) => b.symptomId));
-  const kandidaten = REGELN.filter(
+  const kandidaten = regelnFuer(hatKesseltemperatur).filter(
     (regel) =>
       regel.benoetigt.every((id) => ids.has(id)) && (!regel.exakt || ids.size === regel.benoetigt.length),
   );
@@ -222,7 +252,7 @@ const ACHSEN_REGEL_ID: Readonly<Record<Achse, string>> = {
  * der Vertreter-Regel dieser Achse — kein neuer Text, nur eine weichere
  * Voraussetzung, um ihn zu zeigen.
  */
-function diagnostiziereAchse(befunde: readonly Befund[]): Diagnose | undefined {
+function diagnostiziereAchse(befunde: readonly Befund[], hatKesseltemperatur: boolean): Diagnose | undefined {
   const proAchse = new Map<Achse, Befund[]>();
   for (const befund of befunde) {
     const achse = SYMPTOM_ACHSE[befund.symptomId];
@@ -243,7 +273,7 @@ function diagnostiziereAchse(befunde: readonly Befund[]): Diagnose | undefined {
   }
   if (!beste) return undefined;
 
-  const regel = REGELN.find((r) => r.id === ACHSEN_REGEL_ID[beste!])!;
+  const regel = regelnFuer(hatKesseltemperatur).find((r) => r.id === ACHSEN_REGEL_ID[beste!])!;
   const staerke = maxStaerke(befunde, proAchse.get(beste)!.map((b) => b.symptomId));
   return {
     regelId: `achse-${regel.id}`,
@@ -254,8 +284,13 @@ function diagnostiziereAchse(befunde: readonly Befund[]): Diagnose | undefined {
   };
 }
 
-export function diagnostiziere(befunde: readonly Befund[]): Diagnose | undefined {
-  return diagnostiziereExakt(befunde) ?? diagnostiziereAchse(befunde);
+/**
+ * `hatKesseltemperatur` default `true`, damit bestehende Aufrufer (und die
+ * meisten Tests, die alle vom Siebtraeger ausgehen) unveraendert bleiben —
+ * nur wer explizit ein Geraet ohne Kessel hat, muss `false` uebergeben.
+ */
+export function diagnostiziere(befunde: readonly Befund[], hatKesseltemperatur = true): Diagnose | undefined {
+  return diagnostiziereExakt(befunde, hatKesseltemperatur) ?? diagnostiziereAchse(befunde, hatKesseltemperatur);
 }
 
 /**
@@ -299,8 +334,9 @@ export function ermittleDiagnose(
   eigeneChips: readonly EigenerChip[],
   shotTs: number,
   vorherigeShots: readonly VorherigerShot[],
+  hatKesseltemperatur = true,
 ): DiagnoseAuswertung {
-  const ergebnis = diagnostiziere(befunde) ?? diagnostiziereEigen(befunde, eigeneChips);
+  const ergebnis = diagnostiziere(befunde, hatKesseltemperatur) ?? diagnostiziereEigen(befunde, eigeneChips);
   if (!ergebnis) return { ergebnis: undefined, unterdrueckt: false };
 
   const frueher = vorherigeShots.filter((s) => s.ts < shotTs).sort((a, b) => b.ts - a.ts);

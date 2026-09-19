@@ -29,6 +29,7 @@
   import Urteil from '../../muster/Urteil.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
+  import ChatKnopf from '../../muster/ChatKnopf.svelte';
   import Chips from '../../muster/Chips.svelte';
   import Vorschlag from '../../muster/Vorschlag.svelte';
   import Gussplanansicht from '../../muster/Gussplanansicht.svelte';
@@ -160,7 +161,7 @@
       .map((s) => ({ ts: s.ts, vorschlagRegelId: s.vorschlag?.regelId, vorschlagZustand: s.vorschlag?.zustand })),
   );
   const diagnoseAuswertung = $derived(
-    ermittleDiagnose(diagnoseBefunde, bestand.symptome, entwurf?.ts ?? Date.now(), vorherigeProfilShots),
+    ermittleDiagnose(diagnoseBefunde, bestand.symptome, entwurf?.ts ?? Date.now(), vorherigeProfilShots, !!bruehgeraet?.ktEinstellbar),
   );
   const diagnoseErgebnis = $derived(diagnoseAuswertung.ergebnis);
   const diagnoseUnterdrueckt = $derived(diagnoseAuswertung.unterdrueckt);
@@ -338,7 +339,13 @@
      Gattung. Vorher stand "Shot loggen" in 26/600 ueber dem Namen in
      20/400 — das nichtssagende Wort war das groesste im Bild. Fehlt der
      Kaffee (Nichtgefunden-Fall), bleibt die Aufgabe als Titel. -->
-<Kopfzeile titel={kaffee?.name ?? 'Shot loggen'} {onZurueck} gross={!!kaffee} />
+<!-- Rückmeldung 2026-09-19: der Chat-Link (Profil.chatLink) soll bis zum
+     Ende des Bezugs erreichbar bleiben, nicht nur auf dem Profilblatt. -->
+<Kopfzeile titel={kaffee?.name ?? 'Shot loggen'} {onZurueck} gross={!!kaffee}>
+  {#snippet aktion()}
+    {#if profil?.chatLink}<ChatKnopf href={profil.chatLink} />{/if}
+  {/snippet}
+</Kopfzeile>
 
 {#if !profil || !kaffee}
   <p class="hinweis">Profil nicht gefunden.</p>

@@ -510,10 +510,15 @@
      Aroma-Training, nicht nur Bohnenbestand) — feste Zone statt
      Alles-oder-nichts (Etappe 8 Block A):
      1-2 Meldungen wenn vorhanden, sonst die Bohne, mit der gerade gearbeitet
-     wird. Ganz ohne Daten (frische Installation) bleibt die Zone weg. -->
+     wird. Ganz ohne Daten (frische Installation) bleibt die Zone weg.
+
+     Rückmeldung 2026-09-19: ohne echte Meldung hieß die Überschrift trotzdem
+     "Meldungen" — die Ruhezustands-Karte hat keine Dringlichkeit (keine
+     "kritisch"/"achtung"-Kante), sah unter dieser Überschrift aber wie eine
+     aus. Eigene, neutrale Überschrift statt eigener Optik. -->
 {#if meldungen.sichtbar.length > 0 || ruhezustandBohne}
   <div class="abschnitt">
-    <h2>Meldungen</h2>
+    <h2>{meldungen.sichtbar.length > 0 ? 'Meldungen' : 'Im Einsatz'}</h2>
     <div class="bestandliste">
       {#if meldungen.sichtbar.length > 0}
         {#each meldungen.sichtbar as eintrag (eintrag.art + eintrag.name)}

@@ -103,6 +103,23 @@
           onWahl={setupGewaehlt}
         />
       </div>
+      <!-- Rückmeldung 2026-09-19: Link zum Claude-Chat, in dem dieses Rezept
+           besprochen wird — leer lassen heisst "kein Link", nicht "leerer
+           Text speichern" (daten/schema/kaffee.ts::Profil.chatLink). -->
+      <div class="formularzeile">
+        <span class="formularzeile-label">Chat-Link</span>
+        <input
+          class="eingabefeld-text"
+          type="url"
+          placeholder="https://…"
+          value={entwurf.chatLink ?? ''}
+          oninput={(e) => {
+            if (!entwurf) return;
+            const wert = e.currentTarget.value.trim();
+            entwurf.chatLink = wert === '' ? undefined : wert;
+          }}
+        />
+      </div>
     </Blattliste>
   </section>
 
