@@ -57,6 +57,13 @@ describe('Regelwerk aus dem Konzept', () => {
     expect(d?.aenderung).toEqual({ parameter: 'kt', richtung: 'weniger', schritte: 1 });
   });
 
+  it('brandig + zu stark OHNE Kessel (Pour Over etc.) -> geraeteneutraler Text, kein aenderbarer Wert', () => {
+    const d = diagnostiziere([befund('brandig'), befund('stark')], false);
+    expect(d?.diagnose).toBe('Röstung wirkt zu intensiv');
+    expect(d?.empfehlungstext).toBe('Wassertemperatur oder Gießverhalten prüfen');
+    expect(d?.aenderung).toBeUndefined();
+  });
+
   it('keine Auswahl -> keine Diagnose, keine erzwungene Regel', () => {
     expect(diagnostiziere([])).toBeUndefined();
   });
@@ -115,6 +122,13 @@ describe('Achsen-Scoring — greift, wenn keine exakte Regel passt', () => {
     const d = diagnostiziere([befund('stark')]);
     expect(d?.diagnose).toBe('KT zu hoch für diese Röstung');
     expect(d?.geschaetzt).toBe(true);
+  });
+
+  it('"stark" allein OHNE Kessel -> derselbe Achsen-Fallback, aber geraeteneutraler Text', () => {
+    const d = diagnostiziere([befund('stark')], false);
+    expect(d?.diagnose).toBe('Röstung wirkt zu intensiv');
+    expect(d?.geschaetzt).toBe(true);
+    expect(d?.aenderung).toBeUndefined();
   });
 
   it('leere Auswahl bleibt ohne Diagnose, auch im Achsen-Fallback', () => {

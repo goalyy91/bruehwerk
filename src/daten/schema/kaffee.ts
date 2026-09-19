@@ -275,5 +275,19 @@ export const Profil = z.object({
    * Fuellstand statt Geraet) wird tatsaechlich gespeichert.
    */
   icon: z.enum(['siebtraeger', 'moka', 'pourover', 'coldbrew', 'ristretto', 'espresso', 'lungo']).optional(),
+  /**
+   * Rückmeldung 2026-09-19 — Link zum Claude-Chat, in dem dieses Rezept
+   * besprochen wird. Am Profil statt am Kaffee: eine Bohne wird in sehr
+   * verschiedenen Zubereitungen besprochen (Espresso vs. Mokka), ein Chat
+   * aber immer entlang einer Zubereitungsrichtung. Nur http/https zugelassen
+   * — ein `javascript:`-Link waere beim Antippen ausfuehrbarer Code.
+   */
+  chatLink: z
+    .string()
+    .url()
+    .refine((url) => url.startsWith('http://') || url.startsWith('https://'), {
+      message: 'nur http(s)-Links',
+    })
+    .optional(),
 });
 export type Profil = z.infer<typeof Profil>;

@@ -204,7 +204,12 @@
       <Werteliste
         zeilen={[
           { label: 'Output', wert: output, einheit: 'g', onAendern: (w) => (output = w) },
-          { label: 'Preinfusion', wert: pre ?? 0, einheit: 's', onAendern: (w) => (pre = w) },
+          // Preinfusion nur am Siebtraeger (Rueckmeldung 2026-09-08, siehe
+          // ShotErfassung.svelte) — am V60/Moka/Cold Brew gibt es keine, das
+          // Feld stand hier bisher trotzdem immer da.
+          ...(bruehgeraet?.typ === 'espresso'
+            ? [{ label: 'Preinfusion', wert: pre ?? 0, einheit: 's', onAendern: (w: number) => (pre = w) }]
+            : []),
           {
             label: bruehgeraet?.fuehrungswert === 'durchlaufzeit' ? 'Durchlaufzeit' : 'Zeit',
             wert: zeit,

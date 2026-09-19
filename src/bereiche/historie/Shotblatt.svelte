@@ -84,7 +84,9 @@
       : [],
   );
   const diagnoseAuswertung = $derived(
-    shot ? ermittleDiagnose(diagnoseBefunde, bestand.symptome, shot.ts, vorherigeProfilShots) : { ergebnis: undefined, unterdrueckt: false },
+    shot
+      ? ermittleDiagnose(diagnoseBefunde, bestand.symptome, shot.ts, vorherigeProfilShots, !!bruehgeraet?.ktEinstellbar)
+      : { ergebnis: undefined, unterdrueckt: false },
   );
 
   // K67/K75 — derselbe Messreihen-Check wie im Alltagspfad: liegt der

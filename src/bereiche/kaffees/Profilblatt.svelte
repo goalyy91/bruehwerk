@@ -32,6 +32,7 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import BearbeitenKnopf from '../../muster/BearbeitenKnopf.svelte';
+  import ChatKnopf from '../../muster/ChatKnopf.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
@@ -343,6 +344,7 @@
   <Kopfzeile titel={profil.name} {onZurueck} gross>
     {#snippet aktion()}
       <div class="kopf-aktionen">
+        {#if profil.chatLink}<ChatKnopf href={profil.chatLink} />{/if}
         <BearbeitenKnopf onKlick={onBearbeiten} />
         <Kontextmenue eintraege={[{ text: 'löschen', kritisch: true, onWahl: versuchLoeschen }]} />
       </div>
