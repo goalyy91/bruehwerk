@@ -13,33 +13,17 @@ Kaffeeblatt-Umbau, Spielraum-Fachfehler Preinfusion/Zeit in
 `docs/ux-regeln.md` für die Gestaltungsreihenfolge.** Dieses Dokument ist nur
 die Aufgabenliste für das, was tatsächlich noch aussteht.
 
-## 1. Profil/Setup-Modell: Kompatibilitätsfilter Setup
-
-**Kontext:** Die Setup-Auswahl beim Anlegen/Ändern eines Profils
-(`Profilblatt.svelte`, `Kaffeeblatt.svelte`) zeigt aktuell alle vorhandenen
-Setups, unabhängig vom Gerätetyp. Ein Pour-Over-Profil könnte so versehentlich
-an ein Espresso-Setup gebunden werden.
-
-**Blockiert durch eine offene Modellfrage:** Es gibt aktuell kein
-Getränke-Konzept im Code, das einem Profil eine Zubereitungsart zuordnet.
-`Profil` (`daten/schema/kaffee.ts`) hat nur `kaffeeId` + `setupId` + `name` —
-keine Referenz auf eine Getränkeart. Diese Verbindung ergibt sich erst aus dem
-Bau von Paket 06 (Getränke/Bestellung).
-
-**Entscheidung (bereits getroffen, nur noch nicht fällig):** Zurückstellen bis
-Paket 06 — dann ergibt sich die Verbindung Profil↔Getränk ohnehin aus dem Bau
-dieses Pakets. Nicht vorab am `Bruehgeraet.typ` oder `Kaffee.geeignetFuer`
-behelfsweise filtern (das wäre Zweckentfremdung von `geeignetFuer`, das ist als
-Bohnen-Eigenschaft gedacht, nicht als Profil-Filter).
-
-Dieselbe Session hat auch schon die Setup-Vorbelegung für die Bestellung
-entschieden (Ranking-Fenster-Logik wie bei der Bohnen-Vorbelegung, K12/K56,
-≥60 % vorbelegt / 40–60 % gefragt ohne Vorbelegung / ≤40 % gar nicht gefragt,
-kein separater Kontext-Umschalter) — das hängt ebenfalls an Paket 06 und ist
-hier nur als Erinnerung notiert, damit es beim Bauen nicht neu verhandelt
-werden muss.
-
 ## Bereits geklärt, nicht mehr offen (zur Erinnerung)
+
+- **Profil/Setup-Kompatibilitätsfilter — erledigt 2026-09-08.** War
+  zurückgestellt, bis Paket 06 die Verbindung Profil↔Zubereitungsart liefert
+  (`bestand.profilFuerZubereitung()`: der Gerätetyp hinter dem Setup
+  entscheidet, `bruehgeraetVon(setupId)?.typ`). Paket 06 ist gebaut,
+  `Profilblatt.svelte::kompatibleSetups` filtert "Setup ändern" jetzt auf
+  Setups mit demselben Gerätetyp — dieselbe Zuordnung, kein zweites Konzept.
+  Die separat notierte Setup-Vorbelegung für die Bestellung
+  (Ranking-Fenster-Logik wie bei der Bohnen-Vorbelegung) ist beim Bau der
+  Bestellung mitgelaufen, ebenfalls erledigt.
 
 - **Koffein-Frage:** Im Konzept entschieden (K45/K46, `docs/konzept.md`):
   Koffein wird vor der Bohne gefragt und filtert die Bohnenliste. Gehört zur
