@@ -21,14 +21,15 @@
  *     Leitner-Bewegung, nachdem die Nummer feststeht.
  *  4. Verwechslungspaare (verwechslungspaare) — welche Aromen sich ein
  *     Kontrastdurchgang vornehmen darf (Aromapaket, Etappe 7).
- *  5. Auswertung eines Kontrastdurchgangs (werteKontrastAus) — eine
- *     gemeinsame Entscheidung für zwei Aromen statt einer einzelnen.
+ *  5. Kontrastdurchgang (kontrastpaare, waehleDurchgangsart,
+ *     werteKontrastAus) — bis zu vier Paare, eine Zuordnungsfrage je Paar,
+ *     gewertet am Verwechslungszähler statt an der Box.
  */
 import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
 import type { Uebungsergebnis } from '../daten/schema/uebungsantwort';
 import type { Box } from './leitner';
-import { startBox, istEingefuehrt, einfuehrungErlaubt, bewegeBox, naechsteFaelligkeit } from './leitner';
+import { startBox, istEingefuehrt, einfuehrungErlaubt, bewegeBox, naechsteFaelligkeit, starkUeberfaellig, istZaeh } from './leitner';
 
 export interface AromaOption {
   readonly id: string;
@@ -59,6 +60,12 @@ export interface GesamtStand {
   readonly faellig?: number;
   readonly stufe?: UebungStufe;
   readonly familienSerie?: number;
+  // Stufenlogik-Nachzug (2026-11-08) — siehe werteAntwortAus(). Alle optional:
+  // ein Datensatz von vorher kennt sie nicht und startet bei 0.
+  readonly abrufSerie?: number;
+  readonly abrufSerieZuletzt?: number;
+  readonly familieFalschSerie?: number;
+  readonly fehlerSerie?: number;
 }
 
 // ---- Trefferquote, um den Zufall bereinigt -------------------------------
@@ -123,6 +130,8 @@ export interface EffektiverZustand {
   readonly faellig: number;
   readonly stufe: UebungStufe;
   readonly eingefuehrt: boolean;
+  /** Siehe domain/leitner.ts::ZAEH_SCHWELLE — zählt nicht für die Einführungssperre. */
+  readonly zaeh: boolean;
 }
 
 const LEERER_STAND: GesamtStand = {
@@ -146,7 +155,7 @@ export function effektiverZustand(stand: GesamtStand | undefined, jetzt: number)
   const box = s.box ?? (eingefuehrt ? startBox(s) : 1);
   const faellig = s.faellig ?? jetzt;
   const stufe = s.stufe ?? 'a';
-  return { box, faellig, stufe, eingefuehrt };
+  return { box, faellig, stufe, eingefuehrt, zaeh: istZaeh(s.fehlerSerie ?? 0) };
 }
 
 /** Rundengröße aus dem Lastenheft, Abschnitt 6 — acht abgefragte Items je Durchgang. */
@@ -248,6 +257,12 @@ export function planeDurchgang(
   jetzt: number,
   durchgangsGroesse: number = DURCHGANG_GROESSE,
   zufall: () => number = Math.random,
+  /**
+   * Aromen aus den eigenen Verkostungen (Kaffee-Brücke, domain/
+   * kaffeebruecke.ts): werden zuerst *eingeführt*. Auf eingeführte Aromen
+   * wirkt das nicht — deren Abfrage folgt allein der Fälligkeit.
+   */
+  bevorzugt: ReadonlySet<string> = new Set(),
 ): DurchgangsPlan {
   const kandidaten: Kandidat[] = alleAromen.map((option) => {
     const stand = staende.get(option.id);
@@ -267,9 +282,12 @@ export function planeDurchgang(
   const niedrigSortiert = nachUeberfaelligkeitMitVerwechslungsvorzug(faelligNiedrig, jetzt);
   const hochSortiert = nachUeberfaelligkeitMitVerwechslungsvorzug(faelligHoch, jetzt);
 
-  const neuErlaubt = einfuehrungErlaubt(eingefuehrt.map((k) => k.zustand.box));
+  const neuErlaubt = einfuehrungErlaubt(eingefuehrt.filter((k) => !k.zustand.zaeh).map((k) => k.zustand.box));
   const zielNeu = neuErlaubt ? Math.min(NEU_MAX, Math.round(durchgangsGroesse * ANTEIL_NEU), nichtEingefuehrt.length) : 0;
-  const neu = gemischt(nichtEingefuehrt, zufall).slice(0, zielNeu);
+  const neu = [
+    ...gemischt(nichtEingefuehrt.filter((k) => bevorzugt.has(k.option.id)), zufall),
+    ...gemischt(nichtEingefuehrt.filter((k) => !bevorzugt.has(k.option.id)), zufall),
+  ].slice(0, zielNeu);
 
   const zielNiedrig = Math.min(niedrigSortiert.length, Math.round(durchgangsGroesse * ANTEIL_NIEDRIG));
   const genommenNiedrig = niedrigSortiert.slice(0, zielNiedrig);
@@ -353,74 +371,239 @@ export function reverseVorschlag(
  * gezogen wird** — bei einem echten blinden Griff aus zwölf ununterscheid-
  * baren Fläschchen ist das sogar der Regelfall: praktisch jeder Griff trifft
  * ein anderes Aroma als das, dessen Stufe zufällig die Form dieses Platzes
- * bestimmt hat. `formStufe` ist nur ein Mittel, überhaupt *irgendeine*
- * sinnvolle Form zeigen zu können, ohne Identität vorwegzunehmen — mehr
- * nicht. Bewertet wird unten ausschließlich gegen das tatsächlich
- * aufgedeckte Aroma, nie gegen das, dessen Stufe die Form geliefert hat.
+ * bestimmt hat. Deshalb trennt die Auswertung zwei Dinge (siehe
+ * `AntwortAuswertung`): ob die *gezeigte Frage* richtig beantwortet wurde,
+ * und was das über die *Stufe des tatsächlichen Aromas* aussagt.
  */
 export interface AntwortEingabe {
   readonly formStufe: UebungStufe;
-  /** Getippte Familie — bei Stufe A und B gefragt, bei C nicht vorhanden. */
+  /** Getippte Familie — bei Form A und B gefragt, bei C nicht vorhanden. */
   readonly tipFamilieId?: string;
-  /** Getipptes Aroma — bei Stufe B (nach Familienwahl) und C gefragt, bei A nicht vorhanden. */
+  /** Getipptes Aroma — bei Form B (nach Familienwahl) und C gefragt, bei A nicht vorhanden. */
   readonly tipAromaId?: string;
+  /**
+   * Familie des getippten Aromas. Bei Form C die einzige Quelle für ein
+   * Familienurteil (gefragt wird dort keine Familie, aber das getippte Aroma
+   * hat eine) — gebraucht, wenn das tatsächliche Aroma erst auf Stufe A/B
+   * steht, und für den Rückweg von C nach B.
+   */
+  readonly tipAromaFamilieId?: string;
+  /** "nur geraten" — ein Treffer zählt dann wie ein Teilerfolg. */
+  readonly geraten?: boolean;
   readonly tatsaechlicheAromaId: string;
   readonly tatsaechlicheFamilieId: string | undefined;
   readonly tatsaechlicherStand: GesamtStand | undefined;
 }
 
+/**
+ * Was eine Antwort für die Leitner-Mechanik bedeutet — gegen die Stufe des
+ * **tatsächlichen** Aromas, nicht gegen die gezeigte Form:
+ *
+ * - `richtig` / `teilweise` / `falsch` wie gehabt (Box hoch / eine runter / auf 1).
+ * - `ohneAussage`: die gezeigte Frage war leichter als die Stufe des Aromas
+ *   und wurde richtig beantwortet. Das beweist nichts über die eigentliche
+ *   Stufe — Box, Fälligkeit und Serien bleiben stehen, das Aroma bleibt fällig.
+ * - `aufgefrischt`: lange liegen geblieben (`starkUeberfaellig`), auf der
+ *   eigenen Stufe nicht gewusst, aber auf der Stufe darunter — Box 2, bald
+ *   wieder dran, ohne den Rückfall auf 1.
+ */
+export type Wertung = Uebungsergebnis | 'ohneAussage' | 'aufgefrischt';
+
 export interface AntwortAuswertung {
+  /** Ob die gezeigte Frage richtig beantwortet wurde — für die Anzeige und das Protokoll (`uebungsantwort`). */
   readonly ergebnis: Uebungsergebnis;
+  /** Was das für das tatsächliche Aroma heißt — bewegt Box und Stufe. */
+  readonly wertung: Wertung;
   readonly box: Box;
   readonly faellig: number;
   readonly stufe: UebungStufe;
+  /** Gesetzt, wenn sich die Stufe mit dieser Antwort geändert hat. */
+  readonly stufenwechsel?: 'auf' | 'ab';
   readonly familienSerie: number;
+  readonly abrufSerie: number;
+  readonly abrufSerieZuletzt?: number;
+  readonly familieFalschSerie: number;
+  readonly fehlerSerie: number;
+  /** true, wenn das Aroma mit dieser Antwort zum ersten Mal überhaupt dran war. */
+  readonly erstkontakt: boolean;
 }
 
 /** Ab wie vielen Treffern in Folge (Stufe A, Familie) auf Stufe B geschaltet wird — Lastenheft Abschnitt 3. */
 const FAMILIENSERIE_SCHWELLE = 3;
+/** Ab wie vielen Treffern (Stufe B, zeitlich getrennt) auf Stufe C geschaltet wird. */
+const ABRUFSERIE_SCHWELLE = 2;
+/** Mindestabstand zwischen zwei Treffern, die für den Aufstieg B → C zählen — zwei Durchgänge am selben Abend sind einer. */
+const ABRUFSERIE_MINDESTABSTAND_MS = 12 * 60 * 60 * 1000;
+/** Ab wie vielen Antworten in Folge mit falscher Familie ein Aroma von C auf B zurückfällt. */
+const RUECKWEG_SCHWELLE = 2;
+/** Box nach einem Stufenwechsel nach oben: eine schwerere Abrufform ist eine neue Karte, aber nicht bei null. */
+const BOX_NACH_AUFSTIEG: Box = 2;
+
+const STUFE_DARUNTER: Record<UebungStufe, UebungStufe | undefined> = { a: undefined, b: 'a', c: 'b' };
+const STUFE_DARUEBER: Record<UebungStufe, UebungStufe | undefined> = { a: 'b', b: 'c', c: undefined };
+const RANG: Record<UebungStufe, number> = { a: 0, b: 1, c: 2 };
+
+/**
+ * Wertet die Antwort gegen eine bestimmte Stufe — mit dem, was die Antwort
+ * hergibt. Form C enthält ein Aroma und damit auch dessen Familie, Form A
+ * nur eine Familie. War die Form leichter als die Stufe, kann ein Treffer
+ * nichts beweisen (`ohneAussage`); ein Fehler in leichterer Form zählt voll.
+ */
+function wertungGegenStufe(stufe: UebungStufe, form: UebungStufe, familieRichtig: boolean, aromaRichtig: boolean | undefined): Uebungsergebnis | 'ohneAussage' {
+  if (RANG[form] < RANG[stufe]) {
+    const gezeigteFrageRichtig = form === 'a' ? familieRichtig : aromaRichtig === true;
+    return gezeigteFrageRichtig ? 'ohneAussage' : 'falsch';
+  }
+  switch (stufe) {
+    case 'a':
+      return familieRichtig ? 'richtig' : 'falsch';
+    case 'b':
+      return aromaRichtig ? 'richtig' : familieRichtig ? 'teilweise' : 'falsch';
+    case 'c':
+      return aromaRichtig ? 'richtig' : 'falsch';
+  }
+}
 
 /**
  * Wertet eine Antwort aus, **nachdem** die Nummer bekannt ist — vorher kann
- * die App nicht wissen, gegen welches Aroma sie überhaupt prüft. Die
- * Leitner-Bewegung (Box, Fälligkeit, Stufe, Familienserie) bezieht sich
- * immer auf das **tatsächliche** Aroma — `formStufe` hat damit nichts zu
- * tun, sie hat nur die Form geliefert (siehe Kopfkommentar zu
- * `AntwortEingabe`). Das gilt für jede Antwort, nicht nur für den seltenen
- * Fall eines echten Bereitlegen-Fehlers.
+ * die App nicht wissen, gegen welches Aroma sie überhaupt prüft. Konzept:
+ * docs/konzept.md, Übungsmodus, "Gewertet wird gegen die Stufe des
+ * gezogenen Aromas".
  */
 export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): AntwortAuswertung {
-  const { formStufe, tipFamilieId, tipAromaId, tatsaechlicheAromaId, tatsaechlicheFamilieId, tatsaechlicherStand } = eingabe;
+  const { formStufe, tipFamilieId, tipAromaId, tipAromaFamilieId, geraten, tatsaechlicheAromaId, tatsaechlicheFamilieId, tatsaechlicherStand } =
+    eingabe;
   const zustand = effektiverZustand(tatsaechlicherStand, jetzt);
-  const familieRichtig = tipFamilieId !== undefined && tipFamilieId === tatsaechlicheFamilieId;
+  const getippteFamilie = tipFamilieId ?? tipAromaFamilieId;
+  const familieRichtig = getippteFamilie !== undefined && getippteFamilie === tatsaechlicheFamilieId;
+  const aromaRichtig = formStufe === 'a' ? undefined : tipAromaId === tatsaechlicheAromaId;
 
-  let ergebnis: Uebungsergebnis;
-  if (formStufe === 'c') {
-    ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : 'falsch';
-  } else if (formStufe === 'a') {
-    ergebnis = familieRichtig ? 'richtig' : 'falsch';
-  } else {
-    ergebnis = tipAromaId === tatsaechlicheAromaId ? 'richtig' : familieRichtig ? 'teilweise' : 'falsch';
+  // 1. Die gezeigte Frage — unverändert gegenüber der ersten Fassung.
+  const ergebnis: Uebungsergebnis =
+    formStufe === 'a'
+      ? familieRichtig
+        ? 'richtig'
+        : 'falsch'
+      : aromaRichtig
+        ? 'richtig'
+        : formStufe === 'b' && familieRichtig
+          ? 'teilweise'
+          : 'falsch';
+
+  // 2. Gegen die Stufe des tatsächlichen Aromas.
+  let wertung: Wertung = wertungGegenStufe(zustand.stufe, formStufe, familieRichtig, aromaRichtig);
+  if (wertung === 'richtig' && geraten) wertung = 'teilweise';
+  const darunter = STUFE_DARUNTER[zustand.stufe];
+  if (wertung !== 'richtig' && !geraten && darunter && starkUeberfaellig(zustand.box, zustand.faellig, jetzt)) {
+    if (wertungGegenStufe(darunter, formStufe, familieRichtig, aromaRichtig) === 'richtig') wertung = 'aufgefrischt';
   }
 
-  const box = bewegeBox(zustand.box, ergebnis);
-  const faellig = naechsteFaelligkeit(box, jetzt);
+  // 3. Box und Fälligkeit.
+  let box: Box;
+  let faellig: number;
+  if (wertung === 'ohneAussage') {
+    box = zustand.box;
+    faellig = zustand.faellig;
+  } else {
+    box = wertung === 'aufgefrischt' ? 2 : bewegeBox(zustand.box, wertung);
+    faellig = naechsteFaelligkeit(box, jetzt);
+  }
 
-  // familienSerie zaehlt nur, solange das TATSAECHLICHE Aroma noch auf
-  // Stufe A steht — unabhaengig von `formStufe`. Ein Aroma, das laengst auf
-  // B oder C steht, aber (der Regelfall) mit der Stufe-A-Form gefragt wurde,
-  // macht dadurch keinen Rueckschritt.
-  let familienSerie = tatsaechlicherStand?.familienSerie ?? 0;
+  // 4. Serien und Stufenwechsel.
   let stufe = zustand.stufe;
-  if (zustand.stufe === 'a') {
-    familienSerie = familieRichtig ? familienSerie + 1 : 0;
-    if (familienSerie >= FAMILIENSERIE_SCHWELLE) {
-      stufe = 'b';
-      familienSerie = 0;
+  let stufenwechsel: 'auf' | 'ab' | undefined;
+  let familienSerie = tatsaechlicherStand?.familienSerie ?? 0;
+  let abrufSerie = tatsaechlicherStand?.abrufSerie ?? 0;
+  let abrufSerieZuletzt = tatsaechlicherStand?.abrufSerieZuletzt;
+  let familieFalschSerie = tatsaechlicherStand?.familieFalschSerie ?? 0;
+  let fehlerSerie = tatsaechlicherStand?.fehlerSerie ?? 0;
+
+  if (wertung === 'richtig') fehlerSerie = 0;
+  else if (wertung === 'teilweise' || wertung === 'falsch') fehlerSerie += 1;
+
+  if (stufe === 'a' && wertung !== 'ohneAussage') {
+    familienSerie = wertung === 'richtig' ? familienSerie + 1 : 0;
+    if (familienSerie >= FAMILIENSERIE_SCHWELLE) stufenwechsel = 'auf';
+  } else if (stufe === 'b' && wertung !== 'ohneAussage') {
+    if (wertung === 'richtig') {
+      if (abrufSerieZuletzt === undefined || jetzt - abrufSerieZuletzt >= ABRUFSERIE_MINDESTABSTAND_MS) {
+        abrufSerie += 1;
+        abrufSerieZuletzt = jetzt;
+      }
+    } else {
+      abrufSerie = 0;
+      abrufSerieZuletzt = undefined;
+    }
+    if (abrufSerie >= ABRUFSERIE_SCHWELLE) stufenwechsel = 'auf';
+  } else if (stufe === 'c') {
+    // Die Familie ist in jeder Form bekannt (bei C über das getippte Aroma).
+    familieFalschSerie = familieRichtig ? 0 : familieFalschSerie + 1;
+    if (familieFalschSerie >= RUECKWEG_SCHWELLE) stufenwechsel = 'ab';
+  }
+
+  if (stufenwechsel) {
+    stufe = (stufenwechsel === 'auf' ? STUFE_DARUEBER[stufe] : STUFE_DARUNTER[stufe])!;
+    familienSerie = 0;
+    abrufSerie = 0;
+    abrufSerieZuletzt = undefined;
+    familieFalschSerie = 0;
+    fehlerSerie = 0;
+    if (stufenwechsel === 'auf') {
+      box = BOX_NACH_AUFSTIEG;
+      faellig = naechsteFaelligkeit(box, jetzt);
     }
   }
 
-  return { ergebnis, box, faellig, stufe, familienSerie };
+  return {
+    ergebnis,
+    wertung,
+    box,
+    faellig,
+    stufe,
+    stufenwechsel,
+    familienSerie,
+    abrufSerie,
+    abrufSerieZuletzt,
+    familieFalschSerie,
+    fehlerSerie,
+    erstkontakt: !zustand.eingefuehrt,
+  };
+}
+
+// ============================================================================
+// Nachriechen — nach einer falschen Antwort das Fläschchen noch einmal, jetzt
+// mit Namen (Etappe 2 des Lern-Nachzugs, docs/konzept.md "Nachriechen").
+// ============================================================================
+
+/**
+ * Höchstens so viele Riechvorgänge je Übungsdurchgang (abgefragte
+ * Fläschchen plus Nachriechen). Das Lastenheft setzte 10; angehoben auf 12,
+ * damit nach Fehlern nachgerochen werden kann, ohne die Zahl der Abfragen zu
+ * senken. Klinische Identifikationstests (Sniffin' Sticks) arbeiten mit 16
+ * Gerüchen in einer Sitzung — 12 bleibt deutlich darunter.
+ */
+export const RIECHGRENZE = 12;
+
+/**
+ * Ob nach dieser Auflösung zum Nachriechen aufgefordert wird: wenn die
+ * gezeigte Frage nicht richtig beantwortet wurde, oder die Wertung für das
+ * Aroma kein voller Treffer war (geraten, aufgefrischt). Genau dort fehlt
+ * die Verknüpfung von Name und Geruch — und eine Bezeichnung hilft dem
+ * Geruchsgedächtnis nur, wenn sie beim Riechen da ist (Frank et al. 2010).
+ * Nach einem echten Treffer wäre es ein Riechvorgang ohne Lerngewinn, der
+ * gegen die Grenze zählt.
+ */
+export function nachriechenAngebracht(
+  auswertung: Pick<AntwortAuswertung, 'ergebnis' | 'wertung'> & { readonly erstkontakt?: boolean },
+  bisherNachgerochen: number,
+  durchgangsGroesse: number = DURCHGANG_GROESSE,
+): boolean {
+  // Beim ersten Kontakt immer: auch ein Zufallstreffer (Familie 1 zu 9)
+  // hiesse sonst, das Aroma nie bewusst mit Namen gerochen zu haben.
+  const lueckeDa =
+    auswertung.erstkontakt === true ||
+    auswertung.ergebnis !== 'richtig' || auswertung.wertung === 'teilweise' || auswertung.wertung === 'falsch' || auswertung.wertung === 'aufgefrischt';
+  return lueckeDa && durchgangsGroesse + bisherNachgerochen < RIECHGRENZE;
 }
 
 // ============================================================================
@@ -470,42 +653,156 @@ export function verwechslungspaare(staende: ReadonlyMap<string, GesamtStand>): r
 }
 
 // ============================================================================
-// Auswertung eines Kontrastdurchgangs — eine gemeinsame Entscheidung für
-// zwei Aromen (Aromapaket, Etappe 7).
+// Kontrastdurchgang mit mehreren Paaren (Etappe 3 des Lern-Nachzugs,
+// docs/konzept.md "Kontrastdurchgang").
 // ============================================================================
 
-export interface KontrastAuswertung {
-  readonly ergebnis: 'richtig' | 'falsch';
-  readonly aBox: Box;
-  readonly aFaellig: number;
-  readonly bBox: Box;
-  readonly bFaellig: number;
+/** Höchstens so viele Paare je Kontrastdurchgang — 8 Riechvorgänge, Rest der Riechgrenze fürs Nachriechen. */
+export const KONTRAST_PAARE_MAX = 4;
+/** Ab so vielen verfügbaren Paaren darf die App einen Kontrastdurchgang von sich aus wählen. */
+export const KONTRAST_PAARE_MIN_ZUFALL = 3;
+/** Anteil der Durchgänge, die die App als Kontrast wählt, wenn genug Paare da sind. */
+export const KONTRAST_ANTEIL = 0.25;
+
+export interface Kontrastpaar {
+  readonly aId: string;
+  readonly bId: string;
+  /**
+   * Woher das Paar kommt — zugleich die Rangfolge: belegte Verwechslungen
+   * zuerst, dann zähe Aromen mit ihrem nächsten Nachbarn, dann vorbeugend
+   * verwandte Aromen (Datenblatt "Related Aromas"), bevor sie verwechselt werden.
+   */
+  readonly quelle: 'verwechslung' | 'zaeh' | 'verwandt';
 }
 
 /**
- * Wertet einen Kontrastdurchgang aus: **eine** Zuordnungsfrage ("welches war
- * welches") über zwei Aromen hinweg, nicht zwei Einzelfragen — das zweite
- * wäre nach dem ersten durch Ausschluss geschenkt (Lastenheft Abschnitt 6).
- * Deshalb kein `teilweise`: entweder beide richtig zugeordnet, oder beide
- * verwechselt — eine binäre Unterscheidungsleistung kennt keine Zwischenstufe.
+ * Stellt bis zu `max` Paare zusammen. **Jedes Aroma höchstens einmal** — ein
+ * Fläschchen kann nicht in zwei Paaren zugleich liegen. Vorbeugend verwandte
+ * Paare nur, wenn beide Aromen eingeführt sind und mindestens auf Stufe B
+ * stehen: wer die Familie noch sucht, lernt am Unterscheiden zweier
+ * Familienmitglieder nichts.
+ */
+export function kontrastpaare(
+  alleAromen: readonly AromaOption[],
+  staende: ReadonlyMap<string, GesamtStand>,
+  jetzt: number,
+  zufall: () => number = Math.random,
+  max: number = KONTRAST_PAARE_MAX,
+): readonly Kontrastpaar[] {
+  const zustand = (id: string) => effektiverZustand(staende.get(id), jetzt);
+  const bekannt = new Set(alleAromen.map((a) => a.id));
+  const kandidaten: Kontrastpaar[] = [];
+
+  for (const p of verwechslungspaare(staende)) {
+    if (bekannt.has(p.aId) && bekannt.has(p.bId)) kandidaten.push({ aId: p.aId, bId: p.bId, quelle: 'verwechslung' });
+  }
+
+  const verwandteVon = (option: AromaOption) => (option.verwandte ?? []).filter((id) => bekannt.has(id) && zustand(id).eingefuehrt);
+  const zaehe = alleAromen
+    .filter((a) => zustand(a.id).eingefuehrt && zustand(a.id).zaeh)
+    .sort((x, y) => (staende.get(y.id)?.fehlerSerie ?? 0) - (staende.get(x.id)?.fehlerSerie ?? 0));
+  for (const a of zaehe) {
+    const verwechslungen = Object.entries(staende.get(a.id)?.verwechslungen ?? {})
+      .filter(([id]) => bekannt.has(id))
+      .sort((x, y) => y[1] - x[1]);
+    const partner = verwechslungen[0]?.[0] ?? verwandteVon(a)[0];
+    if (partner) kandidaten.push({ aId: a.id, bId: partner, quelle: 'zaeh' });
+  }
+
+  // Vorbeugende Paare in drei Rängen, innerhalb eines Rangs zufällig: erst
+  // Paare, deren Datenblätter sich gegenseitig nennen (die belastbarste
+  // Ähnlichkeit, auch über Familiengrenzen: Holzig–Zeder, Teer–Rauchig),
+  // dann einseitig genannte aus derselben Familie, zuletzt einseitig genannte
+  // über Familiengrenzen (Zeder–Pappe, aber auch Zitrone–Jasmin). Ein Filter
+  // nach Familie wäre falsch — er striche Holzig–Zeder.
+  const abStufeB = (id: string) => zustand(id).eingefuehrt && zustand(id).stufe !== 'a';
+  const nachId = new Map(alleAromen.map((a) => [a.id, a]));
+  const gesehen = new Set<string>();
+  const raenge: [Kontrastpaar[], Kontrastpaar[], Kontrastpaar[]] = [[], [], []];
+  for (const a of alleAromen) {
+    if (!abStufeB(a.id)) continue;
+    for (const bId of verwandteVon(a)) {
+      const schluessel = [a.id, bId].sort().join('|');
+      if (gesehen.has(schluessel) || !abStufeB(bId)) continue;
+      gesehen.add(schluessel);
+      const b = nachId.get(bId)!;
+      const gegenseitig = (b.verwandte ?? []).includes(a.id);
+      const gleicheFamilie = a.kategorieId !== undefined && a.kategorieId === b.kategorieId;
+      raenge[gegenseitig ? 0 : gleicheFamilie ? 1 : 2].push({ aId: a.id, bId, quelle: 'verwandt' });
+    }
+  }
+  for (const rang of raenge) kandidaten.push(...gemischt(rang, zufall));
+
+  const belegt = new Set<string>();
+  const paare: Kontrastpaar[] = [];
+  for (const p of kandidaten) {
+    if (paare.length >= max) break;
+    if (p.aId === p.bId || belegt.has(p.aId) || belegt.has(p.bId)) continue;
+    belegt.add(p.aId);
+    belegt.add(p.bId);
+    paare.push(p);
+  }
+  return paare;
+}
+
+/**
+ * Welche Art Durchgang "durchgang starten" beginnt: etwa jeder vierte wird
+ * ein Kontrastdurchgang, aber nur, wenn mindestens drei Paare da sind —
+ * sonst wäre er zu kurz, um die Riechvorbereitung zu lohnen.
+ */
+export function waehleDurchgangsart(verfuegbarePaare: number, zufall: () => number = Math.random): 'normal' | 'kontrast' {
+  return verfuegbarePaare >= KONTRAST_PAARE_MIN_ZUFALL && zufall() < KONTRAST_ANTEIL ? 'kontrast' : 'normal';
+}
+
+export interface KontrastAuswertung {
+  readonly ergebnis: 'richtig' | 'falsch';
+  /** Neue Verwechslungsliste von A (Eintrag für B angepasst). */
+  readonly aVerwechslungen: Readonly<Record<string, number>>;
+  /** Neue Verwechslungsliste von B (Eintrag für A angepasst). */
+  readonly bVerwechslungen: Readonly<Record<string, number>>;
+}
+
+function verwechslungAngepasst(liste: Readonly<Record<string, number>>, partnerId: string, delta: number): Record<string, number> {
+  const neu = { ...liste };
+  const wert = (neu[partnerId] ?? 0) + delta;
+  if (wert > 0) neu[partnerId] = wert;
+  else delete neu[partnerId];
+  return neu;
+}
+
+/**
+ * Wertet ein Paar aus: **eine** Zuordnungsfrage ("welches war welches"),
+ * nicht zwei Einzelfragen — die zweite wäre nach der ersten durch Ausschluss
+ * geschenkt (Lastenheft Abschnitt 6). Deshalb kein `teilweise`.
  *
- * Beide Aromen bewegen sich **gemeinsam in dieselbe Richtung**, aber jedes
- * von seiner **eigenen** Box aus — ein Kontrastdurchgang bevorzugt zwar
- * Aromen mit dokumentierter Verwechslung (`verwechslungspaare`), das sagt
- * aber nichts darüber, dass beide zufällig denselben Fortschritt hätten.
- * Berührt bewusst weder `stufe` noch `familienSerie`: ein Kontrastdurchgang
- * ist keine Familien-Übung und bewegt diesen Fortschritt nicht.
+ * **Bewegt keine Box.** Bei zwei Antwortmöglichkeiten liegt Raten zur Hälfte
+ * richtig — ein Treffer schöbe sonst bei jedem zweiten Versuch beide Boxen
+ * hoch, auch für ein Paar, das man nicht auseinanderhalten kann. Gezählt wird
+ * stattdessen am Paar: richtig senkt den Verwechslungszähler in beide
+ * Richtungen um 1, falsch erhöht ihn. Ein Paar, das dauerhaft gelingt,
+ * wandert so aus dem Kontrastpool; eines, das nicht gelingt, steigt auf.
  */
 export function werteKontrastAus(
   richtigeReihenfolge: boolean,
+  aId: string,
+  bId: string,
   aStand: GesamtStand | undefined,
   bStand: GesamtStand | undefined,
-  jetzt: number,
 ): KontrastAuswertung {
-  const ergebnis: 'richtig' | 'falsch' = richtigeReihenfolge ? 'richtig' : 'falsch';
-  const aZustand = effektiverZustand(aStand, jetzt);
-  const bZustand = effektiverZustand(bStand, jetzt);
-  const aBox = bewegeBox(aZustand.box, ergebnis);
-  const bBox = bewegeBox(bZustand.box, ergebnis);
-  return { ergebnis, aBox, aFaellig: naechsteFaelligkeit(aBox, jetzt), bBox, bFaellig: naechsteFaelligkeit(bBox, jetzt) };
+  const delta = richtigeReihenfolge ? -1 : 1;
+  return {
+    ergebnis: richtigeReihenfolge ? 'richtig' : 'falsch',
+    aVerwechslungen: verwechslungAngepasst(aStand?.verwechslungen ?? {}, bId, delta),
+    bVerwechslungen: verwechslungAngepasst(bStand?.verwechslungen ?? {}, aId, delta),
+  };
+}
+
+/**
+ * Ob nach einem Paar beide Fläschchen noch einmal gerochen werden — nach
+ * einer falschen Zuordnung, solange die Riechgrenze zwei weitere
+ * Riechvorgänge trägt. Beide nacheinander mit Namen zu riechen ist der
+ * direkte Vergleich, um den es im Kontrastdurchgang geht.
+ */
+export function kontrastNachriechenAngebracht(ergebnis: 'richtig' | 'falsch', paareImDurchgang: number, bisherNachgerochen: number): boolean {
+  return ergebnis === 'falsch' && 2 * paareImDurchgang + bisherNachgerochen + 2 <= RIECHGRENZE;
 }

@@ -43,14 +43,19 @@
   // abwägen — fände nicht statt (CLAUDE.md, "Was nie sichtbar wird" im Plan-
   // Dokument dieses Umbaus). Eine einzige Zuordnungsfrage danach, nicht zwei
   // Einzelfragen — die zweite wäre nach der ersten durch Ausschluss geschenkt.
+  // Seit Etappe 3 des Lern-Nachzugs: bis zu vier Paare je Durchgang, jedes
+  // Paar für sich verdeckt; "durchgang starten" wählt in etwa jedem vierten
+  // Fall selbst einen Kontrastdurchgang (domain/uebung.ts::waehleDurchgangsart).
+  // Ein Paar bewegt keine Box, nur den Verwechslungszähler.
   //
   // Reverse — ungescort, ohne jede Wirkung auf Box/Fälligkeit: kein Aufruf
   // von `schreiben('uebung', …)` in reverseAufloesen(). Nicht blind: du
   // suchst das Fläschchen gezielt (Name + Nummer stehen offen), das ist der
   // Witz der Übung.
   //
-  // Bekannte Lücke: die harte Obergrenze von 10 Riechvorgängen (Lastenheft
-  // Abschnitt 2) gilt hier nur je einzelnem Durchgang (8 normal, 2 Kontrast,
+  // Bekannte Lücke: die harte Obergrenze von 12 Riechvorgängen
+  // (domain/uebung.ts::RIECHGRENZE, inklusive Nachriechen) gilt hier nur je
+  // einzelnem Durchgang (8 normal + bis zu 4 Nachriechen, 2 Kontrast,
   // 1 Reverse) — nicht kumulativ über mehrere hintereinander gestartete
   // Durchgänge einer Sitzung. Eine sitzungsweite Zählung bräuchte einen
   // eigenen Zustand über Durchgänge hinweg, den es bewusst noch nicht gibt.
@@ -64,23 +69,33 @@
     planeDurchgang,
     effektiverZustand,
     werteAntwortAus,
+    nachriechenAngebracht,
     verwechslungspaare,
     werteKontrastAus,
+    kontrastpaare,
+    waehleDurchgangsart,
+    kontrastNachriechenAngebracht,
+    type Kontrastpaar,
     reverseVorschlag,
     DURCHGANG_GROESSE,
     type AromaOption,
     type GesamtStand,
+    type AntwortAuswertung,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
-  import { uebungsKennzahlenPool, zielfrequenzAbgleich } from '../../domain/uebungsauswertung';
+  import { uebungsKennzahlenPool, zielfrequenzAbgleich, zuletztKennengelernt } from '../../domain/uebungsauswertung';
+  import { nummernAusKaffees } from '../../domain/kaffeebruecke';
   import { meilensteinSatz } from '../../domain/meilenstein';
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
+  import { merkhilfeZu, BESCHREIBUNGSWOERTER } from '../../daten/aroma-merkhilfen';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
@@ -90,11 +105,16 @@
     aktiv,
     onZurueck,
     onOeffnenStatistik,
+    kontrastAnfrage = false,
+    onKontrastAnfrageAngenommen,
   }: {
     /** true = eine Aktivität läuft gerade (Route 'uebungLaufend'), false = Übersicht (Route 'uebung'). */
     aktiv: boolean;
     onZurueck: () => void;
     onOeffnenStatistik: () => void;
+    /** Wunsch aus der Statistik: "als Kontrast üben" — wird einmal angenommen und gestartet. */
+    kontrastAnfrage?: boolean;
+    onKontrastAnfrageAngenommen?: () => void;
   } = $props();
 
   // Der Uebungsmodus fragt Flaeschchennummern ab — das ergibt nur bei einem
@@ -143,7 +163,10 @@
   // Tippen ist der Name kein Geheimnis mehr, und das erleichtert das Finden
   // der richtigen Zeile beim Ablesen.
   const alleNachNummer = $derived([...alleAromen].sort((a, b) => (a.nummer ?? 0) - (b.nummer ?? 0)));
-  const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer} — ${a.label}` })));
+  // Nur die Nummer, kein Name (Lern-Nachzug Etappe 4): der Name erscheint
+  // erst beim Auflösen. Sonst stünde er schon beim Nummer-Suchen da — und ein
+  // neues Aroma ließe sich nicht mehr blind beschreiben.
+  const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer}` })));
   const namenOptionen = $derived(alleAromen.map((a) => ({ wert: a.id, label: a.label })));
 
   // ---- Übersicht: Kennzahl-Kacheln statt roher Boxenliste --------------
@@ -165,7 +188,7 @@
 
   const zustaende = $derived(alleAromen.map((a) => effektiverZustand(staende.get(a.id), uebersichtJetzt)));
   const eingefuehrteZustaende = $derived(zustaende.filter((z) => z.eingefuehrt));
-  const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.map((z) => z.box)));
+  const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.filter((z) => !z.zaeh).map((z) => z.box)));
 
   /** kategorieId -> Familienname, fuer domain/uebungsauswertung.ts::uebungsKennzahlenPool — die Domäne kennt das Aromaset selbst nicht. */
   const familienLabels = $derived(new Map(familien.map((f) => [f.wert, f.label] as const)));
@@ -239,6 +262,12 @@
   // Das am staerksten dokumentierte Verwechslungspaar, wenn eins die Schwelle
   // erreicht — die Grundlage fuer das Kontrastdurchgang-Angebot auf der
   // Uebersicht (Lastenheft Abschnitt 8).
+  const zuletztKennengelerntOption = $derived.by(() => {
+    if (!set) return undefined;
+    const id = zuletztKennengelernt(bestand.uebungsantworten.filter((a) => a.setId === set!.id));
+    return id ? alleAromen.find((a) => a.id === id) : undefined;
+  });
+
   const kontrastKandidat = $derived(verwechslungspaare(bekannteStaende)[0]);
   const kontrastKandidatLabelA = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.aId)?.label ?? '');
   const kontrastKandidatLabelB = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.bId)?.label ?? '');
@@ -276,9 +305,16 @@
 
   async function durchgangStarten() {
     if (!set) return;
+    // Etwa jeder vierte Durchgang wird ein Kontrastdurchgang, sobald drei
+    // Paare da sind (domain/uebung.ts::waehleDurchgangsart).
+    const paare = kontrastpaare(alleAromen, bekannteStaende, Date.now());
+    if (waehleDurchgangsart(paare.length) === 'kontrast') {
+      await kontrastdurchgangStarten(paare);
+      return;
+    }
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
-    const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt);
+    const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt, DURCHGANG_GROESSE, Math.random, aromenAusKaffees(jetzt));
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
       setId: set.id,
@@ -288,6 +324,7 @@
       abgefragt: plan.abgefragt.map((a) => a.id),
       zusatz: plan.zusatz.map((a) => a.id),
       beantwortet: [],
+      nachgerochen: 0,
       begonnenAm: jetzt,
     };
     try {
@@ -300,24 +337,45 @@
     }
   }
 
-  async function kontrastdurchgangStarten() {
-    if (!set || !kontrastKandidat) return;
+  /** Startet einen Kontrastdurchgang — ohne Argument (Vorschlagskarte) mit den aktuell besten Paaren. */
+  /**
+   * Kaffee-Brücke (Etappe 6): die Fläschchen zu Aromen, die in den eigenen
+   * Verkostungen der letzten 60 Tage vorkamen — werden zuerst eingeführt.
+   */
+  function aromenAusKaffees(jetzt: number): ReadonlySet<string> {
+    const leNez = alleAromen.filter((a) => a.nummer !== undefined).map((a) => ({ label: a.label, nummer: a.nummer! }));
+    const verkostungen = bestand.tastings.map((t) => ({ ts: bestand.shots.find((s) => s.id === t.shotId)?.ts ?? 0, aromen: t.aromen }));
+    return new Set([...nummernAusKaffees(verkostungen, leNez, jetzt)].map(flaeschchenId));
+  }
+
+  $effect(() => {
+    if (!kontrastAnfrage || aktiv || !set) return;
+    onKontrastAnfrageAngenommen?.();
+    void untrack(() => kontrastdurchgangStarten());
+  });
+
+  async function kontrastdurchgangStarten(paare: readonly Kontrastpaar[] = kontrastpaare(alleAromen, bekannteStaende, Date.now())) {
+    if (!set || paare.length === 0) return;
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
+    const ids = paare.flatMap((p) => [p.aId, p.bId]);
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
       setId: set.id,
       art: 'kontrast',
       status: 'bereitlegen',
-      verdeckt: [kontrastKandidat.aId, kontrastKandidat.bId],
-      abgefragt: [kontrastKandidat.aId, kontrastKandidat.bId],
+      verdeckt: ids,
+      abgefragt: ids,
       zusatz: [],
       beantwortet: [],
+      nachgerochen: 0,
+      paare: paare.map((p) => [p.aId, p.bId] as [string, string]),
       begonnenAm: jetzt,
     };
     try {
       await schreiben('uebungsdurchgang', neu);
       durchgang = neu;
+      kontrastIndex = 0;
       phase = 'bereitlegen';
       navigation.gehe({ name: 'uebungLaufend' });
     } catch (e) {
@@ -338,12 +396,23 @@
       .sort((a, b) => a - b),
   );
 
-  /** Die zwei Aromen eines Kontrastdurchgangs, in der beim Start festgelegten (beliebigen, aber stabilen) Reihenfolge. */
-  const kontrastOptionen = $derived(
-    durchgang?.art === 'kontrast'
-      ? durchgang.verdeckt.map((id) => alleAromen.find((a) => a.id === id)).filter((a): a is AromaOption => a !== undefined)
-      : [],
-  );
+  /**
+   * Die Paare eines Kontrastdurchgangs als Optionen, in Abfragereihenfolge.
+   * Ein älterer Durchgang ohne `paare` hatte genau eins — aus `verdeckt`.
+   */
+  const kontrastPaarListe = $derived.by((): readonly (readonly [AromaOption, AromaOption])[] => {
+    if (durchgang?.art !== 'kontrast') return [];
+    const roh: readonly (readonly [string, string])[] =
+      durchgang.paare && durchgang.paare.length > 0 ? durchgang.paare : [[durchgang.verdeckt[0] ?? '', durchgang.verdeckt[1] ?? '']];
+    const zuOption = (id: string) => alleAromen.find((a) => a.id === id);
+    return roh
+      .map(([a, b]) => [zuOption(a), zuOption(b)] as const)
+      .filter((p): p is readonly [AromaOption, AromaOption] => p[0] !== undefined && p[1] !== undefined);
+  });
+  /** Welches Paar gerade dran ist — beim Start 0, beim Fortsetzen aus `beantwortet`. */
+  let kontrastIndex = $state(0);
+  /** Die zwei Aromen des aktuellen Paars, in der beim Start festgelegten (beliebigen, aber stabilen) Reihenfolge. */
+  const kontrastOptionen = $derived(kontrastPaarListe[kontrastIndex] ?? []);
 
   async function bereitgelegt() {
     if (!durchgang) return;
@@ -352,11 +421,8 @@
       await schreiben('uebungsdurchgang', aktualisiert);
       durchgang = aktualisiert;
       if (aktualisiert.art === 'kontrast') {
-        kontrastSchritt = 'erstesRiechen';
-        kontrastReihenfolge = '';
-        kontrastErsteNummer = '';
-        kontrastAuswertung = undefined;
-        kontrastUnerwartet = false;
+        kontrastIndex = 0;
+        kontrastSchrittZuruecksetzen();
         phase = 'kontrast';
       } else {
         index = 0;
@@ -376,12 +442,31 @@
     readonly formStufe: 'a' | 'b' | 'c';
   }
   let item = $state<AktuellesItem | undefined>(undefined);
-  let itemPhase = $state<'raten' | 'nummer' | 'aufgeloest'>('raten');
+  let itemPhase = $state<'raten' | 'nummer' | 'beschreiben' | 'aufgeloest'>('raten');
+  /** Beim ersten Kontakt blind gewählte Wörter — ohne Wertung (Etappe 4). */
+  let beschreibung = $state<string[]>([]);
+  const beschreibungsOptionen = BESCHREIBUNGSWOERTER.map((w) => ({ wert: w, label: w }));
+
+  function beschreibungUmschalten(wort: string) {
+    beschreibung = beschreibung.includes(wort) ? beschreibung.filter((w) => w !== wort) : [...beschreibung, wort];
+  }
+
+  /** Nach der Nummer: ein neues Aroma wird erst beschrieben, dann aufgelöst. */
+  function nachNummer() {
+    if (!tipNummer) return;
+    if (!effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt) {
+      itemPhase = 'beschreiben';
+      return;
+    }
+    void aufloesen();
+  }
   let itemBegonnenAm = $state(0);
 
   let tipFamilie = $state('');
   let tipAroma = $state('');
   let tipNummer = $state('');
+  /** "nur geraten" — ein Treffer zählt dann für die Box wie ein Teilerfolg (domain/uebung.ts::werteAntwortAus). */
+  let tipGeraten = $state(false);
 
   interface LetzteAuswertung {
     readonly ergebnis: 'richtig' | 'teilweise' | 'falsch';
@@ -389,7 +474,24 @@
     readonly unerwarteteNummer: boolean;
     /** Nur gesetzt, wenn ein Familientipp danebenlag (Stufe A/B, ergebnis "falsch") — welche Familie es gewesen wäre. */
     readonly korrekteFamilie?: string;
+    /** Ein Satz dazu, was die Antwort für den Lernstand des gezogenen Aromas heißt — nur, wenn es etwas zu sagen gibt. */
+    readonly lernstandHinweis?: string;
+    /** Was getippt wurde, als Wort — Familie (Form A) oder Aroma (Form B/C). "Deine Vermutung: …" statt "Daneben". */
+    readonly vermutung: string;
+    /** Die beim ersten Kontakt blind gewählten Wörter, zum Vergleich neben der Merkhilfe. */
+    readonly beschreibung?: readonly string[];
+    /**
+     * Gesetzt, wenn zum Nachriechen aufgefordert wird (domain/uebung.ts::
+     * nachriechenAngebracht): die Merkhilfe des gezogenen Aromas und — bei
+     * einer echten Verwechslung — die des getippten daneben.
+     */
+    readonly nachriechen?: {
+      readonly merkhilfe?: string;
+      readonly tipp?: { readonly label: string; readonly merkhilfe?: string };
+    };
   }
+  /** true, sobald "nachgerochen" angetippt wurde — erst dann läuft die Riechpause. */
+  let nachgerochenErledigt = $state(false);
   let letzteAuswertung = $state<LetzteAuswertung | undefined>(undefined);
 
   function naechstesItemVorbereiten() {
@@ -406,6 +508,9 @@
     tipFamilie = '';
     tipAroma = '';
     tipNummer = '';
+    tipGeraten = false;
+    nachgerochenErledigt = false;
+    beschreibung = [];
     letzteAuswertung = undefined;
   }
 
@@ -483,6 +588,8 @@
         tipAromaId: tipAroma || undefined,
         tatsaechlicheAromaId: tatsaechlicheId,
         tatsaechlicheFamilieId: tatsaechlicheOption.kategorieId,
+        tipAromaFamilieId: tipAroma ? alleAromen.find((a) => a.id === tipAroma)?.kategorieId : undefined,
+        geraten: tipGeraten,
         tatsaechlicherStand,
       },
       jetzt,
@@ -506,6 +613,7 @@
     try {
       const bisherigeUebung = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === tatsaechlicheId);
       await schreiben('uebung', {
+        ...bisherigeUebung,
         id: bisherigeUebung?.id ?? neueId(),
         setId: set.id,
         aromaId: tatsaechlicheId,
@@ -517,6 +625,10 @@
         faellig: auswertung.faellig,
         stufe: auswertung.stufe,
         familienSerie: auswertung.familienSerie,
+        abrufSerie: auswertung.abrufSerie,
+        abrufSerieZuletzt: auswertung.abrufSerieZuletzt,
+        familieFalschSerie: auswertung.familieFalschSerie,
+        fehlerSerie: auswertung.fehlerSerie,
       });
 
       await schreiben('uebungsantwort', {
@@ -532,6 +644,8 @@
         zeitstempel: jetzt,
         antwortdauerMs: Math.max(0, jetzt - itemBegonnenAm),
         unerwarteteNummer,
+        geraten: tipGeraten || undefined,
+        beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
       });
 
       const beantwortet = [...durchgang.beantwortet, tatsaechlicheId];
@@ -557,10 +671,65 @@
         ? familieVon(tatsaechlicheOption.kategorieId)
         : undefined;
 
-    letzteAuswertung = { ergebnis: auswertung.ergebnis, tatsaechlicheOption, unerwarteteNummer, korrekteFamilie };
+    letzteAuswertung = {
+      ergebnis: auswertung.ergebnis,
+      tatsaechlicheOption,
+      unerwarteteNummer,
+      korrekteFamilie,
+      lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
+      vermutung:
+        item.formStufe === 'a' || !tipAroma
+          ? familieVon(tipFamilie)
+          : (alleAromen.find((a) => a.id === tipAroma)?.label ?? ''),
+      beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
+      nachriechen: nachriechenAngebracht(auswertung, durchgang.nachgerochen)
+        ? {
+            merkhilfe: merkhilfeZu(tatsaechlicheOption.nummer),
+            tipp: verwechseltMit(tipAroma, tatsaechlicheId),
+          }
+        : undefined,
+    };
     itemPhase = 'aufgeloest';
     // Keine Pause nach dem letzten Item — niemand riecht danach noch etwas,
     // fuer das sich die Nase erholen muesste.
+    // Mit Nachriechen startet die Pause erst nach dem zweiten Riechen (siehe
+    // nachgerochen()) — sonst laege zwischen ihm und dem naechsten Fläschchen
+    // nur der Rest der 25 Sekunden.
+    if (!letzteAuswertung.nachriechen && index + 1 < DURCHGANG_GROESSE) starteRiechpause();
+  }
+
+  /**
+   * Höchstens ein Satz, und nur wenn er etwas sagt (dieselbe Haltung wie
+   * domain/meilenstein.ts): ein Stufenwechsel, eine Antwort ohne Aussage
+   * über den Lernstand, ein als geraten markierter Treffer.
+   */
+  function lernstandHinweis(a: AntwortAuswertung, name: string): string | undefined {
+    if (a.stufenwechsel === 'auf') {
+      return a.stufe === 'c' ? `${name} sitzt. Ab jetzt fragst du frei nach dem Namen.` : `Bei ${name} sitzt die Familie. Ab jetzt geht es um das Aroma selbst.`;
+    }
+    if (a.stufenwechsel === 'ab') return `${name} wieder mit Familienwahl — die Familie lag zweimal anderswo.`;
+    if (a.wertung === 'aufgefrischt') return `Lange nicht gerochen — ${name} kommt bald wieder.`;
+    if (a.wertung === 'ohneAussage') return `Zählt nicht für ${name} — es ist schon weiter als diese Frage.`;
+    if (tipGeraten && a.ergebnis === 'richtig') return 'Als eher geraten markiert — zählt halb.';
+    return undefined;
+  }
+
+  function verwechseltMit(getipptId: string, tatsaechlicheId: string): { label: string; merkhilfe?: string } | undefined {
+    if (!getipptId || getipptId === tatsaechlicheId) return undefined;
+    const getippt = alleAromen.find((a) => a.id === getipptId);
+    return getippt ? { label: getippt.label, merkhilfe: merkhilfeZu(getippt.nummer) } : undefined;
+  }
+
+  async function nachgerochen() {
+    if (!durchgang || nachgerochenErledigt) return;
+    nachgerochenErledigt = true;
+    const aktualisiert: SammlungWert['uebungsdurchgang'] = { ...durchgang, nachgerochen: durchgang.nachgerochen + 1 };
+    try {
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
     if (index + 1 < DURCHGANG_GROESSE) starteRiechpause();
   }
 
@@ -587,44 +756,87 @@
   let kontrastErsteNummer = $state('');
   let kontrastUnerwartet = $state(false);
   let kontrastAuswertung = $state<
-    { readonly ergebnis: 'richtig' | 'falsch'; readonly ersteOption: AromaOption; readonly zweiteOption: AromaOption } | undefined
+    | {
+        readonly ergebnis: 'richtig' | 'falsch';
+        readonly ersteOption: AromaOption;
+        readonly zweiteOption: AromaOption;
+        /** Gesetzt, wenn beide noch einmal gerochen werden sollen (domain/uebung.ts::kontrastNachriechenAngebracht). */
+        readonly nachriechen?: { readonly ersteMerkhilfe?: string; readonly zweiteMerkhilfe?: string };
+      }
+    | undefined
   >(undefined);
+  let kontrastNachgerochenErledigt = $state(false);
+
+  const kontrastLetztesPaar = $derived(kontrastIndex + 1 >= kontrastPaarListe.length);
 
   const kontrastFrageOptionen = $derived(
     kontrastOptionen.length === 2
       ? [
-          { wert: 'a-zuerst', label: `erst ${kontrastOptionen[0]!.label}, dann ${kontrastOptionen[1]!.label}` },
-          { wert: 'b-zuerst', label: `erst ${kontrastOptionen[1]!.label}, dann ${kontrastOptionen[0]!.label}` },
+          { wert: 'a-zuerst', label: `Probe 1: ${kontrastOptionen[0]!.label} · Probe 2: ${kontrastOptionen[1]!.label}` },
+          { wert: 'b-zuerst', label: `Probe 1: ${kontrastOptionen[1]!.label} · Probe 2: ${kontrastOptionen[0]!.label}` },
         ]
       : [],
   );
+
+  function kontrastSchrittZuruecksetzen() {
+    kontrastSchritt = 'erstesRiechen';
+    kontrastReihenfolge = '';
+    kontrastErsteNummer = '';
+    kontrastUnerwartet = false;
+    kontrastAuswertung = undefined;
+    kontrastNachgerochenErledigt = false;
+  }
 
   function kontrastErstesGerochen() {
     kontrastSchritt = 'zweitesRiechen';
     starteRiechpause();
   }
 
+  /** Ein Paar ist erledigt: `beantwortet` wächst um beide Ids, beim letzten Paar endet der Durchgang. */
+  function kontrastDurchgangNachPaar(d: SammlungWert['uebungsdurchgang'], paarIds: readonly string[], jetzt: number): SammlungWert['uebungsdurchgang'] {
+    const letztes = kontrastLetztesPaar;
+    return {
+      ...d,
+      beantwortet: [...d.beantwortet, ...paarIds],
+      status: letztes ? 'abgeschlossen' : d.status,
+      abgeschlossenAm: letztes ? jetzt : undefined,
+    };
+  }
+
+  /** Schreibt nur die Verwechslungsliste fort — ein Kontrastpaar bewegt keine Box (domain/uebung.ts::werteKontrastAus). */
+  async function verwechslungenSchreiben(aromaId: string, verwechslungen: Readonly<Record<string, number>>, jetzt: number) {
+    const bisherige = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === aromaId);
+    await schreiben('uebung', {
+      ...bisherige,
+      id: bisherige?.id ?? neueId(),
+      setId: set!.id,
+      aromaId,
+      benennen: bisherige?.benennen ?? { versuche: 0, treffer: 0 },
+      unterscheiden: bisherige?.unterscheiden ?? { versuche: 0, treffer: 0 },
+      verwechslungen: { ...verwechslungen },
+      letzterVersuch: jetzt,
+      familienSerie: bisherige?.familienSerie ?? 0,
+      abrufSerie: bisherige?.abrufSerie ?? 0,
+      familieFalschSerie: bisherige?.familieFalschSerie ?? 0,
+      fehlerSerie: bisherige?.fehlerSerie ?? 0,
+    });
+  }
+
   async function kontrastAufloesen() {
     if (!durchgang || !set || !kontrastErsteNummer || kontrastOptionen.length !== 2) return;
-    const [optA, optB] = kontrastOptionen as [AromaOption, AromaOption];
+    const [optA, optB] = kontrastOptionen as readonly [AromaOption, AromaOption];
     const ersteId = kontrastErsteNummer;
     const jetzt = Date.now();
 
-    if (!durchgang.verdeckt.includes(ersteId)) {
-      // Seltener echter Bereitlegen-Fehler (siehe Kopfkommentar zu
-      // unerwarteteNummer weiter oben): bei nur zwei Verdeckten trägt "das
-      // jeweils andere" als Grundlage für die zweite Identität nicht mehr.
-      // Kein Absturz, keine erfundene zweite Identität — der Durchgang endet
-      // hier unbewertet, ehrlich benannt.
+    if (ersteId !== optA.id && ersteId !== optB.id) {
+      // Seltener echter Bereitlegen-Fehler: die Nummer gehört nicht zu diesem
+      // Paar. Bei nur zwei Fläschchen trägt "das jeweils andere" als
+      // Grundlage für die zweite Identität nicht mehr — dieses Paar bleibt
+      // unbewertet, ehrlich benannt, und es geht mit dem nächsten weiter.
       try {
-        const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
-          ...durchgang,
-          beantwortet: [ersteId],
-          status: 'abgeschlossen',
-          abgeschlossenAm: jetzt,
-        };
-        await schreiben('uebungsdurchgang', durchgangAktualisiert);
-        durchgang = durchgangAktualisiert;
+        const aktualisiert = kontrastDurchgangNachPaar(durchgang, [optA.id, optB.id], jetzt);
+        await schreiben('uebungsdurchgang', aktualisiert);
+        durchgang = aktualisiert;
         await schreiben('uebungsantwort', {
           id: neueId(),
           durchgangId: durchgang.id,
@@ -640,6 +852,7 @@
       }
       kontrastUnerwartet = true;
       kontrastSchritt = 'aufgeloest';
+      if (!kontrastLetztesPaar) starteRiechpause();
       return;
     }
 
@@ -647,42 +860,11 @@
     const zweiteOption = ersteId === optA.id ? optB : optA;
     const gewaehlteAWarErste = kontrastReihenfolge === 'a-zuerst';
     const tatsaechlichAWarErste = ersteId === optA.id;
-    const richtigeReihenfolge = gewaehlteAWarErste === tatsaechlichAWarErste;
-
-    const aStand = staende.get(optA.id);
-    const bStand = staende.get(optB.id);
-    const auswertung = werteKontrastAus(richtigeReihenfolge, aStand, bStand, jetzt);
+    const auswertung = werteKontrastAus(gewaehlteAWarErste === tatsaechlichAWarErste, optA.id, optB.id, staende.get(optA.id), staende.get(optB.id));
 
     try {
-      const bisherigeA = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optA.id);
-      await schreiben('uebung', {
-        id: bisherigeA?.id ?? neueId(),
-        setId: set.id,
-        aromaId: optA.id,
-        benennen: bisherigeA?.benennen ?? { versuche: 0, treffer: 0 },
-        unterscheiden: bisherigeA?.unterscheiden ?? { versuche: 0, treffer: 0 },
-        verwechslungen: bisherigeA?.verwechslungen ?? {},
-        letzterVersuch: jetzt,
-        box: auswertung.aBox,
-        faellig: auswertung.aFaellig,
-        stufe: bisherigeA?.stufe,
-        familienSerie: bisherigeA?.familienSerie ?? 0,
-      });
-      const bisherigeB = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optB.id);
-      await schreiben('uebung', {
-        id: bisherigeB?.id ?? neueId(),
-        setId: set.id,
-        aromaId: optB.id,
-        benennen: bisherigeB?.benennen ?? { versuche: 0, treffer: 0 },
-        unterscheiden: bisherigeB?.unterscheiden ?? { versuche: 0, treffer: 0 },
-        verwechslungen: bisherigeB?.verwechslungen ?? {},
-        letzterVersuch: jetzt,
-        box: auswertung.bBox,
-        faellig: auswertung.bFaellig,
-        stufe: bisherigeB?.stufe,
-        familienSerie: bisherigeB?.familienSerie ?? 0,
-      });
-
+      await verwechslungenSchreiben(optA.id, auswertung.aVerwechslungen, jetzt);
+      await verwechslungenSchreiben(optB.id, auswertung.bVerwechslungen, jetzt);
       for (const option of [optA, optB]) {
         await schreiben('uebungsantwort', {
           id: neueId(),
@@ -695,22 +877,43 @@
           unerwarteteNummer: false,
         });
       }
-
-      const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
-        ...durchgang,
-        beantwortet: [optA.id, optB.id],
-        status: 'abgeschlossen',
-        abgeschlossenAm: jetzt,
-      };
-      await schreiben('uebungsdurchgang', durchgangAktualisiert);
-      durchgang = durchgangAktualisiert;
+      const aktualisiert = kontrastDurchgangNachPaar(durchgang, [optA.id, optB.id], jetzt);
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
       return;
     }
 
-    kontrastAuswertung = { ergebnis: auswertung.ergebnis, ersteOption, zweiteOption };
+    const nachriechen = kontrastNachriechenAngebracht(auswertung.ergebnis, kontrastPaarListe.length, durchgang.nachgerochen)
+      ? { ersteMerkhilfe: merkhilfeZu(ersteOption.nummer), zweiteMerkhilfe: merkhilfeZu(zweiteOption.nummer) }
+      : undefined;
+    kontrastAuswertung = { ergebnis: auswertung.ergebnis, ersteOption, zweiteOption, nachriechen };
     kontrastSchritt = 'aufgeloest';
+    // Mit Nachriechen startet die Pause erst danach (kontrastNachgerochen).
+    if (!nachriechen && !kontrastLetztesPaar) starteRiechpause();
+  }
+
+  async function kontrastNachgerochen() {
+    if (!durchgang || kontrastNachgerochenErledigt) return;
+    kontrastNachgerochenErledigt = true;
+    const aktualisiert: SammlungWert['uebungsdurchgang'] = { ...durchgang, nachgerochen: durchgang.nachgerochen + 2 };
+    try {
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+    if (!kontrastLetztesPaar) starteRiechpause();
+  }
+
+  function kontrastWeiter() {
+    if (kontrastLetztesPaar) {
+      zurueckZurUebersicht();
+      return;
+    }
+    kontrastIndex += 1;
+    kontrastSchrittZuruecksetzen();
   }
 
   // ---- Reverse: Name zuerst, dann gezielt suchen — ungescort -------------
@@ -737,6 +940,7 @@
       abgefragt: [reverseAromaId],
       zusatz: [],
       beantwortet: [],
+      nachgerochen: 0,
       begonnenAm: jetzt,
     };
     try {
@@ -782,9 +986,9 @@
   // ---- Ende: was sass, was nicht — die Zusatzfläschchen bleiben unaufgeloest
 
   const ERGEBNIS_TEXT: Record<'richtig' | 'teilweise' | 'falsch', string> = {
-    richtig: 'richtig',
-    teilweise: 'teilweise — Familie richtig',
-    falsch: 'daneben',
+    richtig: 'getroffen',
+    teilweise: 'Familie stimmt',
+    falsch: '',
   };
 
   /**
@@ -804,6 +1008,7 @@
     readonly ergebnisText: string;
     readonly hinweis?: string;
     readonly nummer?: number;
+    readonly kategorieId?: string;
   }
 
   const rundenZeilen = $derived<RundenZeile[]>(
@@ -812,10 +1017,15 @@
       const option = alleAromen.find((a) => a.id === aromaId);
       // Nur bei Stufe A/B (Familientipp) — Stufe C (freier Abruf) hat keine
       // Familie getippt, bleibt ohne Hinweiszeile.
-      const hinweis =
-        antwort && (antwort.form === 'familie' || antwort.form === 'aromaInFamilie') && antwort.getipptFamilieId
-          ? `getippt: ${familieVon(antwort.getipptFamilieId)} · richtig: ${familieVon(option?.kategorieId)}`
-          : undefined;
+      // "Vermutung: …" bei allem, was kein Treffer war — getipptes Aroma,
+      // sonst die getippte Familie. Kein "daneben" (Stimme der Aromaschule).
+      const vermutung =
+        antwort?.getipptId !== undefined
+          ? alleAromen.find((a) => a.id === antwort.getipptId)?.label
+          : antwort?.getipptFamilieId
+            ? familieVon(antwort.getipptFamilieId)
+            : undefined;
+      const hinweis = antwort && antwort.ergebnis !== 'richtig' && vermutung ? `Vermutung: ${vermutung}` : undefined;
       return {
         aromaId,
         label: option?.label ?? '?',
@@ -823,6 +1033,7 @@
         ergebnisText: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '',
         hinweis,
         nummer: option?.nummer,
+        kategorieId: option?.kategorieId,
       };
     }),
   );
@@ -860,11 +1071,8 @@
   function zurueckZurUebersicht() {
     durchgang = undefined;
     item = undefined;
-    kontrastSchritt = 'erstesRiechen';
-    kontrastReihenfolge = '';
-    kontrastErsteNummer = '';
-    kontrastUnerwartet = false;
-    kontrastAuswertung = undefined;
+    kontrastIndex = 0;
+    kontrastSchrittZuruecksetzen();
     reverseSchritt = 'wahl';
     reverseAromaId = '';
     reverseEinschaetzung = '';
@@ -980,11 +1188,8 @@
       return;
     }
     if (laufender.art === 'kontrast') {
-      kontrastSchritt = 'erstesRiechen';
-      kontrastReihenfolge = '';
-      kontrastErsteNummer = '';
-      kontrastAuswertung = undefined;
-      kontrastUnerwartet = false;
+      kontrastIndex = Math.floor(laufender.beantwortet.length / 2);
+      kontrastSchrittZuruecksetzen();
       phase = 'kontrast';
     } else if (laufender.art === 'reverse') {
       reverseAromaId = laufender.verdeckt[0] ?? '';
@@ -1027,6 +1232,20 @@
   });
 </script>
 
+<!-- Die Riechpause als ruhiger Ring (Gestaltung Aromaschule, 08.11.2026):
+     schließt sich in 25 Sekunden, statt nur eine Zahl im Knopf herunterzu-
+     zählen. Die eine erlaubte Uhr der App (CLAUDE.md, "Kein Timer") — sie
+     soll das Warten zur Atempause machen, nicht zum Countdown. -->
+{#snippet atempause()}
+  <div class="atempause">
+    <svg class="atem-ring" viewBox="0 0 36 36" aria-hidden="true">
+      <circle class="atem-spur" cx="18" cy="18" r="15" />
+      <circle class="atem-fortschritt" cx="18" cy="18" r="15" style:animation-duration={`${PAUSE_SEKUNDEN}s`} />
+    </svg>
+    <span>Kurz durchatmen — die Nase sortiert sich.</span>
+  </div>
+{/snippet}
+
 {#if datenblatt}
   <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
@@ -1065,12 +1284,28 @@
       <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
     </div>
 
+    {#if zuletztKennengelerntOption}
+      {@const z = zuletztKennengelerntOption}
+      <!-- Was zuletzt neu dazukam, mit seiner Merkhilfe — persönlich und
+           ehrlich, ohne Zähler oder Sammel-Optik (ux-regeln Regel 10). -->
+      <div class="frage-block kennengelernt">
+        <div class="aufloesung-kopf" style:--familie={z.kategorieId ? `var(--kat-${z.kategorieId})` : 'var(--spur)'}>
+          {#if z.nummer !== undefined}<span class="deckel">{z.nummer}</span>{/if}
+          <div>
+            <p class="familie-kicker"><span class="familie-punkt"></span>Zuletzt kennengelernt</p>
+            <p class="aroma-name mittel">{z.label}</p>
+          </div>
+        </div>
+        {#if merkhilfeZu(z.nummer)}<p class="hinweis">{merkhilfeZu(z.nummer)}</p>{/if}
+      </div>
+    {/if}
+
     {#if kontrastKandidat || reverseVorschlagOption}
       <div class="vorschlaege">
         <h2>Vorschläge</h2>
         <div class="bestandliste">
           {#if kontrastKandidat}
-            <button type="button" class="bestandkarte" onclick={kontrastdurchgangStarten}>
+            <button type="button" class="bestandkarte" onclick={() => kontrastdurchgangStarten()}>
               <div class="bestandkarte-text">
                 <span class="bestandkarte-name">{kontrastKandidatLabelA} · {kontrastKandidatLabelB}</span>
                 <span class="bestandkarte-meta">oft verwechselt — als Kontrastdurchgang üben</span>
@@ -1110,22 +1345,30 @@
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
-      {#if durchgang?.art === 'kontrast' && kontrastOptionen.length === 2}
-        <p class="frage-satz">Dieser Durchgang: {kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}.</p>
+      {#if durchgang?.art === 'kontrast' && kontrastPaarListe.length > 0}
         <p class="frage-satz">
-          Lege diese zwei Fläschchen verdeckt bereit — so, dass du hinterher nicht weißt, welches du zuerst gezogen hast.
+          Leg {kontrastPaarListe.length === 1 ? 'das Paar' : `jedes der ${kontrastPaarListe.length} Paare`} für sich bereit und misch die zwei
+          verdeckt — welches welches ist, soll erst deine Nase wissen.
         </p>
+        {#each kontrastPaarListe as [a, b], i (a.id)}
+          <p class="hinweis auftrag">Paar {i + 1}: {a.label} oder {b.label}</p>
+          <div class="nummernliste">
+            {#each [a.nummer, b.nummer].filter((n) => n !== undefined).sort((x, y) => x! - y!) as nummer (nummer)}
+              <span class="nummer">{nummer}</span>
+            {/each}
+          </div>
+        {/each}
       {:else}
         <p class="frage-satz">
-          Lege diese {bereitlegenNummern.length} Fläschchen verdeckt bereit — so, dass du beim Greifen nicht erkennen kannst, welches du
-          gerade in der Hand hältst.
+          Leg diese {bereitlegenNummern.length} Fläschchen verdeckt bereit. {DURCHGANG_GROESSE} davon wirst du riechen — welche, entscheidet
+          dein Griff.
         </p>
+        <div class="nummernliste">
+          {#each bereitlegenNummern as nummer (nummer)}
+            <span class="nummer">{nummer}</span>
+          {/each}
+        </div>
       {/if}
-      <div class="nummernliste">
-        {#each bereitlegenNummern as nummer (nummer)}
-          <span class="nummer">{nummer}</span>
-        {/each}
-      </div>
       <div class="knopfreihe">
         <Knopf stufe="primaer" onKlick={bereitgelegt}>liegt bereit</Knopf>
       </div>
@@ -1134,21 +1377,24 @@
   {:else if phase === 'item' && item}
     <p class="fortschritt">{index + 1} von {DURCHGANG_GROESSE}</p>
 
+    <!-- Ein Item ist eine Karte, die wächst (Gestaltung Aromaschule,
+         08.11.2026): Tipp und Nummer schrumpfen zu einer Protokollzeile, die
+         Auflösung wächst darunter — statt drei gestapelter Karten. -->
     <div class="frage-block">
       {#if itemPhase === 'raten'}
-        <p class="frage-satz">Zieh eins, ohne hinzusehen — riech daran.</p>
+        <p class="frage-satz">Zieh eins, ohne hinzusehen. Riech in Ruhe, ruhig zweimal.</p>
         {#if item.formStufe === 'a'}
-          <p class="frage-titel">Welche Familie ist das?</p>
+          <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={(w) => (tipFamilie = w)} platzhalter="Familie wählen …" />
           {/key}
         {:else if item.formStufe === 'b'}
-          <p class="frage-titel">Welche Familie ist das?</p>
+          <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={familieGewaehlt} platzhalter="Familie wählen …" />
           {/key}
           {#if tipFamilie}
-            <p class="frage-titel zweite-frage">Welches Aroma aus „{familieVon(tipFamilie)}“ ist es?</p>
+            <p class="frage-titel zweite-frage">Und welches Aroma aus „{familieVon(tipFamilie)}“?</p>
             {#key tipFamilie}
               <AuswahlListe
                 optionen={aromenDerGewaehltenFamilie}
@@ -1160,110 +1406,172 @@
             {/key}
           {/if}
         {:else}
-          <p class="frage-titel">Welches Aroma ist das?</p>
+          <p class="frage-titel">Was riechst du?</p>
           {#key item}
             <AuswahlListe optionen={namenOptionen} wert={tipAroma} onWahl={(w) => (tipAroma = w)} platzhalter="dein Tipp …" suchbar />
           {/key}
         {/if}
+        <Schalter label="eher geraten" an={tipGeraten} onWahl={(w) => (tipGeraten = w)} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={zurNummer} deaktiviert={!tippVollstaendig}>weiter</Knopf>
         </div>
-      {:else}
-        <p class="hinweis">{tippZusammenfassung}</p>
+      {:else if itemPhase !== 'aufgeloest'}
+        <p class="protokoll">
+          {tippZusammenfassung}{#if itemPhase !== 'nummer' && tipNummer}<span class="protokoll-trenner">{'\u00a0·\u00a0'}</span>{nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}{/if}
+        </p>
+      {/if}
+
+      {#if itemPhase === 'nummer'}
+        <p class="frage-satz abschnitt">Augen auf. Welche Nummer trägt das Fläschchen?</p>
+        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
+        </div>
+      {/if}
+
+      {#if itemPhase === 'beschreiben'}
+        <p class="hinweis auftrag abschnitt">Ein neuer Geruch. Bevor er einen Namen bekommt: wie riecht er für dich?</p>
+        <p class="frage-satz">Tipp an, was passt. Mehrere gehen, keins ist falsch.</p>
+        <Einzelauswahl optionen={beschreibungsOptionen} gewaehlt={beschreibung} onWahl={beschreibungUmschalten} />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={aufloesen}>auflösen</Knopf>
+        </div>
+      {/if}
+
+      {#if itemPhase === 'aufgeloest' && letzteAuswertung}
+        {@const aroma = letzteAuswertung.tatsaechlicheOption}
+        <!-- Die Auflösung als Moment: der Name trägt, nicht das Urteil. Die
+             Familienfarbe (K36, erweitert 08.11.2026) erscheint erst hier —
+             vor der Antwort verriete sie die Familie. -->
+        <div class="aufloesung" style:--familie={aroma.kategorieId ? `var(--kat-${aroma.kategorieId})` : 'var(--spur)'}>
+          <div class="aufloesung-kopf">
+            {#if aroma.nummer !== undefined}<span class="deckel">{aroma.nummer}</span>{/if}
+            <div>
+              {#if aroma.kategorieId}<p class="familie-kicker"><span class="familie-punkt"></span>{familieVon(aroma.kategorieId)}</p>{/if}
+              <p class="aroma-name">{aroma.label}</p>
+            </div>
+          </div>
+          <p class="urteil-zeile">
+            {#if letzteAuswertung.ergebnis === 'richtig'}
+              Getroffen.
+            {:else if letzteAuswertung.ergebnis === 'teilweise'}
+              Die Familie stimmt — deine Vermutung war {letzteAuswertung.vermutung}.
+            {:else}
+              Deine Vermutung: {letzteAuswertung.vermutung}.
+            {/if}
+          </p>
+          {#if letzteAuswertung.lernstandHinweis}
+            <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
+          {/if}
+          {#if letzteAuswertung.nachriechen}
+            <p class="hinweis auftrag">Noch einmal, jetzt mit Namen. So riecht {aroma.label}.</p>
+            {#if letzteAuswertung.beschreibung}
+              <p class="hinweis">Deine Worte: {letzteAuswertung.beschreibung.join(', ')}</p>
+            {/if}
+            {#if letzteAuswertung.nachriechen.merkhilfe}
+              <p class="hinweis">{letzteAuswertung.beschreibung ? 'Datenblatt: ' : ''}{letzteAuswertung.nachriechen.merkhilfe}</p>
+            {/if}
+            {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
+              <p class="hinweis">Zum Vergleich, {letzteAuswertung.nachriechen.tipp.label}: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
+            {/if}
+          {/if}
+          {#if letzteAuswertung.unerwarteteNummer}
+            <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
+          {/if}
+          {#if aroma.verwandte && aroma.verwandte.length > 0}
+            <p class="verwandte">
+              Verwandt: {aroma.verwandte
+                .map((id) => alleAromen.find((a) => a.id === id)?.label)
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          {/if}
+          <div class="knopfreihe">
+            {#if letzteAuswertung.nachriechen && !nachgerochenErledigt}
+              <Knopf stufe="primaer" onKlick={nachgerochen}>nachgerochen</Knopf>
+            {:else}
+              <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
+                weiter
+              </Knopf>
+            {/if}
+            {#if aroma.nummer !== undefined && datenblattZu(aroma.nummer)}
+              <Knopf onKlick={() => (datenblatt = datenblattZu(aroma.nummer!))}>Datenblatt ansehen</Knopf>
+            {/if}
+          </div>
+          {#if pauseRest > 0}{@render atempause()}{/if}
+        </div>
       {/if}
     </div>
-
-    {#if itemPhase === 'nummer' || itemPhase === 'aufgeloest'}
-      <div class="frage-block">
-        {#if itemPhase === 'nummer'}
-          <p class="frage-satz">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
-          <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
-          <div class="knopfreihe">
-            <Knopf stufe="primaer" onKlick={aufloesen} deaktiviert={!tipNummer}>auflösen</Knopf>
-          </div>
-        {:else}
-          <p class="hinweis">Gelesene Nummer: {nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}</p>
-        {/if}
-      </div>
-    {/if}
-
-    {#if itemPhase === 'aufgeloest' && letzteAuswertung}
-      <div class="frage-block">
-        <p class="ergebnis" class:richtig={letzteAuswertung.ergebnis === 'richtig'}>
-          {#if letzteAuswertung.ergebnis === 'richtig'}
-            Richtig — das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {:else if letzteAuswertung.ergebnis === 'teilweise'}
-            Familie richtig, Aroma daneben — das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {:else}
-            Das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {/if}
-        </p>
-        {#if letzteAuswertung.korrekteFamilie}
-          <p class="hinweis">Richtige Familie wäre gewesen: {letzteAuswertung.korrekteFamilie}.</p>
-        {/if}
-        {#if letzteAuswertung.unerwarteteNummer}
-          <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
-        {/if}
-        {#if letzteAuswertung.tatsaechlicheOption.verwandte && letzteAuswertung.tatsaechlicheOption.verwandte.length > 0}
-          <p class="verwandte">
-            Verwandt: {letzteAuswertung.tatsaechlicheOption.verwandte
-              .map((id) => alleAromen.find((a) => a.id === id)?.label)
-              .filter(Boolean)
-              .join(', ')}
-          </p>
-        {/if}
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
-            {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
-          </Knopf>
-          {#if letzteAuswertung.tatsaechlicheOption.nummer !== undefined && datenblattZu(letzteAuswertung.tatsaechlicheOption.nummer)}
-            <Knopf onKlick={() => (datenblatt = datenblattZu(letzteAuswertung!.tatsaechlicheOption.nummer!))}>Datenblatt ansehen</Knopf>
-          {/if}
-        </div>
-      </div>
-    {/if}
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'kontrast' && kontrastOptionen.length === 2}
+    <p class="fortschritt">Paar {kontrastIndex + 1} von {kontrastPaarListe.length}</p>
     <div class="frage-block">
+      <p class="hinweis auftrag">{kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}</p>
       {#if kontrastSchritt === 'erstesRiechen'}
-        <p class="frage-satz">Zieh das erste der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
+        <p class="frage-satz">Probe 1: zieh eins der beiden, ohne hinzusehen, und riech in Ruhe.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastErstesGerochen}>gerochen</Knopf>
         </div>
       {:else if kontrastSchritt === 'zweitesRiechen'}
-        <p class="frage-satz">Zieh das zweite, ohne hinzusehen — riech daran.</p>
+        <p class="frage-satz">Probe 2: das andere, wieder ohne hinzusehen.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'frage')} deaktiviert={pauseRest > 0}>
-            {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+            weiter
           </Knopf>
         </div>
+        {#if pauseRest > 0}{@render atempause()}{/if}
       {:else if kontrastSchritt === 'frage'}
-        <p class="frage-titel">Welches war welches?</p>
+        <p class="frage-titel">Welche Probe war welche?</p>
         <Segment optionen={kontrastFrageOptionen} wert={kontrastReihenfolge} onWahl={(w) => (kontrastReihenfolge = w)} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'nummer')} deaktiviert={!kontrastReihenfolge}>weiter</Knopf>
         </div>
       {:else if kontrastSchritt === 'nummer'}
-        <p class="frage-satz">Jetzt die Augen auf — welche Nummer hattest du zuerst gezogen?</p>
+        <p class="frage-satz">Augen auf. Welche Nummer trägt Probe 1?</p>
         <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
         </div>
       {:else if kontrastSchritt === 'aufgeloest'}
         {#if kontrastUnerwartet}
-          <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieser Durchgang bleibt unbewertet.</p>
+          <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieses Paar bleibt unbewertet.</p>
         {:else if kontrastAuswertung}
-          <p class="ergebnis" class:richtig={kontrastAuswertung.ergebnis === 'richtig'}>
-            {#if kontrastAuswertung.ergebnis === 'richtig'}
-              Richtig — erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
-            {:else}
-              Daneben — es war erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+          <div class="aufloesung">
+            {#each [kontrastAuswertung.ersteOption, kontrastAuswertung.zweiteOption] as probe, i (probe.id)}
+              <div class="aufloesung-kopf" style:--familie={probe.kategorieId ? `var(--kat-${probe.kategorieId})` : 'var(--spur)'}>
+                {#if probe.nummer !== undefined}<span class="deckel">{probe.nummer}</span>{/if}
+                <div>
+                  <p class="familie-kicker"><span class="familie-punkt"></span>Probe {i + 1}</p>
+                  <p class="aroma-name mittel">{probe.label}</p>
+                </div>
+              </div>
+            {/each}
+            <p class="urteil-zeile">{kontrastAuswertung.ergebnis === 'richtig' ? 'Auseinandergehalten.' : 'Vertauscht.'}</p>
+            {#if kontrastAuswertung.nachriechen}
+              <p class="hinweis auftrag">
+                Noch einmal beide, direkt nacheinander, jetzt mit Namen: erst {kontrastAuswertung.ersteOption.label}, dann {kontrastAuswertung.zweiteOption.label}.
+              </p>
+              {#if kontrastAuswertung.nachriechen.ersteMerkhilfe}
+                <p class="hinweis">{kontrastAuswertung.ersteOption.label}: {kontrastAuswertung.nachriechen.ersteMerkhilfe}</p>
+              {/if}
+              {#if kontrastAuswertung.nachriechen.zweiteMerkhilfe}
+                <p class="hinweis">{kontrastAuswertung.zweiteOption.label}: {kontrastAuswertung.nachriechen.zweiteMerkhilfe}</p>
+              {/if}
             {/if}
-          </p>
+          </div>
         {/if}
         <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+          {#if kontrastAuswertung?.nachriechen && !kontrastNachgerochenErledigt}
+            <Knopf stufe="primaer" onKlick={kontrastNachgerochen}>nachgerochen</Knopf>
+          {:else if kontrastLetztesPaar}
+            <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+          {:else}
+            <Knopf stufe="primaer" onKlick={kontrastWeiter} deaktiviert={pauseRest > 0}>
+              nächstes Paar
+            </Knopf>
+          {/if}
         </div>
+        {#if pauseRest > 0}{@render atempause()}{/if}
       {/if}
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
@@ -1312,6 +1620,9 @@
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'ende'}
     {#snippet rundenInhalt(zeile: RundenZeile)}
+      {#if zeile.nummer !== undefined}
+        <span class="deckel klein" style:--familie={zeile.kategorieId ? `var(--kat-${zeile.kategorieId})` : 'var(--spur)'}>{zeile.nummer}</span>
+      {/if}
       <span class="runden-haupt">
         <span class="runden-label">{zeile.label}</span>
         {#if zeile.hinweis}<span class="runden-hinweis">{zeile.hinweis}</span>{/if}
@@ -1319,7 +1630,7 @@
       <span class="runden-ergebnis" class:richtig={zeile.ergebnis === 'richtig'}>{zeile.ergebnisText}</span>
     {/snippet}
     <div class="block">
-      <p class="ende-kopf">{richtigAnzahl} von {rundenZeilen.length} richtig</p>
+      <p class="ende-kopf">Heute gerochen — {richtigAnzahl} von {rundenZeilen.length} getroffen.</p>
       {#if meilenstein}<p class="ende-meilenstein">{meilenstein}</p>{/if}
       <Blattliste>
         {#each rundenZeilen as zeile, index (index)}
@@ -1492,27 +1803,25 @@
     color: var(--gedaempft);
     margin: 0 0 var(--r3);
   }
+  /* Stimme der Aromaschule (08.11.2026): Sätze sind Inhalt, also Serif in
+     Textfarbe — nicht der kleine graue Apparat-Ton. Sans bleibt für Zähler,
+     Protokollzeile und Kicker. */
   .frage-titel {
-    font-size: var(--fs-urteil);
+    font-size: var(--fs-objekt);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
     color: var(--tinte);
-    margin: 0 0 var(--r1);
+    margin: 0 0 var(--r2);
   }
   .frage-titel.zweite-frage {
     margin-top: var(--r4);
   }
   .frage-satz {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-erklaerung);
-    color: var(--gedaempft);
-    margin: 0 0 var(--r3);
-  }
-  .ergebnis {
-    font-size: var(--fs-satz);
-    color: var(--kritisch);
-    margin: 0 0 var(--r2);
-  }
-  .ergebnis.richtig {
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    line-height: 1.45;
     color: var(--satz);
+    margin: 0 0 var(--r3);
   }
   .verwandte {
     font-family: var(--schrift-sans);
@@ -1547,8 +1856,160 @@
   }
   .hinweis {
     color: var(--gedaempft);
-    font-family: var(--schrift-sans);
+    font-family: var(--schrift);
     font-size: var(--fs-satz);
+    line-height: 1.55;
+  }
+  /* Die Aufforderung zum Nachriechen ist eine Handlung, kein Nebenbei — sie
+     steht in Textfarbe über der gedämpften Merkhilfe. */
+  .hinweis.auftrag {
+    color: var(--satz);
+    font-size: var(--fs-bedienwort);
+  }
+
+  /* ---- Ein Item als wachsende Karte, Auflösung als Moment (Gestaltung
+     Aromaschule, 08.11.2026) ------------------------------------------- */
+  .protokoll {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-erklaerung);
+    color: var(--gedaempft);
+    margin: 0;
+  }
+  .protokoll-trenner {
+    color: var(--spur);
+  }
+  .abschnitt {
+    margin-top: var(--r4);
+  }
+  .aufloesung {
+    margin-top: var(--r4);
+    padding-top: var(--r4);
+    border-top: 1px solid var(--linie);
+    animation: auftauchen var(--t-uebernehmen) var(--e-rein);
+  }
+  /* Ohne Protokollzeile darüber (Item aufgelöst, Kontrast) beginnt die
+     Auflösung oben in der Karte — keine Linie, kein leerer Streifen. */
+  .aufloesung:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  @keyframes auftauchen {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .aufloesung-kopf {
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+    margin-bottom: var(--r3);
+  }
+  /* Der Deckel: dieselbe runde Nummer wie beim Bereitlegen, hier mit dem
+     dünnen Rand in der Familienfarbe. */
+  .deckel {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    box-shadow: inset 0 0 0 2px var(--familie);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-wert);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--tinte);
+  }
+  .familie-kicker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .familie-punkt {
+    width: var(--zeichen);
+    height: var(--zeichen);
+    border-radius: 50%;
+    background: var(--familie);
+  }
+  .aroma-name {
+    margin: 0;
+    font-family: var(--schrift);
+    font-size: var(--fs-blattitel);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--tinte);
+  }
+  .urteil-zeile {
+    margin: 0 0 var(--r2);
+    font-size: var(--fs-bedienwort);
+    font-style: italic;
+    color: var(--satz);
+  }
+  .aroma-name.mittel {
+    font-size: var(--fs-titel);
+  }
+  .deckel.klein {
+    width: 36px;
+    height: 36px;
+    font-size: var(--fs-meta);
+    box-shadow: inset 0 0 0 1.5px var(--familie);
+  }
+  .kennengelernt .hinweis {
+    margin: 0;
+  }
+  .atempause {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+    margin-top: var(--r3);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    font-style: italic;
+    color: var(--gedaempft);
+  }
+  .atem-ring {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    transform: rotate(-90deg);
+  }
+  .atem-spur,
+  .atem-fortschritt {
+    fill: none;
+    stroke-width: 2.5;
+  }
+  .atem-spur {
+    stroke: var(--vertiefung);
+  }
+  /* Umfang 2·π·15 ≈ 94,25 — der Ring schließt sich einmal, linear. */
+  .atem-fortschritt {
+    stroke: var(--akzent);
+    stroke-linecap: round;
+    stroke-dasharray: 94.25;
+    stroke-dashoffset: 94.25;
+    animation-name: atem-schliessen;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes atem-schliessen {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
   /* Ende-Screen (Rueckmeldung 2026-09-18: vorher ueber muster/Werteliste.svelte
      gebaut — ein Muster fuer Label+Zahl+Einheit, falsch fuer eine Ergebnis-
@@ -1581,6 +2042,7 @@
     cursor: default;
   }
   .runden-haupt {
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -1603,7 +2065,7 @@
     flex-shrink: 0;
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
-    color: var(--kritisch);
+    color: var(--gedaempft);
   }
   .runden-ergebnis.richtig {
     color: var(--satz);

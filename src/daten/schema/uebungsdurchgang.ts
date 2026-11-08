@@ -49,6 +49,19 @@ export const Uebungsdurchgang = z.object({
   zusatz: z.array(Id).default([]),
   /** Teilmenge von `abgefragt`, in Ziehreihenfolge, die schon dran war. */
   beantwortet: z.array(Id).default([]),
+  /**
+   * Wie oft nach einer Auflösung noch einmal gerochen wurde — zählt gegen die
+   * Riechgrenze (domain/uebung.ts::RIECHGRENZE). Gespeichert statt im
+   * Bildschirm gehalten, damit ein Neuladen mitten im Durchgang die Grenze
+   * nicht zurücksetzt.
+   */
+  nachgerochen: z.number().int().nonnegative().default(0),
+  /**
+   * Nur "kontrast": die Paare in Abfragereihenfolge (Etappe 3 des
+   * Lern-Nachzugs, bis zu vier). Fehlt bei einem älteren Kontrastdurchgang
+   * mit genau einem Paar — der liest sich dann aus `verdeckt`.
+   */
+  paare: z.array(z.tuple([Id, Id])).optional(),
   begonnenAm: Zeitpunkt,
   abgeschlossenAm: Zeitpunkt.optional(),
 });

@@ -250,7 +250,11 @@ export interface UebungsKennzahlEingabe {
   readonly zielProWoche?: number;
 }
 
-/** Ab Box 4 gilt ein Aroma als "sicher" — dieselbe Grenze, die vorher als Boxenverteilung auf der Übersicht stand. */
+/**
+ * Ab Box 4 **auf Stufe C** gilt ein Aroma als "sicher". Die Box allein reicht
+ * nicht: auf Stufe A misst sie nur Familienwissen, und ein Aroma konnte so
+ * nach drei Familientreffern "sicher" heißen, ohne je benannt worden zu sein.
+ */
 const SICHER_AB_BOX = 4;
 
 /** Kleinste Stichprobe, ab der eine Familien-/Reverse-Quote nicht wie geraten wirkt — dieselbe Zahl wie sonst im Aromapaket (z. B. KONTRASTDURCHGANG_SCHWELLE). */
@@ -426,7 +430,7 @@ export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly
   const labelVon = (aromaId: string) => aromen.find((a) => a.id === aromaId)?.label ?? aromaId;
 
   if (eingefuehrteZustaende.length > 0) {
-    const sicher = eingefuehrteZustaende.filter((z) => z.box >= SICHER_AB_BOX).length;
+    const sicher = eingefuehrteZustaende.filter((z) => z.stufe === 'c' && z.box >= SICHER_AB_BOX).length;
     pool.push({ label: 'Sicher gelernt', wert: `${sicher} von ${gesamtAnzahlAromen}` });
   }
 
@@ -459,4 +463,108 @@ export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly
   }
 
   return pool;
+}
+
+// ---- Zuletzt kennengelernt (Gestaltung Aromaschule, 08.11.2026) -----------
+
+/**
+ * Das Aroma, das zuletzt zum ersten Mal dran war — für die Übersicht
+ * ("Zuletzt kennengelernt", mit Merkhilfe). Gezählt werden nur die drei
+ * Abfrageformen eines normalen Durchgangs; Kontrast und Reverse führen kein
+ * Aroma ein. Ohne solche Antworten: undefined — dann bleibt die Stelle leer,
+ * statt einen Platzhalter zu zeigen.
+ */
+export function zuletztKennengelernt(antworten: readonly Uebungsantwort[]): string | undefined {
+  const erstesMal = new Map<string, number>();
+  for (const a of antworten) {
+    if (a.form !== 'familie' && a.form !== 'aromaInFamilie' && a.form !== 'freierAbruf') continue;
+    const bisher = erstesMal.get(a.aromaId);
+    if (bisher === undefined || a.zeitstempel < bisher) erstesMal.set(a.aromaId, a.zeitstempel);
+  }
+  let bestId: string | undefined;
+  let bestZeit = -Infinity;
+  for (const [id, zeit] of erstesMal) {
+    if (zeit > bestZeit) {
+      bestId = id;
+      bestZeit = zeit;
+    }
+  }
+  return bestId;
+}
+
+// ---- Statistik als Erzählung (Etappe 7, Gestaltung der Statistik) ---------
+//
+// Sätze statt Tabellen — dieselbe Haltung wie der Meilenstein-Satz: nur, was
+// die Daten wirklich tragen, und Teile, die bei Null stünden, fallen weg
+// statt als Zähler stehenzubleiben (ux-regeln Regel 10).
+
+/**
+ * Der Satz oben auf der Statistik: "Diese Woche: 3 Durchgänge, 24 Fläschchen
+ * gerochen. Am sichersten: Blumig." Ohne Durchgang in den letzten sieben
+ * Tagen fällt der erste Teil weg (kein "0 Durchgänge"), ohne belastbare
+ * Familie der zweite. Bleibt nichts, gibt es keinen Satz.
+ */
+export function wochenSatz(eingabe: {
+  readonly antworten: readonly Uebungsantwort[];
+  readonly durchgaengeBegonnenAm: readonly number[];
+  readonly familienQuoten: readonly FamilienQuote[];
+  readonly familienLabel: (kategorieId: string) => string;
+  readonly jetzt: number;
+}): string | undefined {
+  const { antworten, durchgaengeBegonnenAm, familienQuoten, familienLabel, jetzt } = eingabe;
+  const teile: string[] = [];
+  const durchgaenge = durchgaengeBegonnenAm.filter((ts) => jetzt - ts < MS_PRO_WOCHE).length;
+  if (durchgaenge > 0) {
+    const gerochen = antworten.filter((a) => jetzt - a.zeitstempel < MS_PRO_WOCHE && a.form !== 'reverse').length;
+    const d = `${durchgaenge} ${durchgaenge === 1 ? 'Durchgang' : 'Durchgänge'}`;
+    const f = `${gerochen} Fläschchen gerochen`;
+    teile.push(`Diese Woche: ${d}, ${f}.`);
+  }
+  const belastbar = familienQuoten.filter((q) => q.versuche >= KENNZAHL_MINDEST_STICHPROBE && q.richtig > 0);
+  if (belastbar.length > 0) {
+    const beste = [...belastbar].sort((x, y) => y.richtig / y.versuche - x.richtig / x.versuche)[0]!;
+    teile.push(`Am sichersten: ${familienLabel(beste.kategorieId)}.`);
+  }
+  return teile.length > 0 ? teile.join(' ') : undefined;
+}
+
+/**
+ * Der Lernstand als Satz: "Von 20 eingeführten Aromen sitzen 8 in ihrer
+ * Familie, 3 benennst du im Familienkreis, 1 frei." Stufe B und C heißen
+ * "sitzt in der Familie", Stufe C zusätzlich "im Familienkreis benannt",
+ * frei = Stufe C ab Box 4 (dieselbe Schwelle wie "Sicher gelernt"). Teile,
+ * die bei Null stünden, fallen weg.
+ */
+export function lernstandSatz(zustaende: readonly { readonly eingefuehrt: boolean; readonly stufe: 'a' | 'b' | 'c'; readonly box: number }[]): string | undefined {
+  const eingefuehrt = zustaende.filter((z) => z.eingefuehrt);
+  const n = eingefuehrt.length;
+  if (n === 0) return undefined;
+  const inFamilie = eingefuehrt.filter((z) => z.stufe !== 'a').length;
+  const imKreis = eingefuehrt.filter((z) => z.stufe === 'c').length;
+  const frei = eingefuehrt.filter((z) => z.stufe === 'c' && z.box >= SICHER_AB_BOX).length;
+  const kopf = `Von ${n} eingeführten ${n === 1 ? 'Aroma' : 'Aromen'}`;
+  if (inFamilie === 0) return `Bei ${n === 1 ? 'dem einen eingeführten Aroma' : `allen ${n} eingeführten Aromen`} geht es noch um die Familie.`;
+  const teile = [`${inFamilie === 1 ? 'sitzt 1' : `sitzen ${inFamilie}`} in ihrer Familie`];
+  if (imKreis > 0) teile.push(`${imKreis} benennst du im Familienkreis`);
+  if (frei > 0) teile.push(`${frei} frei`);
+  return `${kopf} ${teile.join(', ')}.`;
+}
+
+export interface VerwechseltesPaar {
+  readonly aId: string;
+  readonly bId: string;
+  /** Beide Richtungen zusammen — wie oft die beiden insgesamt verwechselt wurden. */
+  readonly anzahl: number;
+}
+
+/** Ungerichtete Verwechslungen aus dem Protokoll, häufigste zuerst — für "Was du verwechselst". */
+export function verwechseltePaare(antworten: readonly Uebungsantwort[]): readonly VerwechseltesPaar[] {
+  const summe = new Map<string, VerwechseltesPaar>();
+  for (const e of verwechslungsmatrix(antworten)) {
+    const [aId, bId] = [e.tatsaechlichId, e.getipptId].sort() as [string, string];
+    const schluessel = `${aId}|${bId}`;
+    const bisher = summe.get(schluessel);
+    summe.set(schluessel, { aId, bId, anzahl: (bisher?.anzahl ?? 0) + e.anzahl });
+  }
+  return [...summe.values()].sort((x, y) => y.anzahl - x.anzahl);
 }

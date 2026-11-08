@@ -334,6 +334,14 @@ richtig, Aroma falsch) → nur eine Box runter, nicht auf Null.** Wer die
 Familie trifft, hat den Geruch grundsätzlich verortet; das auf Null zu
 setzen würde echten Teil-Fortschritt verwerfen.
 
+**Gewertet wird gegen die Stufe des gezogenen Aromas, nie gegen die gezeigte
+Form** (`werteAntwortAus`, Nachzug 08.11.2026). Die Form eines Platzes steht
+vor dem blinden Griff fest und gehört fast nie zum gezogenen Aroma. Ein
+Treffer in einer *leichteren* Form als die Stufe beweist nichts
+(`ohneAussage`: Box und Fälligkeit bleiben stehen) — wer das „vereinfacht",
+lässt Aromen auf Stufe C für eine richtige Familie aufsteigen. Ein
+Stufenaufstieg setzt die Box auf 2, statt die Box der Vorstufe zu erben.
+
 **Die Intervalle bleiben absichtlich stur.** Eine App, die eine faule Woche
 als Präferenz läse und die Intervalle streckt, löst eine Abwärtsspirale aus:
 weniger Erinnerungen, noch weniger Training. Was sich stattdessen anpasst,
@@ -375,8 +383,9 @@ irgendwann etwas, das mit Absicht fehlt.
   zum Ansehen, keine, die laufen.
 
   **Ausdrückliche Ausnahme: die Riechpause im Übungsmodus** (`domain/leitner.ts`,
-  Aromapaket Etappe 6). Zwischen zwei Fläschchen erzwingt ein Rückwärtszähler auf
-  dem „weiter"-Knopf 25 Sekunden Pause. Das ist kein Widerspruch zur Regel oben,
+  Aromapaket Etappe 6). Zwischen zwei Fläschchen erzwingt die App 25 Sekunden
+  Pause — seit 08.11.2026 als Ring, der sich schließt, der „weiter"-Knopf zeigt
+  keine Sekunden mehr. Das ist kein Widerspruch zur Regel oben,
   sondern ihr Zweck gespiegelt: die Uhr dort erzeugt Tempo, diese hier verhindert
   es — ohne Pause sinkt die Wahrnehmungsschärfe der Nase messbar, und die App
   würde Ermüdung statt Können messen. Keine andere Stelle der App bekommt einen
@@ -394,7 +403,10 @@ irgendwann etwas, das mit Absicht fehlt.
   wird nach einer Woche überblättert.
 - **Abgehakt wird nur auf Durchgangs- und Positionsebene** (K2, K37). Handgriffe
   hakt niemand ab.
-- **Keine Farbcodierung im Aromarad** (K36).
+- **Keine Vollflächen in Familienfarben** (K36, seit Redesign v2 gelockert): neun
+  gedämpfte Kategoriefarben nur als Punkt und dünner Rand, im Aromarad und — seit
+  08.11.2026 — in der Aromaschule, dort **nie vor der Antwort** (die Farbe verriete die
+  Familie).
 - **Keine Wischgeste zum Löschen** im Gussplan-Editor (K44) — einen Schritt
   mitten im Aufguss wegzuwischen bemerkt man zu spät.
 - **Keine Personenzuordnung je Tasse außerhalb der Bestellung** (K34).

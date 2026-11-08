@@ -210,6 +210,15 @@ Grenzen, die aus dem Konzept bereits gelten und hier nicht verhandelt werden:
   aus echten Ereignissen nachprüfbare persönliche Rückmeldung im Rückblick,
   außerhalb des Alltagspfads, die bei Misserfolg schweigt statt zu trösten oder
   zu mahnen.
+  **Eine bewusste, eng begrenzte Ausnahme** (2026-11-08, auf ausdrücklichen Wunsch):
+  das Raster aller 60 Fläschchen in der Aromaschule-Statistik („Wie weit du bist").
+  Es steht nie offen da, sondern ist **ausklappbar** hinter dem Lernstand-Satz, trägt
+  keine Zahl („12 von 60"), keinen Balken, keinen Zähler — nur die Fläschchen selbst,
+  noch nicht kennengelernte blass, kennengelernte mit einem Rand in der Familienfarbe,
+  dessen Stärke die Lernstufe zeigt. Der Satz darüber bleibt die Hauptauskunft.
+- **Ausklappbar statt einklappbar.** Wo ein Bildschirm Zusätzliches anbietet
+  („Mehr Zahlen", das Fläschchen-Raster), ist es anfangs zu und öffnet sich auf
+  Wunsch — nicht anfangs offen zum Wegklappen.
 - **Keine neuen Farben für Zustände** (K69) — kein „bald fällig"-Rot, keine
   Fortschrittsbalken.
 - **Nicht im Alltagspfad.** K57/K58 gelten weiter: kein Urteil unter Zeitdruck, kein

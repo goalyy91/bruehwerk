@@ -18,13 +18,20 @@
   type Zeichen = 'punkt' | 'ring' | 'gestrichelt';
   type Option<T extends string> = { wert: T; label: string; symbol?: Zeichen };
 
+  // `gewaehlt` (optional, Lern-Nachzug Etappe 4): macht daraus eine
+  // Mehrfachauswahl ohne Staerke — fuer das Beschreiben eines neuen Aromas.
+  // Bewusst keine Chips.svelte: ein Chip ist in Brühwerk eine Auffaelligkeit
+  // MIT Staerke (ux-regeln Regel 5). Der Aufrufer schaltet selbst um; ohne
+  // `gewaehlt` bleibt alles wie bisher.
   let {
     optionen,
-    wert,
+    wert = '',
+    gewaehlt,
     onWahl,
   }: {
     optionen: readonly Option<string>[];
-    wert: string;
+    wert?: string;
+    gewaehlt?: readonly string[];
     onWahl: (wert: string) => void;
   } = $props();
 </script>
@@ -34,7 +41,8 @@
     <button
       type="button"
       class="chip"
-      class:gewaehlt={option.wert === wert}
+      class:gewaehlt={gewaehlt ? gewaehlt.includes(option.wert) : option.wert === wert}
+      aria-pressed={gewaehlt ? gewaehlt.includes(option.wert) : undefined}
       onclick={() => onWahl(option.wert)}
     >
       {#if option.symbol}

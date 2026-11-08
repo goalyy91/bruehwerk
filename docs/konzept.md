@@ -846,7 +846,7 @@ Drill-down über drei Ebenen, kein radiales Rad — die Entscheidung aus Fassung
 
 Der Umschalter zwischen beiden Sets ist derselbe wie im Gussplan-Editor: zwei gleich große Felder, zwei Wörter K39. Er wechselt die *Sprache* derselben Daten, nicht ihren Umfang.
 
-**K36 aufgehoben (Redesign v2, Etappe 1):** neun gedämpfte, warme Kategoriefarben sind jetzt erlaubt — ein kleiner Punkt und ein dünner Rand je Kategorie, keine Vollflächen. Ursprünglich galt „keine Farbcodierung — ein Akzent bleibt ein Akzent, auch im Aromarad"; am Bildsprache-Mockup zeigte sich, dass neun Kategorien ohne Farbe schlecht unterscheidbar bleiben, und die Kategoriefarben waren über fünf Rückmelderunden die mit Abstand am besten aufgenommene Änderung. Bleibt auf das Aromarad begrenzt — der eine App-weite Akzent gilt überall sonst unverändert.
+**K36 aufgehoben (Redesign v2, Etappe 1):** neun gedämpfte, warme Kategoriefarben sind jetzt erlaubt — ein kleiner Punkt und ein dünner Rand je Kategorie, keine Vollflächen. Ursprünglich galt „keine Farbcodierung — ein Akzent bleibt ein Akzent, auch im Aromarad"; am Bildsprache-Mockup zeigte sich, dass neun Kategorien ohne Farbe schlecht unterscheidbar bleiben, und die Kategoriefarben waren über fünf Rückmelderunden die mit Abstand am besten aufgenommene Änderung. Bleibt auf das Aromarad begrenzt — der eine App-weite Akzent gilt überall sonst unverändert. *(Erweitert 08.11.2026: auch die Aromaschule, weil sie dieselben neun Familien übt — gleiche Familie, gleiche Farbe. Dort nur **nach** der Auflösung und im Rückblick, nie beim Bereitlegen oder Raten: vorher verriete die Farbe die Familie.)*
 
 Zur Größe des Koffers: **60 Aromen** in der großen Ausgabe, 36 in der „Révélation". Die Nummern und ihre Kategoriezuordnung lieferst du beim Bauen; die Zahlen in den Entwürfen sind Beispiele.
 
@@ -897,7 +897,7 @@ ein — erst die Familie, dann das Einzelaroma:
 | Stufe | Frage | Freischaltung |
 | --- | --- | --- |
 | A — Familie | eine von neun Familien | dreimal in Folge richtig → Stufe B |
-| B — Aroma in der Familie | Familie wählen, dann ein Aroma *aus dieser Familie* — 3 bis 16 Kandidaten je nach Familiengröße | automatisch nach A |
+| B — Aroma in der Familie | Familie wählen, dann ein Aroma *aus dieser Familie* — 3 bis 16 Kandidaten je nach Familiengröße | zweimal richtig, mindestens 12 Stunden auseinander → Stufe C |
 | C — Freier Abruf | Aroma aus allen 60, suchbar | die einzige Stufe, die wirklich prüft, ob ein Geruch *gekonnt* wird |
 
 Stufe B ist damit zugleich die Multiple-Choice-Form aus dem Lastenheft: eine freie Liste
@@ -925,21 +925,148 @@ Erinnerungen auslösen. Was sich der Trainingshäufigkeit anpasst, ist stattdess
 Box 1–2 stehen, und läuft von selbst wieder an, sobald diese sich leeren. Der Boxenzustand
 ist der bessere Regler als der Kalender.
 
-**Die Riechpause ist die eine Ausnahme von „kein Timer".** Zwischen zwei Fläschchen
-liegen 25 Sekunden, erzwungen über einen Rückwärtszähler auf dem „weiter"-Knopf — siehe
-die Ausnahme in `CLAUDE.md`. Der Zähler erzeugt kein Tempo, er verhindert es: ohne Pause
-sinkt die Wahrnehmungsschärfe messbar, und die App würde Ermüdung statt Können messen.
-Harte Obergrenze: 10 Riechvorgänge je Übungsdurchgang.
+**Gewertet wird gegen die Stufe des gezogenen Aromas, nicht gegen die gezeigte Form.**
+*(Nachzug 08.11.2026.)* Die Form eines Platzes steht vor dem blinden Griff fest und gehört
+fast nie zu dem Aroma, das dann in der Hand liegt. Erst nach dem Ablesen ist bekannt,
+welches es war — und erst dann lässt sich sagen, was die Antwort beweist. Die Antwort gibt
+her, was ihre Form enthält: ein freier Abruf nennt ein Aroma und damit auch dessen
+Familie, die Familienform nur eine Familie.
 
-**Kontrastdurchgang** — die gezielte Übung gegen dokumentierte Verwechslungen, ab drei
-Verwechslungen eines Paares angeboten. Hier gilt eine bewusste, eng begrenzte Ausnahme
-vom verdeckten Prinzip: die App nennt **vor** dem Riechen beide Namen („dieser
-Durchgang: Mandel oder Haselnuss") — ohne das wäre es nur ein freier Abruf, zufällig auf
-zwei Fläschchen verengt, und die eigentliche Leistung, zwei ähnliche Gerüche direkt
-gegeneinander abzuwägen, fände nicht statt. Beide werden nacheinander blind gezogen,
-dann eine einzige Zuordnungsfrage: „welches war welches" — nie zwei Einzelfragen, sonst
-wäre die zweite durch Ausschluss geschenkt. Läuft immer als eigener Durchgang, nie unter
-die acht Items eines normalen gemischt.
+- **Leichtere Form als die Stufe, Treffer:** beweist nichts über die eigentliche Stufe.
+  Box und Fälligkeit bleiben stehen, das Aroma bleibt fällig. Ohne diese Regel stieg ein
+  Aroma auf Stufe C für eine richtige *Familie* eine Box auf.
+- **Leichtere Form, Fehler:** zählt voll. Wer schon die Familie nicht trifft, kann das
+  Aroma nicht.
+- **Schwerere Form:** gewertet nach den Regeln der eigenen Stufe — ein Aroma auf A, frei
+  abgerufen mit einem Tipp aus der richtigen Familie, ist für A ein Treffer.
+
+Angezeigt wird weiterhin das Urteil über die *gezeigte* Frage; ein Satz darunter sagt,
+wenn die Antwort für den Lernstand nicht zählt.
+
+**Ein Stufenaufstieg setzt die Box auf 2.** Die schwerere Abrufform ist eine neue
+Karteikarte: vorher erbte das Aroma die Box der Familienstufe, nach drei Familientreffern
+also Box 4 — und wurde erst nach zwölf Tagen zum ersten Mal beim Namen gefragt. Box 2
+heißt: in zwei Tagen, nicht bei null, weil das Wissen der Vorstufe trägt.
+
+**Stufe C hält nicht automatisch.** Liegt auf C zweimal in Folge schon die Familie des
+getippten Aromas daneben, geht das Aroma zurück auf B. Ein falsches Aroma aus der
+richtigen Familie unterbricht diese Serie — das ist Verwechslung, nicht Verlust.
+
+**Lange Pause.** Ist ein Aroma mehr als doppelt so lange überfällig wie sein Intervall
+(bei Box 1 gerechnet mit den zwei Tagen von Box 2), und weißt du es auf der eigenen Stufe
+nicht, wohl aber auf der darunter, gilt es als **aufgefrischt**: Box 2, kein Rückfall auf
+1, die Stufe bleibt. Das Lastenheft wollte dafür ursprünglich eine leichtere *Frage* —
+das geht nicht, weil die Frage vor dem Griff feststeht.
+
+**„nur geraten".** Ein Schalter vor dem Weiter: ein so markierter Treffer zählt wie ein
+Teilerfolg. Auf Stufe B mit drei bis sechzehn Kandidaten ist ein Zufallstreffer nicht
+selten, und er schöbe die Box hoch, als wäre der Geruch erkannt. Geraten werden darf und
+soll weiterhin — der Versuch selbst hilft dem Behalten, sobald die Auflösung folgt.
+
+**Zähe Aromen.** Nach fünf nicht richtigen Wertungen in Folge gilt ein Aroma als zäh und
+zählt nicht mehr für die Einführungssperre — sonst halten zwei, drei Gerüche, die einfach
+nicht sitzen, auf Dauer alles Neue zurück. Geübt wird es weiter wie jedes andere; ein
+Treffer hebt den Zustand auf.
+
+**„Sicher gelernt" heißt Stufe C und Box 4 oder höher.** Die Box allein misst auf Stufe A
+nur Familienwissen.
+
+**Die Riechpause ist die eine Ausnahme von „kein Timer".** Zwischen zwei Fläschchen
+liegen 25 Sekunden, erzwungen über den gesperrten „weiter"-Knopf und sichtbar als Ring, der
+sich in dieser Zeit schließt — ohne Sekundenzahl (seit 08.11.2026) — siehe die Ausnahme in
+`CLAUDE.md`. Die Pause erzeugt kein Tempo, er verhindert es: ohne Pause
+sinkt die Wahrnehmungsschärfe messbar, und die App würde Ermüdung statt Können messen.
+Harte Obergrenze: 12 Riechvorgänge je Übungsdurchgang — acht Abfragen und bis zu vier
+Mal Nachriechen. *(Bis 08.11.2026: 10, aus dem Lastenheft. Angehoben, damit nach Fehlern
+nachgerochen werden kann, ohne die Abfragen zu kürzen; klinische Identifikationstests wie
+Sniffin' Sticks arbeiten mit 16 Gerüchen je Sitzung.)*
+
+**Nachriechen.** *(Nachzug 08.11.2026.)* War die Antwort falsch, ein Teilerfolg, als
+geraten markiert oder nur aufgefrischt, fordert die Auflösung auf, das Fläschchen noch
+einmal zu riechen — jetzt mit Namen. Eine Bezeichnung hilft dem Geruchsgedächtnis nur,
+wenn sie beim Einprägen da ist, nicht erst beim Abruf; gerade nach einem Fehler fehlt
+genau diese Verknüpfung. Dazu steht eine **Merkhilfe**: eine Zeile Beschreibungswörter und
+ein Anker, jedes Wort aus dem Datenblatt desselben Fläschchens (`daten/aroma-merkhilfen.ts`,
+ein Test prüft das). Bei einer Verwechslung steht die Merkhilfe des getippten Aromas
+daneben — der Vergleich zweier ähnlicher Gerüche ist, was Unterscheiden lehrt. Geschichte,
+Gewinnung und Chemie bleiben im Datenblatt. Die Riechpause beginnt erst nach dem
+Nachriechen; nach einem echten Treffer wird nicht nachgerochen.
+
+**Kennenlernen.** *(Nachzug 08.11.2026.)* Neue Aromen kommen weiter blind im normalen
+Durchgang — der erste Versuch, gefolgt von der Auflösung, hilft dem Behalten so gut wie
+vorheriges Einprägen. Zwei Ergänzungen: Ist das gezogene Aroma neu, fragt die App nach
+der Nummer und **vor** dem Namen „wie würdest du es beschreiben?" — Antippen aus sechzehn
+Wörtern, die aus den Merkhilfen stammen, mehrere möglich, ohne Wertung. Danach stehen
+deine Wörter neben der Merkhilfe. Und beim ersten Kontakt wird **immer** nachgerochen,
+auch nach einem Zufallstreffer. Damit das Beschreiben blind bleibt, zeigt die
+Nummernliste nur Nummern; der Name erscheint erst beim Auflösen.
+
+**Kontrastdurchgang** — die gezielte Übung im Auseinanderhalten ähnlicher Gerüche.
+Hier gilt eine bewusste, eng begrenzte Ausnahme vom verdeckten Prinzip: die App nennt
+**vor** dem Riechen beide Namen eines Paares („Mandel oder Haselnuss") — ohne das wäre es
+nur ein freier Abruf, zufällig auf zwei Fläschchen verengt, und die eigentliche Leistung,
+zwei ähnliche Gerüche direkt gegeneinander abzuwägen, fände nicht statt. Beide werden
+nacheinander blind gezogen, dann eine einzige Zuordnungsfrage: „welches war welches" — nie
+zwei Einzelfragen, sonst wäre die zweite durch Ausschluss geschenkt. Läuft immer als
+eigener Durchgang, nie unter die acht Items eines normalen gemischt.
+
+*(Nachzug 08.11.2026.)* Ein Kontrastdurchgang hat **bis zu vier Paare**, jedes für sich
+verdeckt bereitgelegt; kein Aroma steht in zwei Paaren. Die Paare kommen in dieser
+Rangfolge: belegte Verwechslungen (ab drei), dann zähe Aromen mit ihrem häufigsten
+Verwechslungspartner, dann **vorbeugend** verwandte Aromen aus dem Datenblatt, sobald beide
+mindestens auf Stufe B stehen — das Unterscheiden wird geübt, bevor die erste Verwechslung
+passiert. Die vorbeugenden Paare kommen in drei Rängen, innerhalb eines Rangs
+zufällig: erst Paare, deren Datenblätter sich **gegenseitig** nennen (57, auch über
+Familiengrenzen: Holzig–Zeder, Teer–Rauchig), dann einseitig genannte aus **derselben
+Familie** (39), zuletzt einseitig genannte über Familiengrenzen (85, etwa Zeder–Pappe, aber
+auch Zitrone–Jasmin). Bewusst kein Familienfilter: er striche Holzig–Zeder. Ob ein Paar
+wirklich verwechselt wird, sagen ohnehin erst die eigenen Fehler — ab drei rückt es nach
+vorn. „durchgang starten" wird in etwa **jedem vierten Fall** von selbst ein
+Kontrastdurchgang, wenn mindestens drei Paare da sind; die Vorschlagskarte für eine belegte
+Verwechslung bleibt und startet ebenfalls alle verfügbaren Paare.
+
+**Ein Paar bewegt keine Box.** Bei zwei Antwortmöglichkeiten liegt Raten zur Hälfte
+richtig; ein Treffer schöbe sonst bei jedem zweiten Versuch beide Boxen hoch, auch für ein
+Paar, das man nicht auseinanderhalten kann. Gezählt wird am Paar: richtig senkt den
+Verwechslungszähler in beide Richtungen um eins, falsch erhöht ihn. Ein Paar, das
+dauerhaft gelingt, wandert so aus dem Pool. Nach einer falschen Zuordnung werden beide
+Fläschchen noch einmal gerochen, direkt nacheinander, mit Namen und Merkhilfen — zwei
+Riechvorgänge, solange die Riechgrenze reicht.
+
+**Kaffee-Brücke.** *(Nachzug 08.11.2026.)* Gelerntes überträgt sich umso schlechter, je
+weiter Übung und Ernstfall auseinanderliegen — deshalb zwei Verbindungen zur Tasse
+(`domain/kaffeebruecke.ts`). Erstens: Aromen, die in den eigenen Verkostungen der letzten
+60 Tage vorkamen, werden zuerst **eingeführt**; auf bereits eingeführte wirkt das nicht, ihre
+Abfrage folgt weiter allein der Fälligkeit. Zweitens: die Verkostung in der Historie zeigt
+zu jedem Aroma mit Fläschchen die Nummer im Deckel-Kreis und darunter höchstens einen Satz —
+„Zum Abgleich: riech Nr. 53 neben der Tasse — war es wirklich Mandel?" (bis zu drei
+Fläschchen). Verkostungen mit dem SCA-Aromarad finden ihr Fläschchen über den Namen: 35
+wortgleiche Blätter und sechs eindeutige Entsprechungen (Anis, Muskat, Nelke, malzig,
+erdig-muffig, schimmelig), zusammen 41 von 79. Was nicht eindeutig ist („papierig" ist nicht
+„Pappe"), bekommt keine Nummer. Grenze, die kein Code löst: in der Tasse riecht man
+retronasal, am Fläschchen orthonasal.
+
+**Statistik als Erzählung.** *(Nachzug 08.11.2026.)* Die Statistik liest sich nicht mehr
+als Bericht, sondern von oben nach unten nach Wichtigkeit: ein Satz über die Woche („Diese
+Woche: 2 Durchgänge, 19 Fläschchen gerochen. Am sichersten: Fruchtig." — Teile, die bei
+Null stünden, fallen weg); **Woran du gerade arbeitest** (die zähesten Aromen mit Deckel,
+Merkhilfe und „0 von 3", antippbar zum Datenblatt); **Was du verwechselst** (Paare, beide
+Richtungen zusammen, mit „als Kontrast üben"); **Deine Familien** (Farbpunkt, „3 von 12",
+sicherste zuerst); **Wie weit du bist** als Satz („Von 10 eingeführten Aromen sitzen 2 in
+ihrer Familie, 2 benennst du im Familienkreis.") und ausklappbar das Raster aller 60
+Fläschchen; die **Entwicklung**; ausklappbar **Mehr Zahlen** (Übungsarten, Abdeckung,
+Volumen, Boxen, Zielfrequenz). Zusätzliches ist ausklappbar, nicht einklappbar.
+
+**Stimme der Aromaschule.** *(Nachzug 08.11.2026.)* Brühwerk ist ein Laborbuch: es gibt
+eine **Vermutung** und einen **Befund**, kein „daneben". Nach der Auflösung steht der Name
+des Aromas groß in Serif (der Befund), darunter „Getroffen.", „Die Familie stimmt — deine
+Vermutung war …" oder „Deine Vermutung: …" — ohne Urteilswort, ohne Rot. Im Kontrast
+heißt es „Auseinandergehalten." oder „Vertauscht.". Sätze sind Inhalt und stehen in Serif
+und Textfarbe; Sans bleibt für Zähler, Protokollzeile und Kicker. Kein Lob, das über den
+Befund hinausgeht, kein Trost — dieselbe Haltung wie beim Meilenstein-Satz. Die
+Riechpause erscheint als Ring, der sich in 25 Sekunden schließt („Kurz durchatmen — die
+Nase sortiert sich."). Die Übersicht zeigt das zuletzt kennengelernte Aroma mit seiner
+Merkhilfe; der Ende-Screen die gerochenen Aromen mit Nummer im Deckel-Kreis.
 
 **Reverse** — ungescort, kein Einfluss auf die Boxen: die App zeigt einen Namen, du
 suchst das Fläschchen selbst und schätzt danach „getroffen / daneben" ein. Stärkt die

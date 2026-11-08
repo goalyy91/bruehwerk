@@ -9,8 +9,14 @@ import {
   werteAntwortAus,
   verwechslungspaare,
   werteKontrastAus,
+  kontrastpaare,
+  waehleDurchgangsart,
+  kontrastNachriechenAngebracht,
+  KONTRAST_PAARE_MAX,
   KONTRASTDURCHGANG_SCHWELLE,
   reverseVorschlag,
+  nachriechenAngebracht,
+  RIECHGRENZE,
   type AromaOption,
   type GesamtStand,
   type TrefferStand,
@@ -90,7 +96,7 @@ describe('verdeckteGesamtgroesse — Beutelgroesse ≈ Rundengroesse × 1,5, min
 describe('effektiverZustand — Altbestand ohne box/stufe migriert, sonst unveraendert', () => {
   it('nie geuebt: Box 1, Stufe A, nicht eingefuehrt, sofort faellig', () => {
     const z = effektiverZustand(undefined, JETZT);
-    expect(z).toEqual({ box: 1, faellig: JETZT, stufe: 'a', eingefuehrt: false });
+    expect(z).toEqual({ box: 1, faellig: JETZT, stufe: 'a', eingefuehrt: false, zaeh: false });
   });
 
   it('Altbestand mit hoher bereinigter Quote, aber ohne box: wird eingefuehrt und auf Box 4 migriert', () => {
@@ -226,7 +232,7 @@ describe('werteAntwortAus — Stufe C (freier Abruf): nur richtig oder falsch, n
     formStufe: 'c' as const,
     tatsaechlicheAromaId: 'mandel',
     tatsaechlicheFamilieId: 'nussig-kakao',
-    tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG }),
+    tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG, stufe: 'c' }),
   };
 
   it('richtiges Aroma getippt: richtig, Box eine hoch', () => {
@@ -278,7 +284,7 @@ describe('werteAntwortAus — Stufe B (Aroma in der Familie): teilweise bei rich
     formStufe: 'b' as const,
     tatsaechlicheAromaId: 'haselnuss',
     tatsaechlicheFamilieId: 'nussig-kakao',
-    tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG }),
+    tatsaechlicherStand: STAND({ box: 3, faellig: JETZT - TAG, stufe: 'b' }),
   };
 
   it('Familie und Aroma richtig: richtig, Box eine hoch', () => {
@@ -308,8 +314,178 @@ describe('werteAntwortAus — formStufe stammt von einem anderen Aroma als dem t
       JETZT,
     );
     expect(auswertung.ergebnis).toBe('richtig'); // die gezeigte Form (A) wird korrekt ausgewertet
+    expect(auswertung.wertung).toBe('ohneAussage'); // ... beweist aber nichts ueber Stufe C
+    expect(auswertung.box).toBe(5); // Box bleibt stehen, statt fuer Familienwissen aufzusteigen
+    expect(auswertung.faellig).toBe(JETZT - TAG); // und das Aroma bleibt faellig
     expect(auswertung.stufe).toBe('c'); // bleibt auf C, kein Rueckschritt durch die andere Form
     expect(auswertung.familienSerie).toBe(0); // wird nicht hochgezaehlt — das Aroma ist laengst ueber Stufe A hinaus
+  });
+});
+
+// ============================================================================
+// Stufenlogik-Nachzug (2026-11-08) — Wertung gegen die Stufe des gezogenen
+// Aromas, Box beim Stufenwechsel, B → C, Rueckweg, lange Pause, "nur
+// geraten", zaehe Aromen. docs/konzept.md, Abschnitt Uebungsmodus.
+// ============================================================================
+
+describe('werteAntwortAus — Wertung gegen die Stufe des tatsaechlich gezogenen Aromas', () => {
+  const MANDEL = { tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao' };
+
+  it('leichtere Form, Fehler: zaehlt voll als falsch', () => {
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'a', tipFamilieId: 'blumig', tatsaechlicherStand: STAND({ box: 4, stufe: 'b' }) }, JETZT);
+    expect(a.wertung).toBe('falsch');
+    expect(a.box).toBe(1);
+  });
+
+  it('leichtere Form B fuer ein Aroma auf C: Aroma richtig ist ohneAussage, Familie richtig aber Aroma falsch ist falsch', () => {
+    const stand = STAND({ box: 3, faellig: JETZT - TAG, stufe: 'c' });
+    const treffer = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'mandel', tatsaechlicherStand: stand }, JETZT);
+    expect(treffer.wertung).toBe('ohneAussage');
+    expect(treffer.box).toBe(3);
+    const daneben = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'haselnuss', tatsaechlicherStand: stand }, JETZT);
+    expect(daneben.ergebnis).toBe('teilweise'); // gemessen an der gezeigten Frage
+    expect(daneben.wertung).toBe('falsch'); // gemessen an Stufe C
+  });
+
+  it('schwerere Form C fuer ein Aroma auf A: die Familie des getippten Aromas entscheidet', () => {
+    const stand = STAND({ box: 1, stufe: 'a', familienSerie: 1 });
+    const a = werteAntwortAus(
+      { ...MANDEL, formStufe: 'c', tipAromaId: 'haselnuss', tipAromaFamilieId: 'nussig-kakao', tatsaechlicherStand: stand },
+      JETZT,
+    );
+    expect(a.ergebnis).toBe('falsch'); // die gezeigte Frage (freier Abruf) war falsch
+    expect(a.wertung).toBe('richtig'); // Stufe A verlangt nur die Familie — und die stimmte
+    expect(a.familienSerie).toBe(2);
+  });
+
+  it('schwerere Form C fuer ein Aroma auf B: Familie richtig, Aroma falsch ist teilweise', () => {
+    const a = werteAntwortAus(
+      { ...MANDEL, formStufe: 'c', tipAromaId: 'haselnuss', tipAromaFamilieId: 'nussig-kakao', tatsaechlicherStand: STAND({ box: 3, stufe: 'b' }) },
+      JETZT,
+    );
+    expect(a.wertung).toBe('teilweise');
+    expect(a.box).toBe(2);
+  });
+});
+
+describe('werteAntwortAus — Stufenwechsel', () => {
+  const MANDEL = { tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao' };
+
+  it('A → B: Box zurueck auf 2 statt die Box der Familienstufe zu erben', () => {
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'a', tipFamilieId: 'nussig-kakao', tatsaechlicherStand: STAND({ box: 3, stufe: 'a', familienSerie: 2 }) }, JETZT);
+    expect(a.stufe).toBe('b');
+    expect(a.stufenwechsel).toBe('auf');
+    expect(a.box).toBe(2);
+    expect(a.faellig).toBe(JETZT + 2 * TAG);
+  });
+
+  it('B → C: zwei Treffer mindestens 12 h auseinander', () => {
+    const stand = STAND({ box: 2, stufe: 'b' });
+    const erster = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'mandel', tatsaechlicherStand: stand }, JETZT);
+    expect(erster.stufe).toBe('b');
+    expect(erster.abrufSerie).toBe(1);
+    const nachStand = STAND({ ...stand, box: erster.box, abrufSerie: erster.abrufSerie, abrufSerieZuletzt: erster.abrufSerieZuletzt });
+
+    const amSelbenAbend = werteAntwortAus({ ...MANDEL, formStufe: 'c', tipAromaId: 'mandel', tatsaechlicherStand: nachStand }, JETZT + 2 * 60 * 60 * 1000);
+    expect(amSelbenAbend.stufe).toBe('b'); // zwei Durchgaenge am selben Abend zaehlen als einer
+    expect(amSelbenAbend.abrufSerie).toBe(1);
+
+    const amNaechstenTag = werteAntwortAus({ ...MANDEL, formStufe: 'c', tipAromaId: 'mandel', tatsaechlicherStand: nachStand }, JETZT + 13 * 60 * 60 * 1000);
+    expect(amNaechstenTag.stufe).toBe('c');
+    expect(amNaechstenTag.stufenwechsel).toBe('auf');
+    expect(amNaechstenTag.box).toBe(2);
+  });
+
+  it('B: ein Teilerfolg setzt die Aufstiegsserie zurueck', () => {
+    const stand = STAND({ box: 3, stufe: 'b', abrufSerie: 1, abrufSerieZuletzt: JETZT - TAG });
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'haselnuss', tatsaechlicherStand: stand }, JETZT);
+    expect(a.abrufSerie).toBe(0);
+    expect(a.stufe).toBe('b');
+  });
+
+  it('C → B: zweimal in Folge schon die Familie falsch', () => {
+    const stand = STAND({ box: 3, stufe: 'c' });
+    const tip = { formStufe: 'c' as const, tipAromaId: 'jasmin', tipAromaFamilieId: 'blumig' };
+    const erster = werteAntwortAus({ ...MANDEL, ...tip, tatsaechlicherStand: stand }, JETZT);
+    expect(erster.stufe).toBe('c');
+    expect(erster.familieFalschSerie).toBe(1);
+    const zweiter = werteAntwortAus({ ...MANDEL, ...tip, tatsaechlicherStand: STAND({ ...stand, familieFalschSerie: 1 }) }, JETZT);
+    expect(zweiter.stufe).toBe('b');
+    expect(zweiter.stufenwechsel).toBe('ab');
+    expect(zweiter.box).toBe(1);
+  });
+
+  it('C: Familie richtig, Aroma falsch unterbricht die Rueckweg-Serie', () => {
+    const stand = STAND({ box: 3, stufe: 'c', familieFalschSerie: 1 });
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'c', tipAromaId: 'haselnuss', tipAromaFamilieId: 'nussig-kakao', tatsaechlicherStand: stand }, JETZT);
+    expect(a.familieFalschSerie).toBe(0);
+    expect(a.stufe).toBe('c');
+  });
+});
+
+describe('werteAntwortAus — "nur geraten" und lange Pause', () => {
+  const MANDEL = { tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao' };
+
+  it('ein als geraten markierter Treffer zaehlt wie ein Teilerfolg — die gezeigte Frage bleibt richtig', () => {
+    const a = werteAntwortAus(
+      { ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'mandel', geraten: true, tatsaechlicherStand: STAND({ box: 3, stufe: 'b' }) },
+      JETZT,
+    );
+    expect(a.ergebnis).toBe('richtig');
+    expect(a.wertung).toBe('teilweise');
+    expect(a.box).toBe(2);
+    expect(a.abrufSerie).toBe(0);
+  });
+
+  it('stark ueberfaellig, auf der eigenen Stufe nicht gewusst, aber auf der darunter: aufgefrischt, Box 2', () => {
+    const stand = STAND({ box: 4, stufe: 'b', faellig: JETZT - 30 * TAG });
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'haselnuss', tatsaechlicherStand: stand }, JETZT);
+    expect(a.wertung).toBe('aufgefrischt');
+    expect(a.box).toBe(2);
+    expect(a.faellig).toBe(JETZT + 2 * TAG);
+    expect(a.stufe).toBe('b');
+  });
+
+  it('nicht stark ueberfaellig: derselbe Tipp ist ein normaler Teilerfolg', () => {
+    const stand = STAND({ box: 4, stufe: 'b', faellig: JETZT - TAG });
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'b', tipFamilieId: 'nussig-kakao', tipAromaId: 'haselnuss', tatsaechlicherStand: stand }, JETZT);
+    expect(a.wertung).toBe('teilweise');
+    expect(a.box).toBe(3);
+  });
+
+  it('eine leichtere Form nach langer Pause loest die Dauerschleife "ohneAussage" auf', () => {
+    const stand = STAND({ box: 4, stufe: 'b', faellig: JETZT - 30 * TAG });
+    const a = werteAntwortAus({ ...MANDEL, formStufe: 'a', tipFamilieId: 'nussig-kakao', tatsaechlicherStand: stand }, JETZT);
+    expect(a.wertung).toBe('aufgefrischt');
+    expect(a.faellig).toBe(JETZT + 2 * TAG);
+  });
+});
+
+describe('zaehe Aromen — zaehlen nicht fuer die Einfuehrungssperre', () => {
+  it('fuenf nicht richtige Wertungen in Folge machen ein Aroma zaeh, ein Treffer hebt es auf', () => {
+    expect(effektiverZustand(STAND({ benennen: { versuche: 5, treffer: 0 }, fehlerSerie: 4 }), JETZT).zaeh).toBe(false);
+    expect(effektiverZustand(STAND({ benennen: { versuche: 5, treffer: 0 }, fehlerSerie: 5 }), JETZT).zaeh).toBe(true);
+    const a = werteAntwortAus(
+      { formStufe: 'a', tipFamilieId: 'nussig-kakao', tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao', tatsaechlicherStand: STAND({ fehlerSerie: 7 }) },
+      JETZT,
+    );
+    expect(a.fehlerSerie).toBe(0);
+  });
+
+  it('drei zaehe Aromen auf Box 1 blockieren die Einfuehrung nicht mehr', () => {
+    const zaeh = aromen('z', 3);
+    const sitzt = aromen('s', 7);
+    const neu = aromen('neu', 3);
+    const staende = new Map<string, GesamtStand>([
+      ...zaeh.map((a) => [a.id, STAND({ benennen: { versuche: 6, treffer: 0 }, box: 1, faellig: JETZT - TAG, fehlerSerie: 6 })] as const),
+      ...sitzt.map((a) => [a.id, STAND({ benennen: { versuche: 6, treffer: 6 }, box: 4, faellig: JETZT - TAG })] as const),
+    ]);
+    const plan = planeDurchgang([...zaeh, ...sitzt, ...neu], staende, JETZT);
+    expect(plan.abgefragt.filter((a) => a.id.startsWith('neu'))).toHaveLength(2);
+    // Gegenprobe: ohne die Zaeh-Regel stuenden 3 von 10 = 30 % in Box 1-2 — Sperre.
+    const ohneZaeh = new Map([...staende].map(([id, s]) => [id, { ...s, fehlerSerie: 0 }]));
+    const gesperrt = planeDurchgang([...zaeh, ...sitzt, ...neu], ohneZaeh, JETZT);
+    expect(gesperrt.abgefragt.some((a) => a.id.startsWith('neu'))).toBe(false);
   });
 });
 
@@ -350,23 +526,95 @@ describe('verwechslungspaare — Schwelle, Richtungs-Dedup, Sortierung (Lastenhe
   });
 });
 
-describe('werteKontrastAus — eine gemeinsame Zuordnungsfrage, kein "teilweise" (Lastenheft Abschnitt 6)', () => {
-  it('richtige Reihenfolge bewegt beide Boxen eine hoch, jede von ihrer eigenen aus', () => {
-    const a = STAND({ box: 2, faellig: JETZT - TAG });
-    const b = STAND({ box: 4, faellig: JETZT - TAG });
-    const auswertung = werteKontrastAus(true, a, b, JETZT);
+describe('werteKontrastAus — eine Zuordnungsfrage, wirkt am Paar, nie an der Box', () => {
+  it('richtig senkt den Verwechslungszaehler in beide Richtungen um 1, ein Eintrag auf 0 verschwindet', () => {
+    const a = STAND({ box: 2, verwechslungen: { b: 3 } });
+    const b = STAND({ box: 4, verwechslungen: { a: 1 } });
+    const auswertung = werteKontrastAus(true, 'a', 'b', a, b);
     expect(auswertung.ergebnis).toBe('richtig');
-    expect(auswertung.aBox).toBe(3);
-    expect(auswertung.bBox).toBe(5);
+    expect(auswertung.aVerwechslungen).toEqual({ b: 2 });
+    expect(auswertung.bVerwechslungen).toEqual({});
+    expect('aBox' in auswertung).toBe(false); // bei 50 % Ratechance kein Beleg fuer die Box
   });
 
-  it('falsche Reihenfolge wirft beide Boxen auf 1 zurueck', () => {
-    const a = STAND({ box: 2, faellig: JETZT - TAG });
-    const b = STAND({ box: 4, faellig: JETZT - TAG });
-    const auswertung = werteKontrastAus(false, a, b, JETZT);
+  it('falsch erhoeht den Zaehler in beide Richtungen — auch fuer ein bisher nur verwandtes Paar', () => {
+    const auswertung = werteKontrastAus(false, 'a', 'b', STAND(), undefined);
     expect(auswertung.ergebnis).toBe('falsch');
-    expect(auswertung.aBox).toBe(1);
-    expect(auswertung.bBox).toBe(1);
+    expect(auswertung.aVerwechslungen).toEqual({ b: 1 });
+    expect(auswertung.bVerwechslungen).toEqual({ a: 1 });
+  });
+});
+
+describe('kontrastpaare — Rangfolge, jedes Aroma hoechstens einmal', () => {
+  const opt = (id: string, verwandte: string[] = []): AromaOption => ({ id, label: id, kategorieId: 'k', verwandte });
+  const EINGEFUEHRT = { benennen: { versuche: 3, treffer: 2 } };
+
+  it('belegte Verwechslung vor zaehem Aroma vor verwandtem Paar', () => {
+    const alle = [opt('m', ['h']), opt('h', ['m']), opt('z', ['x']), opt('x'), opt('v1', ['v2']), opt('v2'), opt('q', ['r']), opt('r')];
+    const staende = new Map<string, GesamtStand>([
+      ['m', STAND({ ...EINGEFUEHRT, stufe: 'b', verwechslungen: { h: 3 } })],
+      ['h', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+      ['z', STAND({ ...EINGEFUEHRT, stufe: 'a', fehlerSerie: 6 })],
+      ['x', STAND({ ...EINGEFUEHRT, stufe: 'a' })],
+      ['v1', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+      ['v2', STAND({ ...EINGEFUEHRT, stufe: 'c' })],
+      ['q', STAND({ ...EINGEFUEHRT, stufe: 'a' })], // Stufe A: kein vorbeugendes Paar
+      ['r', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+    ]);
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0);
+    expect(paare.map((p) => p.quelle)).toEqual(['verwechslung', 'zaeh', 'verwandt']);
+    expect(paare.map((p) => [p.aId, p.bId].sort().join('|'))).toEqual(['h|m', 'x|z', 'v1|v2']);
+  });
+
+  it('vorbeugend: gegenseitig genannt vor gleicher Familie vor einseitig ueber Familiengrenzen', () => {
+    const o = (id: string, kategorieId: string, verwandte: string[] = []): AromaOption => ({ id, label: id, kategorieId, verwandte });
+    const alle = [
+      o('zitrone', 'fruchtig', ['jasmin']), // einseitig, verschiedene Familien
+      o('jasmin', 'blumig'),
+      o('apfel', 'fruchtig', ['pfirsich']), // einseitig, gleiche Familie
+      o('pfirsich', 'fruchtig'),
+      o('zeder', 'gruen', ['holzig']), // gegenseitig, verschiedene Familien
+      o('holzig', 'sonstiges', ['zeder']),
+    ];
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0.99);
+    expect(paare.map((p) => [p.aId, p.bId].sort().join('|'))).toEqual(['holzig|zeder', 'apfel|pfirsich', 'jasmin|zitrone']);
+    // Rang 3 kommt nur nach, wenn vorne nicht genug da ist
+    expect(kontrastpaare(alle, staende, JETZT, () => 0.99, 2).map((p) => p.aId + p.bId).some((x) => x.includes('jasmin'))).toBe(false);
+  });
+
+  it('ein Aroma steht nie in zwei Paaren', () => {
+    const alle = [opt('a', ['b', 'c']), opt('b', ['a', 'c']), opt('c', ['a', 'b'])];
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0);
+    expect(paare).toHaveLength(1);
+  });
+
+  it(`hoechstens ${KONTRAST_PAARE_MAX} Paare`, () => {
+    const alle = Array.from({ length: 12 }, (_, i) => opt('p' + i, ['p' + (i % 2 === 0 ? i + 1 : i - 1)]));
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    expect(kontrastpaare(alle, staende, JETZT, () => 0.5)).toHaveLength(KONTRAST_PAARE_MAX);
+  });
+});
+
+describe('waehleDurchgangsart — etwa jeder vierte, nur ab drei Paaren', () => {
+  it('unter drei Paaren immer normal', () => {
+    expect(waehleDurchgangsart(2, () => 0)).toBe('normal');
+  });
+  it('ab drei Paaren: Kontrast bei Zufall unter 25 %', () => {
+    expect(waehleDurchgangsart(3, () => 0.24)).toBe('kontrast');
+    expect(waehleDurchgangsart(3, () => 0.25)).toBe('normal');
+  });
+});
+
+describe('kontrastNachriechenAngebracht — beide Fläschchen, zwei Riechvorgänge', () => {
+  it('nach falsch ja, nach richtig nein', () => {
+    expect(kontrastNachriechenAngebracht('falsch', 4, 0)).toBe(true);
+    expect(kontrastNachriechenAngebracht('richtig', 4, 0)).toBe(false);
+  });
+  it(`bei 4 Paaren hoechstens zweimal: 8 + 2 + 2 = ${RIECHGRENZE}`, () => {
+    expect(kontrastNachriechenAngebracht('falsch', 4, 2)).toBe(true);
+    expect(kontrastNachriechenAngebracht('falsch', 4, 4)).toBe(false);
   });
 });
 
@@ -403,5 +651,89 @@ describe('reverseVorschlag — schwierigstes eingefuehrtes Aroma fuer die Uebers
     );
     expect(reverseVorschlag(alle, staende, JETZT, () => 0)?.id).toBe('a2');
     expect(reverseVorschlag(alle, staende, JETZT, () => 0.99)?.id).toBe('a1');
+  });
+});
+
+// ============================================================================
+// Nachriechen (Etappe 2 des Lern-Nachzugs)
+// ============================================================================
+
+describe('nachriechenAngebracht — nach Fehlern, solange die Riechgrenze reicht', () => {
+  it('nach einem echten Treffer nicht — das wäre ein Riechvorgang ohne Lerngewinn', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig' }, 0)).toBe(false);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'ohneAussage' }, 0)).toBe(false);
+  });
+
+  it('nach falsch, teilweise, geraten oder aufgefrischt ja', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'falsch' }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'teilweise', wertung: 'teilweise' }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'teilweise' }, 0)).toBe(true); // als geraten markiert
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'richtig' }, 0)).toBe(true); // schwerere Form verfehlt, Stufe gehalten
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'aufgefrischt' }, 0)).toBe(true);
+  });
+
+  it(`höchstens ${RIECHGRENZE - DURCHGANG_GROESSE}-mal je Durchgang: 8 Abfragen + Nachriechen ≤ ${RIECHGRENZE}`, () => {
+    const fehler = { ergebnis: 'falsch' as const, wertung: 'falsch' as const };
+    expect(nachriechenAngebracht(fehler, RIECHGRENZE - DURCHGANG_GROESSE - 1)).toBe(true);
+    expect(nachriechenAngebracht(fehler, RIECHGRENZE - DURCHGANG_GROESSE)).toBe(false);
+  });
+});
+
+describe('Erstkontakt — Kennenlernen im normalen Durchgang (Etappe 4)', () => {
+  it('ein nie geuebtes Aroma ist Erstkontakt, ein eingefuehrtes nicht', () => {
+    const tip = { formStufe: 'a' as const, tipFamilieId: 'nussig-kakao', tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao' };
+    expect(werteAntwortAus({ ...tip, tatsaechlicherStand: undefined }, JETZT).erstkontakt).toBe(true);
+    expect(werteAntwortAus({ ...tip, tatsaechlicherStand: STAND({ benennen: { versuche: 1, treffer: 1 } }) }, JETZT).erstkontakt).toBe(false);
+  });
+
+  it('beim Erstkontakt wird auch nach einem Treffer nachgerochen', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig', erstkontakt: true }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig', erstkontakt: false }, 0)).toBe(false);
+  });
+});
+
+describe('planeDurchgang — Kaffee-Bruecke: Aromen aus den eigenen Verkostungen zuerst einfuehren (Etappe 6)', () => {
+  it('neue Aromen aus den Verkostungen kommen vor anderen neuen', () => {
+    const eingefuehrt = aromen('alt', 12);
+    const neu = aromen('neu', 10);
+    const staende = new Map<string, GesamtStand>(
+      eingefuehrt.map((a) => [a.id, STAND({ benennen: { versuche: 5, treffer: 5 }, box: 4, faellig: JETZT - TAG })]),
+    );
+    const bevorzugt = new Set(['neu7', 'neu9']);
+    for (let lauf = 0; lauf < 20; lauf++) {
+      const plan = planeDurchgang([...eingefuehrt, ...neu], staende, JETZT, DURCHGANG_GROESSE, Math.random, bevorzugt);
+      const gezogenNeu = plan.abgefragt.filter((a) => a.id.startsWith('neu')).map((a) => a.id).sort();
+      expect(gezogenNeu).toEqual(['neu7', 'neu9']);
+    }
+  });
+
+  it('auf eingefuehrte Aromen wirkt der Vorzug nicht', () => {
+    const alle = aromen('a', 20);
+    const staende = new Map<string, GesamtStand>(
+      alle.map((a, i) => [a.id, STAND({ benennen: { versuche: 5, treffer: 5 }, box: 4, faellig: i < 10 ? JETZT - TAG : JETZT + 5 * TAG })]),
+    );
+    const ohne = planeDurchgang(alle, staende, JETZT, DURCHGANG_GROESSE, () => 0.3);
+    const mit = planeDurchgang(alle, staende, JETZT, DURCHGANG_GROESSE, () => 0.3, new Set(['a15', 'a16']));
+    expect(mit.abgefragt.map((a) => a.id)).toEqual(ohne.abgefragt.map((a) => a.id));
+  });
+});
+
+describe('eingefuehrt — ein in der neuen Fassung geuebtes Aroma (Korrektur 08.11.2026)', () => {
+  it('der Stand nach einer echten Antwort gilt als eingefuehrt, obwohl die alten Zaehler bei 0 stehen', () => {
+    const a = werteAntwortAus(
+      { formStufe: 'a', tipFamilieId: 'blumig', tatsaechlicheAromaId: 'honig', tatsaechlicheFamilieId: 'blumig', tatsaechlicherStand: undefined },
+      JETZT,
+    );
+    // So schreibt der Bildschirm den Stand: alte Zaehler unveraendert 0, Box/Faelligkeit neu.
+    const stand = STAND({ box: a.box, faellig: a.faellig, stufe: a.stufe });
+    expect(effektiverZustand(stand, JETZT).eingefuehrt).toBe(true);
+  });
+
+  it('ein so geuebtes, nicht faelliges Aroma wird nicht als "neu" gezogen', () => {
+    const alle = aromen('x', 14);
+    const staende = new Map<string, GesamtStand>(alle.slice(0, 12).map((a) => [a.id, STAND({ box: 4, faellig: JETZT + 10 * TAG, stufe: 'b' })]));
+    const plan = planeDurchgang(alle, staende, JETZT);
+    // Die zwei wirklich neuen kommen dran, die zwoelf geuebten zaehlen nicht als neu.
+    expect(plan.abgefragt.filter((a) => a.id === 'x13' || a.id === 'x14')).toHaveLength(2);
   });
 });

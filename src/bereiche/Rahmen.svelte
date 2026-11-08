@@ -64,6 +64,12 @@
   ];
 
   let inhaltElement = $state<HTMLElement | undefined>();
+  /**
+   * "als Kontrast üben" aus der Statistik (Etappe 7): die Statistik meldet den
+   * Wunsch, die Übersicht der Aromaschule startet den Kontrastdurchgang —
+   * statt einer eigenen Route nur dafür.
+   */
+  let kontrastAnfrage = $state(false);
 
   onMount(() => {
     void bestand.laden();
@@ -243,9 +249,17 @@
         aktiv={route.name === 'uebungLaufend'}
         onZurueck={() => navigation.zurueck()}
         onOeffnenStatistik={() => navigation.gehe({ name: 'uebungStatistik' })}
+        {kontrastAnfrage}
+        onKontrastAnfrageAngenommen={() => (kontrastAnfrage = false)}
       />
     {:else if route.name === 'uebungStatistik'}
-      <UebungsAuswertung onZurueck={() => navigation.zurueck()} />
+      <UebungsAuswertung
+        onZurueck={() => navigation.zurueck()}
+        onKontrastUeben={() => {
+          kontrastAnfrage = true;
+          navigation.zurueck();
+        }}
+      />
     {:else if route.name === 'personen'}
       <Personen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'sicherungen'}
