@@ -14,6 +14,8 @@
 
   import { bestand } from '../bestand.svelte';
   import { GROESSEN, zusammenfassung } from '../../domain/tasting';
+  import { leNezNummer, abgleichSatz } from '../../domain/kaffeebruecke';
+  import { AROMASET_LENEZ } from '../../daten/aromen';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Treppe from '../../muster/Treppe.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
@@ -45,6 +47,10 @@
     readonly farbe?: string;
   }
 
+  // Kaffee-Brücke (Etappe 6): auch SCA-Aromen bekommen ihre Fläschchennummer,
+  // wo es eine eindeutige Entsprechung gibt (domain/kaffeebruecke.ts).
+  const LE_NEZ = AROMASET_LENEZ.kategorien.flatMap((k) => k.gruppen.flatMap((g) => g.aromen)).map((a) => ({ label: a.label, nummer: a.nummer! }));
+
   // Normalerweise genau eine Gruppe (eine Lesart je Verkostung) — gruppiert
   // trotzdem nach Set, falls doch beide genutzt wurden.
   const aromenGruppen = $derived.by(() => {
@@ -52,7 +58,7 @@
     const nachSet = new Map<string, AromaZeile[]>();
     for (const a of tasting.aromen) {
       const liste = nachSet.get(a.set) ?? [];
-      liste.push({ pfad: a.pfad, nummer: a.nummer, farbe: farbeVonPfad(a.set, a.pfad) });
+      liste.push({ pfad: a.pfad, nummer: leNezNummer(a, LE_NEZ), farbe: farbeVonPfad(a.set, a.pfad) });
       nachSet.set(a.set, liste);
     }
     return [...nachSet.entries()].map(([setId, eintraege]) => ({
@@ -61,6 +67,16 @@
       eintraege,
     }));
   });
+
+  /** "Zum Abgleich: riech Nr. 53 neben der Tasse — war es wirklich Mandel?" — nur, wo es Fläschchen gibt. */
+  const abgleich = $derived(
+    abgleichSatz(
+      aromenGruppen
+        .flatMap((g) => g.eintraege)
+        .filter((e) => e.nummer !== undefined)
+        .map((e) => ({ name: e.pfad[e.pfad.length - 1]!, nummer: e.nummer! })),
+    ),
+  );
 
   const zusammenfassungssatz = $derived(
     tasting
@@ -113,12 +129,13 @@
           <li>
             {#if a.farbe}<span class="kategorie-punkt" style="--punkt-farbe: {a.farbe}"></span>{/if}
             <span class="name">{a.pfad[a.pfad.length - 1]}</span>
-            {#if a.nummer !== undefined}<span class="nummer">{a.nummer}</span>{/if}
+            {#if a.nummer !== undefined}<span class="nummer" style:--deckel-farbe={a.farbe ?? 'var(--spur)'}>{a.nummer}</span>{/if}
           </li>
         {/each}
       </ul>
     </div>
   {/each}
+  {#if abgleich}<p class="abgleich">{abgleich}</p>{/if}
 
   <section class="block">
     <h2>Zusammenfassung</h2>
@@ -207,11 +224,28 @@
     flex: 1;
     min-width: 0;
   }
+  /* Die Nummer als Fläschchendeckel — dieselbe Form wie in der Aromaschule,
+     mit dünnem Rand in der Familienfarbe (Kaffee-Brücke, Etappe 6). */
   .aromenliste .nummer {
     flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    box-shadow: inset 0 0 0 1.5px var(--deckel-farbe);
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
     font-variant-numeric: var(--zahl-features);
+    color: var(--tinte);
+  }
+  .abgleich {
+    margin: calc(-1 * var(--r2)) 0 var(--r5);
+    font-size: var(--fs-satz);
+    font-style: italic;
+    line-height: 1.55;
     color: var(--gedaempft);
   }
   .gerechnet {

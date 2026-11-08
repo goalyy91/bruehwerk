@@ -1033,6 +1033,19 @@ dauerhaft gelingt, wandert so aus dem Pool. Nach einer falschen Zuordnung werden
 Fläschchen noch einmal gerochen, direkt nacheinander, mit Namen und Merkhilfen — zwei
 Riechvorgänge, solange die Riechgrenze reicht.
 
+**Kaffee-Brücke.** *(Nachzug 08.11.2026.)* Gelerntes überträgt sich umso schlechter, je
+weiter Übung und Ernstfall auseinanderliegen — deshalb zwei Verbindungen zur Tasse
+(`domain/kaffeebruecke.ts`). Erstens: Aromen, die in den eigenen Verkostungen der letzten
+60 Tage vorkamen, werden zuerst **eingeführt**; auf bereits eingeführte wirkt das nicht, ihre
+Abfrage folgt weiter allein der Fälligkeit. Zweitens: die Verkostung in der Historie zeigt
+zu jedem Aroma mit Fläschchen die Nummer im Deckel-Kreis und darunter höchstens einen Satz —
+„Zum Abgleich: riech Nr. 53 neben der Tasse — war es wirklich Mandel?" (bis zu drei
+Fläschchen). Verkostungen mit dem SCA-Aromarad finden ihr Fläschchen über den Namen: 35
+wortgleiche Blätter und sechs eindeutige Entsprechungen (Anis, Muskat, Nelke, malzig,
+erdig-muffig, schimmelig), zusammen 41 von 79. Was nicht eindeutig ist („papierig" ist nicht
+„Pappe"), bekommt keine Nummer. Grenze, die kein Code löst: in der Tasse riecht man
+retronasal, am Fläschchen orthonasal.
+
 **Stimme der Aromaschule.** *(Nachzug 08.11.2026.)* Brühwerk ist ein Laborbuch: es gibt
 eine **Vermutung** und einen **Befund**, kein „daneben". Nach der Auflösung steht der Name
 des Aromas groß in Serif (der Befund), darunter „Getroffen.", „Die Familie stimmt — deine

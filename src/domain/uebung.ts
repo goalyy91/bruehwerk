@@ -257,6 +257,12 @@ export function planeDurchgang(
   jetzt: number,
   durchgangsGroesse: number = DURCHGANG_GROESSE,
   zufall: () => number = Math.random,
+  /**
+   * Aromen aus den eigenen Verkostungen (Kaffee-Brücke, domain/
+   * kaffeebruecke.ts): werden zuerst *eingeführt*. Auf eingeführte Aromen
+   * wirkt das nicht — deren Abfrage folgt allein der Fälligkeit.
+   */
+  bevorzugt: ReadonlySet<string> = new Set(),
 ): DurchgangsPlan {
   const kandidaten: Kandidat[] = alleAromen.map((option) => {
     const stand = staende.get(option.id);
@@ -278,7 +284,10 @@ export function planeDurchgang(
 
   const neuErlaubt = einfuehrungErlaubt(eingefuehrt.filter((k) => !k.zustand.zaeh).map((k) => k.zustand.box));
   const zielNeu = neuErlaubt ? Math.min(NEU_MAX, Math.round(durchgangsGroesse * ANTEIL_NEU), nichtEingefuehrt.length) : 0;
-  const neu = gemischt(nichtEingefuehrt, zufall).slice(0, zielNeu);
+  const neu = [
+    ...gemischt(nichtEingefuehrt.filter((k) => bevorzugt.has(k.option.id)), zufall),
+    ...gemischt(nichtEingefuehrt.filter((k) => !bevorzugt.has(k.option.id)), zufall),
+  ].slice(0, zielNeu);
 
   const zielNiedrig = Math.min(niedrigSortiert.length, Math.round(durchgangsGroesse * ANTEIL_NIEDRIG));
   const genommenNiedrig = niedrigSortiert.slice(0, zielNiedrig);

@@ -691,3 +691,29 @@ describe('Erstkontakt — Kennenlernen im normalen Durchgang (Etappe 4)', () => 
     expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig', erstkontakt: false }, 0)).toBe(false);
   });
 });
+
+describe('planeDurchgang — Kaffee-Bruecke: Aromen aus den eigenen Verkostungen zuerst einfuehren (Etappe 6)', () => {
+  it('neue Aromen aus den Verkostungen kommen vor anderen neuen', () => {
+    const eingefuehrt = aromen('alt', 12);
+    const neu = aromen('neu', 10);
+    const staende = new Map<string, GesamtStand>(
+      eingefuehrt.map((a) => [a.id, STAND({ benennen: { versuche: 5, treffer: 5 }, box: 4, faellig: JETZT - TAG })]),
+    );
+    const bevorzugt = new Set(['neu7', 'neu9']);
+    for (let lauf = 0; lauf < 20; lauf++) {
+      const plan = planeDurchgang([...eingefuehrt, ...neu], staende, JETZT, DURCHGANG_GROESSE, Math.random, bevorzugt);
+      const gezogenNeu = plan.abgefragt.filter((a) => a.id.startsWith('neu')).map((a) => a.id).sort();
+      expect(gezogenNeu).toEqual(['neu7', 'neu9']);
+    }
+  });
+
+  it('auf eingefuehrte Aromen wirkt der Vorzug nicht', () => {
+    const alle = aromen('a', 20);
+    const staende = new Map<string, GesamtStand>(
+      alle.map((a, i) => [a.id, STAND({ benennen: { versuche: 5, treffer: 5 }, box: 4, faellig: i < 10 ? JETZT - TAG : JETZT + 5 * TAG })]),
+    );
+    const ohne = planeDurchgang(alle, staende, JETZT, DURCHGANG_GROESSE, () => 0.3);
+    const mit = planeDurchgang(alle, staende, JETZT, DURCHGANG_GROESSE, () => 0.3, new Set(['a15', 'a16']));
+    expect(mit.abgefragt.map((a) => a.id)).toEqual(ohne.abgefragt.map((a) => a.id));
+  });
+});

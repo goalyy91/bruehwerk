@@ -84,6 +84,7 @@
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
   import { uebungsKennzahlenPool, zielfrequenzAbgleich, zuletztKennengelernt } from '../../domain/uebungsauswertung';
+  import { nummernAusKaffees } from '../../domain/kaffeebruecke';
   import { meilensteinSatz } from '../../domain/meilenstein';
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
@@ -308,7 +309,7 @@
     }
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
-    const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt);
+    const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt, DURCHGANG_GROESSE, Math.random, aromenAusKaffees(jetzt));
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
       setId: set.id,
@@ -332,6 +333,16 @@
   }
 
   /** Startet einen Kontrastdurchgang — ohne Argument (Vorschlagskarte) mit den aktuell besten Paaren. */
+  /**
+   * Kaffee-Brücke (Etappe 6): die Fläschchen zu Aromen, die in den eigenen
+   * Verkostungen der letzten 60 Tage vorkamen — werden zuerst eingeführt.
+   */
+  function aromenAusKaffees(jetzt: number): ReadonlySet<string> {
+    const leNez = alleAromen.filter((a) => a.nummer !== undefined).map((a) => ({ label: a.label, nummer: a.nummer! }));
+    const verkostungen = bestand.tastings.map((t) => ({ ts: bestand.shots.find((s) => s.id === t.shotId)?.ts ?? 0, aromen: t.aromen }));
+    return new Set([...nummernAusKaffees(verkostungen, leNez, jetzt)].map(flaeschchenId));
+  }
+
   async function kontrastdurchgangStarten(paare: readonly Kontrastpaar[] = kontrastpaare(alleAromen, bekannteStaende, Date.now())) {
     if (!set || paare.length === 0) return;
     await alteLaufendeDurchgaengeAufraeumen();
