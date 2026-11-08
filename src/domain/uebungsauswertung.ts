@@ -568,3 +568,56 @@ export function verwechseltePaare(antworten: readonly Uebungsantwort[]): readonl
   }
   return [...summe.values()].sort((x, y) => y.anzahl - x.anzahl);
 }
+
+// ---- Trend und Kennzahl als Satz (Etappe 7, Nachschärfung) -----------------
+
+/**
+ * Ein Satz über die Entwicklung: die letzten vier Wochen gegen die vier
+ * davor (`wocheIndex` 4–7 gegen 0–3). Nur wenn beide Hälften Werte haben —
+ * sonst kein Satz, statt eines Vergleichs mit nichts. Unterschiede unterhalb
+ * der Schwelle heißen "etwa gleich", damit Streuung nicht als Fortschritt
+ * oder Rückschritt erzählt wird (dieselbe Haltung wie der Spielraum, K6).
+ */
+export function trendSatz(
+  punkte: readonly VerlaufsPunkt[],
+  art: 'quote' | 'zeit',
+  wochen: number,
+): string | undefined {
+  const haelfte = Math.floor(wochen / 2);
+  const mittel = (teil: readonly VerlaufsPunkt[]) => teil.reduce((s, p) => s + p.wert, 0) / teil.length;
+  const frueher = punkte.filter((p) => p.wocheIndex < haelfte);
+  const zuletzt = punkte.filter((p) => p.wocheIndex >= haelfte);
+  if (frueher.length === 0 || zuletzt.length === 0) return undefined;
+  const a = mittel(frueher);
+  const b = mittel(zuletzt);
+  if (art === 'quote') {
+    const prozent = (w: number) => `${Math.round(w * 100)} %`;
+    if (Math.abs(b - a) < 0.05) return `Etwa gleich geblieben: in den letzten vier Wochen ${prozent(b)} getroffen.`;
+    return `In den letzten vier Wochen ${prozent(b)} getroffen, davor ${prozent(a)}.`;
+  }
+  const sekunden = (ms: number) => `${(ms / 1000).toFixed(1).replace('.', ',')} s`;
+  if (Math.abs(b - a) < 500) return `Deine Antwortzeit ist etwa gleich geblieben, um ${sekunden(b)}.`;
+  return b < a
+    ? `Du antwortest schneller: in den letzten vier Wochen ${sekunden(b)}, davor ${sekunden(a)}.`
+    : `Du nimmst dir mehr Zeit: in den letzten vier Wochen ${sekunden(b)}, davor ${sekunden(a)}.`;
+}
+
+/** Eine Kennzahl aus `uebungsKennzahlenPool` als Satz — für die Übersicht, statt einer Kachel. */
+export function kennzahlSatz(k: Kennzahl): string {
+  switch (k.label) {
+    case 'Sicher gelernt':
+      return `${k.wert} sicher gelernt.`;
+    case 'Durchgänge diese Woche':
+      return `Diese Woche ${k.wert} Durchgänge.`;
+    case 'Stärkste Familie':
+      return `Am sichersten: ${k.wert}.`;
+    case 'Meistverwechselt':
+      return `Am häufigsten verwechselt: ${k.wert}.`;
+    case 'Dabei seit':
+      return `Seit ${k.wert} dabei.`;
+    case 'Reverse-Trefferquote':
+      return `Reverse: ${k.wert} getroffen.`;
+    default:
+      return `${k.label}: ${k.wert}.`;
+  }
+}

@@ -24,19 +24,20 @@
     wochenSatz,
     lernstandSatz,
     verwechseltePaare,
+    trendSatz,
     type VerlaufsPunkt,
   } from '../../domain/uebungsauswertung';
   import { merkhilfeZu } from '../../daten/aroma-merkhilfen';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
+  import Trendkurve, { type TrendPunkt } from '../../muster/Trendkurve.svelte';
   import { achsMarken } from '../../domain/auswertung';
   import { effektiverZustand, type AromaOption } from '../../domain/uebung';
   import type { Uebungsform } from '../../daten/schema/uebungsantwort';
   import { EINSTELLUNGEN_ID, type AppEinstellungen } from '../../daten/schema';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import Werteliste from '../../muster/Werteliste.svelte';
-  import Verlaufskurve from '../../muster/Verlaufskurve.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Schalter from '../../muster/Schalter.svelte';
@@ -198,39 +199,10 @@
     return `${Math.round(anteil * 100)}%`;
   }
 
-  /** Wochenpunkte -> Verlaufskurve-Koordinaten (x nach Wochenindex, y auf die eigene Wertspanne normiert). Unter zwei Wochen mit Datenbasis gibt es keine sinnvolle Kurve — undefined heisst "Satz statt Kurve zeigen" (siehe Vorlage). */
-  function zuKurve(
-    punkte: readonly VerlaufsPunkt[],
-    formatiere: (wert: number) => string,
-  ): { punkte: { x: number; y: number }[]; marken: readonly [string, string, string] } | undefined {
-    if (punkte.length < 2) return undefined;
-    const werte = punkte.map((p) => p.wert);
-    const min = Math.min(...werte);
-    const max = Math.max(...werte);
-    return {
-      punkte: punkte.map((p) => ({
-        x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 0.5,
-        y: max === min ? 0.5 : (p.wert - min) / (max - min),
-      })),
-      marken: achsMarken(min, max, formatiere),
-    };
-  }
 
-  const zeitVerlauf = $derived(zuKurve(antwortzeitVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF), formatSekunden));
-  const quoteVerlauf = $derived(zuKurve(trefferquoteVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF), formatProzent));
 
   // ---- Abdeckung: kumulativ, wie viel vom Koffer schon mal richtig sass ----
   const abdeckungPunkte = $derived(abdeckungVerlauf(antworten, jetzt, WOCHEN_VERLAUF));
-  const abdeckungKurve = $derived.by(() => {
-    if (alleAromen.length === 0) return undefined;
-    return {
-      punkte: abdeckungPunkte.map((p) => ({
-        x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 0.5,
-        y: p.wert / alleAromen.length,
-      })),
-      marken: achsMarken(0, alleAromen.length, (w) => String(Math.round(w))),
-    };
-  });
   const abdeckungAktuell = $derived(abdeckungPunkte.at(-1)?.wert ?? 0);
 
   // ---- Lernstufen: reine Umsortierung der effektiven Zustaende ------------
@@ -323,6 +295,36 @@
     const blatt = nummer !== undefined ? datenblattZu(nummer) : undefined;
     if (blatt) datenblatt = blatt;
   }
+
+  // ---- Trendkurven (Nachschärfung Etappe 7): Satz zuerst, dann die Kurve ----
+  function wocheText(wocheIndex: number): string {
+    const vor = WOCHEN_VERLAUF - 1 - wocheIndex;
+    return vor === 0 ? 'diese Woche' : `vor ${vor} Woche${vor === 1 ? '' : 'n'}`;
+  }
+  function zuTrend(punkte: readonly VerlaufsPunkt[], formatiere: (w: number) => string): TrendPunkt[] {
+    return punkte.map((p) => ({
+      x: WOCHEN_VERLAUF > 1 ? p.wocheIndex / (WOCHEN_VERLAUF - 1) : 1,
+      wert: p.wert,
+      beschriftung: formatiere(p.wert),
+      zeit: wocheText(p.wocheIndex),
+    }));
+  }
+  /** Spanne für Kurven ohne feste Skala: etwas Luft, damit die Linie nicht am Rand klebt. */
+  function spanneVon(punkte: readonly VerlaufsPunkt[]): { min: number; max: number } {
+    const werte = punkte.map((p) => p.wert);
+    const min = Math.min(...werte);
+    const max = Math.max(...werte);
+    const luft = (max - min || max || 1) * 0.15;
+    return { min: Math.max(0, min - luft), max: max + luft };
+  }
+  const WOCHEN_LINKS = `vor ${WOCHEN_VERLAUF - 1} Wochen`;
+
+  const quotePunkte = $derived(trefferquoteVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF));
+  const zeitPunkte = $derived(antwortzeitVerlauf(antworten, entwicklungForm, jetzt, WOCHEN_VERLAUF));
+  const quoteSatz = $derived(trendSatz(quotePunkte, 'quote', WOCHEN_VERLAUF));
+  const zeitSatz = $derived(trendSatz(zeitPunkte, 'zeit', WOCHEN_VERLAUF));
+  const zeitSpanne = $derived(zeitPunkte.length > 0 ? spanneVon(zeitPunkte) : { min: 0, max: 1 });
+  const volumenSpanne = $derived({ min: 0, max: Math.max(1, ...volumenPunkteRoh.map((p) => p.wert)) * 1.15 });
 </script>
 
 {#if datenblatt}
@@ -420,20 +422,38 @@
     {#if sichtbar('entwicklung')}
       <h2>Entwicklung</h2>
       <Segment optionen={FORM_OPTIONEN} wert={entwicklungForm} onWahl={(w) => (entwicklungForm = w as Uebungsform)} />
-      {#if !zeitVerlauf && !quoteVerlauf}
+      {#if quotePunkte.length < 2 && zeitPunkte.length < 2}
         <p class="satz">Die Kurven zeichnen sich nach zwei Wochen mit Durchgängen.</p>
       {:else}
-        <p class="kurven-titel">Trefferquote</p>
-        {#if quoteVerlauf}
-          <Verlaufskurve punkte={quoteVerlauf.punkte} achsMarken={quoteVerlauf.marken} />
-        {:else}
-          <p class="hinweis">Für diese Form noch zu wenig.</p>
+        {#if quotePunkte.length >= 2}
+          {#if quoteSatz}<p class="satz kurven-satz">{quoteSatz}</p>{/if}
+          <Blattliste>
+            <div class="kurve">
+              <p class="kurven-titel">Trefferquote</p>
+              <Trendkurve
+                punkte={zuTrend(quotePunkte, formatProzent)}
+                minWert={0}
+                maxWert={1}
+                titel="Trefferquote je Woche"
+                xLinks={WOCHEN_LINKS}
+              />
+            </div>
+          </Blattliste>
         {/if}
-        <p class="kurven-titel">Antwortzeit</p>
-        {#if zeitVerlauf}
-          <Verlaufskurve punkte={zeitVerlauf.punkte} achsMarken={zeitVerlauf.marken} />
-        {:else}
-          <p class="hinweis">Für diese Form noch zu wenig.</p>
+        {#if zeitPunkte.length >= 2}
+          {#if zeitSatz}<p class="satz kurven-satz">{zeitSatz}</p>{/if}
+          <Blattliste>
+            <div class="kurve">
+              <p class="kurven-titel">Antwortzeit</p>
+              <Trendkurve
+                punkte={zuTrend(zeitPunkte, formatSekunden)}
+                minWert={zeitSpanne.min}
+                maxWert={zeitSpanne.max}
+                titel="Antwortzeit je Woche"
+                xLinks={WOCHEN_LINKS}
+              />
+            </div>
+          </Blattliste>
         {/if}
       {/if}
     {/if}
@@ -449,14 +469,34 @@
           <h2>Übungsarten</h2>
           <Werteliste zeilen={uebungsartZeilen} />
         {/if}
-        {#if abdeckungKurve}
+        {#if abdeckungPunkte.length >= 2}
           <h2>Abdeckung</h2>
-          <p class="hinweis">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
-          <Verlaufskurve punkte={abdeckungKurve.punkte} achsMarken={abdeckungKurve.marken} />
+          <p class="satz">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
+          <Blattliste>
+            <div class="kurve">
+              <Trendkurve
+                punkte={zuTrend(abdeckungPunkte, (w) => `${Math.round(w)}`)}
+                minWert={0}
+                maxWert={alleAromen.length || 60}
+                titel="Richtig benannte Aromen über die Wochen"
+                xLinks={WOCHEN_LINKS}
+              />
+            </div>
+          </Blattliste>
         {/if}
         {#if volumenKurve}
           <h2>Volumen</h2>
-          <Verlaufskurve punkte={volumenKurve.punkte} achsMarken={volumenKurve.marken} />
+          <Blattliste>
+            <div class="kurve">
+              <Trendkurve
+                punkte={zuTrend(volumenPunkteRoh, (w) => `${Math.round(w)} Durchg.`)}
+                minWert={0}
+                maxWert={volumenSpanne.max}
+                titel="Durchgänge je Woche"
+                xLinks={WOCHEN_LINKS}
+              />
+            </div>
+          </Blattliste>
         {/if}
         {#if zeigeBoxenverteilung}
           <h2>Boxen</h2>
@@ -488,10 +528,18 @@
     font-size: var(--fs-satz);
   }
   .kurven-titel {
-    margin: var(--r3) 0 var(--r1);
+    margin: 0 0 var(--r2);
     font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--gedaempft);
+  }
+  .kurve {
+    padding: var(--r3) var(--r2);
+  }
+  .kurven-satz {
+    margin-top: var(--r4);
   }
   .knopfreihe {
     display: flex;
