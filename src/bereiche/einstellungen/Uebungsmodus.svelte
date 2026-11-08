@@ -1308,6 +1308,9 @@
   {:else if phase === 'item' && item}
     <p class="fortschritt">{index + 1} von {DURCHGANG_GROESSE}</p>
 
+    <!-- Ein Item ist eine Karte, die wächst (Gestaltung Aromaschule,
+         08.11.2026): Tipp und Nummer schrumpfen zu einer Protokollzeile, die
+         Auflösung wächst darunter — statt drei gestapelter Karten. -->
     <div class="frage-block">
       {#if itemPhase === 'raten'}
         <p class="frage-satz">Zieh eins, ohne hinzusehen — riech daran.</p>
@@ -1344,89 +1347,91 @@
           <Knopf stufe="primaer" onKlick={zurNummer} deaktiviert={!tippVollstaendig}>weiter</Knopf>
         </div>
       {:else}
-        <p class="hinweis">{tippZusammenfassung}</p>
+        <p class="protokoll">
+          {tippZusammenfassung}{#if itemPhase !== 'nummer' && tipNummer}<span class="protokoll-trenner">{'\u00a0·\u00a0'}</span>{nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}{/if}
+        </p>
       {/if}
-    </div>
 
-    {#if itemPhase === 'nummer' || itemPhase === 'beschreiben' || itemPhase === 'aufgeloest'}
-      <div class="frage-block">
-        {#if itemPhase === 'nummer'}
-          <p class="frage-satz">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
-          <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
-          <div class="knopfreihe">
-            <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
-          </div>
-        {:else}
-          <p class="hinweis">Gelesene Nummer: {nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}</p>
-        {/if}
-      </div>
-    {/if}
+      {#if itemPhase === 'nummer'}
+        <p class="frage-satz abschnitt">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
+        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
+        </div>
+      {/if}
 
-    {#if itemPhase === 'beschreiben'}
-      <div class="frage-block">
-        <p class="hinweis auftrag">Neu für dich. Bevor der Name kommt — wie würdest du es beschreiben?</p>
+      {#if itemPhase === 'beschreiben'}
+        <p class="hinweis auftrag abschnitt">Neu für dich. Bevor der Name kommt — wie würdest du es beschreiben?</p>
         <p class="frage-satz">Tipp an, was passt. Mehrere gehen, keins ist falsch.</p>
         <Einzelauswahl optionen={beschreibungsOptionen} gewaehlt={beschreibung} onWahl={beschreibungUmschalten} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={aufloesen}>auflösen</Knopf>
         </div>
-      </div>
-    {/if}
+      {/if}
 
-    {#if itemPhase === 'aufgeloest' && letzteAuswertung}
-      <div class="frage-block">
-        <p class="ergebnis" class:richtig={letzteAuswertung.ergebnis === 'richtig'}>
-          {#if letzteAuswertung.ergebnis === 'richtig'}
-            Richtig — das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {:else if letzteAuswertung.ergebnis === 'teilweise'}
-            Familie richtig, Aroma daneben — das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {:else}
-            Das war „{letzteAuswertung.tatsaechlicheOption.label}“.
-          {/if}
-        </p>
-        {#if letzteAuswertung.korrekteFamilie}
-          <p class="hinweis">Richtige Familie wäre gewesen: {letzteAuswertung.korrekteFamilie}.</p>
-        {/if}
-        {#if letzteAuswertung.lernstandHinweis}
-          <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
-        {/if}
-        {#if letzteAuswertung.nachriechen}
-          <p class="hinweis auftrag">Riech noch einmal daran — das ist „{letzteAuswertung.tatsaechlicheOption.label}“.</p>
-          {#if letzteAuswertung.beschreibung}
-            <p class="hinweis">Deine Worte: {letzteAuswertung.beschreibung.join(', ')}</p>
-          {/if}
-          {#if letzteAuswertung.nachriechen.merkhilfe}
-            <p class="hinweis">{letzteAuswertung.beschreibung ? 'Datenblatt: ' : ''}{letzteAuswertung.nachriechen.merkhilfe}</p>
-          {/if}
-          {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
-            <p class="hinweis">Dein Tipp „{letzteAuswertung.nachriechen.tipp.label}“: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
-          {/if}
-        {/if}
-        {#if letzteAuswertung.unerwarteteNummer}
-          <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
-        {/if}
-        {#if letzteAuswertung.tatsaechlicheOption.verwandte && letzteAuswertung.tatsaechlicheOption.verwandte.length > 0}
-          <p class="verwandte">
-            Verwandt: {letzteAuswertung.tatsaechlicheOption.verwandte
-              .map((id) => alleAromen.find((a) => a.id === id)?.label)
-              .filter(Boolean)
-              .join(', ')}
+      {#if itemPhase === 'aufgeloest' && letzteAuswertung}
+        {@const aroma = letzteAuswertung.tatsaechlicheOption}
+        <!-- Die Auflösung als Moment: der Name trägt, nicht das Urteil. Die
+             Familienfarbe (K36, erweitert 08.11.2026) erscheint erst hier —
+             vor der Antwort verriete sie die Familie. -->
+        <div class="aufloesung" style:--familie={aroma.kategorieId ? `var(--kat-${aroma.kategorieId})` : 'var(--spur)'}>
+          <div class="aufloesung-kopf">
+            {#if aroma.nummer !== undefined}<span class="deckel">{aroma.nummer}</span>{/if}
+            <div>
+              {#if aroma.kategorieId}<p class="familie-kicker"><span class="familie-punkt"></span>{familieVon(aroma.kategorieId)}</p>{/if}
+              <p class="aroma-name">{aroma.label}</p>
+            </div>
+          </div>
+          <p class="urteil-zeile">
+            {#if letzteAuswertung.ergebnis === 'richtig'}
+              Richtig.
+            {:else if letzteAuswertung.ergebnis === 'teilweise'}
+              Familie richtig — das Aroma war ein anderes.
+            {:else}
+              Daneben.
+            {/if}
           </p>
-        {/if}
-        <div class="knopfreihe">
-          {#if letzteAuswertung.nachriechen && !nachgerochenErledigt}
-            <Knopf stufe="primaer" onKlick={nachgerochen}>nachgerochen</Knopf>
-          {:else}
-            <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
-              {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
-            </Knopf>
+          {#if letzteAuswertung.lernstandHinweis}
+            <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
           {/if}
-          {#if letzteAuswertung.tatsaechlicheOption.nummer !== undefined && datenblattZu(letzteAuswertung.tatsaechlicheOption.nummer)}
-            <Knopf onKlick={() => (datenblatt = datenblattZu(letzteAuswertung!.tatsaechlicheOption.nummer!))}>Datenblatt ansehen</Knopf>
+          {#if letzteAuswertung.nachriechen}
+            <p class="hinweis auftrag">Riech noch einmal daran — jetzt mit dem Namen im Kopf.</p>
+            {#if letzteAuswertung.beschreibung}
+              <p class="hinweis">Deine Worte: {letzteAuswertung.beschreibung.join(', ')}</p>
+            {/if}
+            {#if letzteAuswertung.nachriechen.merkhilfe}
+              <p class="hinweis">{letzteAuswertung.beschreibung ? 'Datenblatt: ' : ''}{letzteAuswertung.nachriechen.merkhilfe}</p>
+            {/if}
+            {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
+              <p class="hinweis">Dein Tipp „{letzteAuswertung.nachriechen.tipp.label}“: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
+            {/if}
           {/if}
+          {#if letzteAuswertung.unerwarteteNummer}
+            <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
+          {/if}
+          {#if aroma.verwandte && aroma.verwandte.length > 0}
+            <p class="verwandte">
+              Verwandt: {aroma.verwandte
+                .map((id) => alleAromen.find((a) => a.id === id)?.label)
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          {/if}
+          <div class="knopfreihe">
+            {#if letzteAuswertung.nachriechen && !nachgerochenErledigt}
+              <Knopf stufe="primaer" onKlick={nachgerochen}>nachgerochen</Knopf>
+            {:else}
+              <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
+                {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+              </Knopf>
+            {/if}
+            {#if aroma.nummer !== undefined && datenblattZu(aroma.nummer)}
+              <Knopf onKlick={() => (datenblatt = datenblattZu(aroma.nummer!))}>Datenblatt ansehen</Knopf>
+            {/if}
+          </div>
         </div>
-      </div>
-    {/if}
+      {/if}
+    </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'kontrast' && kontrastOptionen.length === 2}
     <p class="fortschritt">Paar {kontrastIndex + 1} von {kontrastPaarListe.length}</p>
@@ -1779,6 +1784,92 @@
   /* Die Aufforderung zum Nachriechen ist eine Handlung, kein Nebenbei — sie
      steht in Textfarbe über der gedämpften Merkhilfe. */
   .hinweis.auftrag {
+    color: var(--satz);
+  }
+
+  /* ---- Ein Item als wachsende Karte, Auflösung als Moment (Gestaltung
+     Aromaschule, 08.11.2026) ------------------------------------------- */
+  .protokoll {
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-erklaerung);
+    color: var(--gedaempft);
+    margin: 0;
+  }
+  .protokoll-trenner {
+    color: var(--spur);
+  }
+  .abschnitt {
+    margin-top: var(--r4);
+  }
+  .aufloesung {
+    margin-top: var(--r4);
+    padding-top: var(--r4);
+    border-top: 1px solid var(--linie);
+    animation: auftauchen var(--t-uebernehmen) var(--e-rein);
+  }
+  @keyframes auftauchen {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .aufloesung-kopf {
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+    margin-bottom: var(--r3);
+  }
+  /* Der Deckel: dieselbe runde Nummer wie beim Bereitlegen, hier mit dem
+     dünnen Rand in der Familienfarbe. */
+  .deckel {
+    flex: none;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    box-shadow: inset 0 0 0 2px var(--familie);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-wert);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--tinte);
+  }
+  .familie-kicker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-kachel-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gedaempft);
+  }
+  .familie-punkt {
+    width: var(--zeichen);
+    height: var(--zeichen);
+    border-radius: 50%;
+    background: var(--familie);
+  }
+  .aroma-name {
+    margin: 0;
+    font-family: var(--schrift);
+    font-size: var(--fs-blattitel);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--tinte);
+  }
+  .urteil-zeile {
+    margin: 0 0 var(--r2);
+    font-size: var(--fs-objekt);
     color: var(--satz);
   }
   /* Ende-Screen (Rueckmeldung 2026-09-18: vorher ueber muster/Werteliste.svelte
