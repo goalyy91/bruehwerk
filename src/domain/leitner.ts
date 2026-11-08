@@ -123,7 +123,13 @@ export function startBox(stand: GesamtStand): Box {
  * `daten/schema/uebung.ts`, Dateikopf).
  */
 export function istEingefuehrt(stand: GesamtStand): boolean {
-  return stand.benennen.versuche + stand.unterscheiden.versuche > 0;
+  // `box !== undefined` (Korrektur 08.11.2026): seit dem Neubau schreibt eine
+  // Antwort Box und Fälligkeit, erhöht aber die alten Zähler `benennen`/
+  // `unterscheiden` nicht mehr. Ohne diese Bedingung galt jedes in der neuen
+  // Fassung geübte Aroma für immer als "nie geübt" — die Auswahl ignorierte
+  // Fälligkeit und Boxen, die Einführungssperre griff nie. Eine Box bekommt
+  // ein Aroma nur durch eine echte Antwort (werteAntwortAus).
+  return stand.box !== undefined || stand.benennen.versuche + stand.unterscheiden.versuche > 0;
 }
 
 // ---- Einführungssperre ----------------------------------------------------

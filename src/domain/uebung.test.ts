@@ -717,3 +717,23 @@ describe('planeDurchgang — Kaffee-Bruecke: Aromen aus den eigenen Verkostungen
     expect(mit.abgefragt.map((a) => a.id)).toEqual(ohne.abgefragt.map((a) => a.id));
   });
 });
+
+describe('eingefuehrt — ein in der neuen Fassung geuebtes Aroma (Korrektur 08.11.2026)', () => {
+  it('der Stand nach einer echten Antwort gilt als eingefuehrt, obwohl die alten Zaehler bei 0 stehen', () => {
+    const a = werteAntwortAus(
+      { formStufe: 'a', tipFamilieId: 'blumig', tatsaechlicheAromaId: 'honig', tatsaechlicheFamilieId: 'blumig', tatsaechlicherStand: undefined },
+      JETZT,
+    );
+    // So schreibt der Bildschirm den Stand: alte Zaehler unveraendert 0, Box/Faelligkeit neu.
+    const stand = STAND({ box: a.box, faellig: a.faellig, stufe: a.stufe });
+    expect(effektiverZustand(stand, JETZT).eingefuehrt).toBe(true);
+  });
+
+  it('ein so geuebtes, nicht faelliges Aroma wird nicht als "neu" gezogen', () => {
+    const alle = aromen('x', 14);
+    const staende = new Map<string, GesamtStand>(alle.slice(0, 12).map((a) => [a.id, STAND({ box: 4, faellig: JETZT + 10 * TAG, stufe: 'b' })]));
+    const plan = planeDurchgang(alle, staende, JETZT);
+    // Die zwei wirklich neuen kommen dran, die zwoelf geuebten zaehlen nicht als neu.
+    expect(plan.abgefragt.filter((a) => a.id === 'x13' || a.id === 'x14')).toHaveLength(2);
+  });
+});

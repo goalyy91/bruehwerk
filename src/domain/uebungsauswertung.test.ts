@@ -14,6 +14,9 @@ import {
   schwaechsteAromen,
   uebungsartBilanz,
   zuletztKennengelernt,
+  wochenSatz,
+  lernstandSatz,
+  verwechseltePaare,
   LANGSAM_SCHWELLE_MS,
   ANTWORTDAUER_MINDEST_STICHPROBE,
   ZIELFREQUENZ_MINDESTWOCHEN,
@@ -473,5 +476,62 @@ describe('zuletztKennengelernt — das Aroma, das zuletzt zum ersten Mal dran wa
 
   it('ohne Antworten: nichts', () => {
     expect(zuletztKennengelernt([])).toBeUndefined();
+  });
+});
+
+describe('wochenSatz — nur, was die Daten tragen', () => {
+  const familienLabel = (id: string) => ({ blumig: 'Blumig', fruchtig: 'Fruchtig' })[id] ?? id;
+  it('Woche und sicherste Familie', () => {
+    const satz = wochenSatz({
+      antworten: [ANTWORT({ zeitstempel: JETZT - TAG }), ANTWORT({ zeitstempel: JETZT - TAG }), ANTWORT({ zeitstempel: JETZT - 10 * TAG })],
+      durchgaengeBegonnenAm: [JETZT - TAG, JETZT - 10 * TAG],
+      familienQuoten: [
+        { kategorieId: 'blumig', richtig: 3, versuche: 4 },
+        { kategorieId: 'fruchtig', richtig: 1, versuche: 4 },
+        { kategorieId: 'roestig', richtig: 1, versuche: 1 }, // zu wenig Versuche — zaehlt nicht
+      ],
+      familienLabel,
+      jetzt: JETZT,
+    });
+    expect(satz).toBe('Diese Woche: 1 Durchgang, 2 Fläschchen gerochen. Am sichersten: Blumig.');
+  });
+  it('ohne Durchgang diese Woche kein "0 Durchgänge" — der Teil fällt weg', () => {
+    const satz = wochenSatz({ antworten: [], durchgaengeBegonnenAm: [JETZT - 10 * TAG], familienQuoten: [{ kategorieId: 'blumig', richtig: 2, versuche: 3 }], familienLabel, jetzt: JETZT });
+    expect(satz).toBe('Am sichersten: Blumig.');
+  });
+  it('ohne alles kein Satz', () => {
+    expect(wochenSatz({ antworten: [], durchgaengeBegonnenAm: [], familienQuoten: [], familienLabel, jetzt: JETZT })).toBeUndefined();
+  });
+});
+
+describe('lernstandSatz — Teile bei Null fallen weg', () => {
+  const Z = (stufe: 'a' | 'b' | 'c', box = 2, eingefuehrt = true) => ({ stufe, box, eingefuehrt });
+  it('voller Satz', () => {
+    expect(lernstandSatz([Z('a'), Z('b'), Z('b'), Z('c', 2), Z('c', 4), Z('a', 1, false)])).toBe(
+      'Von 5 eingeführten Aromen sitzen 4 in ihrer Familie, 2 benennst du im Familienkreis, 1 frei.',
+    );
+  });
+  it('ohne Stufe C nur der erste Teil, Einzahl richtig', () => {
+    expect(lernstandSatz([Z('a'), Z('b')])).toBe('Von 2 eingeführten Aromen sitzt 1 in ihrer Familie.');
+  });
+  it('alles noch Stufe A', () => {
+    expect(lernstandSatz([Z('a'), Z('a')])).toBe('Bei allen 2 eingeführten Aromen geht es noch um die Familie.');
+  });
+  it('nichts eingeführt: kein Satz', () => {
+    expect(lernstandSatz([Z('a', 1, false)])).toBeUndefined();
+  });
+});
+
+describe('verwechseltePaare — beide Richtungen zusammen', () => {
+  it('summiert A→B und B→A', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', getipptId: 'haselnuss', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'haselnuss', getipptId: 'mandel', ergebnis: 'falsch' }),
+      ANTWORT({ aromaId: 'mandel', getipptId: 'haselnuss', ergebnis: 'teilweise' }),
+      ANTWORT({ aromaId: 'rose', getipptId: 'jasmin', ergebnis: 'falsch' }),
+    ];
+    const paare = verwechseltePaare(antworten);
+    expect(paare[0]).toEqual({ aId: 'haselnuss', bId: 'mandel', anzahl: 3 });
+    expect(paare[1]).toEqual({ aId: 'jasmin', bId: 'rose', anzahl: 1 });
   });
 });

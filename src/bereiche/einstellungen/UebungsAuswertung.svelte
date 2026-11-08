@@ -12,7 +12,6 @@
   // Domäne) dazu und schreibt die Zielfrequenz.
   import { bestand, schreiben } from '../bestand.svelte';
   import {
-    verwechslungsmatrix,
     familienTrefferquote,
     langsameRichtigeAntworten,
     zielfrequenzAbgleich,
@@ -20,11 +19,17 @@
     trefferquoteVerlauf,
     abdeckungVerlauf,
     volumenVerlauf,
-    stufenverteilung,
     schwaechsteAromen,
     uebungsartBilanz,
+    wochenSatz,
+    lernstandSatz,
+    verwechseltePaare,
     type VerlaufsPunkt,
   } from '../../domain/uebungsauswertung';
+  import { merkhilfeZu } from '../../daten/aroma-merkhilfen';
+  import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
+  import Aromadatenblatt from '../aromen/Aromadatenblatt.svelte';
+  import Blattzeile from '../../muster/Blattzeile.svelte';
   import { achsMarken } from '../../domain/auswertung';
   import { effektiverZustand, type AromaOption } from '../../domain/uebung';
   import type { Uebungsform } from '../../daten/schema/uebungsantwort';
@@ -38,7 +43,14 @@
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
   import Knopf from '../../muster/Knopf.svelte';
 
-  let { onZurueck }: { onZurueck: () => void } = $props();
+  let {
+    onZurueck,
+    onKontrastUeben,
+  }: {
+    onZurueck: () => void;
+    /** Startet auf der Übersicht einen Kontrastdurchgang (Rahmen.svelte reicht den Wunsch weiter). */
+    onKontrastUeben?: () => void;
+  } = $props();
 
   /** Gemeinsamer Default, wenn noch keine Einstellungen existieren — dieselbe Basis, die zielAendern() bisher inline hatte, jetzt einmal fuer beide Schreib-Funktionen unten. */
   function basisEinstellungen(): AppEinstellungen {
@@ -61,33 +73,18 @@
   const alleAromen = $derived<AromaOption[]>(
     (set?.kategorien ?? []).flatMap((k) =>
       k.gruppen.flatMap((g) =>
-        g.aromen.filter((a) => a.nummer !== undefined).map((a) => ({ id: a.id, label: a.label, kategorieId: k.id })),
+        g.aromen.filter((a) => a.nummer !== undefined).map((a) => ({ id: a.id, label: a.label, kategorieId: k.id, nummer: a.nummer })),
       ),
     ),
   );
-  function labelVon(id: string): string {
-    return alleAromen.find((a) => a.id === id)?.label ?? id;
-  }
   function familieLabelVon(kategorieId: string): string {
     return set?.kategorien.find((k) => k.id === kategorieId)?.label ?? kategorieId;
   }
 
   const antworten = $derived(bestand.uebungsantworten.filter((a) => a.setId === set?.id));
 
-  /** Auf 10 begrenzt — kein "weitere"-Zähler wie beim Dashboard, das ist hier eine bewusst tiefer gelegte Ansicht, kein Alltagspfad-Element. */
-  const ANZEIGE_GRENZE = 10;
 
-  const matrixZeilen = $derived(
-    verwechslungsmatrix(antworten)
-      .slice(0, ANZEIGE_GRENZE)
-      .map((e) => ({ label: `${labelVon(e.tatsaechlichId)} → ${labelVon(e.getipptId)}`, wert: e.anzahl })),
-  );
 
-  const familienZeilen = $derived(
-    familienTrefferquote(antworten, alleAromen)
-      .map((f) => ({ label: familieLabelVon(f.kategorieId), wert: `${f.richtig} von ${f.versuche}` }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'de')),
-  );
 
   const langsame = $derived(langsameRichtigeAntworten(antworten));
 
@@ -157,17 +154,16 @@
   // (daten/schema/einstellungen.ts::uebungStatistikAus), nicht die
   // sichtbaren: "Feld nicht gesetzt" heisst dann "alles sichtbar", und ein
   // spaeter ergaenzter Abschnitt erscheint von selbst statt zu fehlen.
+  // Etappe 7 (Gestaltung der Statistik): wichtigstes zuerst, Seltenes hinter
+  // "Mehr Zahlen" — die alten Schlüssel bleiben, wo der Inhalt derselbe ist,
+  // damit gespeicherte Ausblendungen weiter gelten.
   const ABSCHNITTE: readonly { schluessel: string; titel: string }[] = [
+    { schluessel: 'was-haengt', titel: 'Woran du gerade arbeitest' },
+    { schluessel: 'verwechslungen', titel: 'Was du verwechselst' },
+    { schluessel: 'familien', titel: 'Deine Familien' },
+    { schluessel: 'lernstufen', titel: 'Wie weit du bist' },
     { schluessel: 'entwicklung', titel: 'Entwicklung' },
-    { schluessel: 'abdeckung', titel: 'Abdeckung' },
-    { schluessel: 'lernstufen', titel: 'Lernstufen' },
-    { schluessel: 'was-haengt', titel: 'Was hängt' },
-    { schluessel: 'uebungsarten', titel: 'Übungsarten' },
-    { schluessel: 'volumen', titel: 'Volumen' },
-    { schluessel: 'verwechslungen', titel: 'Häufigste Verwechslungen' },
-    { schluessel: 'familien', titel: 'Familien-Trefferquote' },
-    { schluessel: 'boxen', titel: 'Boxenverteilung' },
-    { schluessel: 'zielfrequenz', titel: 'Zielfrequenz' },
+    { schluessel: 'mehr', titel: 'Mehr Zahlen' },
   ];
 
   let bearbeiten = $state(false);
@@ -190,8 +186,8 @@
   const WOCHEN_VERLAUF = 8;
   const FORM_OPTIONEN: readonly { wert: Uebungsform; label: string }[] = [
     { wert: 'familie', label: 'Familie' },
-    { wert: 'aromaInFamilie', label: 'Aroma in Familie' },
-    { wert: 'freierAbruf', label: 'freier Abruf' },
+    { wert: 'aromaInFamilie', label: 'im Familienkreis' },
+    { wert: 'freierAbruf', label: 'frei' },
   ];
   let entwicklungForm = $state<Uebungsform>('freierAbruf');
 
@@ -238,27 +234,9 @@
   const abdeckungAktuell = $derived(abdeckungPunkte.at(-1)?.wert ?? 0);
 
   // ---- Lernstufen: reine Umsortierung der effektiven Zustaende ------------
-  const eingefuehrteZustaendeStatistik = $derived(
-    alleAromen
-      .map((a) => effektiverZustand(bestand.uebungen.find((u) => u.setId === set?.id && u.aromaId === a.id), zustaendeJetzt))
-      .filter((z) => z.eingefuehrt),
-  );
-  const stufenZeilen = $derived.by(() => {
-    const v = stufenverteilung(eingefuehrteZustaendeStatistik);
-    return [
-      { label: 'Familie (A)', wert: v.a },
-      { label: 'Aroma in Familie (B)', wert: v.b },
-      { label: 'freier Abruf (C)', wert: v.c },
-    ];
-  });
 
   // ---- Was haengt: schwaechste Aromen ab einer Mindestzahl Versuche -------
   const WAS_HAENGT_MINDESTVERSUCHE = 2;
-  const schwaechsteZeilen = $derived(
-    schwaechsteAromen(antworten, WAS_HAENGT_MINDESTVERSUCHE)
-      .slice(0, ANZEIGE_GRENZE)
-      .map((e) => ({ label: labelVon(e.aromaId), wert: formatProzent(e.richtig / e.versuche) })),
-  );
 
   // ---- Uebungsarten: Kontrast/Reverse getrennt, andere Groesse als normal --
   const uebungsartZeilen = $derived.by(() => {
@@ -282,99 +260,218 @@
       marken: achsMarken(0, max, (w) => String(Math.round(w))),
     };
   });
+
+  // ---- Etappe 7: Statistik als Erzählung ------------------------------------
+  function optionVon(id: string) {
+    return alleAromen.find((a) => a.id === id);
+  }
+  function familienFarbe(kategorieId: string | undefined): string {
+    return kategorieId ? `var(--kat-${kategorieId})` : 'var(--spur)';
+  }
+
+  const familienQuoten = $derived(familienTrefferquote(antworten, alleAromen));
+  const satzOben = $derived(wochenSatz({ antworten, durchgaengeBegonnenAm, familienQuoten, familienLabel: familieLabelVon, jetzt }));
+
+  /** Woran du gerade arbeitest: die zähesten vier, mit Merkhilfe statt Prozent. */
+  const arbeitZeilen = $derived(
+    schwaechsteAromen(antworten, WAS_HAENGT_MINDESTVERSUCHE)
+      .slice(0, 4)
+      .map((e) => ({ option: optionVon(e.aromaId), richtig: e.richtig, versuche: e.versuche }))
+      .filter((z) => z.option !== undefined),
+  );
+
+  const paarZeilen = $derived(
+    verwechseltePaare(antworten)
+      .slice(0, 4)
+      .map((p) => ({ a: optionVon(p.aId), b: optionVon(p.bId), anzahl: p.anzahl }))
+      .filter((p) => p.a !== undefined && p.b !== undefined),
+  );
+
+  const familienListe = $derived(
+    [...familienQuoten]
+      .sort((x, y) => y.richtig / y.versuche - x.richtig / x.versuche)
+      .map((q) => ({ kategorieId: q.kategorieId, label: familieLabelVon(q.kategorieId), wert: `${q.richtig} von ${q.versuche}` })),
+  );
+
+  const alleZustaende = $derived(
+    alleAromen.map((a) => ({
+      option: a,
+      zustand: effektiverZustand(bestand.uebungen.find((u) => u.setId === set?.id && u.aromaId === a.id), zustaendeJetzt),
+    })),
+  );
+  const lernsatz = $derived(lernstandSatz(alleZustaende.map((z) => z.zustand)));
+
+  /** Das Raster aller Fläschchen — nur auf Anfrage (ausklappbar), siehe docs/ux-regeln.md Regel 10, Ausnahme. */
+  type RasterStufe = 'neu' | 'a' | 'b' | 'c' | 'frei';
+  const raster = $derived(
+    [...alleZustaende]
+      .sort((x, y) => (x.option.nummer ?? 0) - (y.option.nummer ?? 0))
+      .map(({ option, zustand }) => ({
+        option,
+        stufe: (!zustand.eingefuehrt
+          ? 'neu'
+          : zustand.stufe === 'c' && zustand.box >= 4
+            ? 'frei'
+            : zustand.stufe) as RasterStufe,
+      })),
+  );
+
+  let rasterOffen = $state(false);
+  let mehrOffen = $state(false);
+  let datenblatt = $state<AromaDatenblatt | undefined>(undefined);
+  function datenblattOeffnen(nummer: number | undefined) {
+    const blatt = nummer !== undefined ? datenblattZu(nummer) : undefined;
+    if (blatt) datenblatt = blatt;
+  }
 </script>
 
-<Kopfzeile titel="Statistik" {onZurueck}>
-  {#snippet aktion()}
-    {#if !bearbeiten}
-      <Kontextmenue eintraege={[{ text: 'Abschnitte wählen', onWahl: () => (bearbeiten = true) }]} />
-    {/if}
-  {/snippet}
-</Kopfzeile>
-
-{#if bearbeiten}
-  <p class="hinweis">Ausgeblendete Abschnitte verschwinden nur hier — an der Berechnung ändert sich nichts.</p>
-  <Blattliste>
-    {#each ABSCHNITTE as abschnitt (abschnitt.schluessel)}
-      <Schalter label={abschnitt.titel} an={sichtbar(abschnitt.schluessel)} onWahl={() => abschnittUmschalten(abschnitt.schluessel)} />
-    {/each}
-  </Blattliste>
-  <div class="knopfreihe">
-    <Knopf stufe="primaer" onKlick={() => (bearbeiten = false)}>fertig</Knopf>
-  </div>
+{#if datenblatt}
+  <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
-  {#if antworten.length === 0}
-    <p class="hinweis">Noch keine Übungsdurchgänge protokolliert.</p>
+  <Kopfzeile titel="Statistik" {onZurueck}>
+    {#snippet aktion()}
+      {#if !bearbeiten}
+        <Kontextmenue eintraege={[{ text: 'Abschnitte wählen', onWahl: () => (bearbeiten = true) }]} />
+      {/if}
+    {/snippet}
+  </Kopfzeile>
+
+  {#if bearbeiten}
+    <p class="hinweis">Ausgeblendete Abschnitte verschwinden nur hier — an der Berechnung ändert sich nichts.</p>
+    <Blattliste>
+      {#each ABSCHNITTE as abschnitt (abschnitt.schluessel)}
+        <Schalter label={abschnitt.titel} an={sichtbar(abschnitt.schluessel)} onWahl={() => abschnittUmschalten(abschnitt.schluessel)} />
+      {/each}
+    </Blattliste>
+    <div class="knopfreihe">
+      <Knopf stufe="primaer" onKlick={() => (bearbeiten = false)}>fertig</Knopf>
+    </div>
+  {:else if antworten.length === 0}
+    <p class="satz">Noch kein Übungsdurchgang — die Statistik füllt sich mit dem ersten.</p>
   {:else}
+    {#if satzOben}<p class="einstieg">{satzOben}</p>{/if}
+
+    {#if sichtbar('was-haengt') && arbeitZeilen.length > 0}
+      <h2>Woran du gerade arbeitest</h2>
+      <Blattliste>
+        {#each arbeitZeilen as z (z.option!.id)}
+          <button type="button" class="aroma-zeile" onclick={() => datenblattOeffnen(z.option!.nummer)}>
+            <span class="deckel" style:--familie={familienFarbe(z.option!.kategorieId)}>{z.option!.nummer}</span>
+            <span class="aroma-text">
+              <span class="aroma-name">{z.option!.label}</span>
+              {#if merkhilfeZu(z.option!.nummer)}<span class="aroma-merkhilfe">{merkhilfeZu(z.option!.nummer)}</span>{/if}
+            </span>
+            <span class="aroma-meta">{z.richtig} von {z.versuche}</span>
+          </button>
+        {/each}
+      </Blattliste>
+    {/if}
+
+    {#if sichtbar('verwechslungen') && paarZeilen.length > 0}
+      <h2>Was du verwechselst</h2>
+      <Blattliste>
+        {#each paarZeilen as p (p.a!.id + p.b!.id)}
+          <div class="aroma-zeile statisch">
+            <span class="deckel-paar">
+              <span class="deckel" style:--familie={familienFarbe(p.a!.kategorieId)}>{p.a!.nummer}</span>
+              <span class="deckel" style:--familie={familienFarbe(p.b!.kategorieId)}>{p.b!.nummer}</span>
+            </span>
+            <span class="aroma-text"><span class="aroma-name">{p.a!.label} ↔ {p.b!.label}</span></span>
+            <span class="aroma-meta">{p.anzahl}-mal</span>
+          </div>
+        {/each}
+      </Blattliste>
+      {#if onKontrastUeben}
+        <div class="knopfreihe">
+          <Knopf onKlick={onKontrastUeben}>als Kontrast üben</Knopf>
+        </div>
+      {/if}
+    {/if}
+
+    {#if sichtbar('familien') && familienListe.length > 0}
+      <h2>Deine Familien</h2>
+      <Blattliste>
+        {#each familienListe as f (f.kategorieId)}
+          <div class="aroma-zeile statisch kompakt">
+            <span class="familie-punkt" style:--familie={familienFarbe(f.kategorieId)}></span>
+            <span class="aroma-text"><span class="aroma-name">{f.label}</span></span>
+            <span class="aroma-meta">{f.wert}</span>
+          </div>
+        {/each}
+      </Blattliste>
+    {/if}
+
+    {#if sichtbar('lernstufen') && lernsatz}
+      <h2>Wie weit du bist</h2>
+      <p class="satz">{lernsatz}</p>
+      <Blattliste>
+        <Blattzeile label={rasterOffen ? 'Fläschchen ausblenden' : 'Alle 60 Fläschchen ansehen'} onKlick={() => (rasterOffen = !rasterOffen)} />
+      </Blattliste>
+      {#if rasterOffen}
+        <div class="raster">
+          {#each raster as r (r.option.id)}
+            <span class="deckel klein stufe-{r.stufe}" style:--familie={familienFarbe(r.option.kategorieId)} title={r.stufe === 'neu' ? undefined : r.option.label}>{r.option.nummer}</span>
+          {/each}
+        </div>
+        <p class="legende">Je kräftiger der Rand, desto sicherer: Familie · im Familienkreis · frei. Blass: noch nicht kennengelernt.</p>
+      {/if}
+    {/if}
+
     {#if sichtbar('entwicklung')}
       <h2>Entwicklung</h2>
       <Segment optionen={FORM_OPTIONEN} wert={entwicklungForm} onWahl={(w) => (entwicklungForm = w as Uebungsform)} />
-      <p class="kurven-titel">Antwortzeit</p>
-      {#if zeitVerlauf}
-        <Verlaufskurve punkte={zeitVerlauf.punkte} achsMarken={zeitVerlauf.marken} />
+      {#if !zeitVerlauf && !quoteVerlauf}
+        <p class="satz">Die Kurven zeichnen sich nach zwei Wochen mit Durchgängen.</p>
       {:else}
-        <p class="hinweis">Noch zu wenig Geschichte für einen Verlauf.</p>
+        <p class="kurven-titel">Trefferquote</p>
+        {#if quoteVerlauf}
+          <Verlaufskurve punkte={quoteVerlauf.punkte} achsMarken={quoteVerlauf.marken} />
+        {:else}
+          <p class="hinweis">Für diese Form noch zu wenig.</p>
+        {/if}
+        <p class="kurven-titel">Antwortzeit</p>
+        {#if zeitVerlauf}
+          <Verlaufskurve punkte={zeitVerlauf.punkte} achsMarken={zeitVerlauf.marken} />
+        {:else}
+          <p class="hinweis">Für diese Form noch zu wenig.</p>
+        {/if}
       {/if}
-      <p class="kurven-titel">Trefferquote</p>
-      {#if quoteVerlauf}
-        <Verlaufskurve punkte={quoteVerlauf.punkte} achsMarken={quoteVerlauf.marken} />
-      {:else}
-        <p class="hinweis">Noch zu wenig Geschichte für einen Verlauf.</p>
+    {/if}
+
+    {#if sichtbar('mehr')}
+      <div class="mehr">
+        <Blattliste>
+          <Blattzeile label={mehrOffen ? 'Weniger Zahlen' : 'Mehr Zahlen'} meta={mehrOffen ? undefined : 'Übungsarten, Abdeckung, Volumen, Boxen, Ziel'} onKlick={() => (mehrOffen = !mehrOffen)} />
+        </Blattliste>
+      </div>
+      {#if mehrOffen}
+        {#if uebungsartZeilen.length > 0}
+          <h2>Übungsarten</h2>
+          <Werteliste zeilen={uebungsartZeilen} />
+        {/if}
+        {#if abdeckungKurve}
+          <h2>Abdeckung</h2>
+          <p class="hinweis">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
+          <Verlaufskurve punkte={abdeckungKurve.punkte} achsMarken={abdeckungKurve.marken} />
+        {/if}
+        {#if volumenKurve}
+          <h2>Volumen</h2>
+          <Verlaufskurve punkte={volumenKurve.punkte} achsMarken={volumenKurve.marken} />
+        {/if}
+        {#if zeigeBoxenverteilung}
+          <h2>Boxen</h2>
+          <Werteliste zeilen={boxenZeilen} />
+        {/if}
+        <h2>Zielfrequenz</h2>
+        <Werteliste zeilen={zielZeilen} />
+        {#if langsame.length > 0}
+          <p class="hinweis">
+            {langsame.length} richtige Antwort{langsame.length === 1 ? '' : 'en'} mit auffällig langer Antwortzeit — möglicherweise geraten
+            statt gewusst.
+          </p>
+        {/if}
       {/if}
     {/if}
-
-    {#if sichtbar('was-haengt') && schwaechsteZeilen.length > 0}
-      <h2>Was hängt</h2>
-      <Werteliste zeilen={schwaechsteZeilen} />
-    {/if}
-
-    {#if sichtbar('uebungsarten') && uebungsartZeilen.length > 0}
-      <h2>Übungsarten</h2>
-      <Werteliste zeilen={uebungsartZeilen} />
-    {/if}
-
-    {#if sichtbar('verwechslungen') && matrixZeilen.length > 0}
-      <h2>Häufigste Verwechslungen</h2>
-      <Werteliste zeilen={matrixZeilen} />
-    {/if}
-
-    {#if sichtbar('familien') && familienZeilen.length > 0}
-      <h2>Familien-Trefferquote</h2>
-      <Werteliste zeilen={familienZeilen} />
-    {/if}
-
-    {#if langsame.length > 0}
-      <p class="hinweis">
-        {langsame.length} richtige Antwort{langsame.length === 1 ? '' : 'en'} mit auffällig langer Antwortzeit — möglicherweise geraten
-        statt gewusst.
-      </p>
-    {/if}
-  {/if}
-
-  {#if sichtbar('abdeckung') && abdeckungKurve}
-    <h2>Abdeckung</h2>
-    <p class="hinweis">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
-    <Verlaufskurve punkte={abdeckungKurve.punkte} achsMarken={abdeckungKurve.marken} />
-  {/if}
-
-  {#if sichtbar('lernstufen') && eingefuehrteZustaendeStatistik.length > 0}
-    <h2>Lernstufen</h2>
-    <Werteliste zeilen={stufenZeilen} />
-  {/if}
-
-  {#if sichtbar('volumen') && volumenKurve}
-    <h2>Volumen</h2>
-    <Verlaufskurve punkte={volumenKurve.punkte} achsMarken={volumenKurve.marken} />
-  {/if}
-
-  {#if sichtbar('boxen') && zeigeBoxenverteilung}
-    <h2>Boxenverteilung</h2>
-    <Werteliste zeilen={boxenZeilen} />
-  {/if}
-
-  {#if sichtbar('zielfrequenz')}
-    <h2>Zielfrequenz</h2>
-    <Werteliste zeilen={zielZeilen} />
   {/if}
 {/if}
 
@@ -399,5 +496,134 @@
   .knopfreihe {
     display: flex;
     margin-top: var(--r3);
+  }
+
+  /* ---- Etappe 7: Statistik als Erzählung ---------------------------------
+     Dieselbe Bildsprache wie die Aromaschule: Deckel-Kreise mit Rand in der
+     Familienfarbe (K36, erweitert), Sätze in Serif, Zahlen klein daneben. */
+  .einstieg {
+    margin: 0 0 var(--r5);
+    font-size: var(--fs-objekt);
+    line-height: 1.35;
+    color: var(--tinte);
+  }
+  .satz {
+    margin: 0 0 var(--r3);
+    font-size: var(--fs-bedienwort);
+    line-height: 1.5;
+    color: var(--satz);
+  }
+  .aroma-zeile {
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+    width: 100%;
+    min-height: var(--blattzeile);
+    padding: var(--r2) var(--r4);
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-family: var(--schrift-sans);
+    cursor: pointer;
+  }
+  .aroma-zeile.statisch {
+    cursor: default;
+  }
+  .aroma-zeile.kompakt {
+    min-height: 48px;
+  }
+  .aroma-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Aromaname und Merkhilfe sind Inhalt, nicht Apparat — Serif. Eigene Blöcke
+     ohne cursor/background (tests/bildsprache.test.ts prüft je Block). */
+  .aroma-name {
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .aroma-merkhilfe {
+    font-family: var(--schrift);
+    font-size: var(--fs-meta);
+    line-height: 1.4;
+    color: var(--gedaempft);
+  }
+  .aroma-meta {
+    flex-shrink: 0;
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+    font-variant-numeric: tabular-nums;
+  }
+  .deckel {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    box-shadow: inset 0 0 0 2px var(--familie);
+    font-size: var(--fs-meta);
+    font-variant-numeric: tabular-nums lining-nums;
+    color: var(--tinte);
+  }
+  .deckel-paar {
+    display: flex;
+    flex: none;
+  }
+  .deckel-paar .deckel + .deckel {
+    margin-left: -8px;
+  }
+  .familie-punkt {
+    flex: none;
+    width: var(--zeichen);
+    height: var(--zeichen);
+    border-radius: 50%;
+    background: var(--familie);
+  }
+  .raster {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--r2);
+    justify-items: center;
+    margin: var(--r3) 0 var(--r2);
+  }
+  .deckel.klein {
+    width: 36px;
+    height: 36px;
+  }
+  /* Stufe als Randstärke — keine neue Zustandsfarbe (K69), die Farbe bleibt
+     die der Familie. */
+  .stufe-neu {
+    opacity: 0.35;
+    box-shadow: none;
+  }
+  .stufe-a {
+    box-shadow: inset 0 0 0 1px var(--familie);
+  }
+  .stufe-b {
+    box-shadow: inset 0 0 0 2.5px var(--familie);
+  }
+  .stufe-c {
+    box-shadow: inset 0 0 0 4px var(--familie);
+  }
+  .stufe-frei {
+    box-shadow: inset 0 0 0 4px var(--familie);
+    background: var(--blatt);
+    font-weight: 600;
+  }
+  .legende {
+    margin: 0 0 var(--r4);
+    font-family: var(--schrift);
+    font-size: var(--fs-meta);
+    font-style: italic;
+    color: var(--gedaempft);
+  }
+  .mehr {
+    margin-top: var(--r5);
   }
 </style>

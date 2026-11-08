@@ -105,11 +105,16 @@
     aktiv,
     onZurueck,
     onOeffnenStatistik,
+    kontrastAnfrage = false,
+    onKontrastAnfrageAngenommen,
   }: {
     /** true = eine Aktivität läuft gerade (Route 'uebungLaufend'), false = Übersicht (Route 'uebung'). */
     aktiv: boolean;
     onZurueck: () => void;
     onOeffnenStatistik: () => void;
+    /** Wunsch aus der Statistik: "als Kontrast üben" — wird einmal angenommen und gestartet. */
+    kontrastAnfrage?: boolean;
+    onKontrastAnfrageAngenommen?: () => void;
   } = $props();
 
   // Der Uebungsmodus fragt Flaeschchennummern ab — das ergibt nur bei einem
@@ -342,6 +347,12 @@
     const verkostungen = bestand.tastings.map((t) => ({ ts: bestand.shots.find((s) => s.id === t.shotId)?.ts ?? 0, aromen: t.aromen }));
     return new Set([...nummernAusKaffees(verkostungen, leNez, jetzt)].map(flaeschchenId));
   }
+
+  $effect(() => {
+    if (!kontrastAnfrage || aktiv || !set) return;
+    onKontrastAnfrageAngenommen?.();
+    void untrack(() => kontrastdurchgangStarten());
+  });
 
   async function kontrastdurchgangStarten(paare: readonly Kontrastpaar[] = kontrastpaare(alleAromen, bekannteStaende, Date.now())) {
     if (!set || paare.length === 0) return;

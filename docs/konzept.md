@@ -1046,6 +1046,17 @@ erdig-muffig, schimmelig), zusammen 41 von 79. Was nicht eindeutig ist („papie
 „Pappe"), bekommt keine Nummer. Grenze, die kein Code löst: in der Tasse riecht man
 retronasal, am Fläschchen orthonasal.
 
+**Statistik als Erzählung.** *(Nachzug 08.11.2026.)* Die Statistik liest sich nicht mehr
+als Bericht, sondern von oben nach unten nach Wichtigkeit: ein Satz über die Woche („Diese
+Woche: 2 Durchgänge, 19 Fläschchen gerochen. Am sichersten: Fruchtig." — Teile, die bei
+Null stünden, fallen weg); **Woran du gerade arbeitest** (die zähesten Aromen mit Deckel,
+Merkhilfe und „0 von 3", antippbar zum Datenblatt); **Was du verwechselst** (Paare, beide
+Richtungen zusammen, mit „als Kontrast üben"); **Deine Familien** (Farbpunkt, „3 von 12",
+sicherste zuerst); **Wie weit du bist** als Satz („Von 10 eingeführten Aromen sitzen 2 in
+ihrer Familie, 2 benennst du im Familienkreis.") und ausklappbar das Raster aller 60
+Fläschchen; die **Entwicklung**; ausklappbar **Mehr Zahlen** (Übungsarten, Abdeckung,
+Volumen, Boxen, Zielfrequenz). Zusätzliches ist ausklappbar, nicht einklappbar.
+
 **Stimme der Aromaschule.** *(Nachzug 08.11.2026.)* Brühwerk ist ein Laborbuch: es gibt
 eine **Vermutung** und einen **Befund**, kein „daneben". Nach der Auflösung steht der Name
 des Aromas groß in Serif (der Befund), darunter „Getroffen.", „Die Familie stimmt — deine
@@ -1515,14 +1526,6 @@ Sechzig Aromen mit Fläschchennummer, eingeordnet in die neun SCA-Kategorien. Di
 **Die restlichen Bildschirme — Gestaltung, nicht Konzept**
 
 Die Gestaltung hat die dichten Bildschirme und den Alltagspfad abgedeckt. Offen ist die Fehlliste, und **ein Eintrag darauf ist keine Kür**: die *Historie und Auswertung*. Seit K57 jede Bewertung dorthin verlegt, ist sie ein Kernbildschirm und Voraussetzung für Paket 05. Die übrigen — Dial-in am Getränk, Kaffee-Pflege, Übungsmodus, Erkenntnis anlegen, Setups, Personenpflege — sind Kompositionen aus vorhandenen Mustern.
-
-**Statistik der Aromaschule — Gestaltung, vorgemerkt 08.11.2026**
-
-Nach dem Gestaltungsdurchgang der Aromaschule (Stimme „Vermutung und Befund", Deckel-Kreis,
-Familienfarben nach der Antwort) wirkt die Statistik-Seite (`UebungsAuswertung.svelte`)
-als einziger Teil noch wie ein Bericht. Sie bekommt eine eigene Etappe: emotionaler,
-optisch ansprechender, intuitiver — mit denselben Grenzen (keine Punkte, Serien oder
-Fortschrittsbalken, ehrliche Rückmeldung, die bei Misserfolg schweigt).
 
 #### Nachpflegbar im Betrieb, mit Startwerten belegt
 
