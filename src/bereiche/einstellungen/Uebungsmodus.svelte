@@ -714,8 +714,8 @@
   const kontrastFrageOptionen = $derived(
     kontrastOptionen.length === 2
       ? [
-          { wert: 'a-zuerst', label: `erst ${kontrastOptionen[0]!.label}, dann ${kontrastOptionen[1]!.label}` },
-          { wert: 'b-zuerst', label: `erst ${kontrastOptionen[1]!.label}, dann ${kontrastOptionen[0]!.label}` },
+          { wert: 'a-zuerst', label: `Probe 1: ${kontrastOptionen[0]!.label} · Probe 2: ${kontrastOptionen[1]!.label}` },
+          { wert: 'b-zuerst', label: `Probe 1: ${kontrastOptionen[1]!.label} · Probe 2: ${kontrastOptionen[0]!.label}` },
         ]
       : [],
   );
@@ -1252,8 +1252,8 @@
     <div class="frage-block">
       {#if durchgang?.art === 'kontrast' && kontrastPaarListe.length > 0}
         <p class="frage-satz">
-          {kontrastPaarListe.length === 1 ? 'Ein Paar' : `${kontrastPaarListe.length} Paare`} — lege jedes für sich verdeckt bereit, so dass
-          du innerhalb eines Paars nicht weißt, welches welches ist.
+          {kontrastPaarListe.length === 1 ? 'Ein Paar' : `${kontrastPaarListe.length} Paare`} — leg jedes für sich bereit und misch die
+          zwei verdeckt, so dass du nicht weißt, welches welches ist.
         </p>
         {#each kontrastPaarListe as [a, b], i (a.id)}
           <p class="hinweis auftrag">Paar {i + 1}: {a.label} oder {b.label}</p>
@@ -1393,12 +1393,12 @@
     <div class="frage-block">
       <p class="hinweis auftrag">{kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}</p>
       {#if kontrastSchritt === 'erstesRiechen'}
-        <p class="frage-satz">Zieh das erste der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
+        <p class="frage-satz">Probe 1: zieh eins der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastErstesGerochen}>gerochen</Knopf>
         </div>
       {:else if kontrastSchritt === 'zweitesRiechen'}
-        <p class="frage-satz">Zieh das zweite, ohne hinzusehen — riech daran.</p>
+        <p class="frage-satz">Probe 2: das andere, wieder ohne hinzusehen — riech daran.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'frage')} deaktiviert={pauseRest > 0}>
             {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
@@ -1411,7 +1411,7 @@
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'nummer')} deaktiviert={!kontrastReihenfolge}>weiter</Knopf>
         </div>
       {:else if kontrastSchritt === 'nummer'}
-        <p class="frage-satz">Jetzt die Augen auf — welche Nummer hattest du zuerst gezogen?</p>
+        <p class="frage-satz">Jetzt die Augen auf — welche Nummer hatte Probe 1?</p>
         <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
@@ -1422,9 +1422,9 @@
         {:else if kontrastAuswertung}
           <p class="ergebnis" class:richtig={kontrastAuswertung.ergebnis === 'richtig'}>
             {#if kontrastAuswertung.ergebnis === 'richtig'}
-              Richtig — erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+              Richtig — Probe 1 war „{kontrastAuswertung.ersteOption.label}“, Probe 2 „{kontrastAuswertung.zweiteOption.label}“.
             {:else}
-              Daneben — es war erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+              Daneben — Probe 1 war „{kontrastAuswertung.ersteOption.label}“, Probe 2 „{kontrastAuswertung.zweiteOption.label}“.
             {/if}
           </p>
           {#if kontrastAuswertung.nachriechen}
