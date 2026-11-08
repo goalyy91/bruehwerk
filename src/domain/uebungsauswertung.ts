@@ -464,3 +464,30 @@ export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly
 
   return pool;
 }
+
+// ---- Zuletzt kennengelernt (Gestaltung Aromaschule, 08.11.2026) -----------
+
+/**
+ * Das Aroma, das zuletzt zum ersten Mal dran war — für die Übersicht
+ * ("Zuletzt kennengelernt", mit Merkhilfe). Gezählt werden nur die drei
+ * Abfrageformen eines normalen Durchgangs; Kontrast und Reverse führen kein
+ * Aroma ein. Ohne solche Antworten: undefined — dann bleibt die Stelle leer,
+ * statt einen Platzhalter zu zeigen.
+ */
+export function zuletztKennengelernt(antworten: readonly Uebungsantwort[]): string | undefined {
+  const erstesMal = new Map<string, number>();
+  for (const a of antworten) {
+    if (a.form !== 'familie' && a.form !== 'aromaInFamilie' && a.form !== 'freierAbruf') continue;
+    const bisher = erstesMal.get(a.aromaId);
+    if (bisher === undefined || a.zeitstempel < bisher) erstesMal.set(a.aromaId, a.zeitstempel);
+  }
+  let bestId: string | undefined;
+  let bestZeit = -Infinity;
+  for (const [id, zeit] of erstesMal) {
+    if (zeit > bestZeit) {
+      bestId = id;
+      bestZeit = zeit;
+    }
+  }
+  return bestId;
+}

@@ -58,7 +58,7 @@ describe('uebungsBegruessung', () => {
   it('waehlt den zweiten Satz des Fensters, wenn der Zufall darueber liegt', () => {
     const jetzt = new Date(2026, 7, 30, 15, 0);
     const ergebnis = uebungsBegruessung(jetzt, KEIN_KONTEXT, () => 0.9);
-    expect(ergebnis.satz).toBe('Zeit für eine Runde Riechen?');
+    expect(ergebnis.satz).toBe('Lust auf ein paar Gerüche?');
   });
 
   it('geradeAbgeschlossen sticht die Tageszeit und traegt kein Label', () => {

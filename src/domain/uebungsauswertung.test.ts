@@ -13,6 +13,7 @@ import {
   stufenverteilung,
   schwaechsteAromen,
   uebungsartBilanz,
+  zuletztKennengelernt,
   LANGSAM_SCHWELLE_MS,
   ANTWORTDAUER_MINDEST_STICHPROBE,
   ZIELFREQUENZ_MINDESTWOCHEN,
@@ -452,5 +453,25 @@ describe('uebungsartBilanz — Kontrast und Reverse getrennt, unbewertete Antwor
       kontrast: { richtig: 1, versuche: 2 },
       reverse: { richtig: 1, versuche: 1 },
     });
+  });
+});
+
+describe('zuletztKennengelernt — das Aroma, das zuletzt zum ersten Mal dran war', () => {
+  it('zaehlt den ERSTEN Kontakt, nicht die letzte Antwort', () => {
+    const antworten = [
+      ANTWORT({ aromaId: 'mandel', zeitstempel: JETZT - 10 * TAG }),
+      ANTWORT({ aromaId: 'honig', zeitstempel: JETZT - 3 * TAG }),
+      ANTWORT({ aromaId: 'mandel', zeitstempel: JETZT }), // Mandel spaeter wieder dran — bleibt alt
+    ];
+    expect(zuletztKennengelernt(antworten)).toBe('honig');
+  });
+
+  it('Kontrast und Reverse fuehren kein Aroma ein', () => {
+    const antworten = [ANTWORT({ aromaId: 'honig', zeitstempel: JETZT - TAG }), ANTWORT({ aromaId: 'zeder', form: 'kontrast', zeitstempel: JETZT })];
+    expect(zuletztKennengelernt(antworten)).toBe('honig');
+  });
+
+  it('ohne Antworten: nichts', () => {
+    expect(zuletztKennengelernt([])).toBeUndefined();
   });
 });

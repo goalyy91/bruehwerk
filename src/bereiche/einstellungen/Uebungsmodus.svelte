@@ -83,7 +83,7 @@
     type AntwortAuswertung,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
-  import { uebungsKennzahlenPool, zielfrequenzAbgleich } from '../../domain/uebungsauswertung';
+  import { uebungsKennzahlenPool, zielfrequenzAbgleich, zuletztKennengelernt } from '../../domain/uebungsauswertung';
   import { meilensteinSatz } from '../../domain/meilenstein';
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
@@ -256,6 +256,12 @@
   // Das am staerksten dokumentierte Verwechslungspaar, wenn eins die Schwelle
   // erreicht — die Grundlage fuer das Kontrastdurchgang-Angebot auf der
   // Uebersicht (Lastenheft Abschnitt 8).
+  const zuletztKennengelerntOption = $derived.by(() => {
+    if (!set) return undefined;
+    const id = zuletztKennengelernt(bestand.uebungsantworten.filter((a) => a.setId === set!.id));
+    return id ? alleAromen.find((a) => a.id === id) : undefined;
+  });
+
   const kontrastKandidat = $derived(verwechslungspaare(bekannteStaende)[0]);
   const kontrastKandidatLabelA = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.aId)?.label ?? '');
   const kontrastKandidatLabelB = $derived(alleAromen.find((a) => a.id === kontrastKandidat?.bId)?.label ?? '');
@@ -448,6 +454,8 @@
     readonly korrekteFamilie?: string;
     /** Ein Satz dazu, was die Antwort für den Lernstand des gezogenen Aromas heißt — nur, wenn es etwas zu sagen gibt. */
     readonly lernstandHinweis?: string;
+    /** Was getippt wurde, als Wort — Familie (Form A) oder Aroma (Form B/C). "Deine Vermutung: …" statt "Daneben". */
+    readonly vermutung: string;
     /** Die beim ersten Kontakt blind gewählten Wörter, zum Vergleich neben der Merkhilfe. */
     readonly beschreibung?: readonly string[];
     /**
@@ -647,6 +655,10 @@
       unerwarteteNummer,
       korrekteFamilie,
       lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
+      vermutung:
+        item.formStufe === 'a' || !tipAroma
+          ? familieVon(tipFamilie)
+          : (alleAromen.find((a) => a.id === tipAroma)?.label ?? ''),
       beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
       nachriechen: nachriechenAngebracht(auswertung, durchgang.nachgerochen)
         ? {
@@ -671,14 +683,12 @@
    */
   function lernstandHinweis(a: AntwortAuswertung, name: string): string | undefined {
     if (a.stufenwechsel === 'auf') {
-      return a.stufe === 'c'
-        ? `„${name}“ steigt auf: ab jetzt freier Abruf aus allen 60.`
-        : `„${name}“ steigt auf: ab jetzt auch das Aroma innerhalb der Familie.`;
+      return a.stufe === 'c' ? `${name} sitzt. Ab jetzt fragst du frei nach dem Namen.` : `Bei ${name} sitzt die Familie. Ab jetzt geht es um das Aroma selbst.`;
     }
-    if (a.stufenwechsel === 'ab') return `„${name}“ übt wieder mit Familienwahl — die Familie lag zweimal daneben.`;
-    if (a.wertung === 'aufgefrischt') return `„${name}“ war lange nicht dran — als aufgefrischt gewertet, kommt bald wieder.`;
-    if (a.wertung === 'ohneAussage') return `Zählt nicht für „${name}“: das Aroma ist schon weiter als diese Frage.`;
-    if (tipGeraten && a.ergebnis === 'richtig') return 'Als geraten markiert — zählt wie ein Teilerfolg.';
+    if (a.stufenwechsel === 'ab') return `${name} wieder mit Familienwahl — die Familie lag zweimal anderswo.`;
+    if (a.wertung === 'aufgefrischt') return `Lange nicht gerochen — ${name} kommt bald wieder.`;
+    if (a.wertung === 'ohneAussage') return `Zählt nicht für ${name} — es ist schon weiter als diese Frage.`;
+    if (tipGeraten && a.ergebnis === 'richtig') return 'Als eher geraten markiert — zählt halb.';
     return undefined;
   }
 
@@ -954,9 +964,9 @@
   // ---- Ende: was sass, was nicht — die Zusatzfläschchen bleiben unaufgeloest
 
   const ERGEBNIS_TEXT: Record<'richtig' | 'teilweise' | 'falsch', string> = {
-    richtig: 'richtig',
-    teilweise: 'teilweise — Familie richtig',
-    falsch: 'daneben',
+    richtig: 'getroffen',
+    teilweise: 'Familie stimmt',
+    falsch: '',
   };
 
   /**
@@ -976,6 +986,7 @@
     readonly ergebnisText: string;
     readonly hinweis?: string;
     readonly nummer?: number;
+    readonly kategorieId?: string;
   }
 
   const rundenZeilen = $derived<RundenZeile[]>(
@@ -984,10 +995,15 @@
       const option = alleAromen.find((a) => a.id === aromaId);
       // Nur bei Stufe A/B (Familientipp) — Stufe C (freier Abruf) hat keine
       // Familie getippt, bleibt ohne Hinweiszeile.
-      const hinweis =
-        antwort && (antwort.form === 'familie' || antwort.form === 'aromaInFamilie') && antwort.getipptFamilieId
-          ? `getippt: ${familieVon(antwort.getipptFamilieId)} · richtig: ${familieVon(option?.kategorieId)}`
-          : undefined;
+      // "Vermutung: …" bei allem, was kein Treffer war — getipptes Aroma,
+      // sonst die getippte Familie. Kein "daneben" (Stimme der Aromaschule).
+      const vermutung =
+        antwort?.getipptId !== undefined
+          ? alleAromen.find((a) => a.id === antwort.getipptId)?.label
+          : antwort?.getipptFamilieId
+            ? familieVon(antwort.getipptFamilieId)
+            : undefined;
+      const hinweis = antwort && antwort.ergebnis !== 'richtig' && vermutung ? `Vermutung: ${vermutung}` : undefined;
       return {
         aromaId,
         label: option?.label ?? '?',
@@ -995,6 +1011,7 @@
         ergebnisText: antwort?.ergebnis ? ERGEBNIS_TEXT[antwort.ergebnis] : '',
         hinweis,
         nummer: option?.nummer,
+        kategorieId: option?.kategorieId,
       };
     }),
   );
@@ -1193,6 +1210,20 @@
   });
 </script>
 
+<!-- Die Riechpause als ruhiger Ring (Gestaltung Aromaschule, 08.11.2026):
+     schließt sich in 25 Sekunden, statt nur eine Zahl im Knopf herunterzu-
+     zählen. Die eine erlaubte Uhr der App (CLAUDE.md, "Kein Timer") — sie
+     soll das Warten zur Atempause machen, nicht zum Countdown. -->
+{#snippet atempause()}
+  <div class="atempause">
+    <svg class="atem-ring" viewBox="0 0 36 36" aria-hidden="true">
+      <circle class="atem-spur" cx="18" cy="18" r="15" />
+      <circle class="atem-fortschritt" cx="18" cy="18" r="15" style:animation-duration={`${PAUSE_SEKUNDEN}s`} />
+    </svg>
+    <span>Kurz durchatmen — die Nase sortiert sich.</span>
+  </div>
+{/snippet}
+
 {#if datenblatt}
   <Aromadatenblatt blatt={datenblatt} onZurueck={() => (datenblatt = undefined)} onVerweis={(nummer) => (datenblatt = datenblattZu(nummer) ?? datenblatt)} />
 {:else}
@@ -1230,6 +1261,22 @@
       <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
       <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
     </div>
+
+    {#if zuletztKennengelerntOption}
+      {@const z = zuletztKennengelerntOption}
+      <!-- Was zuletzt neu dazukam, mit seiner Merkhilfe — persönlich und
+           ehrlich, ohne Zähler oder Sammel-Optik (ux-regeln Regel 10). -->
+      <div class="frage-block kennengelernt">
+        <div class="aufloesung-kopf" style:--familie={z.kategorieId ? `var(--kat-${z.kategorieId})` : 'var(--spur)'}>
+          {#if z.nummer !== undefined}<span class="deckel">{z.nummer}</span>{/if}
+          <div>
+            <p class="familie-kicker"><span class="familie-punkt"></span>Zuletzt kennengelernt</p>
+            <p class="aroma-name mittel">{z.label}</p>
+          </div>
+        </div>
+        {#if merkhilfeZu(z.nummer)}<p class="hinweis">{merkhilfeZu(z.nummer)}</p>{/if}
+      </div>
+    {/if}
 
     {#if kontrastKandidat || reverseVorschlagOption}
       <div class="vorschlaege">
@@ -1278,8 +1325,8 @@
     <div class="frage-block">
       {#if durchgang?.art === 'kontrast' && kontrastPaarListe.length > 0}
         <p class="frage-satz">
-          {kontrastPaarListe.length === 1 ? 'Ein Paar' : `${kontrastPaarListe.length} Paare`} — leg jedes für sich bereit und misch die
-          zwei verdeckt, so dass du nicht weißt, welches welches ist.
+          Leg {kontrastPaarListe.length === 1 ? 'das Paar' : `jedes der ${kontrastPaarListe.length} Paare`} für sich bereit und misch die zwei
+          verdeckt — welches welches ist, soll erst deine Nase wissen.
         </p>
         {#each kontrastPaarListe as [a, b], i (a.id)}
           <p class="hinweis auftrag">Paar {i + 1}: {a.label} oder {b.label}</p>
@@ -1291,8 +1338,8 @@
         {/each}
       {:else}
         <p class="frage-satz">
-          Lege diese {bereitlegenNummern.length} Fläschchen verdeckt bereit — so, dass du beim Greifen nicht erkennen kannst, welches du
-          gerade in der Hand hältst.
+          Leg diese {bereitlegenNummern.length} Fläschchen verdeckt bereit. {DURCHGANG_GROESSE} davon wirst du riechen — welche, entscheidet
+          dein Griff.
         </p>
         <div class="nummernliste">
           {#each bereitlegenNummern as nummer (nummer)}
@@ -1313,19 +1360,19 @@
          Auflösung wächst darunter — statt drei gestapelter Karten. -->
     <div class="frage-block">
       {#if itemPhase === 'raten'}
-        <p class="frage-satz">Zieh eins, ohne hinzusehen — riech daran.</p>
+        <p class="frage-satz">Zieh eins, ohne hinzusehen. Riech in Ruhe, ruhig zweimal.</p>
         {#if item.formStufe === 'a'}
-          <p class="frage-titel">Welche Familie ist das?</p>
+          <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={(w) => (tipFamilie = w)} platzhalter="Familie wählen …" />
           {/key}
         {:else if item.formStufe === 'b'}
-          <p class="frage-titel">Welche Familie ist das?</p>
+          <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}
             <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={familieGewaehlt} platzhalter="Familie wählen …" />
           {/key}
           {#if tipFamilie}
-            <p class="frage-titel zweite-frage">Welches Aroma aus „{familieVon(tipFamilie)}“ ist es?</p>
+            <p class="frage-titel zweite-frage">Und welches Aroma aus „{familieVon(tipFamilie)}“?</p>
             {#key tipFamilie}
               <AuswahlListe
                 optionen={aromenDerGewaehltenFamilie}
@@ -1337,23 +1384,23 @@
             {/key}
           {/if}
         {:else}
-          <p class="frage-titel">Welches Aroma ist das?</p>
+          <p class="frage-titel">Was riechst du?</p>
           {#key item}
             <AuswahlListe optionen={namenOptionen} wert={tipAroma} onWahl={(w) => (tipAroma = w)} platzhalter="dein Tipp …" suchbar />
           {/key}
         {/if}
-        <Schalter label="nur geraten" an={tipGeraten} onWahl={(w) => (tipGeraten = w)} />
+        <Schalter label="eher geraten" an={tipGeraten} onWahl={(w) => (tipGeraten = w)} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={zurNummer} deaktiviert={!tippVollstaendig}>weiter</Knopf>
         </div>
-      {:else}
+      {:else if itemPhase !== 'aufgeloest'}
         <p class="protokoll">
           {tippZusammenfassung}{#if itemPhase !== 'nummer' && tipNummer}<span class="protokoll-trenner">{'\u00a0·\u00a0'}</span>{nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}{/if}
         </p>
       {/if}
 
       {#if itemPhase === 'nummer'}
-        <p class="frage-satz abschnitt">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
+        <p class="frage-satz abschnitt">Augen auf. Welche Nummer trägt das Fläschchen?</p>
         <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
@@ -1361,7 +1408,7 @@
       {/if}
 
       {#if itemPhase === 'beschreiben'}
-        <p class="hinweis auftrag abschnitt">Neu für dich. Bevor der Name kommt — wie würdest du es beschreiben?</p>
+        <p class="hinweis auftrag abschnitt">Ein neuer Geruch. Bevor er einen Namen bekommt: wie riecht er für dich?</p>
         <p class="frage-satz">Tipp an, was passt. Mehrere gehen, keins ist falsch.</p>
         <Einzelauswahl optionen={beschreibungsOptionen} gewaehlt={beschreibung} onWahl={beschreibungUmschalten} />
         <div class="knopfreihe">
@@ -1384,18 +1431,18 @@
           </div>
           <p class="urteil-zeile">
             {#if letzteAuswertung.ergebnis === 'richtig'}
-              Richtig.
+              Getroffen.
             {:else if letzteAuswertung.ergebnis === 'teilweise'}
-              Familie richtig — das Aroma war ein anderes.
+              Die Familie stimmt — deine Vermutung war {letzteAuswertung.vermutung}.
             {:else}
-              Daneben.
+              Deine Vermutung: {letzteAuswertung.vermutung}.
             {/if}
           </p>
           {#if letzteAuswertung.lernstandHinweis}
             <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
           {/if}
           {#if letzteAuswertung.nachriechen}
-            <p class="hinweis auftrag">Riech noch einmal daran — jetzt mit dem Namen im Kopf.</p>
+            <p class="hinweis auftrag">Noch einmal, jetzt mit Namen. So riecht {aroma.label}.</p>
             {#if letzteAuswertung.beschreibung}
               <p class="hinweis">Deine Worte: {letzteAuswertung.beschreibung.join(', ')}</p>
             {/if}
@@ -1403,7 +1450,7 @@
               <p class="hinweis">{letzteAuswertung.beschreibung ? 'Datenblatt: ' : ''}{letzteAuswertung.nachriechen.merkhilfe}</p>
             {/if}
             {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
-              <p class="hinweis">Dein Tipp „{letzteAuswertung.nachriechen.tipp.label}“: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
+              <p class="hinweis">Zum Vergleich, {letzteAuswertung.nachriechen.tipp.label}: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
             {/if}
           {/if}
           {#if letzteAuswertung.unerwarteteNummer}
@@ -1429,6 +1476,7 @@
               <Knopf onKlick={() => (datenblatt = datenblattZu(aroma.nummer!))}>Datenblatt ansehen</Knopf>
             {/if}
           </div>
+          {#if pauseRest > 0}{@render atempause()}{/if}
         </div>
       {/if}
     </div>
@@ -1438,25 +1486,26 @@
     <div class="frage-block">
       <p class="hinweis auftrag">{kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}</p>
       {#if kontrastSchritt === 'erstesRiechen'}
-        <p class="frage-satz">Probe 1: zieh eins der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
+        <p class="frage-satz">Probe 1: zieh eins der beiden, ohne hinzusehen, und riech in Ruhe.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastErstesGerochen}>gerochen</Knopf>
         </div>
       {:else if kontrastSchritt === 'zweitesRiechen'}
-        <p class="frage-satz">Probe 2: das andere, wieder ohne hinzusehen — riech daran.</p>
+        <p class="frage-satz">Probe 2: das andere, wieder ohne hinzusehen.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'frage')} deaktiviert={pauseRest > 0}>
             {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
           </Knopf>
         </div>
+        {#if pauseRest > 0}{@render atempause()}{/if}
       {:else if kontrastSchritt === 'frage'}
-        <p class="frage-titel">Welches war welches?</p>
+        <p class="frage-titel">Welche Probe war welche?</p>
         <Segment optionen={kontrastFrageOptionen} wert={kontrastReihenfolge} onWahl={(w) => (kontrastReihenfolge = w)} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'nummer')} deaktiviert={!kontrastReihenfolge}>weiter</Knopf>
         </div>
       {:else if kontrastSchritt === 'nummer'}
-        <p class="frage-satz">Jetzt die Augen auf — welche Nummer hatte Probe 1?</p>
+        <p class="frage-satz">Augen auf. Welche Nummer trägt Probe 1?</p>
         <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
@@ -1465,24 +1514,29 @@
         {#if kontrastUnerwartet}
           <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieses Paar bleibt unbewertet.</p>
         {:else if kontrastAuswertung}
-          <p class="ergebnis" class:richtig={kontrastAuswertung.ergebnis === 'richtig'}>
-            {#if kontrastAuswertung.ergebnis === 'richtig'}
-              Richtig — Probe 1 war „{kontrastAuswertung.ersteOption.label}“, Probe 2 „{kontrastAuswertung.zweiteOption.label}“.
-            {:else}
-              Daneben — Probe 1 war „{kontrastAuswertung.ersteOption.label}“, Probe 2 „{kontrastAuswertung.zweiteOption.label}“.
+          <div class="aufloesung">
+            {#each [kontrastAuswertung.ersteOption, kontrastAuswertung.zweiteOption] as probe, i (probe.id)}
+              <div class="aufloesung-kopf" style:--familie={probe.kategorieId ? `var(--kat-${probe.kategorieId})` : 'var(--spur)'}>
+                {#if probe.nummer !== undefined}<span class="deckel">{probe.nummer}</span>{/if}
+                <div>
+                  <p class="familie-kicker"><span class="familie-punkt"></span>Probe {i + 1}</p>
+                  <p class="aroma-name mittel">{probe.label}</p>
+                </div>
+              </div>
+            {/each}
+            <p class="urteil-zeile">{kontrastAuswertung.ergebnis === 'richtig' ? 'Auseinandergehalten.' : 'Vertauscht.'}</p>
+            {#if kontrastAuswertung.nachriechen}
+              <p class="hinweis auftrag">
+                Noch einmal beide, direkt nacheinander, jetzt mit Namen: erst {kontrastAuswertung.ersteOption.label}, dann {kontrastAuswertung.zweiteOption.label}.
+              </p>
+              {#if kontrastAuswertung.nachriechen.ersteMerkhilfe}
+                <p class="hinweis">{kontrastAuswertung.ersteOption.label}: {kontrastAuswertung.nachriechen.ersteMerkhilfe}</p>
+              {/if}
+              {#if kontrastAuswertung.nachriechen.zweiteMerkhilfe}
+                <p class="hinweis">{kontrastAuswertung.zweiteOption.label}: {kontrastAuswertung.nachriechen.zweiteMerkhilfe}</p>
+              {/if}
             {/if}
-          </p>
-          {#if kontrastAuswertung.nachriechen}
-            <p class="hinweis auftrag">
-              Riech beide noch einmal, direkt nacheinander — erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
-            </p>
-            {#if kontrastAuswertung.nachriechen.ersteMerkhilfe}
-              <p class="hinweis">{kontrastAuswertung.ersteOption.label}: {kontrastAuswertung.nachriechen.ersteMerkhilfe}</p>
-            {/if}
-            {#if kontrastAuswertung.nachriechen.zweiteMerkhilfe}
-              <p class="hinweis">{kontrastAuswertung.zweiteOption.label}: {kontrastAuswertung.nachriechen.zweiteMerkhilfe}</p>
-            {/if}
-          {/if}
+          </div>
         {/if}
         <div class="knopfreihe">
           {#if kontrastAuswertung?.nachriechen && !kontrastNachgerochenErledigt}
@@ -1495,6 +1549,7 @@
             </Knopf>
           {/if}
         </div>
+        {#if pauseRest > 0}{@render atempause()}{/if}
       {/if}
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
@@ -1543,6 +1598,9 @@
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'ende'}
     {#snippet rundenInhalt(zeile: RundenZeile)}
+      {#if zeile.nummer !== undefined}
+        <span class="deckel klein" style:--familie={zeile.kategorieId ? `var(--kat-${zeile.kategorieId})` : 'var(--spur)'}>{zeile.nummer}</span>
+      {/if}
       <span class="runden-haupt">
         <span class="runden-label">{zeile.label}</span>
         {#if zeile.hinweis}<span class="runden-hinweis">{zeile.hinweis}</span>{/if}
@@ -1550,7 +1608,7 @@
       <span class="runden-ergebnis" class:richtig={zeile.ergebnis === 'richtig'}>{zeile.ergebnisText}</span>
     {/snippet}
     <div class="block">
-      <p class="ende-kopf">{richtigAnzahl} von {rundenZeilen.length} richtig</p>
+      <p class="ende-kopf">Heute gerochen — {richtigAnzahl} von {rundenZeilen.length} getroffen.</p>
       {#if meilenstein}<p class="ende-meilenstein">{meilenstein}</p>{/if}
       <Blattliste>
         {#each rundenZeilen as zeile, index (index)}
@@ -1723,27 +1781,25 @@
     color: var(--gedaempft);
     margin: 0 0 var(--r3);
   }
+  /* Stimme der Aromaschule (08.11.2026): Sätze sind Inhalt, also Serif in
+     Textfarbe — nicht der kleine graue Apparat-Ton. Sans bleibt für Zähler,
+     Protokollzeile und Kicker. */
   .frage-titel {
-    font-size: var(--fs-urteil);
+    font-size: var(--fs-objekt);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
     color: var(--tinte);
-    margin: 0 0 var(--r1);
+    margin: 0 0 var(--r2);
   }
   .frage-titel.zweite-frage {
     margin-top: var(--r4);
   }
   .frage-satz {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-erklaerung);
-    color: var(--gedaempft);
-    margin: 0 0 var(--r3);
-  }
-  .ergebnis {
-    font-size: var(--fs-satz);
-    color: var(--kritisch);
-    margin: 0 0 var(--r2);
-  }
-  .ergebnis.richtig {
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    line-height: 1.45;
     color: var(--satz);
+    margin: 0 0 var(--r3);
   }
   .verwandte {
     font-family: var(--schrift-sans);
@@ -1778,13 +1834,15 @@
   }
   .hinweis {
     color: var(--gedaempft);
-    font-family: var(--schrift-sans);
+    font-family: var(--schrift);
     font-size: var(--fs-satz);
+    line-height: 1.55;
   }
   /* Die Aufforderung zum Nachriechen ist eine Handlung, kein Nebenbei — sie
      steht in Textfarbe über der gedämpften Merkhilfe. */
   .hinweis.auftrag {
     color: var(--satz);
+    font-size: var(--fs-bedienwort);
   }
 
   /* ---- Ein Item als wachsende Karte, Auflösung als Moment (Gestaltung
@@ -1806,6 +1864,13 @@
     padding-top: var(--r4);
     border-top: 1px solid var(--linie);
     animation: auftauchen var(--t-uebernehmen) var(--e-rein);
+  }
+  /* Ohne Protokollzeile darüber (Item aufgelöst, Kontrast) beginnt die
+     Auflösung oben in der Karte — keine Linie, kein leerer Streifen. */
+  .aufloesung:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
   }
   @keyframes auftauchen {
     from {
@@ -1869,8 +1934,60 @@
   }
   .urteil-zeile {
     margin: 0 0 var(--r2);
-    font-size: var(--fs-objekt);
+    font-size: var(--fs-bedienwort);
+    font-style: italic;
     color: var(--satz);
+  }
+  .aroma-name.mittel {
+    font-size: var(--fs-titel);
+  }
+  .deckel.klein {
+    width: 36px;
+    height: 36px;
+    font-size: var(--fs-meta);
+    box-shadow: inset 0 0 0 1.5px var(--familie);
+  }
+  .kennengelernt .hinweis {
+    margin: 0;
+  }
+  .atempause {
+    display: flex;
+    align-items: center;
+    gap: var(--r2);
+    margin-top: var(--r3);
+    font-family: var(--schrift);
+    font-size: var(--fs-satz);
+    font-style: italic;
+    color: var(--gedaempft);
+  }
+  .atem-ring {
+    width: 28px;
+    height: 28px;
+    flex: none;
+    transform: rotate(-90deg);
+  }
+  .atem-spur,
+  .atem-fortschritt {
+    fill: none;
+    stroke-width: 2.5;
+  }
+  .atem-spur {
+    stroke: var(--vertiefung);
+  }
+  /* Umfang 2·π·15 ≈ 94,25 — der Ring schließt sich einmal, linear. */
+  .atem-fortschritt {
+    stroke: var(--akzent);
+    stroke-linecap: round;
+    stroke-dasharray: 94.25;
+    stroke-dashoffset: 94.25;
+    animation-name: atem-schliessen;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes atem-schliessen {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
   /* Ende-Screen (Rueckmeldung 2026-09-18: vorher ueber muster/Werteliste.svelte
      gebaut — ein Muster fuer Label+Zahl+Einheit, falsch fuer eine Ergebnis-
@@ -1903,6 +2020,7 @@
     cursor: default;
   }
   .runden-haupt {
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -1925,7 +2043,7 @@
     flex-shrink: 0;
     font-family: var(--schrift-sans);
     font-size: var(--fs-meta);
-    color: var(--kritisch);
+    color: var(--gedaempft);
   }
   .runden-ergebnis.richtig {
     color: var(--satz);

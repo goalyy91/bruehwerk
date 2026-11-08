@@ -402,7 +402,10 @@ irgendwann etwas, das mit Absicht fehlt.
   wird nach einer Woche überblättert.
 - **Abgehakt wird nur auf Durchgangs- und Positionsebene** (K2, K37). Handgriffe
   hakt niemand ab.
-- **Keine Farbcodierung im Aromarad** (K36).
+- **Keine Vollflächen in Familienfarben** (K36, seit Redesign v2 gelockert): neun
+  gedämpfte Kategoriefarben nur als Punkt und dünner Rand, im Aromarad und — seit
+  08.11.2026 — in der Aromaschule, dort **nie vor der Antwort** (die Farbe verriete die
+  Familie).
 - **Keine Wischgeste zum Löschen** im Gussplan-Editor (K44) — einen Schritt
   mitten im Aufguss wegzuwischen bemerkt man zu spät.
 - **Keine Personenzuordnung je Tasse außerhalb der Bestellung** (K34).

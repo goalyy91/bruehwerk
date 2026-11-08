@@ -846,7 +846,7 @@ Drill-down über drei Ebenen, kein radiales Rad — die Entscheidung aus Fassung
 
 Der Umschalter zwischen beiden Sets ist derselbe wie im Gussplan-Editor: zwei gleich große Felder, zwei Wörter K39. Er wechselt die *Sprache* derselben Daten, nicht ihren Umfang.
 
-**K36 aufgehoben (Redesign v2, Etappe 1):** neun gedämpfte, warme Kategoriefarben sind jetzt erlaubt — ein kleiner Punkt und ein dünner Rand je Kategorie, keine Vollflächen. Ursprünglich galt „keine Farbcodierung — ein Akzent bleibt ein Akzent, auch im Aromarad"; am Bildsprache-Mockup zeigte sich, dass neun Kategorien ohne Farbe schlecht unterscheidbar bleiben, und die Kategoriefarben waren über fünf Rückmelderunden die mit Abstand am besten aufgenommene Änderung. Bleibt auf das Aromarad begrenzt — der eine App-weite Akzent gilt überall sonst unverändert.
+**K36 aufgehoben (Redesign v2, Etappe 1):** neun gedämpfte, warme Kategoriefarben sind jetzt erlaubt — ein kleiner Punkt und ein dünner Rand je Kategorie, keine Vollflächen. Ursprünglich galt „keine Farbcodierung — ein Akzent bleibt ein Akzent, auch im Aromarad"; am Bildsprache-Mockup zeigte sich, dass neun Kategorien ohne Farbe schlecht unterscheidbar bleiben, und die Kategoriefarben waren über fünf Rückmelderunden die mit Abstand am besten aufgenommene Änderung. Bleibt auf das Aromarad begrenzt — der eine App-weite Akzent gilt überall sonst unverändert. *(Erweitert 08.11.2026: auch die Aromaschule, weil sie dieselben neun Familien übt — gleiche Familie, gleiche Farbe. Dort nur **nach** der Auflösung und im Rückblick, nie beim Bereitlegen oder Raten: vorher verriete die Farbe die Familie.)*
 
 Zur Größe des Koffers: **60 Aromen** in der großen Ausgabe, 36 in der „Révélation". Die Nummern und ihre Kategoriezuordnung lieferst du beim Bauen; die Zahlen in den Entwürfen sind Beispiele.
 
@@ -1031,6 +1031,17 @@ Verwechslungszähler in beide Richtungen um eins, falsch erhöht ihn. Ein Paar, 
 dauerhaft gelingt, wandert so aus dem Pool. Nach einer falschen Zuordnung werden beide
 Fläschchen noch einmal gerochen, direkt nacheinander, mit Namen und Merkhilfen — zwei
 Riechvorgänge, solange die Riechgrenze reicht.
+
+**Stimme der Aromaschule.** *(Nachzug 08.11.2026.)* Brühwerk ist ein Laborbuch: es gibt
+eine **Vermutung** und einen **Befund**, kein „daneben". Nach der Auflösung steht der Name
+des Aromas groß in Serif (der Befund), darunter „Getroffen.", „Die Familie stimmt — deine
+Vermutung war …" oder „Deine Vermutung: …" — ohne Urteilswort, ohne Rot. Im Kontrast
+heißt es „Auseinandergehalten." oder „Vertauscht.". Sätze sind Inhalt und stehen in Serif
+und Textfarbe; Sans bleibt für Zähler, Protokollzeile und Kicker. Kein Lob, das über den
+Befund hinausgeht, kein Trost — dieselbe Haltung wie beim Meilenstein-Satz. Die
+Riechpause erscheint als Ring, der sich in 25 Sekunden schließt („Kurz durchatmen — die
+Nase sortiert sich."). Die Übersicht zeigt das zuletzt kennengelernte Aroma mit seiner
+Merkhilfe; der Ende-Screen die gerochenen Aromen mit Nummer im Deckel-Kreis.
 
 **Reverse** — ungescort, kein Einfluss auf die Boxen: die App zeigt einen Namen, du
 suchst das Fläschchen selbst und schätzt danach „getroffen / daneben" ein. Stärkt die
