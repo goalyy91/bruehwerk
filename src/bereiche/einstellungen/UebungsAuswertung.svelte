@@ -426,10 +426,11 @@
         <p class="satz">Die Kurven zeichnen sich nach zwei Wochen mit Durchgängen.</p>
       {:else}
         {#if quotePunkte.length >= 2}
-          {#if quoteSatz}<p class="satz kurven-satz">{quoteSatz}</p>{/if}
+          <div class="kurven-block">
           <Blattliste>
             <div class="kurve">
               <p class="kurven-titel">Trefferquote</p>
+              {#if quoteSatz}<p class="kurven-satz">{quoteSatz}</p>{/if}
               <Trendkurve
                 punkte={zuTrend(quotePunkte, formatProzent)}
                 minWert={0}
@@ -439,12 +440,14 @@
               />
             </div>
           </Blattliste>
+          </div>
         {/if}
         {#if zeitPunkte.length >= 2}
-          {#if zeitSatz}<p class="satz kurven-satz">{zeitSatz}</p>{/if}
+          <div class="kurven-block">
           <Blattliste>
             <div class="kurve">
               <p class="kurven-titel">Antwortzeit</p>
+              {#if zeitSatz}<p class="kurven-satz">{zeitSatz}</p>{/if}
               <Trendkurve
                 punkte={zuTrend(zeitPunkte, formatSekunden)}
                 minWert={zeitSpanne.min}
@@ -454,6 +457,7 @@
               />
             </div>
           </Blattliste>
+          </div>
         {/if}
       {/if}
     {/if}
@@ -471,9 +475,10 @@
         {/if}
         {#if abdeckungPunkte.length >= 2}
           <h2>Abdeckung</h2>
-          <p class="satz">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
+          <div class="kurven-block">
           <Blattliste>
             <div class="kurve">
+              <p class="kurven-satz">{abdeckungAktuell} von {alleAromen.length} schon mal richtig benannt.</p>
               <Trendkurve
                 punkte={zuTrend(abdeckungPunkte, (w) => `${Math.round(w)}`)}
                 minWert={0}
@@ -483,6 +488,7 @@
               />
             </div>
           </Blattliste>
+          </div>
         {/if}
         {#if volumenKurve}
           <h2>Volumen</h2>
@@ -538,8 +544,19 @@
   .kurve {
     padding: var(--r3) var(--r2);
   }
+  /* Der Satz gehört zur Kurve und steht deshalb in derselben Karte, unter
+     dem Titel — vorher stand er darüber, außerhalb, und las sich wie ein
+     loser Absatz. */
   .kurven-satz {
-    margin-top: var(--r4);
+    margin: 0 0 var(--r3);
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    line-height: 1.45;
+    color: var(--satz);
+  }
+  .kurven-block {
+    margin-top: var(--r3);
+    margin-bottom: var(--r4);
   }
   .knopfreihe {
     display: flex;
