@@ -897,7 +897,7 @@ ein — erst die Familie, dann das Einzelaroma:
 | Stufe | Frage | Freischaltung |
 | --- | --- | --- |
 | A — Familie | eine von neun Familien | dreimal in Folge richtig → Stufe B |
-| B — Aroma in der Familie | Familie wählen, dann ein Aroma *aus dieser Familie* — 3 bis 16 Kandidaten je nach Familiengröße | automatisch nach A |
+| B — Aroma in der Familie | Familie wählen, dann ein Aroma *aus dieser Familie* — 3 bis 16 Kandidaten je nach Familiengröße | zweimal richtig, mindestens 12 Stunden auseinander → Stufe C |
 | C — Freier Abruf | Aroma aus allen 60, suchbar | die einzige Stufe, die wirklich prüft, ob ein Geruch *gekonnt* wird |
 
 Stufe B ist damit zugleich die Multiple-Choice-Form aus dem Lastenheft: eine freie Liste
@@ -924,6 +924,52 @@ Erinnerungen auslösen. Was sich der Trainingshäufigkeit anpasst, ist stattdess
 **Einführung neuer Aromen**: sie stoppt, sobald 30 % der bereits eingeführten Aromen in
 Box 1–2 stehen, und läuft von selbst wieder an, sobald diese sich leeren. Der Boxenzustand
 ist der bessere Regler als der Kalender.
+
+**Gewertet wird gegen die Stufe des gezogenen Aromas, nicht gegen die gezeigte Form.**
+*(Nachzug 08.11.2026.)* Die Form eines Platzes steht vor dem blinden Griff fest und gehört
+fast nie zu dem Aroma, das dann in der Hand liegt. Erst nach dem Ablesen ist bekannt,
+welches es war — und erst dann lässt sich sagen, was die Antwort beweist. Die Antwort gibt
+her, was ihre Form enthält: ein freier Abruf nennt ein Aroma und damit auch dessen
+Familie, die Familienform nur eine Familie.
+
+- **Leichtere Form als die Stufe, Treffer:** beweist nichts über die eigentliche Stufe.
+  Box und Fälligkeit bleiben stehen, das Aroma bleibt fällig. Ohne diese Regel stieg ein
+  Aroma auf Stufe C für eine richtige *Familie* eine Box auf.
+- **Leichtere Form, Fehler:** zählt voll. Wer schon die Familie nicht trifft, kann das
+  Aroma nicht.
+- **Schwerere Form:** gewertet nach den Regeln der eigenen Stufe — ein Aroma auf A, frei
+  abgerufen mit einem Tipp aus der richtigen Familie, ist für A ein Treffer.
+
+Angezeigt wird weiterhin das Urteil über die *gezeigte* Frage; ein Satz darunter sagt,
+wenn die Antwort für den Lernstand nicht zählt.
+
+**Ein Stufenaufstieg setzt die Box auf 2.** Die schwerere Abrufform ist eine neue
+Karteikarte: vorher erbte das Aroma die Box der Familienstufe, nach drei Familientreffern
+also Box 4 — und wurde erst nach zwölf Tagen zum ersten Mal beim Namen gefragt. Box 2
+heißt: in zwei Tagen, nicht bei null, weil das Wissen der Vorstufe trägt.
+
+**Stufe C hält nicht automatisch.** Liegt auf C zweimal in Folge schon die Familie des
+getippten Aromas daneben, geht das Aroma zurück auf B. Ein falsches Aroma aus der
+richtigen Familie unterbricht diese Serie — das ist Verwechslung, nicht Verlust.
+
+**Lange Pause.** Ist ein Aroma mehr als doppelt so lange überfällig wie sein Intervall
+(bei Box 1 gerechnet mit den zwei Tagen von Box 2), und weißt du es auf der eigenen Stufe
+nicht, wohl aber auf der darunter, gilt es als **aufgefrischt**: Box 2, kein Rückfall auf
+1, die Stufe bleibt. Das Lastenheft wollte dafür ursprünglich eine leichtere *Frage* —
+das geht nicht, weil die Frage vor dem Griff feststeht.
+
+**„nur geraten".** Ein Schalter vor dem Weiter: ein so markierter Treffer zählt wie ein
+Teilerfolg. Auf Stufe B mit drei bis sechzehn Kandidaten ist ein Zufallstreffer nicht
+selten, und er schöbe die Box hoch, als wäre der Geruch erkannt. Geraten werden darf und
+soll weiterhin — der Versuch selbst hilft dem Behalten, sobald die Auflösung folgt.
+
+**Zähe Aromen.** Nach fünf nicht richtigen Wertungen in Folge gilt ein Aroma als zäh und
+zählt nicht mehr für die Einführungssperre — sonst halten zwei, drei Gerüche, die einfach
+nicht sitzen, auf Dauer alles Neue zurück. Geübt wird es weiter wie jedes andere; ein
+Treffer hebt den Zustand auf.
+
+**„Sicher gelernt" heißt Stufe C und Box 4 oder höher.** Die Box allein misst auf Stufe A
+nur Familienwissen.
 
 **Die Riechpause ist die eine Ausnahme von „kein Timer".** Zwischen zwei Fläschchen
 liegen 25 Sekunden, erzwungen über einen Rückwärtszähler auf dem „weiter"-Knopf — siehe

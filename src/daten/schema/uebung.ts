@@ -85,6 +85,17 @@ export const Uebung = z
     stufe: z.enum(UEBUNG_STUFEN).optional(),
     /** Zaehler "wie oft in Folge die Familie richtig" — ab 3 schaltet Stufe A auf B (nur Lesart, die Bewegung selbst macht domain/uebung.ts). */
     familienSerie: z.number().int().nonnegative().default(0),
+    // Stufenlogik-Nachzug (2026-11-08, docs/konzept.md "Übungsmodus") — reine
+    // Zähler, die Bewegung macht domain/uebung.ts::werteAntwortAus. Ein
+    // älterer Datensatz kennt sie nicht und startet bei 0.
+    /** Treffer auf Stufe B, je mindestens 12 h auseinander — ab 2 schaltet Stufe B auf C. */
+    abrufSerie: z.number().int().nonnegative().default(0),
+    /** Zeitpunkt des letzten gezählten Treffers der abrufSerie. */
+    abrufSerieZuletzt: Zeitpunkt.optional(),
+    /** Antworten in Folge auf Stufe C, bei denen schon die Familie danebenlag — ab 2 zurück auf B. */
+    familieFalschSerie: z.number().int().nonnegative().default(0),
+    /** Nicht richtige Wertungen in Folge — ab domain/leitner.ts::ZAEH_SCHWELLE gilt das Aroma als zäh. */
+    fehlerSerie: z.number().int().nonnegative().default(0),
   })
   .transform(
     (
@@ -105,6 +116,10 @@ export const Uebung = z
       faellig?: number;
       stufe?: UebungStufe;
       familienSerie: number;
+      abrufSerie: number;
+      abrufSerieZuletzt?: number;
+      familieFalschSerie: number;
+      fehlerSerie: number;
     } => ({
       id: u.id,
       setId: u.setId,
@@ -117,6 +132,10 @@ export const Uebung = z
       faellig: u.faellig,
       stufe: u.stufe,
       familienSerie: u.familienSerie,
+      abrufSerie: u.abrufSerie,
+      abrufSerieZuletzt: u.abrufSerieZuletzt,
+      familieFalschSerie: u.familieFalschSerie,
+      fehlerSerie: u.fehlerSerie,
     }),
   );
 export type Uebung = z.infer<typeof Uebung>;

@@ -334,6 +334,14 @@ richtig, Aroma falsch) → nur eine Box runter, nicht auf Null.** Wer die
 Familie trifft, hat den Geruch grundsätzlich verortet; das auf Null zu
 setzen würde echten Teil-Fortschritt verwerfen.
 
+**Gewertet wird gegen die Stufe des gezogenen Aromas, nie gegen die gezeigte
+Form** (`werteAntwortAus`, Nachzug 08.11.2026). Die Form eines Platzes steht
+vor dem blinden Griff fest und gehört fast nie zum gezogenen Aroma. Ein
+Treffer in einer *leichteren* Form als die Stufe beweist nichts
+(`ohneAussage`: Box und Fälligkeit bleiben stehen) — wer das „vereinfacht",
+lässt Aromen auf Stufe C für eine richtige Familie aufsteigen. Ein
+Stufenaufstieg setzt die Box auf 2, statt die Box der Vorstufe zu erben.
+
 **Die Intervalle bleiben absichtlich stur.** Eine App, die eine faule Woche
 als Präferenz läse und die Intervalle streckt, löst eine Abwärtsspirale aus:
 weniger Erinnerungen, noch weniger Training. Was sich stattdessen anpasst,

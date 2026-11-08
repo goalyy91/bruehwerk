@@ -61,5 +61,7 @@ export const Uebungsantwort = z.object({
    * (siehe Uebungsmodus.svelte, Kopfkommentar).
    */
   unerwarteteNummer: z.boolean().default(false),
+  /** "nur geraten" angetippt — ein Treffer zählte dann für die Box wie ein Teilerfolg. Fehlt bei älteren Antworten. */
+  geraten: z.boolean().optional(),
 });
 export type Uebungsantwort = z.infer<typeof Uebungsantwort>;

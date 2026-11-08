@@ -250,7 +250,11 @@ export interface UebungsKennzahlEingabe {
   readonly zielProWoche?: number;
 }
 
-/** Ab Box 4 gilt ein Aroma als "sicher" — dieselbe Grenze, die vorher als Boxenverteilung auf der Übersicht stand. */
+/**
+ * Ab Box 4 **auf Stufe C** gilt ein Aroma als "sicher". Die Box allein reicht
+ * nicht: auf Stufe A misst sie nur Familienwissen, und ein Aroma konnte so
+ * nach drei Familientreffern "sicher" heißen, ohne je benannt worden zu sein.
+ */
 const SICHER_AB_BOX = 4;
 
 /** Kleinste Stichprobe, ab der eine Familien-/Reverse-Quote nicht wie geraten wirkt — dieselbe Zahl wie sonst im Aromapaket (z. B. KONTRASTDURCHGANG_SCHWELLE). */
@@ -426,7 +430,7 @@ export function uebungsKennzahlenPool(eingabe: UebungsKennzahlEingabe): readonly
   const labelVon = (aromaId: string) => aromen.find((a) => a.id === aromaId)?.label ?? aromaId;
 
   if (eingefuehrteZustaende.length > 0) {
-    const sicher = eingefuehrteZustaende.filter((z) => z.box >= SICHER_AB_BOX).length;
+    const sicher = eingefuehrteZustaende.filter((z) => z.stufe === 'c' && z.box >= SICHER_AB_BOX).length;
     pool.push({ label: 'Sicher gelernt', wert: `${sicher} von ${gesamtAnzahlAromen}` });
   }
 

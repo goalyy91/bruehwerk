@@ -207,6 +207,7 @@ describe('uebungsKennzahlenPool — sechs Fakten, jeder erst ab ausreichender Da
     faellig: JETZT,
     stufe: 'a',
     eingefuehrt: true,
+    zaeh: false,
     ...ueber,
   });
   const LEER = {
@@ -223,8 +224,13 @@ describe('uebungsKennzahlenPool — sechs Fakten, jeder erst ab ausreichender Da
     expect(uebungsKennzahlenPool(LEER)).toEqual([]);
   });
 
-  it('Gesamtfortschritt nur ab mindestens einem eingefuehrten Aroma, "sicher" ab Box 4', () => {
-    const zustaende = [ZUSTAND({ box: 4 }), ZUSTAND({ box: 3 }), ZUSTAND({ box: 5 })];
+  it('Gesamtfortschritt nur ab mindestens einem eingefuehrten Aroma, "sicher" ab Box 4 auf Stufe C', () => {
+    const zustaende = [
+      ZUSTAND({ box: 4, stufe: 'c' }),
+      ZUSTAND({ box: 3, stufe: 'c' }),
+      ZUSTAND({ box: 5, stufe: 'c' }),
+      ZUSTAND({ box: 5, stufe: 'a' }), // hohe Box, aber nur Familienwissen — nicht sicher
+    ];
     const pool = uebungsKennzahlenPool({ ...LEER, eingefuehrteZustaende: zustaende });
     expect(pool).toContainEqual({ label: 'Sicher gelernt', wert: '2 von 60' });
   });

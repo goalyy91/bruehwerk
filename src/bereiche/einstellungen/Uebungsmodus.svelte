@@ -70,6 +70,7 @@
     DURCHGANG_GROESSE,
     type AromaOption,
     type GesamtStand,
+    type AntwortAuswertung,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
   import { uebungsKennzahlenPool, zielfrequenzAbgleich } from '../../domain/uebungsauswertung';
@@ -81,6 +82,7 @@
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
+  import Schalter from '../../muster/Schalter.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
@@ -165,7 +167,7 @@
 
   const zustaende = $derived(alleAromen.map((a) => effektiverZustand(staende.get(a.id), uebersichtJetzt)));
   const eingefuehrteZustaende = $derived(zustaende.filter((z) => z.eingefuehrt));
-  const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.map((z) => z.box)));
+  const sperreAktiv = $derived(!einfuehrungErlaubt(eingefuehrteZustaende.filter((z) => !z.zaeh).map((z) => z.box)));
 
   /** kategorieId -> Familienname, fuer domain/uebungsauswertung.ts::uebungsKennzahlenPool — die Domäne kennt das Aromaset selbst nicht. */
   const familienLabels = $derived(new Map(familien.map((f) => [f.wert, f.label] as const)));
@@ -382,6 +384,8 @@
   let tipFamilie = $state('');
   let tipAroma = $state('');
   let tipNummer = $state('');
+  /** "nur geraten" — ein Treffer zählt dann für die Box wie ein Teilerfolg (domain/uebung.ts::werteAntwortAus). */
+  let tipGeraten = $state(false);
 
   interface LetzteAuswertung {
     readonly ergebnis: 'richtig' | 'teilweise' | 'falsch';
@@ -389,6 +393,8 @@
     readonly unerwarteteNummer: boolean;
     /** Nur gesetzt, wenn ein Familientipp danebenlag (Stufe A/B, ergebnis "falsch") — welche Familie es gewesen wäre. */
     readonly korrekteFamilie?: string;
+    /** Ein Satz dazu, was die Antwort für den Lernstand des gezogenen Aromas heißt — nur, wenn es etwas zu sagen gibt. */
+    readonly lernstandHinweis?: string;
   }
   let letzteAuswertung = $state<LetzteAuswertung | undefined>(undefined);
 
@@ -406,6 +412,7 @@
     tipFamilie = '';
     tipAroma = '';
     tipNummer = '';
+    tipGeraten = false;
     letzteAuswertung = undefined;
   }
 
@@ -483,6 +490,8 @@
         tipAromaId: tipAroma || undefined,
         tatsaechlicheAromaId: tatsaechlicheId,
         tatsaechlicheFamilieId: tatsaechlicheOption.kategorieId,
+        tipAromaFamilieId: tipAroma ? alleAromen.find((a) => a.id === tipAroma)?.kategorieId : undefined,
+        geraten: tipGeraten,
         tatsaechlicherStand,
       },
       jetzt,
@@ -506,6 +515,7 @@
     try {
       const bisherigeUebung = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === tatsaechlicheId);
       await schreiben('uebung', {
+        ...bisherigeUebung,
         id: bisherigeUebung?.id ?? neueId(),
         setId: set.id,
         aromaId: tatsaechlicheId,
@@ -517,6 +527,10 @@
         faellig: auswertung.faellig,
         stufe: auswertung.stufe,
         familienSerie: auswertung.familienSerie,
+        abrufSerie: auswertung.abrufSerie,
+        abrufSerieZuletzt: auswertung.abrufSerieZuletzt,
+        familieFalschSerie: auswertung.familieFalschSerie,
+        fehlerSerie: auswertung.fehlerSerie,
       });
 
       await schreiben('uebungsantwort', {
@@ -532,6 +546,7 @@
         zeitstempel: jetzt,
         antwortdauerMs: Math.max(0, jetzt - itemBegonnenAm),
         unerwarteteNummer,
+        geraten: tipGeraten || undefined,
       });
 
       const beantwortet = [...durchgang.beantwortet, tatsaechlicheId];
@@ -557,11 +572,35 @@
         ? familieVon(tatsaechlicheOption.kategorieId)
         : undefined;
 
-    letzteAuswertung = { ergebnis: auswertung.ergebnis, tatsaechlicheOption, unerwarteteNummer, korrekteFamilie };
+    letzteAuswertung = {
+      ergebnis: auswertung.ergebnis,
+      tatsaechlicheOption,
+      unerwarteteNummer,
+      korrekteFamilie,
+      lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
+    };
     itemPhase = 'aufgeloest';
     // Keine Pause nach dem letzten Item — niemand riecht danach noch etwas,
     // fuer das sich die Nase erholen muesste.
     if (index + 1 < DURCHGANG_GROESSE) starteRiechpause();
+  }
+
+  /**
+   * Höchstens ein Satz, und nur wenn er etwas sagt (dieselbe Haltung wie
+   * domain/meilenstein.ts): ein Stufenwechsel, eine Antwort ohne Aussage
+   * über den Lernstand, ein als geraten markierter Treffer.
+   */
+  function lernstandHinweis(a: AntwortAuswertung, name: string): string | undefined {
+    if (a.stufenwechsel === 'auf') {
+      return a.stufe === 'c'
+        ? `„${name}“ steigt auf: ab jetzt freier Abruf aus allen 60.`
+        : `„${name}“ steigt auf: ab jetzt auch das Aroma innerhalb der Familie.`;
+    }
+    if (a.stufenwechsel === 'ab') return `„${name}“ übt wieder mit Familienwahl — die Familie lag zweimal daneben.`;
+    if (a.wertung === 'aufgefrischt') return `„${name}“ war lange nicht dran — als aufgefrischt gewertet, kommt bald wieder.`;
+    if (a.wertung === 'ohneAussage') return `Zählt nicht für „${name}“: das Aroma ist schon weiter als diese Frage.`;
+    if (tipGeraten && a.ergebnis === 'richtig') return 'Als geraten markiert — zählt wie ein Teilerfolg.';
+    return undefined;
   }
 
   function weiterNachAufloesung() {
@@ -656,6 +695,7 @@
     try {
       const bisherigeA = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optA.id);
       await schreiben('uebung', {
+        ...bisherigeA,
         id: bisherigeA?.id ?? neueId(),
         setId: set.id,
         aromaId: optA.id,
@@ -667,9 +707,13 @@
         faellig: auswertung.aFaellig,
         stufe: bisherigeA?.stufe,
         familienSerie: bisherigeA?.familienSerie ?? 0,
+        abrufSerie: bisherigeA?.abrufSerie ?? 0,
+        familieFalschSerie: bisherigeA?.familieFalschSerie ?? 0,
+        fehlerSerie: bisherigeA?.fehlerSerie ?? 0,
       });
       const bisherigeB = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optB.id);
       await schreiben('uebung', {
+        ...bisherigeB,
         id: bisherigeB?.id ?? neueId(),
         setId: set.id,
         aromaId: optB.id,
@@ -681,6 +725,9 @@
         faellig: auswertung.bFaellig,
         stufe: bisherigeB?.stufe,
         familienSerie: bisherigeB?.familienSerie ?? 0,
+        abrufSerie: bisherigeB?.abrufSerie ?? 0,
+        familieFalschSerie: bisherigeB?.familieFalschSerie ?? 0,
+        fehlerSerie: bisherigeB?.fehlerSerie ?? 0,
       });
 
       for (const option of [optA, optB]) {
@@ -1165,6 +1212,7 @@
             <AuswahlListe optionen={namenOptionen} wert={tipAroma} onWahl={(w) => (tipAroma = w)} platzhalter="dein Tipp …" suchbar />
           {/key}
         {/if}
+        <Schalter label="nur geraten" an={tipGeraten} onWahl={(w) => (tipGeraten = w)} />
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={zurNummer} deaktiviert={!tippVollstaendig}>weiter</Knopf>
         </div>
@@ -1200,6 +1248,9 @@
         </p>
         {#if letzteAuswertung.korrekteFamilie}
           <p class="hinweis">Richtige Familie wäre gewesen: {letzteAuswertung.korrekteFamilie}.</p>
+        {/if}
+        {#if letzteAuswertung.lernstandHinweis}
+          <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
         {/if}
         {#if letzteAuswertung.unerwarteteNummer}
           <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>

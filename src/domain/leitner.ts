@@ -69,20 +69,30 @@ export function bewegeBox(box: Box, ergebnis: Uebungsergebnis): Box {
 }
 
 /**
- * Rückstufung nach langer Pause (Lastenheft Abschnitt 7): ist ein Aroma
- * **mehr als doppelt so lange überfällig wie sein eigenes Intervall**, ist
- * das reale Niveau gesunken. Die Box selbst bleibt dabei unverändert — nur
- * die Abfrage-Stufe wird für diesen einen Versuch eine Stufe tiefer gewählt
- * (das übernimmt der Aufrufer in `domain/uebung.ts`, nicht diese Funktion).
+ * Lange Pause (Lastenheft Abschnitt 7): ist ein Aroma **mehr als doppelt so
+ * lange überfällig wie sein eigenes Intervall**, ist das reale Niveau
+ * gesunken. Die Stufe bleibt dabei unverändert — `domain/uebung.ts::
+ * werteAntwortAus` wertet die Antwort für diesen einen Versuch zusätzlich
+ * gegen die Stufe darunter ("aufgefrischt", Box 2), statt sie als Fehler zu
+ * zählen.
  *
- * Box 1 hat Intervall 0 — dort ist jede Verspätung "mehr als doppelt so
- * lang" und die Funktion liefert sofort `true`. Das ist beabsichtigt: Box 1
- * bedeutet ohnehin "sofort", ein Aufschub dort ist immer ein Alarmsignal.
+ * Bewusst **nicht** über die Frageform gelöst, wie das Lastenheft es
+ * ursprünglich meinte ("eine Stufe tiefer abfragen"): die Form eines Platzes
+ * steht vor dem blinden Griff fest und gehört praktisch nie zu dem Aroma,
+ * das dann gezogen wird. Nur bei der Auswertung ist bekannt, welches Aroma
+ * es war.
+ *
+ * Box 1 hat Intervall 0 — gerechnet wird dort mit dem Intervall von Box 2
+ * (2 Tage). Ohne diese Untergrenze wäre jedes Box-1-Aroma sofort "stark
+ * überfällig" (es ist ja sofort fällig), und ein gerade erst falsch
+ * beantwortetes Aroma bekäme beim nächsten Mal die mildere Wertung — genau
+ * verkehrt herum.
  */
 export function starkUeberfaellig(box: Box, faellig: number, jetzt: number): boolean {
   const ueberfaelligSeit = jetzt - faellig;
   if (ueberfaelligSeit <= 0) return false;
-  return ueberfaelligSeit > INTERVALL_TAGE[box] * MS_PRO_TAG;
+  const bezugTage = Math.max(INTERVALL_TAGE[box], INTERVALL_TAGE[2]);
+  return ueberfaelligSeit > bezugTage * MS_PRO_TAG;
 }
 
 // ---- Migration eines Altbestands ohne Box/Stufe --------------------------
@@ -122,13 +132,29 @@ export function istEingefuehrt(stand: GesamtStand): boolean {
 const EINFUEHRUNGSSPERRE_ANTEIL = 0.3;
 
 /**
+ * Ab wie vielen nicht richtigen Wertungen in Folge ein Aroma als **zäh**
+ * gilt. Zähe Aromen zählen nicht mehr für die Einführungssperre — sonst
+ * blockieren zwei, drei Gerüche, die einfach nicht sitzen wollen, auf Dauer
+ * jedes neue Aroma (bei zehn eingeführten reichen drei). Geübt werden sie
+ * weiter wie alle anderen; sie sind nur kein Grund mehr, das Neue
+ * zurückzuhalten. Ein einziger Treffer hebt den Zustand auf.
+ */
+export const ZAEH_SCHWELLE = 5;
+
+export function istZaeh(fehlerSerie: number): boolean {
+  return fehlerSerie >= ZAEH_SCHWELLE;
+}
+
+/**
  * Neue Aromen werden nur eingeführt, wenn **weniger als 30 %** der bereits
  * eingeführten Aromen in Box 1–2 stehen (Lastenheft Abschnitt 7). Braucht
  * die tatsächliche Trainingsfrequenz nicht zu kennen: der Boxenzustand
  * reguliert sich selbst — viel Training leert die unteren Boxen und öffnet
  * die Sperre wieder, wenig Training hält sie geschlossen.
  *
- * Ohne eingeführte Aromen ist die Sperre nie aktiv (0⁄0 zählt als 0 %).
+ * Der Aufrufer reicht nur die Boxen der **nicht zähen** eingeführten Aromen
+ * herein (siehe `ZAEH_SCHWELLE`). Ohne solche ist die Sperre nie aktiv
+ * (0⁄0 zählt als 0 %).
  */
 export function einfuehrungErlaubt(boxenEingefuehrterAromen: readonly Box[]): boolean {
   if (boxenEingefuehrterAromen.length === 0) return true;

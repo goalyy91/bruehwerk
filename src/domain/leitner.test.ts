@@ -72,9 +72,10 @@ describe('starkUeberfaellig — Rückstufung nach langer Pause, Lastenheft Absch
     expect(starkUeberfaellig(3, faellig, JETZT)).toBe(true);
   });
 
-  it('Box 1 (Intervall 0): jede Verspätung zählt sofort als stark überfällig', () => {
-    const faellig = JETZT - 1000;
-    expect(starkUeberfaellig(1, faellig, JETZT)).toBe(true);
+  it('Box 1 (Intervall 0): gerechnet wird mit den 2 Tagen von Box 2 — ein gerade falsch beantwortetes Aroma ist nicht sofort "stark überfällig"', () => {
+    expect(starkUeberfaellig(1, JETZT - 1000, JETZT)).toBe(false);
+    expect(starkUeberfaellig(1, JETZT - 2 * TAG, JETZT)).toBe(false);
+    expect(starkUeberfaellig(1, JETZT - 3 * TAG, JETZT)).toBe(true);
   });
 });
 
