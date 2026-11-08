@@ -83,10 +83,17 @@
     type AntwortAuswertung,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
-  import { uebungsKennzahlenPool, zielfrequenzAbgleich, zuletztKennengelernt } from '../../domain/uebungsauswertung';
+  import {
+    uebungsKennzahlenPool,
+    zielfrequenzAbgleich,
+    zuletztKennengelernt,
+    wochenSatz,
+    kennzahlSatz,
+    familienTrefferquote,
+  } from '../../domain/uebungsauswertung';
   import { nummernAusKaffees } from '../../domain/kaffeebruecke';
   import { meilensteinSatz } from '../../domain/meilenstein';
-  import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
+  import { waehleKennzahlen } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
   import { merkhilfeZu, BESCHREIBUNGSWOERTER } from '../../daten/aroma-merkhilfen';
@@ -193,7 +200,12 @@
   /** kategorieId -> Familienname, fuer domain/uebungsauswertung.ts::uebungsKennzahlenPool — die Domäne kennt das Aromaset selbst nicht. */
   const familienLabels = $derived(new Map(familien.map((f) => [f.wert, f.label] as const)));
 
-  let kennzahlenAuswahl = $state<readonly Kennzahl[]>([]);
+  /**
+   * Ein Satz statt der Kennzahl-Kacheln (Nachschärfung Etappe 7): die Woche
+   * wie oben in der Statistik, dazu eine wechselnde Kennzahl als Satz —
+   * dieselben Fakten, in der Stimme der Aromaschule.
+   */
+  let einordnungsSatz = $state<string | undefined>(undefined);
 
   // Begrüßung analog zur Bar (domain/begruessung.ts::uebungsBegruessung) —
   // Livebetrieb-Rückmeldung: die Übersicht hatte keinen Kopf, der Raum
@@ -239,7 +251,20 @@
         jetzt,
         zielProWoche,
       });
-      kennzahlenAuswahl = waehleKennzahlen(pool, 2);
+      const eigeneAntworten = bestand.uebungsantworten.filter((a) => a.setId === set.id);
+      const woche = wochenSatz({
+        antworten: eigeneAntworten,
+        durchgaengeBegonnenAm,
+        familienQuoten: familienTrefferquote(eigeneAntworten, alleAromen),
+        familienLabel: familieVon,
+        jetzt,
+      });
+      // Was der Wochensatz schon sagt, nicht noch einmal als Kennzahl.
+      const zusatz = waehleKennzahlen(
+        pool.filter((k) => k.label !== 'Stärkste Familie' && k.label !== 'Durchgänge diese Woche'),
+        1,
+      )[0];
+      einordnungsSatz = [woche, zusatz ? kennzahlSatz(zusatz) : undefined].filter(Boolean).join(' ') || undefined;
 
       const kuerzlichAbgeschlossen = eigeneDurchgaenge.some(
         (d) => d.status === 'abgeschlossen' && d.abgeschlossenAm !== undefined && jetzt - d.abgeschlossenAm < 15 * 60_000,
@@ -1273,6 +1298,7 @@
       {#if begruessungsText.label}<p class="tageszeit-label">{begruessungsText.label}</p>{/if}
       <p class="begruessung">{begruessungsText.satz}</p>
     </header>
+    {#if einordnungsSatz}<p class="einordnung">{einordnungsSatz}</p>{/if}
     {#if sperreAktiv}
       <p class="hinweis">Erst festigen, dann Neues.</p>
     {/if}
@@ -1281,7 +1307,6 @@
         <Knopf stufe="still" onKlick={onOeffnenStatistik}>{zielfrequenzHinweis}</Knopf>
       {/if}
       <Knopf stufe="primaer" onKlick={durchgangStarten}>durchgang starten</Knopf>
-      <Knopf onKlick={reverseUeben}>reverse üben</Knopf>
     </div>
 
     {#if zuletztKennengelerntOption}
@@ -1300,48 +1325,43 @@
       </div>
     {/if}
 
-    {#if kontrastKandidat || reverseVorschlagOption}
-      <div class="vorschlaege">
-        <h2>Vorschläge</h2>
-        <div class="bestandliste">
-          {#if kontrastKandidat}
-            <button type="button" class="bestandkarte" onclick={() => kontrastdurchgangStarten()}>
-              <div class="bestandkarte-text">
-                <span class="bestandkarte-name">{kontrastKandidatLabelA} · {kontrastKandidatLabelB}</span>
-                <span class="bestandkarte-meta">oft verwechselt — als Kontrastdurchgang üben</span>
-              </div>
-            </button>
-          {/if}
-          {#if reverseVorschlagOption}
-            <button type="button" class="bestandkarte" onclick={reverseVorschlagUeben}>
-              <div class="bestandkarte-text">
-                <span class="bestandkarte-name">{reverseVorschlagOption.label}</span>
-                <span class="bestandkarte-meta">schwer getan — gezielt reverse üben</span>
-              </div>
-            </button>
-            {#if reverseVorschlagOption.nummer !== undefined && datenblattZu(reverseVorschlagOption.nummer)}
-              <Knopf stufe="still" onKlick={() => (datenblatt = datenblattZu(reverseVorschlagOption!.nummer!))}>Datenblatt ansehen</Knopf>
-            {/if}
+    <!-- Mehr üben (Nachschärfung Etappe 7): eine Liste im Stil der
+         Statistik statt zweier gleich großer Knöpfe und loser Karten —
+         ein dominanter Knopf oben (ux-regeln Regel 3). -->
+    <h2>Mehr üben</h2>
+    <Blattliste>
+      {#if kontrastKandidat}
+        {@const ka = alleAromen.find((a) => a.id === kontrastKandidat.aId)}
+        {@const kb = alleAromen.find((a) => a.id === kontrastKandidat.bId)}
+        <button type="button" class="uebung-zeile" onclick={() => kontrastdurchgangStarten()}>
+          <span class="deckel-paar">
+            <span class="deckel klein" style:--familie={ka?.kategorieId ? `var(--kat-${ka.kategorieId})` : 'var(--spur)'}>{ka?.nummer}</span>
+            <span class="deckel klein" style:--familie={kb?.kategorieId ? `var(--kat-${kb.kategorieId})` : 'var(--spur)'}>{kb?.nummer}</span>
+          </span>
+          <span class="uebung-text">
+            <span class="uebung-name">{kontrastKandidatLabelA} ↔ {kontrastKandidatLabelB}</span>
+            <span class="uebung-meta">oft verwechselt — als Kontrast üben</span>
+          </span>
+        </button>
+      {/if}
+      {#if reverseVorschlagOption}
+        {@const r = reverseVorschlagOption}
+        <div class="uebung-zeile-rahmen">
+          <button type="button" class="uebung-zeile" onclick={reverseVorschlagUeben}>
+            <span class="deckel klein" style:--familie={r.kategorieId ? `var(--kat-${r.kategorieId})` : 'var(--spur)'}>{r.nummer}</span>
+            <span class="uebung-text">
+              <span class="uebung-name">{r.label}</span>
+              <span class="uebung-meta">schwer getan — gezielt reverse üben</span>
+            </span>
+          </button>
+          {#if r.nummer !== undefined && datenblattZu(r.nummer)}
+            <button type="button" class="uebung-neben" onclick={() => (datenblatt = datenblattZu(r.nummer!))}>Datenblatt</button>
           {/if}
         </div>
-      </div>
-    {/if}
-
-    {#if kennzahlenAuswahl.length > 0}
-      <div class="kennzahl-raster" class:einzeln={kennzahlenAuswahl.length === 1}>
-        {#each kennzahlenAuswahl as fakt (fakt.label)}
-          <div class="kennzahl-kachel">
-            <span class="kennzahl-label">{fakt.label}</span>
-            <span class="zahl kennzahl-zahl">{fakt.wert}</span>
-          </div>
-        {/each}
-      </div>
-    {/if}
-    <div class="block">
-      <Blattliste>
-        <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
-      </Blattliste>
-    </div>
+      {/if}
+      <Blattzeile label="Reverse üben" meta="ein Aroma nennen, suchen, riechen" onKlick={reverseUeben} />
+      <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
+    </Blattliste>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
@@ -1688,61 +1708,76 @@
      aus domain/uebungsauswertung.ts::uebungsKennzahlenPool statt der
      rohen Fünf-Boxen-Liste, die vorher hier stand (die volle Aufschlüsselung
      lebt jetzt auf der Statistik-Seite). */
-  .kennzahl-raster {
-    margin-bottom: var(--r3);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--r-kachelabstand);
-  }
-  .kennzahl-raster.einzeln {
-    grid-template-columns: 1fr;
-  }
-  .kennzahl-kachel {
-    background: var(--blatt);
-    border-radius: var(--r-kachel);
-    padding: 12px 16px 11px;
-    min-height: 100px;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .kennzahl-label {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-kachel-label);
-    letter-spacing: var(--label-spacing-kachel);
-    text-transform: uppercase;
-    color: var(--gedaempft);
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .kennzahl-zahl {
-    font-size: var(--fs-wert);
-    line-height: 1.15;
-    color: var(--tinte);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: break-word;
-  }
   /* Rückmeldung 2026-09-17: die Übersicht sollte denselben Dashboard-
      Charakter haben wie Bar.svelte — eine klare Primäraktion ohne
      Kartenrahmen (wie dort "Getränk wählen"), statt in einer Knopfreihe mit
      zwei weiteren Aktionen zu stehen. */
+  .einordnung {
+    margin: 0 0 var(--r4);
+    font-size: var(--fs-bedienwort);
+    line-height: 1.5;
+    color: var(--satz);
+  }
+  .uebung-zeile-rahmen {
+    display: flex;
+    align-items: center;
+  }
+  .uebung-zeile {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--r3);
+    width: 100%;
+    min-height: var(--blattzeile);
+    /* 6 px seitlich wie die Blattzeilen darunter (dort der Standardeinzug
+       eines Knopfs), damit Deckel und Zeilentexte auf einer Kante stehen. */
+    padding: var(--r2) 6px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-family: var(--schrift-sans);
+    cursor: pointer;
+  }
+  .uebung-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Aromanamen sind Inhalt — Serif in einem eigenen Block ohne cursor
+     (tests/bildsprache.test.ts prüft je Block). */
+  .uebung-name {
+    font-family: var(--schrift);
+    font-size: var(--fs-bedienwort);
+    color: var(--tinte);
+  }
+  .uebung-meta {
+    font-size: var(--fs-meta);
+    color: var(--gedaempft);
+  }
+  .uebung-neben {
+    flex: none;
+    min-height: var(--treffer);
+    padding: 0 0 0 var(--r3);
+    border: none;
+    background: transparent;
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-meta);
+    color: var(--akzent);
+    cursor: pointer;
+  }
+  .deckel-paar {
+    display: flex;
+    flex: none;
+  }
+  .deckel-paar .deckel + .deckel {
+    margin-left: -8px;
+  }
   .jetzt-zone {
     margin: var(--r3) 0 var(--r4);
     display: flex;
     flex-direction: column;
     gap: var(--r3);
-  }
-  .vorschlaege {
-    margin-bottom: var(--r3);
   }
   /* Vorschlags-Karten — 1:1 aus Bar.svelte übernommen (.bestandkarte/
      .bestandliste dort, Zeilen 712-781): Blattfläche + Schatten statt Rand,
@@ -1751,41 +1786,6 @@
      auf", ganze Karte tippbar, keine eigene Bildsprache dafür nötig. Ohne
      die dortigen Dringlichkeits-Farbvarianten (kritisch/achtung/info): hier
      ist kein Vorschlag dringend. */
-  .bestandliste {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .bestandkarte {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 12px 18px;
-    border: none;
-    border-radius: 18px;
-    background: var(--blatt);
-    box-shadow: 0 6px 16px -10px var(--schatten-weich);
-    cursor: pointer;
-    text-align: left;
-    /* Serif bewusst: die Karte trägt einen Aroma- oder Paarnamen. */
-    font-family: var(--schrift);
-  }
-  .bestandkarte-text {
-    flex: 1;
-    min-width: 0;
-  }
-  .bestandkarte-name {
-    font-size: 15.5px;
-    color: var(--tinte);
-    display: block;
-  }
-  .bestandkarte-meta {
-    font-family: var(--schrift-sans);
-    font-size: var(--fs-meta);
-    color: var(--gedaempft);
-    display: block;
-    margin-top: 3px;
-  }
   /* Weiße Fläche wie Bar.svelte (.fastway-frage, Getränke-Kacheln) statt
      freien Texts auf der Seitenfläche — Livebetrieb-Rückmeldung "sieht nicht
      sonderlich schön aus". Trägt jeden Schritt der laufenden Übung

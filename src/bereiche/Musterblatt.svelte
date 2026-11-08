@@ -21,6 +21,7 @@
   import Rangliste from '../muster/Rangliste.svelte';
   import VorbelegteFrage from '../muster/VorbelegteFrage.svelte';
   import Verlaufskurve from '../muster/Verlaufskurve.svelte';
+  import Trendkurve from '../muster/Trendkurve.svelte';
   import LesartUmschalter from '../muster/LesartUmschalter.svelte';
   import Bohnen from '../muster/Bohnen.svelte';
   import Sterne from '../muster/Sterne.svelte';
@@ -330,6 +331,28 @@
           ]}
         />
         <Verlaufskurve punkte={[]} achsMarken={['3,60', '3,75', '3,90']} />
+      </div>
+    {/each}
+  </section>
+
+  <!-- 14b · Trendkurve (Lern-Nachzug, Etappe 7) — eine Größe über Wochen:
+       weiche Linie, zarte Fläche, nur der letzte Wert beschriftet. -->
+  <section class="muster">
+    <h2>14b · Trendkurve</h2>
+    {#each ['hell', 'dunkel'] as const as theme (theme)}
+      <div class="thema stapel" data-theme={theme}>
+        <Trendkurve
+          punkte={[0.2, 0.25, 0.22, 0.35, 0.48, 0.52, 0.6, 0.62].map((w, i) => ({
+            x: i / 7,
+            wert: w,
+            beschriftung: `${Math.round(w * 100)} %`,
+            zeit: i === 7 ? 'diese Woche' : `vor ${7 - i} Wochen`,
+          }))}
+          minWert={0}
+          maxWert={1}
+          titel="Trefferquote je Woche"
+          xLinks="vor 7 Wochen"
+        />
       </div>
     {/each}
   </section>

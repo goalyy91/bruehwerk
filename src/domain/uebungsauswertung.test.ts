@@ -17,6 +17,8 @@ import {
   wochenSatz,
   lernstandSatz,
   verwechseltePaare,
+  trendSatz,
+  kennzahlSatz,
   LANGSAM_SCHWELLE_MS,
   ANTWORTDAUER_MINDEST_STICHPROBE,
   ZIELFREQUENZ_MINDESTWOCHEN,
@@ -533,5 +535,28 @@ describe('verwechseltePaare — beide Richtungen zusammen', () => {
     const paare = verwechseltePaare(antworten);
     expect(paare[0]).toEqual({ aId: 'haselnuss', bId: 'mandel', anzahl: 3 });
     expect(paare[1]).toEqual({ aId: 'jasmin', bId: 'rose', anzahl: 1 });
+  });
+});
+
+describe('trendSatz — vier Wochen gegen vier Wochen', () => {
+  const P = (wocheIndex: number, wert: number) => ({ wocheIndex, wert });
+  it('Trefferquote gestiegen', () => {
+    expect(trendSatz([P(0, 0.2), P(1, 0.2), P(5, 0.6), P(7, 0.64)], 'quote', 8)).toBe('In den letzten vier Wochen 62 % getroffen, davor 20 %.');
+  });
+  it('kleine Unterschiede heißen "etwa gleich"', () => {
+    expect(trendSatz([P(1, 0.4), P(6, 0.42)], 'quote', 8)).toBe('Etwa gleich geblieben: in den letzten vier Wochen 42 % getroffen.');
+  });
+  it('Antwortzeit schneller', () => {
+    expect(trendSatz([P(0, 12000), P(6, 9600)], 'zeit', 8)).toBe('Du antwortest schneller: in den letzten vier Wochen 9,6 s, davor 12,0 s.');
+  });
+  it('ohne Werte in beiden Hälften kein Satz', () => {
+    expect(trendSatz([P(5, 0.5), P(6, 0.6)], 'quote', 8)).toBeUndefined();
+  });
+});
+
+describe('kennzahlSatz', () => {
+  it('formuliert die Kennzahlen als Sätze', () => {
+    expect(kennzahlSatz({ label: 'Dabei seit', wert: '7 Wochen' })).toBe('Seit 7 Wochen dabei.');
+    expect(kennzahlSatz({ label: 'Sicher gelernt', wert: '12 von 60' })).toBe('12 von 60 sicher gelernt.');
   });
 });
