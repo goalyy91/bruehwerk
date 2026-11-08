@@ -21,8 +21,9 @@
  *     Leitner-Bewegung, nachdem die Nummer feststeht.
  *  4. Verwechslungspaare (verwechslungspaare) — welche Aromen sich ein
  *     Kontrastdurchgang vornehmen darf (Aromapaket, Etappe 7).
- *  5. Auswertung eines Kontrastdurchgangs (werteKontrastAus) — eine
- *     gemeinsame Entscheidung für zwei Aromen statt einer einzelnen.
+ *  5. Kontrastdurchgang (kontrastpaare, waehleDurchgangsart,
+ *     werteKontrastAus) — bis zu vier Paare, eine Zuordnungsfrage je Paar,
+ *     gewertet am Verwechslungszähler statt an der Box.
  */
 import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
@@ -625,42 +626,146 @@ export function verwechslungspaare(staende: ReadonlyMap<string, GesamtStand>): r
 }
 
 // ============================================================================
-// Auswertung eines Kontrastdurchgangs — eine gemeinsame Entscheidung für
-// zwei Aromen (Aromapaket, Etappe 7).
+// Kontrastdurchgang mit mehreren Paaren (Etappe 3 des Lern-Nachzugs,
+// docs/konzept.md "Kontrastdurchgang").
 // ============================================================================
 
-export interface KontrastAuswertung {
-  readonly ergebnis: 'richtig' | 'falsch';
-  readonly aBox: Box;
-  readonly aFaellig: number;
-  readonly bBox: Box;
-  readonly bFaellig: number;
+/** Höchstens so viele Paare je Kontrastdurchgang — 8 Riechvorgänge, Rest der Riechgrenze fürs Nachriechen. */
+export const KONTRAST_PAARE_MAX = 4;
+/** Ab so vielen verfügbaren Paaren darf die App einen Kontrastdurchgang von sich aus wählen. */
+export const KONTRAST_PAARE_MIN_ZUFALL = 3;
+/** Anteil der Durchgänge, die die App als Kontrast wählt, wenn genug Paare da sind. */
+export const KONTRAST_ANTEIL = 0.25;
+
+export interface Kontrastpaar {
+  readonly aId: string;
+  readonly bId: string;
+  /**
+   * Woher das Paar kommt — zugleich die Rangfolge: belegte Verwechslungen
+   * zuerst, dann zähe Aromen mit ihrem nächsten Nachbarn, dann vorbeugend
+   * verwandte Aromen (Datenblatt "Related Aromas"), bevor sie verwechselt werden.
+   */
+  readonly quelle: 'verwechslung' | 'zaeh' | 'verwandt';
 }
 
 /**
- * Wertet einen Kontrastdurchgang aus: **eine** Zuordnungsfrage ("welches war
- * welches") über zwei Aromen hinweg, nicht zwei Einzelfragen — das zweite
- * wäre nach dem ersten durch Ausschluss geschenkt (Lastenheft Abschnitt 6).
- * Deshalb kein `teilweise`: entweder beide richtig zugeordnet, oder beide
- * verwechselt — eine binäre Unterscheidungsleistung kennt keine Zwischenstufe.
+ * Stellt bis zu `max` Paare zusammen. **Jedes Aroma höchstens einmal** — ein
+ * Fläschchen kann nicht in zwei Paaren zugleich liegen. Vorbeugend verwandte
+ * Paare nur, wenn beide Aromen eingeführt sind und mindestens auf Stufe B
+ * stehen: wer die Familie noch sucht, lernt am Unterscheiden zweier
+ * Familienmitglieder nichts.
+ */
+export function kontrastpaare(
+  alleAromen: readonly AromaOption[],
+  staende: ReadonlyMap<string, GesamtStand>,
+  jetzt: number,
+  zufall: () => number = Math.random,
+  max: number = KONTRAST_PAARE_MAX,
+): readonly Kontrastpaar[] {
+  const zustand = (id: string) => effektiverZustand(staende.get(id), jetzt);
+  const bekannt = new Set(alleAromen.map((a) => a.id));
+  const kandidaten: Kontrastpaar[] = [];
+
+  for (const p of verwechslungspaare(staende)) {
+    if (bekannt.has(p.aId) && bekannt.has(p.bId)) kandidaten.push({ aId: p.aId, bId: p.bId, quelle: 'verwechslung' });
+  }
+
+  const verwandteVon = (option: AromaOption) => (option.verwandte ?? []).filter((id) => bekannt.has(id) && zustand(id).eingefuehrt);
+  const zaehe = alleAromen
+    .filter((a) => zustand(a.id).eingefuehrt && zustand(a.id).zaeh)
+    .sort((x, y) => (staende.get(y.id)?.fehlerSerie ?? 0) - (staende.get(x.id)?.fehlerSerie ?? 0));
+  for (const a of zaehe) {
+    const verwechslungen = Object.entries(staende.get(a.id)?.verwechslungen ?? {})
+      .filter(([id]) => bekannt.has(id))
+      .sort((x, y) => y[1] - x[1]);
+    const partner = verwechslungen[0]?.[0] ?? verwandteVon(a)[0];
+    if (partner) kandidaten.push({ aId: a.id, bId: partner, quelle: 'zaeh' });
+  }
+
+  const abStufeB = (id: string) => zustand(id).eingefuehrt && zustand(id).stufe !== 'a';
+  const gesehen = new Set<string>();
+  const verwandt: Kontrastpaar[] = [];
+  for (const a of alleAromen) {
+    if (!abStufeB(a.id)) continue;
+    for (const bId of verwandteVon(a)) {
+      const schluessel = [a.id, bId].sort().join('|');
+      if (gesehen.has(schluessel) || !abStufeB(bId)) continue;
+      gesehen.add(schluessel);
+      verwandt.push({ aId: a.id, bId, quelle: 'verwandt' });
+    }
+  }
+  kandidaten.push(...gemischt(verwandt, zufall));
+
+  const belegt = new Set<string>();
+  const paare: Kontrastpaar[] = [];
+  for (const p of kandidaten) {
+    if (paare.length >= max) break;
+    if (p.aId === p.bId || belegt.has(p.aId) || belegt.has(p.bId)) continue;
+    belegt.add(p.aId);
+    belegt.add(p.bId);
+    paare.push(p);
+  }
+  return paare;
+}
+
+/**
+ * Welche Art Durchgang "durchgang starten" beginnt: etwa jeder vierte wird
+ * ein Kontrastdurchgang, aber nur, wenn mindestens drei Paare da sind —
+ * sonst wäre er zu kurz, um die Riechvorbereitung zu lohnen.
+ */
+export function waehleDurchgangsart(verfuegbarePaare: number, zufall: () => number = Math.random): 'normal' | 'kontrast' {
+  return verfuegbarePaare >= KONTRAST_PAARE_MIN_ZUFALL && zufall() < KONTRAST_ANTEIL ? 'kontrast' : 'normal';
+}
+
+export interface KontrastAuswertung {
+  readonly ergebnis: 'richtig' | 'falsch';
+  /** Neue Verwechslungsliste von A (Eintrag für B angepasst). */
+  readonly aVerwechslungen: Readonly<Record<string, number>>;
+  /** Neue Verwechslungsliste von B (Eintrag für A angepasst). */
+  readonly bVerwechslungen: Readonly<Record<string, number>>;
+}
+
+function verwechslungAngepasst(liste: Readonly<Record<string, number>>, partnerId: string, delta: number): Record<string, number> {
+  const neu = { ...liste };
+  const wert = (neu[partnerId] ?? 0) + delta;
+  if (wert > 0) neu[partnerId] = wert;
+  else delete neu[partnerId];
+  return neu;
+}
+
+/**
+ * Wertet ein Paar aus: **eine** Zuordnungsfrage ("welches war welches"),
+ * nicht zwei Einzelfragen — die zweite wäre nach der ersten durch Ausschluss
+ * geschenkt (Lastenheft Abschnitt 6). Deshalb kein `teilweise`.
  *
- * Beide Aromen bewegen sich **gemeinsam in dieselbe Richtung**, aber jedes
- * von seiner **eigenen** Box aus — ein Kontrastdurchgang bevorzugt zwar
- * Aromen mit dokumentierter Verwechslung (`verwechslungspaare`), das sagt
- * aber nichts darüber, dass beide zufällig denselben Fortschritt hätten.
- * Berührt bewusst weder `stufe` noch `familienSerie`: ein Kontrastdurchgang
- * ist keine Familien-Übung und bewegt diesen Fortschritt nicht.
+ * **Bewegt keine Box.** Bei zwei Antwortmöglichkeiten liegt Raten zur Hälfte
+ * richtig — ein Treffer schöbe sonst bei jedem zweiten Versuch beide Boxen
+ * hoch, auch für ein Paar, das man nicht auseinanderhalten kann. Gezählt wird
+ * stattdessen am Paar: richtig senkt den Verwechslungszähler in beide
+ * Richtungen um 1, falsch erhöht ihn. Ein Paar, das dauerhaft gelingt,
+ * wandert so aus dem Kontrastpool; eines, das nicht gelingt, steigt auf.
  */
 export function werteKontrastAus(
   richtigeReihenfolge: boolean,
+  aId: string,
+  bId: string,
   aStand: GesamtStand | undefined,
   bStand: GesamtStand | undefined,
-  jetzt: number,
 ): KontrastAuswertung {
-  const ergebnis: 'richtig' | 'falsch' = richtigeReihenfolge ? 'richtig' : 'falsch';
-  const aZustand = effektiverZustand(aStand, jetzt);
-  const bZustand = effektiverZustand(bStand, jetzt);
-  const aBox = bewegeBox(aZustand.box, ergebnis);
-  const bBox = bewegeBox(bZustand.box, ergebnis);
-  return { ergebnis, aBox, aFaellig: naechsteFaelligkeit(aBox, jetzt), bBox, bFaellig: naechsteFaelligkeit(bBox, jetzt) };
+  const delta = richtigeReihenfolge ? -1 : 1;
+  return {
+    ergebnis: richtigeReihenfolge ? 'richtig' : 'falsch',
+    aVerwechslungen: verwechslungAngepasst(aStand?.verwechslungen ?? {}, bId, delta),
+    bVerwechslungen: verwechslungAngepasst(bStand?.verwechslungen ?? {}, aId, delta),
+  };
+}
+
+/**
+ * Ob nach einem Paar beide Fläschchen noch einmal gerochen werden — nach
+ * einer falschen Zuordnung, solange die Riechgrenze zwei weitere
+ * Riechvorgänge trägt. Beide nacheinander mit Namen zu riechen ist der
+ * direkte Vergleich, um den es im Kontrastdurchgang geht.
+ */
+export function kontrastNachriechenAngebracht(ergebnis: 'richtig' | 'falsch', paareImDurchgang: number, bisherNachgerochen: number): boolean {
+  return ergebnis === 'falsch' && 2 * paareImDurchgang + bisherNachgerochen + 2 <= RIECHGRENZE;
 }

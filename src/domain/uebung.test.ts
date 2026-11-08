@@ -9,6 +9,10 @@ import {
   werteAntwortAus,
   verwechslungspaare,
   werteKontrastAus,
+  kontrastpaare,
+  waehleDurchgangsart,
+  kontrastNachriechenAngebracht,
+  KONTRAST_PAARE_MAX,
   KONTRASTDURCHGANG_SCHWELLE,
   reverseVorschlag,
   nachriechenAngebracht,
@@ -522,23 +526,78 @@ describe('verwechslungspaare — Schwelle, Richtungs-Dedup, Sortierung (Lastenhe
   });
 });
 
-describe('werteKontrastAus — eine gemeinsame Zuordnungsfrage, kein "teilweise" (Lastenheft Abschnitt 6)', () => {
-  it('richtige Reihenfolge bewegt beide Boxen eine hoch, jede von ihrer eigenen aus', () => {
-    const a = STAND({ box: 2, faellig: JETZT - TAG });
-    const b = STAND({ box: 4, faellig: JETZT - TAG });
-    const auswertung = werteKontrastAus(true, a, b, JETZT);
+describe('werteKontrastAus — eine Zuordnungsfrage, wirkt am Paar, nie an der Box', () => {
+  it('richtig senkt den Verwechslungszaehler in beide Richtungen um 1, ein Eintrag auf 0 verschwindet', () => {
+    const a = STAND({ box: 2, verwechslungen: { b: 3 } });
+    const b = STAND({ box: 4, verwechslungen: { a: 1 } });
+    const auswertung = werteKontrastAus(true, 'a', 'b', a, b);
     expect(auswertung.ergebnis).toBe('richtig');
-    expect(auswertung.aBox).toBe(3);
-    expect(auswertung.bBox).toBe(5);
+    expect(auswertung.aVerwechslungen).toEqual({ b: 2 });
+    expect(auswertung.bVerwechslungen).toEqual({});
+    expect('aBox' in auswertung).toBe(false); // bei 50 % Ratechance kein Beleg fuer die Box
   });
 
-  it('falsche Reihenfolge wirft beide Boxen auf 1 zurueck', () => {
-    const a = STAND({ box: 2, faellig: JETZT - TAG });
-    const b = STAND({ box: 4, faellig: JETZT - TAG });
-    const auswertung = werteKontrastAus(false, a, b, JETZT);
+  it('falsch erhoeht den Zaehler in beide Richtungen — auch fuer ein bisher nur verwandtes Paar', () => {
+    const auswertung = werteKontrastAus(false, 'a', 'b', STAND(), undefined);
     expect(auswertung.ergebnis).toBe('falsch');
-    expect(auswertung.aBox).toBe(1);
-    expect(auswertung.bBox).toBe(1);
+    expect(auswertung.aVerwechslungen).toEqual({ b: 1 });
+    expect(auswertung.bVerwechslungen).toEqual({ a: 1 });
+  });
+});
+
+describe('kontrastpaare — Rangfolge, jedes Aroma hoechstens einmal', () => {
+  const opt = (id: string, verwandte: string[] = []): AromaOption => ({ id, label: id, kategorieId: 'k', verwandte });
+  const EINGEFUEHRT = { benennen: { versuche: 3, treffer: 2 } };
+
+  it('belegte Verwechslung vor zaehem Aroma vor verwandtem Paar', () => {
+    const alle = [opt('m', ['h']), opt('h', ['m']), opt('z', ['x']), opt('x'), opt('v1', ['v2']), opt('v2'), opt('q', ['r']), opt('r')];
+    const staende = new Map<string, GesamtStand>([
+      ['m', STAND({ ...EINGEFUEHRT, stufe: 'b', verwechslungen: { h: 3 } })],
+      ['h', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+      ['z', STAND({ ...EINGEFUEHRT, stufe: 'a', fehlerSerie: 6 })],
+      ['x', STAND({ ...EINGEFUEHRT, stufe: 'a' })],
+      ['v1', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+      ['v2', STAND({ ...EINGEFUEHRT, stufe: 'c' })],
+      ['q', STAND({ ...EINGEFUEHRT, stufe: 'a' })], // Stufe A: kein vorbeugendes Paar
+      ['r', STAND({ ...EINGEFUEHRT, stufe: 'b' })],
+    ]);
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0);
+    expect(paare.map((p) => p.quelle)).toEqual(['verwechslung', 'zaeh', 'verwandt']);
+    expect(paare.map((p) => [p.aId, p.bId].sort().join('|'))).toEqual(['h|m', 'x|z', 'v1|v2']);
+  });
+
+  it('ein Aroma steht nie in zwei Paaren', () => {
+    const alle = [opt('a', ['b', 'c']), opt('b', ['a', 'c']), opt('c', ['a', 'b'])];
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0);
+    expect(paare).toHaveLength(1);
+  });
+
+  it(`hoechstens ${KONTRAST_PAARE_MAX} Paare`, () => {
+    const alle = Array.from({ length: 12 }, (_, i) => opt('p' + i, ['p' + (i % 2 === 0 ? i + 1 : i - 1)]));
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    expect(kontrastpaare(alle, staende, JETZT, () => 0.5)).toHaveLength(KONTRAST_PAARE_MAX);
+  });
+});
+
+describe('waehleDurchgangsart — etwa jeder vierte, nur ab drei Paaren', () => {
+  it('unter drei Paaren immer normal', () => {
+    expect(waehleDurchgangsart(2, () => 0)).toBe('normal');
+  });
+  it('ab drei Paaren: Kontrast bei Zufall unter 25 %', () => {
+    expect(waehleDurchgangsart(3, () => 0.24)).toBe('kontrast');
+    expect(waehleDurchgangsart(3, () => 0.25)).toBe('normal');
+  });
+});
+
+describe('kontrastNachriechenAngebracht — beide Fläschchen, zwei Riechvorgänge', () => {
+  it('nach falsch ja, nach richtig nein', () => {
+    expect(kontrastNachriechenAngebracht('falsch', 4, 0)).toBe(true);
+    expect(kontrastNachriechenAngebracht('richtig', 4, 0)).toBe(false);
+  });
+  it(`bei 4 Paaren hoechstens zweimal: 8 + 2 + 2 = ${RIECHGRENZE}`, () => {
+    expect(kontrastNachriechenAngebracht('falsch', 4, 2)).toBe(true);
+    expect(kontrastNachriechenAngebracht('falsch', 4, 4)).toBe(false);
   });
 });
 

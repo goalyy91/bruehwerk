@@ -56,6 +56,12 @@ export const Uebungsdurchgang = z.object({
    * nicht zurücksetzt.
    */
   nachgerochen: z.number().int().nonnegative().default(0),
+  /**
+   * Nur "kontrast": die Paare in Abfragereihenfolge (Etappe 3 des
+   * Lern-Nachzugs, bis zu vier). Fehlt bei einem älteren Kontrastdurchgang
+   * mit genau einem Paar — der liest sich dann aus `verdeckt`.
+   */
+  paare: z.array(z.tuple([Id, Id])).optional(),
   begonnenAm: Zeitpunkt,
   abgeschlossenAm: Zeitpunkt.optional(),
 });

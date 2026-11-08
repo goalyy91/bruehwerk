@@ -43,6 +43,10 @@
   // abwägen — fände nicht statt (CLAUDE.md, "Was nie sichtbar wird" im Plan-
   // Dokument dieses Umbaus). Eine einzige Zuordnungsfrage danach, nicht zwei
   // Einzelfragen — die zweite wäre nach der ersten durch Ausschluss geschenkt.
+  // Seit Etappe 3 des Lern-Nachzugs: bis zu vier Paare je Durchgang, jedes
+  // Paar für sich verdeckt; "durchgang starten" wählt in etwa jedem vierten
+  // Fall selbst einen Kontrastdurchgang (domain/uebung.ts::waehleDurchgangsart).
+  // Ein Paar bewegt keine Box, nur den Verwechslungszähler.
   //
   // Reverse — ungescort, ohne jede Wirkung auf Box/Fälligkeit: kein Aufruf
   // von `schreiben('uebung', …)` in reverseAufloesen(). Nicht blind: du
@@ -68,6 +72,10 @@
     nachriechenAngebracht,
     verwechslungspaare,
     werteKontrastAus,
+    kontrastpaare,
+    waehleDurchgangsart,
+    kontrastNachriechenAngebracht,
+    type Kontrastpaar,
     reverseVorschlag,
     DURCHGANG_GROESSE,
     type AromaOption,
@@ -281,6 +289,13 @@
 
   async function durchgangStarten() {
     if (!set) return;
+    // Etwa jeder vierte Durchgang wird ein Kontrastdurchgang, sobald drei
+    // Paare da sind (domain/uebung.ts::waehleDurchgangsart).
+    const paare = kontrastpaare(alleAromen, bekannteStaende, Date.now());
+    if (waehleDurchgangsart(paare.length) === 'kontrast') {
+      await kontrastdurchgangStarten(paare);
+      return;
+    }
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
     const plan = planeDurchgang(alleAromen, bekannteStaende, jetzt);
@@ -306,25 +321,29 @@
     }
   }
 
-  async function kontrastdurchgangStarten() {
-    if (!set || !kontrastKandidat) return;
+  /** Startet einen Kontrastdurchgang — ohne Argument (Vorschlagskarte) mit den aktuell besten Paaren. */
+  async function kontrastdurchgangStarten(paare: readonly Kontrastpaar[] = kontrastpaare(alleAromen, bekannteStaende, Date.now())) {
+    if (!set || paare.length === 0) return;
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
+    const ids = paare.flatMap((p) => [p.aId, p.bId]);
     const neu: SammlungWert['uebungsdurchgang'] = {
       id: neueId(),
       setId: set.id,
       art: 'kontrast',
       status: 'bereitlegen',
-      verdeckt: [kontrastKandidat.aId, kontrastKandidat.bId],
-      abgefragt: [kontrastKandidat.aId, kontrastKandidat.bId],
+      verdeckt: ids,
+      abgefragt: ids,
       zusatz: [],
       beantwortet: [],
       nachgerochen: 0,
+      paare: paare.map((p) => [p.aId, p.bId] as [string, string]),
       begonnenAm: jetzt,
     };
     try {
       await schreiben('uebungsdurchgang', neu);
       durchgang = neu;
+      kontrastIndex = 0;
       phase = 'bereitlegen';
       navigation.gehe({ name: 'uebungLaufend' });
     } catch (e) {
@@ -345,12 +364,23 @@
       .sort((a, b) => a - b),
   );
 
-  /** Die zwei Aromen eines Kontrastdurchgangs, in der beim Start festgelegten (beliebigen, aber stabilen) Reihenfolge. */
-  const kontrastOptionen = $derived(
-    durchgang?.art === 'kontrast'
-      ? durchgang.verdeckt.map((id) => alleAromen.find((a) => a.id === id)).filter((a): a is AromaOption => a !== undefined)
-      : [],
-  );
+  /**
+   * Die Paare eines Kontrastdurchgangs als Optionen, in Abfragereihenfolge.
+   * Ein älterer Durchgang ohne `paare` hatte genau eins — aus `verdeckt`.
+   */
+  const kontrastPaarListe = $derived.by((): readonly (readonly [AromaOption, AromaOption])[] => {
+    if (durchgang?.art !== 'kontrast') return [];
+    const roh: readonly (readonly [string, string])[] =
+      durchgang.paare && durchgang.paare.length > 0 ? durchgang.paare : [[durchgang.verdeckt[0] ?? '', durchgang.verdeckt[1] ?? '']];
+    const zuOption = (id: string) => alleAromen.find((a) => a.id === id);
+    return roh
+      .map(([a, b]) => [zuOption(a), zuOption(b)] as const)
+      .filter((p): p is readonly [AromaOption, AromaOption] => p[0] !== undefined && p[1] !== undefined);
+  });
+  /** Welches Paar gerade dran ist — beim Start 0, beim Fortsetzen aus `beantwortet`. */
+  let kontrastIndex = $state(0);
+  /** Die zwei Aromen des aktuellen Paars, in der beim Start festgelegten (beliebigen, aber stabilen) Reihenfolge. */
+  const kontrastOptionen = $derived(kontrastPaarListe[kontrastIndex] ?? []);
 
   async function bereitgelegt() {
     if (!durchgang) return;
@@ -359,11 +389,8 @@
       await schreiben('uebungsdurchgang', aktualisiert);
       durchgang = aktualisiert;
       if (aktualisiert.art === 'kontrast') {
-        kontrastSchritt = 'erstesRiechen';
-        kontrastReihenfolge = '';
-        kontrastErsteNummer = '';
-        kontrastAuswertung = undefined;
-        kontrastUnerwartet = false;
+        kontrastIndex = 0;
+        kontrastSchrittZuruecksetzen();
         phase = 'kontrast';
       } else {
         index = 0;
@@ -671,8 +698,18 @@
   let kontrastErsteNummer = $state('');
   let kontrastUnerwartet = $state(false);
   let kontrastAuswertung = $state<
-    { readonly ergebnis: 'richtig' | 'falsch'; readonly ersteOption: AromaOption; readonly zweiteOption: AromaOption } | undefined
+    | {
+        readonly ergebnis: 'richtig' | 'falsch';
+        readonly ersteOption: AromaOption;
+        readonly zweiteOption: AromaOption;
+        /** Gesetzt, wenn beide noch einmal gerochen werden sollen (domain/uebung.ts::kontrastNachriechenAngebracht). */
+        readonly nachriechen?: { readonly ersteMerkhilfe?: string; readonly zweiteMerkhilfe?: string };
+      }
+    | undefined
   >(undefined);
+  let kontrastNachgerochenErledigt = $state(false);
+
+  const kontrastLetztesPaar = $derived(kontrastIndex + 1 >= kontrastPaarListe.length);
 
   const kontrastFrageOptionen = $derived(
     kontrastOptionen.length === 2
@@ -683,32 +720,65 @@
       : [],
   );
 
+  function kontrastSchrittZuruecksetzen() {
+    kontrastSchritt = 'erstesRiechen';
+    kontrastReihenfolge = '';
+    kontrastErsteNummer = '';
+    kontrastUnerwartet = false;
+    kontrastAuswertung = undefined;
+    kontrastNachgerochenErledigt = false;
+  }
+
   function kontrastErstesGerochen() {
     kontrastSchritt = 'zweitesRiechen';
     starteRiechpause();
   }
 
+  /** Ein Paar ist erledigt: `beantwortet` wächst um beide Ids, beim letzten Paar endet der Durchgang. */
+  function kontrastDurchgangNachPaar(d: SammlungWert['uebungsdurchgang'], paarIds: readonly string[], jetzt: number): SammlungWert['uebungsdurchgang'] {
+    const letztes = kontrastLetztesPaar;
+    return {
+      ...d,
+      beantwortet: [...d.beantwortet, ...paarIds],
+      status: letztes ? 'abgeschlossen' : d.status,
+      abgeschlossenAm: letztes ? jetzt : undefined,
+    };
+  }
+
+  /** Schreibt nur die Verwechslungsliste fort — ein Kontrastpaar bewegt keine Box (domain/uebung.ts::werteKontrastAus). */
+  async function verwechslungenSchreiben(aromaId: string, verwechslungen: Readonly<Record<string, number>>, jetzt: number) {
+    const bisherige = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === aromaId);
+    await schreiben('uebung', {
+      ...bisherige,
+      id: bisherige?.id ?? neueId(),
+      setId: set!.id,
+      aromaId,
+      benennen: bisherige?.benennen ?? { versuche: 0, treffer: 0 },
+      unterscheiden: bisherige?.unterscheiden ?? { versuche: 0, treffer: 0 },
+      verwechslungen: { ...verwechslungen },
+      letzterVersuch: jetzt,
+      familienSerie: bisherige?.familienSerie ?? 0,
+      abrufSerie: bisherige?.abrufSerie ?? 0,
+      familieFalschSerie: bisherige?.familieFalschSerie ?? 0,
+      fehlerSerie: bisherige?.fehlerSerie ?? 0,
+    });
+  }
+
   async function kontrastAufloesen() {
     if (!durchgang || !set || !kontrastErsteNummer || kontrastOptionen.length !== 2) return;
-    const [optA, optB] = kontrastOptionen as [AromaOption, AromaOption];
+    const [optA, optB] = kontrastOptionen as readonly [AromaOption, AromaOption];
     const ersteId = kontrastErsteNummer;
     const jetzt = Date.now();
 
-    if (!durchgang.verdeckt.includes(ersteId)) {
-      // Seltener echter Bereitlegen-Fehler (siehe Kopfkommentar zu
-      // unerwarteteNummer weiter oben): bei nur zwei Verdeckten trägt "das
-      // jeweils andere" als Grundlage für die zweite Identität nicht mehr.
-      // Kein Absturz, keine erfundene zweite Identität — der Durchgang endet
-      // hier unbewertet, ehrlich benannt.
+    if (ersteId !== optA.id && ersteId !== optB.id) {
+      // Seltener echter Bereitlegen-Fehler: die Nummer gehört nicht zu diesem
+      // Paar. Bei nur zwei Fläschchen trägt "das jeweils andere" als
+      // Grundlage für die zweite Identität nicht mehr — dieses Paar bleibt
+      // unbewertet, ehrlich benannt, und es geht mit dem nächsten weiter.
       try {
-        const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
-          ...durchgang,
-          beantwortet: [ersteId],
-          status: 'abgeschlossen',
-          abgeschlossenAm: jetzt,
-        };
-        await schreiben('uebungsdurchgang', durchgangAktualisiert);
-        durchgang = durchgangAktualisiert;
+        const aktualisiert = kontrastDurchgangNachPaar(durchgang, [optA.id, optB.id], jetzt);
+        await schreiben('uebungsdurchgang', aktualisiert);
+        durchgang = aktualisiert;
         await schreiben('uebungsantwort', {
           id: neueId(),
           durchgangId: durchgang.id,
@@ -724,6 +794,7 @@
       }
       kontrastUnerwartet = true;
       kontrastSchritt = 'aufgeloest';
+      if (!kontrastLetztesPaar) starteRiechpause();
       return;
     }
 
@@ -731,50 +802,11 @@
     const zweiteOption = ersteId === optA.id ? optB : optA;
     const gewaehlteAWarErste = kontrastReihenfolge === 'a-zuerst';
     const tatsaechlichAWarErste = ersteId === optA.id;
-    const richtigeReihenfolge = gewaehlteAWarErste === tatsaechlichAWarErste;
-
-    const aStand = staende.get(optA.id);
-    const bStand = staende.get(optB.id);
-    const auswertung = werteKontrastAus(richtigeReihenfolge, aStand, bStand, jetzt);
+    const auswertung = werteKontrastAus(gewaehlteAWarErste === tatsaechlichAWarErste, optA.id, optB.id, staende.get(optA.id), staende.get(optB.id));
 
     try {
-      const bisherigeA = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optA.id);
-      await schreiben('uebung', {
-        ...bisherigeA,
-        id: bisherigeA?.id ?? neueId(),
-        setId: set.id,
-        aromaId: optA.id,
-        benennen: bisherigeA?.benennen ?? { versuche: 0, treffer: 0 },
-        unterscheiden: bisherigeA?.unterscheiden ?? { versuche: 0, treffer: 0 },
-        verwechslungen: bisherigeA?.verwechslungen ?? {},
-        letzterVersuch: jetzt,
-        box: auswertung.aBox,
-        faellig: auswertung.aFaellig,
-        stufe: bisherigeA?.stufe,
-        familienSerie: bisherigeA?.familienSerie ?? 0,
-        abrufSerie: bisherigeA?.abrufSerie ?? 0,
-        familieFalschSerie: bisherigeA?.familieFalschSerie ?? 0,
-        fehlerSerie: bisherigeA?.fehlerSerie ?? 0,
-      });
-      const bisherigeB = bestand.uebungen.find((u) => u.setId === set!.id && u.aromaId === optB.id);
-      await schreiben('uebung', {
-        ...bisherigeB,
-        id: bisherigeB?.id ?? neueId(),
-        setId: set.id,
-        aromaId: optB.id,
-        benennen: bisherigeB?.benennen ?? { versuche: 0, treffer: 0 },
-        unterscheiden: bisherigeB?.unterscheiden ?? { versuche: 0, treffer: 0 },
-        verwechslungen: bisherigeB?.verwechslungen ?? {},
-        letzterVersuch: jetzt,
-        box: auswertung.bBox,
-        faellig: auswertung.bFaellig,
-        stufe: bisherigeB?.stufe,
-        familienSerie: bisherigeB?.familienSerie ?? 0,
-        abrufSerie: bisherigeB?.abrufSerie ?? 0,
-        familieFalschSerie: bisherigeB?.familieFalschSerie ?? 0,
-        fehlerSerie: bisherigeB?.fehlerSerie ?? 0,
-      });
-
+      await verwechslungenSchreiben(optA.id, auswertung.aVerwechslungen, jetzt);
+      await verwechslungenSchreiben(optB.id, auswertung.bVerwechslungen, jetzt);
       for (const option of [optA, optB]) {
         await schreiben('uebungsantwort', {
           id: neueId(),
@@ -787,22 +819,43 @@
           unerwarteteNummer: false,
         });
       }
-
-      const durchgangAktualisiert: SammlungWert['uebungsdurchgang'] = {
-        ...durchgang,
-        beantwortet: [optA.id, optB.id],
-        status: 'abgeschlossen',
-        abgeschlossenAm: jetzt,
-      };
-      await schreiben('uebungsdurchgang', durchgangAktualisiert);
-      durchgang = durchgangAktualisiert;
+      const aktualisiert = kontrastDurchgangNachPaar(durchgang, [optA.id, optB.id], jetzt);
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
     } catch (e) {
       fehler = e instanceof Error ? e.message : String(e);
       return;
     }
 
-    kontrastAuswertung = { ergebnis: auswertung.ergebnis, ersteOption, zweiteOption };
+    const nachriechen = kontrastNachriechenAngebracht(auswertung.ergebnis, kontrastPaarListe.length, durchgang.nachgerochen)
+      ? { ersteMerkhilfe: merkhilfeZu(ersteOption.nummer), zweiteMerkhilfe: merkhilfeZu(zweiteOption.nummer) }
+      : undefined;
+    kontrastAuswertung = { ergebnis: auswertung.ergebnis, ersteOption, zweiteOption, nachriechen };
     kontrastSchritt = 'aufgeloest';
+    // Mit Nachriechen startet die Pause erst danach (kontrastNachgerochen).
+    if (!nachriechen && !kontrastLetztesPaar) starteRiechpause();
+  }
+
+  async function kontrastNachgerochen() {
+    if (!durchgang || kontrastNachgerochenErledigt) return;
+    kontrastNachgerochenErledigt = true;
+    const aktualisiert: SammlungWert['uebungsdurchgang'] = { ...durchgang, nachgerochen: durchgang.nachgerochen + 2 };
+    try {
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+    if (!kontrastLetztesPaar) starteRiechpause();
+  }
+
+  function kontrastWeiter() {
+    if (kontrastLetztesPaar) {
+      zurueckZurUebersicht();
+      return;
+    }
+    kontrastIndex += 1;
+    kontrastSchrittZuruecksetzen();
   }
 
   // ---- Reverse: Name zuerst, dann gezielt suchen — ungescort -------------
@@ -953,11 +1006,8 @@
   function zurueckZurUebersicht() {
     durchgang = undefined;
     item = undefined;
-    kontrastSchritt = 'erstesRiechen';
-    kontrastReihenfolge = '';
-    kontrastErsteNummer = '';
-    kontrastUnerwartet = false;
-    kontrastAuswertung = undefined;
+    kontrastIndex = 0;
+    kontrastSchrittZuruecksetzen();
     reverseSchritt = 'wahl';
     reverseAromaId = '';
     reverseEinschaetzung = '';
@@ -1073,11 +1123,8 @@
       return;
     }
     if (laufender.art === 'kontrast') {
-      kontrastSchritt = 'erstesRiechen';
-      kontrastReihenfolge = '';
-      kontrastErsteNummer = '';
-      kontrastAuswertung = undefined;
-      kontrastUnerwartet = false;
+      kontrastIndex = Math.floor(laufender.beantwortet.length / 2);
+      kontrastSchrittZuruecksetzen();
       phase = 'kontrast';
     } else if (laufender.art === 'reverse') {
       reverseAromaId = laufender.verdeckt[0] ?? '';
@@ -1163,7 +1210,7 @@
         <h2>Vorschläge</h2>
         <div class="bestandliste">
           {#if kontrastKandidat}
-            <button type="button" class="bestandkarte" onclick={kontrastdurchgangStarten}>
+            <button type="button" class="bestandkarte" onclick={() => kontrastdurchgangStarten()}>
               <div class="bestandkarte-text">
                 <span class="bestandkarte-name">{kontrastKandidatLabelA} · {kontrastKandidatLabelB}</span>
                 <span class="bestandkarte-meta">oft verwechselt — als Kontrastdurchgang üben</span>
@@ -1203,22 +1250,30 @@
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
-      {#if durchgang?.art === 'kontrast' && kontrastOptionen.length === 2}
-        <p class="frage-satz">Dieser Durchgang: {kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}.</p>
+      {#if durchgang?.art === 'kontrast' && kontrastPaarListe.length > 0}
         <p class="frage-satz">
-          Lege diese zwei Fläschchen verdeckt bereit — so, dass du hinterher nicht weißt, welches du zuerst gezogen hast.
+          {kontrastPaarListe.length === 1 ? 'Ein Paar' : `${kontrastPaarListe.length} Paare`} — lege jedes für sich verdeckt bereit, so dass
+          du innerhalb eines Paars nicht weißt, welches welches ist.
         </p>
+        {#each kontrastPaarListe as [a, b], i (a.id)}
+          <p class="hinweis auftrag">Paar {i + 1}: {a.label} oder {b.label}</p>
+          <div class="nummernliste">
+            {#each [a.nummer, b.nummer].filter((n) => n !== undefined).sort((x, y) => x! - y!) as nummer (nummer)}
+              <span class="nummer">{nummer}</span>
+            {/each}
+          </div>
+        {/each}
       {:else}
         <p class="frage-satz">
           Lege diese {bereitlegenNummern.length} Fläschchen verdeckt bereit — so, dass du beim Greifen nicht erkennen kannst, welches du
           gerade in der Hand hältst.
         </p>
+        <div class="nummernliste">
+          {#each bereitlegenNummern as nummer (nummer)}
+            <span class="nummer">{nummer}</span>
+          {/each}
+        </div>
       {/if}
-      <div class="nummernliste">
-        {#each bereitlegenNummern as nummer (nummer)}
-          <span class="nummer">{nummer}</span>
-        {/each}
-      </div>
       <div class="knopfreihe">
         <Knopf stufe="primaer" onKlick={bereitgelegt}>liegt bereit</Knopf>
       </div>
@@ -1334,7 +1389,9 @@
     {/if}
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'kontrast' && kontrastOptionen.length === 2}
+    <p class="fortschritt">Paar {kontrastIndex + 1} von {kontrastPaarListe.length}</p>
     <div class="frage-block">
+      <p class="hinweis auftrag">{kontrastOptionen[0]!.label} oder {kontrastOptionen[1]!.label}</p>
       {#if kontrastSchritt === 'erstesRiechen'}
         <p class="frage-satz">Zieh das erste der beiden, ohne hinzusehen — riech daran. Noch nicht auflösen.</p>
         <div class="knopfreihe">
@@ -1361,7 +1418,7 @@
         </div>
       {:else if kontrastSchritt === 'aufgeloest'}
         {#if kontrastUnerwartet}
-          <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieser Durchgang bleibt unbewertet.</p>
+          <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieses Paar bleibt unbewertet.</p>
         {:else if kontrastAuswertung}
           <p class="ergebnis" class:richtig={kontrastAuswertung.ergebnis === 'richtig'}>
             {#if kontrastAuswertung.ergebnis === 'richtig'}
@@ -1370,9 +1427,28 @@
               Daneben — es war erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
             {/if}
           </p>
+          {#if kontrastAuswertung.nachriechen}
+            <p class="hinweis auftrag">
+              Riech beide noch einmal, direkt nacheinander — erst „{kontrastAuswertung.ersteOption.label}“, dann „{kontrastAuswertung.zweiteOption.label}“.
+            </p>
+            {#if kontrastAuswertung.nachriechen.ersteMerkhilfe}
+              <p class="hinweis">{kontrastAuswertung.ersteOption.label}: {kontrastAuswertung.nachriechen.ersteMerkhilfe}</p>
+            {/if}
+            {#if kontrastAuswertung.nachriechen.zweiteMerkhilfe}
+              <p class="hinweis">{kontrastAuswertung.zweiteOption.label}: {kontrastAuswertung.nachriechen.zweiteMerkhilfe}</p>
+            {/if}
+          {/if}
         {/if}
         <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+          {#if kontrastAuswertung?.nachriechen && !kontrastNachgerochenErledigt}
+            <Knopf stufe="primaer" onKlick={kontrastNachgerochen}>nachgerochen</Knopf>
+          {:else if kontrastLetztesPaar}
+            <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+          {:else}
+            <Knopf stufe="primaer" onKlick={kontrastWeiter} deaktiviert={pauseRest > 0}>
+              {pauseRest > 0 ? `nächstes Paar (${pauseRest})` : 'nächstes Paar'}
+            </Knopf>
+          {/if}
         </div>
       {/if}
     </div>

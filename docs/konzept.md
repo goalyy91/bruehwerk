@@ -991,15 +991,31 @@ daneben — der Vergleich zweier ähnlicher Gerüche ist, was Unterscheiden lehr
 Gewinnung und Chemie bleiben im Datenblatt. Die Riechpause beginnt erst nach dem
 Nachriechen; nach einem echten Treffer wird nicht nachgerochen.
 
-**Kontrastdurchgang** — die gezielte Übung gegen dokumentierte Verwechslungen, ab drei
-Verwechslungen eines Paares angeboten. Hier gilt eine bewusste, eng begrenzte Ausnahme
-vom verdeckten Prinzip: die App nennt **vor** dem Riechen beide Namen („dieser
-Durchgang: Mandel oder Haselnuss") — ohne das wäre es nur ein freier Abruf, zufällig auf
-zwei Fläschchen verengt, und die eigentliche Leistung, zwei ähnliche Gerüche direkt
-gegeneinander abzuwägen, fände nicht statt. Beide werden nacheinander blind gezogen,
-dann eine einzige Zuordnungsfrage: „welches war welches" — nie zwei Einzelfragen, sonst
-wäre die zweite durch Ausschluss geschenkt. Läuft immer als eigener Durchgang, nie unter
-die acht Items eines normalen gemischt.
+**Kontrastdurchgang** — die gezielte Übung im Auseinanderhalten ähnlicher Gerüche.
+Hier gilt eine bewusste, eng begrenzte Ausnahme vom verdeckten Prinzip: die App nennt
+**vor** dem Riechen beide Namen eines Paares („Mandel oder Haselnuss") — ohne das wäre es
+nur ein freier Abruf, zufällig auf zwei Fläschchen verengt, und die eigentliche Leistung,
+zwei ähnliche Gerüche direkt gegeneinander abzuwägen, fände nicht statt. Beide werden
+nacheinander blind gezogen, dann eine einzige Zuordnungsfrage: „welches war welches" — nie
+zwei Einzelfragen, sonst wäre die zweite durch Ausschluss geschenkt. Läuft immer als
+eigener Durchgang, nie unter die acht Items eines normalen gemischt.
+
+*(Nachzug 08.11.2026.)* Ein Kontrastdurchgang hat **bis zu vier Paare**, jedes für sich
+verdeckt bereitgelegt; kein Aroma steht in zwei Paaren. Die Paare kommen in dieser
+Rangfolge: belegte Verwechslungen (ab drei), dann zähe Aromen mit ihrem häufigsten
+Verwechslungspartner, dann **vorbeugend** verwandte Aromen aus dem Datenblatt, sobald beide
+mindestens auf Stufe B stehen — das Unterscheiden wird geübt, bevor die erste Verwechslung
+passiert. „durchgang starten" wird in etwa **jedem vierten Fall** von selbst ein
+Kontrastdurchgang, wenn mindestens drei Paare da sind; die Vorschlagskarte für eine belegte
+Verwechslung bleibt und startet ebenfalls alle verfügbaren Paare.
+
+**Ein Paar bewegt keine Box.** Bei zwei Antwortmöglichkeiten liegt Raten zur Hälfte
+richtig; ein Treffer schöbe sonst bei jedem zweiten Versuch beide Boxen hoch, auch für ein
+Paar, das man nicht auseinanderhalten kann. Gezählt wird am Paar: richtig senkt den
+Verwechslungszähler in beide Richtungen um eins, falsch erhöht ihn. Ein Paar, das
+dauerhaft gelingt, wandert so aus dem Pool. Nach einer falschen Zuordnung werden beide
+Fläschchen noch einmal gerochen, direkt nacheinander, mit Namen und Merkhilfen — zwei
+Riechvorgänge, solange die Riechgrenze reicht.
 
 **Reverse** — ungescort, kein Einfluss auf die Boxen: die App zeigt einen Namen, du
 suchst das Fläschchen selbst und schätzt danach „getroffen / daneben" ein. Stärkt die
