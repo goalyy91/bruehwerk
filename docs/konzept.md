@@ -1005,7 +1005,13 @@ verdeckt bereitgelegt; kein Aroma steht in zwei Paaren. Die Paare kommen in dies
 Rangfolge: belegte Verwechslungen (ab drei), dann zähe Aromen mit ihrem häufigsten
 Verwechslungspartner, dann **vorbeugend** verwandte Aromen aus dem Datenblatt, sobald beide
 mindestens auf Stufe B stehen — das Unterscheiden wird geübt, bevor die erste Verwechslung
-passiert. „durchgang starten" wird in etwa **jedem vierten Fall** von selbst ein
+passiert. Die vorbeugenden Paare kommen in drei Rängen, innerhalb eines Rangs
+zufällig: erst Paare, deren Datenblätter sich **gegenseitig** nennen (57, auch über
+Familiengrenzen: Holzig–Zeder, Teer–Rauchig), dann einseitig genannte aus **derselben
+Familie** (39), zuletzt einseitig genannte über Familiengrenzen (85, etwa Zeder–Pappe, aber
+auch Zitrone–Jasmin). Bewusst kein Familienfilter: er striche Holzig–Zeder. Ob ein Paar
+wirklich verwechselt wird, sagen ohnehin erst die eigenen Fehler — ab drei rückt es nach
+vorn. „durchgang starten" wird in etwa **jedem vierten Fall** von selbst ein
 Kontrastdurchgang, wenn mindestens drei Paare da sind; die Vorschlagskarte für eine belegte
 Verwechslung bleibt und startet ebenfalls alle verfügbaren Paare.
 

@@ -566,6 +566,23 @@ describe('kontrastpaare — Rangfolge, jedes Aroma hoechstens einmal', () => {
     expect(paare.map((p) => [p.aId, p.bId].sort().join('|'))).toEqual(['h|m', 'x|z', 'v1|v2']);
   });
 
+  it('vorbeugend: gegenseitig genannt vor gleicher Familie vor einseitig ueber Familiengrenzen', () => {
+    const o = (id: string, kategorieId: string, verwandte: string[] = []): AromaOption => ({ id, label: id, kategorieId, verwandte });
+    const alle = [
+      o('zitrone', 'fruchtig', ['jasmin']), // einseitig, verschiedene Familien
+      o('jasmin', 'blumig'),
+      o('apfel', 'fruchtig', ['pfirsich']), // einseitig, gleiche Familie
+      o('pfirsich', 'fruchtig'),
+      o('zeder', 'gruen', ['holzig']), // gegenseitig, verschiedene Familien
+      o('holzig', 'sonstiges', ['zeder']),
+    ];
+    const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));
+    const paare = kontrastpaare(alle, staende, JETZT, () => 0.99);
+    expect(paare.map((p) => [p.aId, p.bId].sort().join('|'))).toEqual(['holzig|zeder', 'apfel|pfirsich', 'jasmin|zitrone']);
+    // Rang 3 kommt nur nach, wenn vorne nicht genug da ist
+    expect(kontrastpaare(alle, staende, JETZT, () => 0.99, 2).map((p) => p.aId + p.bId).some((x) => x.includes('jasmin'))).toBe(false);
+  });
+
   it('ein Aroma steht nie in zwei Paaren', () => {
     const alle = [opt('a', ['b', 'c']), opt('b', ['a', 'c']), opt('c', ['a', 'b'])];
     const staende = new Map<string, GesamtStand>(alle.map((a) => [a.id, STAND({ ...EINGEFUEHRT, stufe: 'b' })]));

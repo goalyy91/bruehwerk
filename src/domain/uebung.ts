@@ -682,19 +682,29 @@ export function kontrastpaare(
     if (partner) kandidaten.push({ aId: a.id, bId: partner, quelle: 'zaeh' });
   }
 
+  // Vorbeugende Paare in drei Rängen, innerhalb eines Rangs zufällig: erst
+  // Paare, deren Datenblätter sich gegenseitig nennen (die belastbarste
+  // Ähnlichkeit, auch über Familiengrenzen: Holzig–Zeder, Teer–Rauchig),
+  // dann einseitig genannte aus derselben Familie, zuletzt einseitig genannte
+  // über Familiengrenzen (Zeder–Pappe, aber auch Zitrone–Jasmin). Ein Filter
+  // nach Familie wäre falsch — er striche Holzig–Zeder.
   const abStufeB = (id: string) => zustand(id).eingefuehrt && zustand(id).stufe !== 'a';
+  const nachId = new Map(alleAromen.map((a) => [a.id, a]));
   const gesehen = new Set<string>();
-  const verwandt: Kontrastpaar[] = [];
+  const raenge: [Kontrastpaar[], Kontrastpaar[], Kontrastpaar[]] = [[], [], []];
   for (const a of alleAromen) {
     if (!abStufeB(a.id)) continue;
     for (const bId of verwandteVon(a)) {
       const schluessel = [a.id, bId].sort().join('|');
       if (gesehen.has(schluessel) || !abStufeB(bId)) continue;
       gesehen.add(schluessel);
-      verwandt.push({ aId: a.id, bId, quelle: 'verwandt' });
+      const b = nachId.get(bId)!;
+      const gegenseitig = (b.verwandte ?? []).includes(a.id);
+      const gleicheFamilie = a.kategorieId !== undefined && a.kategorieId === b.kategorieId;
+      raenge[gegenseitig ? 0 : gleicheFamilie ? 1 : 2].push({ aId: a.id, bId, quelle: 'verwandt' });
     }
   }
-  kandidaten.push(...gemischt(verwandt, zufall));
+  for (const rang of raenge) kandidaten.push(...gemischt(rang, zufall));
 
   const belegt = new Set<string>();
   const paare: Kontrastpaar[] = [];
