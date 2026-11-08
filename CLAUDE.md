@@ -383,8 +383,9 @@ irgendwann etwas, das mit Absicht fehlt.
   zum Ansehen, keine, die laufen.
 
   **Ausdrückliche Ausnahme: die Riechpause im Übungsmodus** (`domain/leitner.ts`,
-  Aromapaket Etappe 6). Zwischen zwei Fläschchen erzwingt ein Rückwärtszähler auf
-  dem „weiter"-Knopf 25 Sekunden Pause. Das ist kein Widerspruch zur Regel oben,
+  Aromapaket Etappe 6). Zwischen zwei Fläschchen erzwingt die App 25 Sekunden
+  Pause — seit 08.11.2026 als Ring, der sich schließt, der „weiter"-Knopf zeigt
+  keine Sekunden mehr. Das ist kein Widerspruch zur Regel oben,
   sondern ihr Zweck gespiegelt: die Uhr dort erzeugt Tempo, diese hier verhindert
   es — ohne Pause sinkt die Wahrnehmungsschärfe der Nase messbar, und die App
   würde Ermüdung statt Können messen. Keine andere Stelle der App bekommt einen

@@ -1469,7 +1469,7 @@
               <Knopf stufe="primaer" onKlick={nachgerochen}>nachgerochen</Knopf>
             {:else}
               <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
-                {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+                weiter
               </Knopf>
             {/if}
             {#if aroma.nummer !== undefined && datenblattZu(aroma.nummer)}
@@ -1494,7 +1494,7 @@
         <p class="frage-satz">Probe 2: das andere, wieder ohne hinzusehen.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={() => (kontrastSchritt = 'frage')} deaktiviert={pauseRest > 0}>
-            {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+            weiter
           </Knopf>
         </div>
         {#if pauseRest > 0}{@render atempause()}{/if}
@@ -1545,7 +1545,7 @@
             <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
           {:else}
             <Knopf stufe="primaer" onKlick={kontrastWeiter} deaktiviert={pauseRest > 0}>
-              {pauseRest > 0 ? `nächstes Paar (${pauseRest})` : 'nächstes Paar'}
+              nächstes Paar
             </Knopf>
           {/if}
         </div>

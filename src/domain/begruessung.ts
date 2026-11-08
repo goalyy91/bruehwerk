@@ -66,7 +66,7 @@ const UEBUNGS_SAETZE: Record<Tageszeit, [string, string]> = {
   frueh: ['Die Nase ist morgens am wachsten.', 'Früh dran — ein paar Aromen vor dem ersten Kaffee?'],
   vormittag: ['Ein guter Moment für die Nase.', 'Der Vormittag hat noch Platz für ein paar Aromen.'],
   mittag: ['Kurze Pause, kurzer Durchgang.', 'Mittagspause — passt auch für ein paar Aromen.'],
-  nachmittag: ['Der Nachmittag hat noch Platz für ein paar Aromen.', 'Lust auf ein paar Gerüche?'],
+  nachmittag: ['Der Nachmittag hat noch Platz für ein paar Aromen.', 'Lust auf ein paar Aromen?'],
   abend: ['Der Abend hat noch Platz zum Üben.', 'Ein ruhiger Moment für die Nase.'],
   nacht: ['Spät dran — auch die Nase braucht Ruhe.', 'Noch wach? Ein kurzer Durchgang geht auch jetzt.'],
 };

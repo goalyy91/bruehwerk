@@ -972,8 +972,9 @@ Treffer hebt den Zustand auf.
 nur Familienwissen.
 
 **Die Riechpause ist die eine Ausnahme von „kein Timer".** Zwischen zwei Fläschchen
-liegen 25 Sekunden, erzwungen über einen Rückwärtszähler auf dem „weiter"-Knopf — siehe
-die Ausnahme in `CLAUDE.md`. Der Zähler erzeugt kein Tempo, er verhindert es: ohne Pause
+liegen 25 Sekunden, erzwungen über den gesperrten „weiter"-Knopf und sichtbar als Ring, der
+sich in dieser Zeit schließt — ohne Sekundenzahl (seit 08.11.2026) — siehe die Ausnahme in
+`CLAUDE.md`. Die Pause erzeugt kein Tempo, er verhindert es: ohne Pause
 sinkt die Wahrnehmungsschärfe messbar, und die App würde Ermüdung statt Können messen.
 Harte Obergrenze: 12 Riechvorgänge je Übungsdurchgang — acht Abfragen und bis zu vier
 Mal Nachriechen. *(Bis 08.11.2026: 10, aus dem Lastenheft. Angehoben, damit nach Fehlern
@@ -1501,6 +1502,14 @@ Sechzig Aromen mit Fläschchennummer, eingeordnet in die neun SCA-Kategorien. Di
 **Die restlichen Bildschirme — Gestaltung, nicht Konzept**
 
 Die Gestaltung hat die dichten Bildschirme und den Alltagspfad abgedeckt. Offen ist die Fehlliste, und **ein Eintrag darauf ist keine Kür**: die *Historie und Auswertung*. Seit K57 jede Bewertung dorthin verlegt, ist sie ein Kernbildschirm und Voraussetzung für Paket 05. Die übrigen — Dial-in am Getränk, Kaffee-Pflege, Übungsmodus, Erkenntnis anlegen, Setups, Personenpflege — sind Kompositionen aus vorhandenen Mustern.
+
+**Statistik der Aromaschule — Gestaltung, vorgemerkt 08.11.2026**
+
+Nach dem Gestaltungsdurchgang der Aromaschule (Stimme „Vermutung und Befund", Deckel-Kreis,
+Familienfarben nach der Antwort) wirkt die Statistik-Seite (`UebungsAuswertung.svelte`)
+als einziger Teil noch wie ein Bericht. Sie bekommt eine eigene Etappe: emotionaler,
+optisch ansprechender, intuitiver — mit denselben Grenzen (keine Punkte, Serien oder
+Fortschrittsbalken, ehrliche Rückmeldung, die bei Misserfolg schweigt).
 
 #### Nachpflegbar im Betrieb, mit Startwerten belegt
 
