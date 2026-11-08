@@ -1360,8 +1360,14 @@
         </div>
       {/if}
       <Blattzeile label="Reverse üben" meta="ein Aroma nennen, suchen, riechen" onKlick={reverseUeben} />
-      <Blattzeile label="Statistik" akzent onKlick={onOeffnenStatistik} />
     </Blattliste>
+
+    <!-- Statistik als eigenständiger Eintrag, abgesetzt von den Übungen. -->
+    <div class="statistik-eintrag">
+      <Blattliste>
+        <Blattzeile label="Statistik" meta="Woran du arbeitest, was du verwechselst, wie weit du bist" akzent onKlick={onOeffnenStatistik} />
+      </Blattliste>
+    </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'bereitlegen'}
     <div class="frage-block">
@@ -1712,6 +1718,9 @@
      Charakter haben wie Bar.svelte — eine klare Primäraktion ohne
      Kartenrahmen (wie dort "Getränk wählen"), statt in einer Knopfreihe mit
      zwei weiteren Aktionen zu stehen. */
+  .statistik-eintrag {
+    margin-top: var(--r5);
+  }
   .einordnung {
     margin: 0 0 var(--r4);
     font-size: var(--fs-bedienwort);
