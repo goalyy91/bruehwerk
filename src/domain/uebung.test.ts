@@ -678,3 +678,16 @@ describe('nachriechenAngebracht — nach Fehlern, solange die Riechgrenze reicht
     expect(nachriechenAngebracht(fehler, RIECHGRENZE - DURCHGANG_GROESSE)).toBe(false);
   });
 });
+
+describe('Erstkontakt — Kennenlernen im normalen Durchgang (Etappe 4)', () => {
+  it('ein nie geuebtes Aroma ist Erstkontakt, ein eingefuehrtes nicht', () => {
+    const tip = { formStufe: 'a' as const, tipFamilieId: 'nussig-kakao', tatsaechlicheAromaId: 'mandel', tatsaechlicheFamilieId: 'nussig-kakao' };
+    expect(werteAntwortAus({ ...tip, tatsaechlicherStand: undefined }, JETZT).erstkontakt).toBe(true);
+    expect(werteAntwortAus({ ...tip, tatsaechlicherStand: STAND({ benennen: { versuche: 1, treffer: 1 } }) }, JETZT).erstkontakt).toBe(false);
+  });
+
+  it('beim Erstkontakt wird auch nach einem Treffer nachgerochen', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig', erstkontakt: true }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig', erstkontakt: false }, 0)).toBe(false);
+  });
+});

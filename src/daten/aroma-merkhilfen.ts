@@ -88,6 +88,32 @@ export const MERKHILFEN: Readonly<Record<number, string>> = {
   58: 'süß, holzig, braun, karamellisiert, leicht grün — Pancakes',
 };
 
+/**
+ * Die Wörter, aus denen beim ersten Kontakt mit einem Aroma blind gewählt
+ * wird (Lern-Nachzug Etappe 4, docs/konzept.md "Kennenlernen"). Gezogen aus
+ * den häufigsten Beschreibungswörtern der Merkhilfen oben — dieselbe
+ * Sprache, die direkt danach angezeigt wird. "süß" fehlt mit Absicht: es
+ * steht in 34 von 57 Merkhilfen und unterscheidet damit fast nichts.
+ */
+export const BESCHREIBUNGSWOERTER: readonly string[] = [
+  'fruchtig',
+  'blumig',
+  'grün',
+  'frisch',
+  'saftig',
+  'sauer',
+  'würzig',
+  'scharf',
+  'harzig',
+  'holzig',
+  'nussig',
+  'röstig',
+  'warm',
+  'erdig',
+  'muffig',
+  'beißend',
+];
+
 export function merkhilfeZu(nummer: number | undefined): string | undefined {
   return nummer === undefined ? undefined : MERKHILFEN[nummer];
 }

@@ -991,6 +991,15 @@ daneben — der Vergleich zweier ähnlicher Gerüche ist, was Unterscheiden lehr
 Gewinnung und Chemie bleiben im Datenblatt. Die Riechpause beginnt erst nach dem
 Nachriechen; nach einem echten Treffer wird nicht nachgerochen.
 
+**Kennenlernen.** *(Nachzug 08.11.2026.)* Neue Aromen kommen weiter blind im normalen
+Durchgang — der erste Versuch, gefolgt von der Auflösung, hilft dem Behalten so gut wie
+vorheriges Einprägen. Zwei Ergänzungen: Ist das gezogene Aroma neu, fragt die App nach
+der Nummer und **vor** dem Namen „wie würdest du es beschreiben?" — Antippen aus sechzehn
+Wörtern, die aus den Merkhilfen stammen, mehrere möglich, ohne Wertung. Danach stehen
+deine Wörter neben der Merkhilfe. Und beim ersten Kontakt wird **immer** nachgerochen,
+auch nach einem Zufallstreffer. Damit das Beschreiben blind bleibt, zeigt die
+Nummernliste nur Nummern; der Name erscheint erst beim Auflösen.
+
 **Kontrastdurchgang** — die gezielte Übung im Auseinanderhalten ähnlicher Gerüche.
 Hier gilt eine bewusste, eng begrenzte Ausnahme vom verdeckten Prinzip: die App nennt
 **vor** dem Riechen beide Namen eines Paares („Mandel oder Haselnuss") — ohne das wäre es

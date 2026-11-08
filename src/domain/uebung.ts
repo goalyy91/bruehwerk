@@ -415,6 +415,8 @@ export interface AntwortAuswertung {
   readonly abrufSerieZuletzt?: number;
   readonly familieFalschSerie: number;
   readonly fehlerSerie: number;
+  /** true, wenn das Aroma mit dieser Antwort zum ersten Mal überhaupt dran war. */
+  readonly erstkontakt: boolean;
 }
 
 /** Ab wie vielen Treffern in Folge (Stufe A, Familie) auf Stufe B geschaltet wird — Lastenheft Abschnitt 3. */
@@ -543,7 +545,20 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
     }
   }
 
-  return { ergebnis, wertung, box, faellig, stufe, stufenwechsel, familienSerie, abrufSerie, abrufSerieZuletzt, familieFalschSerie, fehlerSerie };
+  return {
+    ergebnis,
+    wertung,
+    box,
+    faellig,
+    stufe,
+    stufenwechsel,
+    familienSerie,
+    abrufSerie,
+    abrufSerieZuletzt,
+    familieFalschSerie,
+    fehlerSerie,
+    erstkontakt: !zustand.eingefuehrt,
+  };
 }
 
 // ============================================================================
@@ -570,11 +585,14 @@ export const RIECHGRENZE = 12;
  * gegen die Grenze zählt.
  */
 export function nachriechenAngebracht(
-  auswertung: Pick<AntwortAuswertung, 'ergebnis' | 'wertung'>,
+  auswertung: Pick<AntwortAuswertung, 'ergebnis' | 'wertung'> & { readonly erstkontakt?: boolean },
   bisherNachgerochen: number,
   durchgangsGroesse: number = DURCHGANG_GROESSE,
 ): boolean {
+  // Beim ersten Kontakt immer: auch ein Zufallstreffer (Familie 1 zu 9)
+  // hiesse sonst, das Aroma nie bewusst mit Namen gerochen zu haben.
   const lueckeDa =
+    auswertung.erstkontakt === true ||
     auswertung.ergebnis !== 'richtig' || auswertung.wertung === 'teilweise' || auswertung.wertung === 'falsch' || auswertung.wertung === 'aufgefrischt';
   return lueckeDa && durchgangsGroesse + bisherNachgerochen < RIECHGRENZE;
 }

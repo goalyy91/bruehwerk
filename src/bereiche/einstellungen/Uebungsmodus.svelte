@@ -88,12 +88,13 @@
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
-  import { merkhilfeZu } from '../../daten/aroma-merkhilfen';
+  import { merkhilfeZu, BESCHREIBUNGSWOERTER } from '../../daten/aroma-merkhilfen';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
   import Knopf from '../../muster/Knopf.svelte';
   import Schalter from '../../muster/Schalter.svelte';
+  import Einzelauswahl from '../../muster/Einzelauswahl.svelte';
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
   import Kontextmenue from '../../muster/Kontextmenue.svelte';
@@ -156,7 +157,10 @@
   // Tippen ist der Name kein Geheimnis mehr, und das erleichtert das Finden
   // der richtigen Zeile beim Ablesen.
   const alleNachNummer = $derived([...alleAromen].sort((a, b) => (a.nummer ?? 0) - (b.nummer ?? 0)));
-  const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer} — ${a.label}` })));
+  // Nur die Nummer, kein Name (Lern-Nachzug Etappe 4): der Name erscheint
+  // erst beim Auflösen. Sonst stünde er schon beim Nummer-Suchen da — und ein
+  // neues Aroma ließe sich nicht mehr blind beschreiben.
+  const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer}` })));
   const namenOptionen = $derived(alleAromen.map((a) => ({ wert: a.id, label: a.label })));
 
   // ---- Übersicht: Kennzahl-Kacheln statt roher Boxenliste --------------
@@ -410,7 +414,24 @@
     readonly formStufe: 'a' | 'b' | 'c';
   }
   let item = $state<AktuellesItem | undefined>(undefined);
-  let itemPhase = $state<'raten' | 'nummer' | 'aufgeloest'>('raten');
+  let itemPhase = $state<'raten' | 'nummer' | 'beschreiben' | 'aufgeloest'>('raten');
+  /** Beim ersten Kontakt blind gewählte Wörter — ohne Wertung (Etappe 4). */
+  let beschreibung = $state<string[]>([]);
+  const beschreibungsOptionen = BESCHREIBUNGSWOERTER.map((w) => ({ wert: w, label: w }));
+
+  function beschreibungUmschalten(wort: string) {
+    beschreibung = beschreibung.includes(wort) ? beschreibung.filter((w) => w !== wort) : [...beschreibung, wort];
+  }
+
+  /** Nach der Nummer: ein neues Aroma wird erst beschrieben, dann aufgelöst. */
+  function nachNummer() {
+    if (!tipNummer) return;
+    if (!effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt) {
+      itemPhase = 'beschreiben';
+      return;
+    }
+    void aufloesen();
+  }
   let itemBegonnenAm = $state(0);
 
   let tipFamilie = $state('');
@@ -427,6 +448,8 @@
     readonly korrekteFamilie?: string;
     /** Ein Satz dazu, was die Antwort für den Lernstand des gezogenen Aromas heißt — nur, wenn es etwas zu sagen gibt. */
     readonly lernstandHinweis?: string;
+    /** Die beim ersten Kontakt blind gewählten Wörter, zum Vergleich neben der Merkhilfe. */
+    readonly beschreibung?: readonly string[];
     /**
      * Gesetzt, wenn zum Nachriechen aufgefordert wird (domain/uebung.ts::
      * nachriechenAngebracht): die Merkhilfe des gezogenen Aromas und — bei
@@ -457,6 +480,7 @@
     tipNummer = '';
     tipGeraten = false;
     nachgerochenErledigt = false;
+    beschreibung = [];
     letzteAuswertung = undefined;
   }
 
@@ -591,6 +615,7 @@
         antwortdauerMs: Math.max(0, jetzt - itemBegonnenAm),
         unerwarteteNummer,
         geraten: tipGeraten || undefined,
+        beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
       });
 
       const beantwortet = [...durchgang.beantwortet, tatsaechlicheId];
@@ -622,6 +647,7 @@
       unerwarteteNummer,
       korrekteFamilie,
       lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
+      beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
       nachriechen: nachriechenAngebracht(auswertung, durchgang.nachgerochen)
         ? {
             merkhilfe: merkhilfeZu(tatsaechlicheOption.nummer),
@@ -1322,17 +1348,28 @@
       {/if}
     </div>
 
-    {#if itemPhase === 'nummer' || itemPhase === 'aufgeloest'}
+    {#if itemPhase === 'nummer' || itemPhase === 'beschreiben' || itemPhase === 'aufgeloest'}
       <div class="frage-block">
         {#if itemPhase === 'nummer'}
           <p class="frage-satz">Jetzt die Augen auf — welche Nummer stand auf dem Fläschchen?</p>
           <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
           <div class="knopfreihe">
-            <Knopf stufe="primaer" onKlick={aufloesen} deaktiviert={!tipNummer}>auflösen</Knopf>
+            <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
           </div>
         {:else}
           <p class="hinweis">Gelesene Nummer: {nummernOptionen.find((n) => n.wert === tipNummer)?.label ?? ''}</p>
         {/if}
+      </div>
+    {/if}
+
+    {#if itemPhase === 'beschreiben'}
+      <div class="frage-block">
+        <p class="hinweis auftrag">Neu für dich. Bevor der Name kommt — wie würdest du es beschreiben?</p>
+        <p class="frage-satz">Tipp an, was passt. Mehrere gehen, keins ist falsch.</p>
+        <Einzelauswahl optionen={beschreibungsOptionen} gewaehlt={beschreibung} onWahl={beschreibungUmschalten} />
+        <div class="knopfreihe">
+          <Knopf stufe="primaer" onKlick={aufloesen}>auflösen</Knopf>
+        </div>
       </div>
     {/if}
 
@@ -1355,8 +1392,11 @@
         {/if}
         {#if letzteAuswertung.nachriechen}
           <p class="hinweis auftrag">Riech noch einmal daran — das ist „{letzteAuswertung.tatsaechlicheOption.label}“.</p>
+          {#if letzteAuswertung.beschreibung}
+            <p class="hinweis">Deine Worte: {letzteAuswertung.beschreibung.join(', ')}</p>
+          {/if}
           {#if letzteAuswertung.nachriechen.merkhilfe}
-            <p class="hinweis">{letzteAuswertung.nachriechen.merkhilfe}</p>
+            <p class="hinweis">{letzteAuswertung.beschreibung ? 'Datenblatt: ' : ''}{letzteAuswertung.nachriechen.merkhilfe}</p>
           {/if}
           {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
             <p class="hinweis">Dein Tipp „{letzteAuswertung.nachriechen.tipp.label}“: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>

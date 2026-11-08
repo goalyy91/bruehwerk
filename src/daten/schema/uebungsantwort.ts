@@ -63,5 +63,7 @@ export const Uebungsantwort = z.object({
   unerwarteteNummer: z.boolean().default(false),
   /** "nur geraten" angetippt — ein Treffer zählte dann für die Box wie ein Teilerfolg. Fehlt bei älteren Antworten. */
   geraten: z.boolean().optional(),
+  /** Beim ersten Kontakt blind gewählte Beschreibungswörter (daten/aroma-merkhilfen.ts::BESCHREIBUNGSWOERTER) — ohne Wertung. */
+  beschreibung: z.array(z.string()).optional(),
 });
 export type Uebungsantwort = z.infer<typeof Uebungsantwort>;

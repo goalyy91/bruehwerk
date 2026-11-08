@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MERKHILFEN, MERKHILFE_MAX_ZEICHEN } from './aroma-merkhilfen';
+import { MERKHILFEN, MERKHILFE_MAX_ZEICHEN, BESCHREIBUNGSWOERTER } from './aroma-merkhilfen';
 import { DATENBLAETTER, type AromaDatenblatt } from './aroma-datenblaetter';
 
 function volltext(d: AromaDatenblatt): string {
@@ -22,6 +22,14 @@ describe('Merkhilfen — eine Zeile, nur aus dem eigenen Datenblatt', () => {
 
   it(`höchstens ${MERKHILFE_MAX_ZEICHEN} Zeichen`, () => {
     for (const [nummer, text] of Object.entries(MERKHILFEN)) expect(text.length, `Nr. ${nummer}`).toBeLessThanOrEqual(MERKHILFE_MAX_ZEICHEN);
+  });
+
+  it('jedes Beschreibungswort kommt in mindestens drei Merkhilfen vor — dieselbe Sprache wie danach', () => {
+    const texte = Object.values(MERKHILFEN).map((t) => t.toLowerCase());
+    for (const wort of BESCHREIBUNGSWOERTER) {
+      const stamm = wort.slice(0, Math.max(4, wort.length - 2));
+      expect(texte.filter((t) => t.includes(stamm)).length, wort).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('jedes tragende Wort steht (als Wortstamm) im Blatt desselben Fläschchens — nichts dazuerfunden', () => {
