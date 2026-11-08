@@ -546,6 +546,39 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
 }
 
 // ============================================================================
+// Nachriechen — nach einer falschen Antwort das Fläschchen noch einmal, jetzt
+// mit Namen (Etappe 2 des Lern-Nachzugs, docs/konzept.md "Nachriechen").
+// ============================================================================
+
+/**
+ * Höchstens so viele Riechvorgänge je Übungsdurchgang (abgefragte
+ * Fläschchen plus Nachriechen). Das Lastenheft setzte 10; angehoben auf 12,
+ * damit nach Fehlern nachgerochen werden kann, ohne die Zahl der Abfragen zu
+ * senken. Klinische Identifikationstests (Sniffin' Sticks) arbeiten mit 16
+ * Gerüchen in einer Sitzung — 12 bleibt deutlich darunter.
+ */
+export const RIECHGRENZE = 12;
+
+/**
+ * Ob nach dieser Auflösung zum Nachriechen aufgefordert wird: wenn die
+ * gezeigte Frage nicht richtig beantwortet wurde, oder die Wertung für das
+ * Aroma kein voller Treffer war (geraten, aufgefrischt). Genau dort fehlt
+ * die Verknüpfung von Name und Geruch — und eine Bezeichnung hilft dem
+ * Geruchsgedächtnis nur, wenn sie beim Riechen da ist (Frank et al. 2010).
+ * Nach einem echten Treffer wäre es ein Riechvorgang ohne Lerngewinn, der
+ * gegen die Grenze zählt.
+ */
+export function nachriechenAngebracht(
+  auswertung: Pick<AntwortAuswertung, 'ergebnis' | 'wertung'>,
+  bisherNachgerochen: number,
+  durchgangsGroesse: number = DURCHGANG_GROESSE,
+): boolean {
+  const lueckeDa =
+    auswertung.ergebnis !== 'richtig' || auswertung.wertung === 'teilweise' || auswertung.wertung === 'falsch' || auswertung.wertung === 'aufgefrischt';
+  return lueckeDa && durchgangsGroesse + bisherNachgerochen < RIECHGRENZE;
+}
+
+// ============================================================================
 // Verwechslungspaare — welche Aromen sich ein Kontrastdurchgang vornehmen
 // darf (Aromapaket, Etappe 7).
 // ============================================================================

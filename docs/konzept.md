@@ -975,7 +975,21 @@ nur Familienwissen.
 liegen 25 Sekunden, erzwungen über einen Rückwärtszähler auf dem „weiter"-Knopf — siehe
 die Ausnahme in `CLAUDE.md`. Der Zähler erzeugt kein Tempo, er verhindert es: ohne Pause
 sinkt die Wahrnehmungsschärfe messbar, und die App würde Ermüdung statt Können messen.
-Harte Obergrenze: 10 Riechvorgänge je Übungsdurchgang.
+Harte Obergrenze: 12 Riechvorgänge je Übungsdurchgang — acht Abfragen und bis zu vier
+Mal Nachriechen. *(Bis 08.11.2026: 10, aus dem Lastenheft. Angehoben, damit nach Fehlern
+nachgerochen werden kann, ohne die Abfragen zu kürzen; klinische Identifikationstests wie
+Sniffin' Sticks arbeiten mit 16 Gerüchen je Sitzung.)*
+
+**Nachriechen.** *(Nachzug 08.11.2026.)* War die Antwort falsch, ein Teilerfolg, als
+geraten markiert oder nur aufgefrischt, fordert die Auflösung auf, das Fläschchen noch
+einmal zu riechen — jetzt mit Namen. Eine Bezeichnung hilft dem Geruchsgedächtnis nur,
+wenn sie beim Einprägen da ist, nicht erst beim Abruf; gerade nach einem Fehler fehlt
+genau diese Verknüpfung. Dazu steht eine **Merkhilfe**: eine Zeile Beschreibungswörter und
+ein Anker, jedes Wort aus dem Datenblatt desselben Fläschchens (`daten/aroma-merkhilfen.ts`,
+ein Test prüft das). Bei einer Verwechslung steht die Merkhilfe des getippten Aromas
+daneben — der Vergleich zweier ähnlicher Gerüche ist, was Unterscheiden lehrt. Geschichte,
+Gewinnung und Chemie bleiben im Datenblatt. Die Riechpause beginnt erst nach dem
+Nachriechen; nach einem echten Treffer wird nicht nachgerochen.
 
 **Kontrastdurchgang** — die gezielte Übung gegen dokumentierte Verwechslungen, ab drei
 Verwechslungen eines Paares angeboten. Hier gilt eine bewusste, eng begrenzte Ausnahme

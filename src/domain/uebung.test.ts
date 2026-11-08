@@ -11,6 +11,8 @@ import {
   werteKontrastAus,
   KONTRASTDURCHGANG_SCHWELLE,
   reverseVorschlag,
+  nachriechenAngebracht,
+  RIECHGRENZE,
   type AromaOption,
   type GesamtStand,
   type TrefferStand,
@@ -573,5 +575,30 @@ describe('reverseVorschlag — schwierigstes eingefuehrtes Aroma fuer die Uebers
     );
     expect(reverseVorschlag(alle, staende, JETZT, () => 0)?.id).toBe('a2');
     expect(reverseVorschlag(alle, staende, JETZT, () => 0.99)?.id).toBe('a1');
+  });
+});
+
+// ============================================================================
+// Nachriechen (Etappe 2 des Lern-Nachzugs)
+// ============================================================================
+
+describe('nachriechenAngebracht — nach Fehlern, solange die Riechgrenze reicht', () => {
+  it('nach einem echten Treffer nicht — das wäre ein Riechvorgang ohne Lerngewinn', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'richtig' }, 0)).toBe(false);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'ohneAussage' }, 0)).toBe(false);
+  });
+
+  it('nach falsch, teilweise, geraten oder aufgefrischt ja', () => {
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'falsch' }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'teilweise', wertung: 'teilweise' }, 0)).toBe(true);
+    expect(nachriechenAngebracht({ ergebnis: 'richtig', wertung: 'teilweise' }, 0)).toBe(true); // als geraten markiert
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'richtig' }, 0)).toBe(true); // schwerere Form verfehlt, Stufe gehalten
+    expect(nachriechenAngebracht({ ergebnis: 'falsch', wertung: 'aufgefrischt' }, 0)).toBe(true);
+  });
+
+  it(`höchstens ${RIECHGRENZE - DURCHGANG_GROESSE}-mal je Durchgang: 8 Abfragen + Nachriechen ≤ ${RIECHGRENZE}`, () => {
+    const fehler = { ergebnis: 'falsch' as const, wertung: 'falsch' as const };
+    expect(nachriechenAngebracht(fehler, RIECHGRENZE - DURCHGANG_GROESSE - 1)).toBe(true);
+    expect(nachriechenAngebracht(fehler, RIECHGRENZE - DURCHGANG_GROESSE)).toBe(false);
   });
 });

@@ -49,6 +49,13 @@ export const Uebungsdurchgang = z.object({
   zusatz: z.array(Id).default([]),
   /** Teilmenge von `abgefragt`, in Ziehreihenfolge, die schon dran war. */
   beantwortet: z.array(Id).default([]),
+  /**
+   * Wie oft nach einer Auflösung noch einmal gerochen wurde — zählt gegen die
+   * Riechgrenze (domain/uebung.ts::RIECHGRENZE). Gespeichert statt im
+   * Bildschirm gehalten, damit ein Neuladen mitten im Durchgang die Grenze
+   * nicht zurücksetzt.
+   */
+  nachgerochen: z.number().int().nonnegative().default(0),
   begonnenAm: Zeitpunkt,
   abgeschlossenAm: Zeitpunkt.optional(),
 });

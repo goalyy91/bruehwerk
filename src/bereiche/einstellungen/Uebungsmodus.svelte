@@ -49,8 +49,9 @@
   // suchst das Fläschchen gezielt (Name + Nummer stehen offen), das ist der
   // Witz der Übung.
   //
-  // Bekannte Lücke: die harte Obergrenze von 10 Riechvorgängen (Lastenheft
-  // Abschnitt 2) gilt hier nur je einzelnem Durchgang (8 normal, 2 Kontrast,
+  // Bekannte Lücke: die harte Obergrenze von 12 Riechvorgängen
+  // (domain/uebung.ts::RIECHGRENZE, inklusive Nachriechen) gilt hier nur je
+  // einzelnem Durchgang (8 normal + bis zu 4 Nachriechen, 2 Kontrast,
   // 1 Reverse) — nicht kumulativ über mehrere hintereinander gestartete
   // Durchgänge einer Sitzung. Eine sitzungsweite Zählung bräuchte einen
   // eigenen Zustand über Durchgänge hinweg, den es bewusst noch nicht gibt.
@@ -64,6 +65,7 @@
     planeDurchgang,
     effektiverZustand,
     werteAntwortAus,
+    nachriechenAngebracht,
     verwechslungspaare,
     werteKontrastAus,
     reverseVorschlag,
@@ -78,6 +80,7 @@
   import { waehleKennzahlen, type Kennzahl } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
+  import { merkhilfeZu } from '../../daten/aroma-merkhilfen';
   import Kopfzeile from '../../muster/Kopfzeile.svelte';
   import AuswahlListe from '../../muster/AuswahlListe.svelte';
   import Segment from '../../muster/Segment.svelte';
@@ -290,6 +293,7 @@
       abgefragt: plan.abgefragt.map((a) => a.id),
       zusatz: plan.zusatz.map((a) => a.id),
       beantwortet: [],
+      nachgerochen: 0,
       begonnenAm: jetzt,
     };
     try {
@@ -315,6 +319,7 @@
       abgefragt: [kontrastKandidat.aId, kontrastKandidat.bId],
       zusatz: [],
       beantwortet: [],
+      nachgerochen: 0,
       begonnenAm: jetzt,
     };
     try {
@@ -395,7 +400,18 @@
     readonly korrekteFamilie?: string;
     /** Ein Satz dazu, was die Antwort für den Lernstand des gezogenen Aromas heißt — nur, wenn es etwas zu sagen gibt. */
     readonly lernstandHinweis?: string;
+    /**
+     * Gesetzt, wenn zum Nachriechen aufgefordert wird (domain/uebung.ts::
+     * nachriechenAngebracht): die Merkhilfe des gezogenen Aromas und — bei
+     * einer echten Verwechslung — die des getippten daneben.
+     */
+    readonly nachriechen?: {
+      readonly merkhilfe?: string;
+      readonly tipp?: { readonly label: string; readonly merkhilfe?: string };
+    };
   }
+  /** true, sobald "nachgerochen" angetippt wurde — erst dann läuft die Riechpause. */
+  let nachgerochenErledigt = $state(false);
   let letzteAuswertung = $state<LetzteAuswertung | undefined>(undefined);
 
   function naechstesItemVorbereiten() {
@@ -413,6 +429,7 @@
     tipAroma = '';
     tipNummer = '';
     tipGeraten = false;
+    nachgerochenErledigt = false;
     letzteAuswertung = undefined;
   }
 
@@ -578,11 +595,20 @@
       unerwarteteNummer,
       korrekteFamilie,
       lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
+      nachriechen: nachriechenAngebracht(auswertung, durchgang.nachgerochen)
+        ? {
+            merkhilfe: merkhilfeZu(tatsaechlicheOption.nummer),
+            tipp: verwechseltMit(tipAroma, tatsaechlicheId),
+          }
+        : undefined,
     };
     itemPhase = 'aufgeloest';
     // Keine Pause nach dem letzten Item — niemand riecht danach noch etwas,
     // fuer das sich die Nase erholen muesste.
-    if (index + 1 < DURCHGANG_GROESSE) starteRiechpause();
+    // Mit Nachriechen startet die Pause erst nach dem zweiten Riechen (siehe
+    // nachgerochen()) — sonst laege zwischen ihm und dem naechsten Fläschchen
+    // nur der Rest der 25 Sekunden.
+    if (!letzteAuswertung.nachriechen && index + 1 < DURCHGANG_GROESSE) starteRiechpause();
   }
 
   /**
@@ -601,6 +627,25 @@
     if (a.wertung === 'ohneAussage') return `Zählt nicht für „${name}“: das Aroma ist schon weiter als diese Frage.`;
     if (tipGeraten && a.ergebnis === 'richtig') return 'Als geraten markiert — zählt wie ein Teilerfolg.';
     return undefined;
+  }
+
+  function verwechseltMit(getipptId: string, tatsaechlicheId: string): { label: string; merkhilfe?: string } | undefined {
+    if (!getipptId || getipptId === tatsaechlicheId) return undefined;
+    const getippt = alleAromen.find((a) => a.id === getipptId);
+    return getippt ? { label: getippt.label, merkhilfe: merkhilfeZu(getippt.nummer) } : undefined;
+  }
+
+  async function nachgerochen() {
+    if (!durchgang || nachgerochenErledigt) return;
+    nachgerochenErledigt = true;
+    const aktualisiert: SammlungWert['uebungsdurchgang'] = { ...durchgang, nachgerochen: durchgang.nachgerochen + 1 };
+    try {
+      await schreiben('uebungsdurchgang', aktualisiert);
+      durchgang = aktualisiert;
+    } catch (e) {
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+    if (index + 1 < DURCHGANG_GROESSE) starteRiechpause();
   }
 
   function weiterNachAufloesung() {
@@ -784,6 +829,7 @@
       abgefragt: [reverseAromaId],
       zusatz: [],
       beantwortet: [],
+      nachgerochen: 0,
       begonnenAm: jetzt,
     };
     try {
@@ -1252,6 +1298,15 @@
         {#if letzteAuswertung.lernstandHinweis}
           <p class="hinweis">{letzteAuswertung.lernstandHinweis}</p>
         {/if}
+        {#if letzteAuswertung.nachriechen}
+          <p class="hinweis auftrag">Riech noch einmal daran — das ist „{letzteAuswertung.tatsaechlicheOption.label}“.</p>
+          {#if letzteAuswertung.nachriechen.merkhilfe}
+            <p class="hinweis">{letzteAuswertung.nachriechen.merkhilfe}</p>
+          {/if}
+          {#if letzteAuswertung.nachriechen.tipp?.merkhilfe}
+            <p class="hinweis">Dein Tipp „{letzteAuswertung.nachriechen.tipp.label}“: {letzteAuswertung.nachriechen.tipp.merkhilfe}</p>
+          {/if}
+        {/if}
         {#if letzteAuswertung.unerwarteteNummer}
           <p class="hinweis">Dieses Fläschchen gehörte nicht zu den zwölf, die für diesen Durchgang bereitlagen — trotzdem gewertet.</p>
         {/if}
@@ -1264,9 +1319,13 @@
           </p>
         {/if}
         <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
-            {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
-          </Knopf>
+          {#if letzteAuswertung.nachriechen && !nachgerochenErledigt}
+            <Knopf stufe="primaer" onKlick={nachgerochen}>nachgerochen</Knopf>
+          {:else}
+            <Knopf stufe="primaer" onKlick={weiterNachAufloesung} deaktiviert={pauseRest > 0}>
+              {pauseRest > 0 ? `weiter (${pauseRest})` : 'weiter'}
+            </Knopf>
+          {/if}
           {#if letzteAuswertung.tatsaechlicheOption.nummer !== undefined && datenblattZu(letzteAuswertung.tatsaechlicheOption.nummer)}
             <Knopf onKlick={() => (datenblatt = datenblattZu(letzteAuswertung!.tatsaechlicheOption.nummer!))}>Datenblatt ansehen</Knopf>
           {/if}
@@ -1600,6 +1659,11 @@
     color: var(--gedaempft);
     font-family: var(--schrift-sans);
     font-size: var(--fs-satz);
+  }
+  /* Die Aufforderung zum Nachriechen ist eine Handlung, kein Nebenbei — sie
+     steht in Textfarbe über der gedämpften Merkhilfe. */
+  .hinweis.auftrag {
+    color: var(--satz);
   }
   /* Ende-Screen (Rueckmeldung 2026-09-18: vorher ueber muster/Werteliste.svelte
      gebaut — ein Muster fuer Label+Zahl+Einheit, falsch fuer eine Ergebnis-
