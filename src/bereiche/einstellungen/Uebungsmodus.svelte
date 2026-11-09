@@ -1,3 +1,17 @@
+<script lang="ts" module>
+  /**
+   * Übergabe über den Neu-Mount hinweg (Rahmen.svelte remountet bei jedem
+   * Routenwechsel, auch 'uebung' → 'uebungLaufend'). Alles, was beim Start
+   * einen Durchgang schreibt, findet die neue Instanz in der Datenbank
+   * wieder (versucheWiederaufnahme). "Reverse üben" ohne Vorschlag legt aber
+   * erst nach der Aromawahl einen Durchgang an — bis dahin gab es nichts
+   * wiederzufinden, und die neue Instanz sprang sofort zurück auf die
+   * Übersicht (Rückmeldung 08.11.2026, "Reverse üben" tat scheinbar nichts).
+   * Wird beim ersten Lesen verbraucht.
+   */
+  let angeforderteAktivitaet: 'reverse' | undefined;
+</script>
+
 <script lang="ts">
   // Uebungsmodus — Aromapaket, Etappe 6 (Neubau nach Lastenheft, docs/konzept.md
   // "Übungsmodus"). Ersetzt die erste Fassung (offene Nummer vor der Antwort)
@@ -93,6 +107,7 @@
   } from '../../domain/uebungsauswertung';
   import { nummernAusKaffees } from '../../domain/kaffeebruecke';
   import { meilensteinSatz } from '../../domain/meilenstein';
+  import { durchgangsRueckblick } from '../../domain/rueckblick';
   import { waehleKennzahlen } from '../../domain/hinweise';
   import { uebungsBegruessung } from '../../domain/begruessung';
   import { datenblattZu, type AromaDatenblatt } from '../../daten/aroma-datenblaetter';
@@ -112,6 +127,7 @@
     aktiv,
     onZurueck,
     onOeffnenStatistik,
+    onStatistikNachDurchgang,
     kontrastAnfrage = false,
     onKontrastAnfrageAngenommen,
   }: {
@@ -119,6 +135,13 @@
     aktiv: boolean;
     onZurueck: () => void;
     onOeffnenStatistik: () => void;
+    /**
+     * Vom Ende einer Aktivität in die Statistik — ERSETZT die laufende
+     * Aktivität im Verlauf, statt eine Ebene draufzulegen: der Durchgang ist
+     * vorbei, das Zurück aus der Statistik führt deshalb auf die Übersicht
+     * der Aromaschule, nicht noch einmal auf den Ende-Bildschirm.
+     */
+    onStatistikNachDurchgang: () => void;
     /** Wunsch aus der Statistik: "als Kontrast üben" — wird einmal angenommen und gestartet. */
     kontrastAnfrage?: boolean;
     onKontrastAnfrageAngenommen?: () => void;
@@ -1082,9 +1105,40 @@
     });
   });
 
+  /** Bis zu drei Sätze, was der Durchgang gebracht hat (domain/rueckblick.ts) — gleiche Datenbasis wie der Meilenstein. */
+  const rueckblick = $derived.by(() => {
+    const aktuellerDurchgang = durchgang;
+    if (!aktuellerDurchgang || aktuellerDurchgang.status !== 'abgeschlossen' || aktuellerDurchgang.art !== 'normal') return [];
+    const alleAntwortenDiesesSets = bestand.uebungsantworten.filter((a) => a.setId === aktuellerDurchgang.setId);
+    return durchgangsRueckblick({
+      durchgangAntworten: alleAntwortenDiesesSets.filter((a) => a.durchgangId === aktuellerDurchgang.id),
+      vorherigeAntworten: alleAntwortenDiesesSets.filter((a) => a.durchgangId !== aktuellerDurchgang.id),
+      labelVon: (id) => alleAromen.find((a) => a.id === id)?.label ?? id,
+      familieVon: (id) => familieVon(alleAromen.find((a) => a.id === id)?.kategorieId) || undefined,
+    });
+  });
+
+  /** Ende → Statistik: die abgeschlossene Aktivität wird ersetzt, nicht überlagert (siehe Prop). */
+  function zurStatistik() {
+    verlassen = true;
+    onStatistikNachDurchgang();
+  }
+
   function datenblattVorhanden(nummer: number | undefined): boolean {
     return nummer !== undefined && datenblattZu(nummer) !== undefined;
   }
+
+  /**
+   * Gesetzt, sobald diese Instanz die laufende Aktivität verlässt. Nicht
+   * reaktiv, nur ein Riegel: zurueckZurUebersicht() leert `durchgang`, bevor
+   * das (asynchrone) history.back() greift — ohne Riegel sah der
+   * Wiederaufnahme-Effekt darunter `aktiv && !durchgang`, fand nichts
+   * Laufendes und rief ein ZWEITES Zurück auf. Bei Kontrast, Reverse und
+   * "abbrechen" landete man so nicht auf der Übersicht der Aromaschule,
+   * sondern einen Schritt dahinter — meist auf dem Startbildschirm der App
+   * (Rückmeldung 08.11.2026).
+   */
+  let verlassen = false;
 
   /**
    * Verlässt die laufende Aktivität — dieselbe Bewegung wie der
@@ -1094,6 +1148,7 @@
    * (ohne eigene Tiefe) über elternVon.
    */
   function zurueckZurUebersicht() {
+    verlassen = true;
     durchgang = undefined;
     item = undefined;
     kontrastIndex = 0;
@@ -1128,6 +1183,7 @@
     reverseAromaId = '';
     reverseEinschaetzung = '';
     phase = 'reverse';
+    angeforderteAktivitaet = 'reverse';
     navigation.gehe({ name: 'uebungLaufend' });
   }
 
@@ -1175,6 +1231,15 @@
       (bisher, d) => (!bisher || d.begonnenAm > bisher.begonnenAm ? d : bisher),
       undefined,
     );
+    const angefordert = angeforderteAktivitaet;
+    angeforderteAktivitaet = undefined;
+    if (!laufender && angefordert === 'reverse') {
+      reverseSchritt = 'wahl';
+      reverseAromaId = '';
+      reverseEinschaetzung = '';
+      phase = 'reverse';
+      return;
+    }
     if (!laufender) {
       // Kein laufender Durchgang mehr — evtl. gerade eben (normal) fertig
       // geworden, aber durch einen Neu-Mount (z. B. Bildschirmsperre) noch
@@ -1204,6 +1269,7 @@
       // Kein Treffer — z. B. ein wiederhergestellter Verlaufseintrag nach
       // echtem Prozess-Neustart, fuer den auch die IndexedDB nichts
       // Laufendes mehr kennt. Sauber zurueck statt eines leeren Bildschirms.
+      verlassen = true;
       onZurueck();
       return;
     }
@@ -1229,8 +1295,13 @@
     }
   }
 
+  // Erst, wenn der Bestand geladen ist — nach einem Neuladen mitten im
+  // Durchgang sah die Suche sonst eine leere Datenbank, fand nichts
+  // Laufendes und schickte zurück auf die Übersicht. `untrack`, damit
+  // spätere Schreibvorgänge (z. B. "Reverse üben" vor der Aromawahl, ganz
+  // ohne Durchgang) die Suche nicht erneut auslösen.
   $effect(() => {
-    if (aktiv && !durchgang) versucheWiederaufnahme();
+    if (aktiv && !durchgang && !verlassen && bestand.geladen) untrack(versucheWiederaufnahme);
   });
 
   // ---- Datenblatt-Overlay: Hardware-Zurück schliesst nur das Overlay ------
@@ -1238,8 +1309,14 @@
   // 'uebungLaufend'-Route, weil das Overlay keinen eigenen Verlaufs-Eintrag
   // hatte.) navigation.ueberlagerungOeffnen()/-Schliessen() (navigation.svelte.ts)
   // geben ihm genau einen.
+  // Nur auf offen/zu reagieren, nicht auf das Blatt selbst: ein Verweis im
+  // Datenblatt (onVerweis) tauscht das Blatt aus, und ein Effekt auf
+  // `datenblatt` lief dabei ab und neu an — history.back() und pushState
+  // direkt hintereinander, das Back kam danach an und schloss das eben
+  // geöffnete Verweis-Blatt wieder.
+  const datenblattOffen = $derived(datenblatt !== undefined);
   $effect(() => {
-    if (!datenblatt) return;
+    if (!datenblattOffen) return;
     navigation.ueberlagerungOeffnen();
     let ueberHardwareZurueck = false;
     const schliessen = () => {
@@ -1591,6 +1668,7 @@
             <Knopf stufe="primaer" onKlick={kontrastNachgerochen}>nachgerochen</Knopf>
           {:else if kontrastLetztesPaar}
             <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+            <Knopf stufe="sekundaer" onKlick={zurStatistik}>zur Statistik</Knopf>
           {:else}
             <Knopf stufe="primaer" onKlick={kontrastWeiter} deaktiviert={pauseRest > 0}>
               nächstes Paar
@@ -1637,9 +1715,10 @@
           <Knopf stufe="primaer" onKlick={reverseAufloesen} deaktiviert={!reverseEinschaetzung}>fertig</Knopf>
         </div>
       {:else if reverseSchritt === 'fertig'}
-        <p class="frage-satz">Selbsteinschätzung gespeichert — ohne Wirkung auf die Boxen, reine Übung.</p>
+        <p class="frage-satz">Notiert — reine Übung, an deinem Lernplan ändert das nichts.</p>
         <div class="knopfreihe">
           <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+          <Knopf stufe="sekundaer" onKlick={zurStatistik}>zur Statistik</Knopf>
         </div>
       {/if}
     </div>
@@ -1658,6 +1737,11 @@
     <div class="block">
       <p class="ende-kopf">Heute gerochen — {richtigAnzahl} von {rundenZeilen.length} getroffen.</p>
       {#if meilenstein}<p class="ende-meilenstein">{meilenstein}</p>{/if}
+      {#if rueckblick.length > 0}
+        <ul class="rueckblick">
+          {#each rueckblick as satz (satz)}<li>{satz}</li>{/each}
+        </ul>
+      {/if}
       <Blattliste>
         {#each rundenZeilen as zeile, index (index)}
           {#if datenblattVorhanden(zeile.nummer)}
@@ -1675,6 +1759,7 @@
     </div>
     <div class="knopfreihe">
       <Knopf stufe="primaer" onKlick={zurueckZurUebersicht}>zur Übersicht</Knopf>
+      <Knopf stufe="sekundaer" onKlick={zurStatistik}>zur Statistik</Knopf>
     </div>
   {/if}
 {/if}
@@ -2033,6 +2118,23 @@
     font-size: var(--fs-satz);
     color: var(--gedaempft);
     margin: 0 0 var(--r3);
+  }
+  /* Rückblick am Ende — Sätze, keine Kennzahlen; derselbe ruhige Ton wie
+     die Einordnung auf der Übersicht. */
+  .rueckblick {
+    list-style: none;
+    margin: 0 0 var(--r4);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--r2);
+  }
+  .rueckblick li {
+    font-size: var(--fs-bedienwort);
+    line-height: 1.5;
+    color: var(--satz);
+    padding-left: var(--r3);
+    border-left: 2px solid var(--spur);
   }
   .runden-zeile {
     display: flex;

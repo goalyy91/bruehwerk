@@ -249,6 +249,10 @@
         aktiv={route.name === 'uebungLaufend'}
         onZurueck={() => navigation.zurueck()}
         onOeffnenStatistik={() => navigation.gehe({ name: 'uebungStatistik' })}
+        onStatistikNachDurchgang={() => {
+          navigation.richtung = 'vor';
+          navigation.ersetze({ name: 'uebungStatistik' });
+        }}
         {kontrastAnfrage}
         onKontrastAnfrageAngenommen={() => (kontrastAnfrage = false)}
       />

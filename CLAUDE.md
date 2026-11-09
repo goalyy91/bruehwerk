@@ -369,6 +369,27 @@ sind ausschließlich aus `uebungsantwort` rekonstruiert, nie aus einem
 mitgeführten Zustand — bewusst **kein** „sitzt jetzt sicher" (Box-Aufstieg),
 weil der Box-Stand vor dem Durchgang nirgends gespeichert ist.
 
+Darunter steht seit 08.11.2026 ein **Rückblick** (`domain/rueckblick.ts`):
+höchstens drei Sätze, wie sich die Nase entwickelt — „frei benannt“, „sitzt
+wieder“, „die Richtung stimmte“, eine wiederholte Verwechslung. Dieselben
+Regeln wie beim Meilenstein, plus: **keine Technik im Text** (keine Boxen,
+Stufen, Fälligkeiten), und der Vergleich mit dem eigenen Schnitt erscheint
+**nur nach oben**. Bewusst disjunkt zum Meilenstein, damit nichts doppelt
+steht.
+
+### Zurück in der Aromaschule — `Uebungsmodus.svelte` (08.11.2026)
+
+Zurück aus einer Aktivität führt **auf die Übersicht der Aromaschule, nie
+direkt auf den Startbildschirm**. Der Fallstrick: `Rahmen.svelte` remountet
+bei jedem Routenwechsel, und die Wiederaufnahme sucht beim Mount nach einem
+laufenden Durchgang. Leert das Verlassen `durchgang`, bevor das asynchrone
+`history.back()` greift, sah der Effekt „nichts läuft“ und schickte ein
+**zweites** Zurück hinterher. Der Riegel `verlassen` verhindert das; „Reverse
+üben“ ohne Vorschlag (noch kein Durchgang in der Datenbank) wird über eine
+Modul-Variable über den Remount gereicht. Ende → „zur Statistik“ **ersetzt**
+die Aktivität im Verlauf, damit Zurück aus der Statistik auf der Übersicht
+landet statt erneut auf dem Ende-Bildschirm.
+
 ---
 
 ## Was bewusst nicht gebaut wird
