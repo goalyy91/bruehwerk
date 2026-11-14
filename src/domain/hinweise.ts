@@ -20,7 +20,7 @@
  */
 
 /** Reihenfolge ist Bedeutung — Index 0 verdrängt jede andere Art zuerst. */
-export type MeldungsArt = 'uebungFaellig' | 'knapp' | 'alt' | 'restUnbekannt' | 'dialinOffen' | 'beobachtung';
+export type MeldungsArt = 'sicherungWartet' | 'uebungFaellig' | 'knapp' | 'alt' | 'restUnbekannt' | 'dialinOffen' | 'beobachtung';
 
 /**
  * "uebungFaellig" auf Position 0 (Aromapaket, Etappe 8) — verdrängt an einem
@@ -29,7 +29,13 @@ export type MeldungsArt = 'uebungFaellig' | 'knapp' | 'alt' | 'restUnbekannt' | 
  * Erinnerung liegen lässt, kostet Trainingsfortschritt, der sich nicht
  * nachholen lässt, während "knapp" noch ein paar Tage Luft hat.
  */
-const PRIORITAET: readonly MeldungsArt[] = ['uebungFaellig', 'knapp', 'alt', 'restUnbekannt', 'dialinOffen', 'beobachtung'];
+/*
+ * "sicherungWartet" steht noch davor (Cloud-Sicherung, 14.11.2026): sie
+ * erscheint erst nach drei Tagen ohne gelungene Sicherung (daten/cloud.ts::
+ * wartetSeit) — dann ist sie die eine Meldung, deren Nichtbeachtung sich
+ * erst beim Datenverlust zeigt, wenn es zu spät ist.
+ */
+const PRIORITAET: readonly MeldungsArt[] = ['sicherungWartet', 'uebungFaellig', 'knapp', 'alt', 'restUnbekannt', 'dialinOffen', 'beobachtung'];
 
 export function prioritaetsRang(art: MeldungsArt): number {
   const index = PRIORITAET.indexOf(art);

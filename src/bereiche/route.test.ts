@@ -40,6 +40,7 @@ const ALLE_ROUTEN: Route[] = [
   { name: 'uebungLaufend' },
   { name: 'personen' },
   { name: 'sicherungen' },
+  { name: 'cloudSicherung' },
 ];
 
 describe('route — Hin- und Rueckweg', () => {

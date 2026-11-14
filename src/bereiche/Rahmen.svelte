@@ -51,6 +51,7 @@
   import Getraenkeblatt from './getraenke/Getraenkeblatt.svelte';
   import Personen from './einstellungen/Personen.svelte';
   import Sicherungen from './einstellungen/Sicherungen.svelte';
+  import CloudSicherung from './einstellungen/CloudSicherung.svelte';
   import BestellungAufnehmen from './bar/BestellungAufnehmen.svelte';
   import BestellungPlan from './bar/BestellungPlan.svelte';
   import BestellungAbarbeiten from './bar/BestellungAbarbeiten.svelte';
@@ -141,6 +142,7 @@
         onOeffnenBeobachtungen={() => navigation.gehe({ name: 'beobachtungen' })}
         onOeffnenShot={(kaffeeId, profilId) => navigation.gehe({ name: 'shot', kaffeeId, profilId })}
         onOeffnenUebung={() => navigation.gehe({ name: 'uebung' })}
+        onOeffnenCloud={() => navigation.gehe({ name: 'cloudSicherung' })}
       />
     {:else if route.name === 'bestellungAufnehmen'}
       <BestellungAufnehmen
@@ -239,6 +241,7 @@
         onOeffnenGetraenke={() => navigation.gehe({ name: 'getraenke' })}
         onOeffnenPersonen={() => navigation.gehe({ name: 'personen' })}
         onOeffnenSicherungen={() => navigation.gehe({ name: 'sicherungen' })}
+        onOeffnenCloud={() => navigation.gehe({ name: 'cloudSicherung' })}
       />
     {:else if route.name === 'verhalten'}
       <Verhalten onZurueck={() => navigation.zurueck()} />
@@ -268,6 +271,8 @@
       <Personen onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'sicherungen'}
       <Sicherungen onZurueck={() => navigation.zurueck()} />
+    {:else if route.name === 'cloudSicherung'}
+      <CloudSicherung onZurueck={() => navigation.zurueck()} />
     {:else if route.name === 'geraete'}
       <Geraete
         onZurueck={() => navigation.zurueck()}

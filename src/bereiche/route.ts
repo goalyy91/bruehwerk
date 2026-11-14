@@ -49,7 +49,8 @@ export type Route =
   | { name: 'uebungStatistik' }
   | { name: 'uebungLaufend' }
   | { name: 'personen' }
-  | { name: 'sicherungen' };
+  | { name: 'sicherungen' }
+  | { name: 'cloudSicherung' };
 
 export const START: Route = { name: 'bar' };
 
@@ -131,6 +132,8 @@ export function zuPfad(route: Route): string {
       return '/einstellungen/personen';
     case 'sicherungen':
       return '/einstellungen/sicherungen';
+    case 'cloudSicherung':
+      return '/einstellungen/cloud';
   }
 }
 
@@ -183,6 +186,7 @@ export function ausPfad(pfad: string): Route {
     if (t.length === 3 && t[1] === 'uebung' && t[2] === 'laufend') return { name: 'uebungLaufend' };
     if (t.length === 2 && t[1] === 'personen') return { name: 'personen' };
     if (t.length === 2 && t[1] === 'sicherungen') return { name: 'sicherungen' };
+    if (t.length === 2 && t[1] === 'cloud') return { name: 'cloudSicherung' };
     if (t.length === 2 && t[1] === 'geraete') return { name: 'geraete' };
     if (t.length === 2 && t[1] === 'verhalten') return { name: 'verhalten' };
     if (t.length === 4 && t[1] === 'geraete' && t[2] === 'bruehgeraet' && t[3] === 'temperatur') {
@@ -257,6 +261,7 @@ export function elternVon(route: Route): Route | undefined {
     case 'beobachtungen':
     case 'personen':
     case 'sicherungen':
+    case 'cloudSicherung':
       return { name: 'einstellungen' };
     case 'uebungStatistik':
     case 'uebungLaufend':
@@ -325,6 +330,7 @@ export function tabVon(route: Route): Bereich {
     case 'tempReferenz':
     case 'personen':
     case 'sicherungen':
+    case 'cloudSicherung':
     case 'getraenke':
     case 'getraenk':
     case 'getraenkNeu':

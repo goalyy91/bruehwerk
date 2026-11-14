@@ -47,6 +47,19 @@ describe('Sicherung vor der Aktualisierung', () => {
     expect(await alle('muehle')).toHaveLength(1);
   });
 
+  it('setzt Vorhandenes zurueck, laesst aber Neues seit der Sicherung stehen — so sagt es der Hinweis in Sicherungen.svelte', async () => {
+    await schreiben('muehle', MUEHLE_SCULPTOR);
+    const eintrag = await schnappschussAnlegen('vor der Aktualisierung');
+
+    await schreiben('muehle', { ...MUEHLE_SCULPTOR, name: 'umbenannt' });
+    await schreiben('muehle', MUEHLE_K6);
+
+    await schnappschussZurueckspielen(eintrag.id);
+    const nachher = await alle('muehle');
+    expect(nachher.find((m) => m.id === MUEHLE_SCULPTOR.id)?.name).toBe(MUEHLE_SCULPTOR.name);
+    expect(nachher.some((m) => m.id === MUEHLE_K6.id)).toBe(true);
+  });
+
   /**
    * Der Grund, warum der Store ausserhalb von SAMMLUNGEN liegt (db.ts): laege
    * er drin, wuerde das Zurueckspielen die uebrigen Sicherungen mit dem alten

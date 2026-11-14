@@ -37,6 +37,7 @@ import {
   Uebungsantwort,
   Uebungsdurchgang,
 } from './schema';
+import { aenderungMelden } from './aenderung';
 
 /** Wert-Typ je Sammlung, abgeleitet aus WertVon (db.ts) statt neu getippt. */
 export type SammlungWert = { [S in Sammlung]: WertVon<S> };
@@ -96,6 +97,7 @@ export async function schreiben<S extends Sammlung>(sammlung: S, wert: SammlungW
   if (!ergebnis.success) throw new SchreibFehler(sammlung, ergebnis.error);
   const db = await oeffneDB();
   await db.put(sammlung, ergebnis.data);
+  aenderungMelden();
 }
 
 /** Liest einen Datensatz. undefined, wenn er nicht existiert; LeseFehler, wenn er dem Schema nicht mehr entspricht. */
@@ -125,6 +127,7 @@ export async function alle<S extends Sammlung>(sammlung: S): Promise<SammlungWer
 export async function loeschen(sammlung: Sammlung, id: string): Promise<void> {
   const db = await oeffneDB();
   await db.delete(sammlung, id);
+  aenderungMelden();
 }
 
 export async function zaehlen(sammlung: Sammlung): Promise<number> {

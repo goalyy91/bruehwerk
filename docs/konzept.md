@@ -939,6 +939,22 @@ Familie, die Familienform nur eine Familie.
   Aroma nicht.
 - **Schwerere Form:** gewertet nach den Regeln der eigenen Stufe — ein Aroma auf A, frei
   abgerufen mit einem Tipp aus der richtigen Familie, ist für A ein Treffer.
+- **Schwerere Form, Aroma beim Namen getroffen, Stufe A** *(Nachzug 14.11.2026)*: direkt
+  auf B, und dieser Treffer zählt als erster der zwei zeitlich getrennten für B → C.
+  Familie und Aroma zufällig zu treffen liegt bei etwa 1 zu 60 bis 1 zu 100 — mehr Beleg
+  als drei Familientreffer, die über den Namen nichts sagen. **Nie direkt auf C:** die
+  Prüfung über mehrere Tage macht aus einem guten Moment ein sitzendes Aroma. „Eher
+  geraten" beschleunigt nicht.
+
+**Freiwillig mitbenennen** *(Nachzug 14.11.2026)*. Ein Platz, der nur die Familie fragt,
+bietet nach der Familienwahl „auch das Aroma benennen" an — dieselbe Auswahl wie auf
+Stufe B, also nur die Aromen der eben gewählten Familie (die Einschränkung kommt aus der
+eigenen Antwort, nicht aus dem Durchgang). Wer es nutzt, hat eine Aroma-in-Familie-Frage
+beantwortet und wird genau so gewertet, inklusive eines Teilerfolgs bei falschem Namen
+auf einem Aroma ab Stufe B: die Box ist der Wiederholungsplan, keine Strafe, und wer
+unsicher ist, lässt den Namen weg. Auf Stufe A kostet ein falscher Name nichts — dort
+zählt nur die Familie. Ohne Antippen bleibt der Platz so kurz wie vorher; die Antwort
+trägt `freiwillig: true`.
 
 Angezeigt wird weiterhin das Urteil über die *gezeigte* Frage; ein Satz darunter sagt,
 wenn die Antwort für den Lernstand nicht zählt.
@@ -1329,14 +1345,14 @@ Aber sie ist auch eine Zeile, die man nach dem zwanzigsten Mal nicht mehr liest.
 
 Deine Backup-Anforderung wird auf **zwei unabhängigen Wegen** erfüllt, weil ein einzelner Weg immer einen Anbieter voraussetzt, der in fünf Jahren noch existiert:
 
-- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. Kandidaten mit kostenfreier Stufe: Supabase, Cloudflare D1, Firebase. Die genauen Limits prüfe ich vor der Umsetzung — *ein Punkt gehört jetzt schon auf den Tisch:* manche kostenfreien Stufen pausieren Projekte bei Inaktivität. Bei täglicher Nutzung ist das unkritisch, aber es ist ein Auswahlkriterium.
+- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. *(Nachzug 14.11.2026: gewählt ist ein privates GitHub-Repo — kostenlos, ohne Stilllegung bei Inaktivität, ohne eigenen Server, jede Sicherung ein Commit. Supabase schied aus, weil es kostenlose Projekte nach 7 Tagen geringer Aktivität stilllegt; Vercel Blob wegen knapper Schreibkontingente. Umsetzung: `daten/cloud.ts`, Bildschirm Einstellungen → Daten → Cloud-Sicherung.)*
 - **Manueller Export als Datei** — ein Tap, vollständiger Bestand, kein Backend beteiligt. Der Weg, der auch dann noch funktioniert, wenn alles andere weg ist.
 
 Die Datenmenge ist unkritisch: fünf Shots am Tag ergeben rund 1.800 Datensätze im Jahr, also wenige hundert Kilobyte. Es gibt keinen Grund, jemals etwas zu löschen.
 
 Zwei Zustände sind aus der Gestaltung mitgekommen, weil ein Alltagspfad, der Netz und Speicher als selbstverständlich behandelt, irgendwann falsch liegt:
 
-- **Die Cloud-Sicherung wartet.** Schlägt sie fehl, erscheint keine Fehlermeldung, sondern eine ruhige Zeile in der Bar mit halbem Zeichen — und erst **ab dem zweiten vergeblichen Versuch**, ohne Zeitschwelle. Die Reihenfolge der Wörter ist „lokal gesichert · Sicherung wartet": das Wichtige zuerst, das Wort „Fehler" kommt nicht vor, weil lokal ja nichts verloren ist K65 K77.
+- **Die Cloud-Sicherung wartet.** Schlägt sie fehl, erscheint keine Fehlermeldung, sondern eine ruhige Zeile in der Bar — *(Nachzug 14.11.2026, ersetzt „ab dem zweiten vergeblichen Versuch, ohne Zeitschwelle")* erst, wenn **seit drei Tagen** keine Sicherung gelungen ist, obwohl Ungesichertes wartet. Kurze Ausfälle sieht man so nie, einen abgelaufenen Token aber rechtzeitig. Die Reihenfolge der Wörter ist „lokal gesichert · Sicherung wartet": das Wichtige zuerst, das Wort „Fehler" kommt nicht vor, weil lokal ja nichts verloren ist K65 K77.
 - **Lokales Schreiben scheitert** — der einzige kritische Zustand im Alltagspfad, weil hier tatsächlich etwas verloren gehen könnte. Ein schraffiertes Zeichen, die eingegebenen Werte bleiben im Feld stehen, „nochmal speichern" als Bodenaktion und „Shot verwerfen" als zweite, bewusst kleinere Option. Diesen Bildschirm verlässt man nicht ohne eine der beiden Entscheidungen K66.
 
 ## Die LLM-Naht

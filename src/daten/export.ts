@@ -11,6 +11,7 @@ import { z, type ZodError } from 'zod';
 import type { IDBPTransaction } from 'idb';
 import { SAMMLUNGEN, oeffneDB, type Sammlung, type BruehwerkSchema } from './db';
 import { alle, schreiben, SCHEMA_FUER, type SammlungWert } from './ablage';
+import { aenderungMelden } from './aenderung';
 
 export const EXPORT_SCHEMA_VERSION = 1;
 
@@ -110,6 +111,7 @@ export async function importiere(datei: unknown): Promise<void> {
   const db = await oeffneDB();
   const tx = db.transaction(SAMMLUNGEN, 'readwrite');
   await Promise.all([...SAMMLUNGEN.flatMap((sammlung) => schreibeAlle(tx, sammlung, geparst[sammlung] ?? [])), tx.done]);
+  aenderungMelden();
 }
 
 type SchreibTransaktion = IDBPTransaction<BruehwerkSchema, typeof SAMMLUNGEN, 'readwrite'>;

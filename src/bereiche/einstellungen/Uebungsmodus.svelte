@@ -512,6 +512,17 @@
 
   let tipFamilie = $state('');
   let tipAroma = $state('');
+  /**
+   * Freiwillig mitbenennen (Nachzug 14.11.2026): auf einem Platz, der nur die
+   * Familie fragt, darf das Aroma trotzdem genannt werden. Die Antwort wird
+   * dann als das gewertet, was sie ist — Aroma in der Familie (Form B). Ohne
+   * Antippen bleibt Form A genau so kurz wie vorher.
+   */
+  let mitbenennen = $state(false);
+  /** Die Form, die tatsächlich beantwortet wurde — nicht die gezeigte. */
+  const antwortForm = $derived<'a' | 'b' | 'c' | undefined>(
+    item?.formStufe === 'a' && mitbenennen && tipAroma !== '' ? 'b' : item?.formStufe,
+  );
   let tipNummer = $state('');
   /** "nur geraten" — ein Treffer zählt dann für die Box wie ein Teilerfolg (domain/uebung.ts::werteAntwortAus). */
   let tipGeraten = $state(false);
@@ -555,6 +566,7 @@
     itemBegonnenAm = Date.now();
     tipFamilie = '';
     tipAroma = '';
+    mitbenennen = false;
     tipNummer = '';
     tipGeraten = false;
     nachgerochenErledigt = false;
@@ -583,9 +595,9 @@
   const tippZusammenfassung = $derived(
     !item
       ? ''
-      : item.formStufe === 'a'
+      : antwortForm === 'a'
         ? `Deine Familie: ${familieVon(tipFamilie)}`
-        : item.formStufe === 'b'
+        : antwortForm === 'b'
           ? `Deine Familie: ${familieVon(tipFamilie)} · dein Aroma: ${aromenDerGewaehltenFamilie.find((a) => a.wert === tipAroma)?.label ?? ''}`
           : `Dein Tipp: ${namenOptionen.find((a) => a.wert === tipAroma)?.label ?? ''}`,
   );
@@ -631,7 +643,7 @@
 
     const auswertung = werteAntwortAus(
       {
-        formStufe: item.formStufe,
+        formStufe: antwortForm ?? item.formStufe,
         tipFamilieId: tipFamilie || undefined,
         tipAromaId: tipAroma || undefined,
         tatsaechlicheAromaId: tatsaechlicheId,
@@ -684,10 +696,11 @@
         durchgangId: durchgang.id,
         setId: set.id,
         aromaId: tatsaechlicheId,
-        getipptId: item.formStufe === 'a' ? undefined : tipAroma || undefined,
+        getipptId: antwortForm === 'a' ? undefined : tipAroma || undefined,
         getipptFamilieId: tipFamilie || undefined,
-        form: item.formStufe === 'a' ? 'familie' : item.formStufe === 'b' ? 'aromaInFamilie' : 'freierAbruf',
-        stufe: item.formStufe,
+        form: antwortForm === 'a' ? 'familie' : antwortForm === 'b' ? 'aromaInFamilie' : 'freierAbruf',
+        stufe: antwortForm,
+        freiwillig: antwortForm !== item.formStufe || undefined,
         ergebnis: auswertung.ergebnis,
         zeitstempel: jetzt,
         antwortdauerMs: Math.max(0, jetzt - itemBegonnenAm),
@@ -726,7 +739,7 @@
       korrekteFamilie,
       lernstandHinweis: lernstandHinweis(auswertung, tatsaechlicheOption.label),
       vermutung:
-        item.formStufe === 'a' || !tipAroma
+        antwortForm === 'a' || !tipAroma
           ? familieVon(tipFamilie)
           : (alleAromen.find((a) => a.id === tipAroma)?.label ?? ''),
       beschreibung: beschreibung.length > 0 ? [...beschreibung] : undefined,
@@ -752,6 +765,9 @@
    * über den Lernstand, ein als geraten markierter Treffer.
    */
   function lernstandHinweis(a: AntwortAuswertung, name: string): string | undefined {
+    if (a.stufenwechsel === 'auf' && a.aufstiegMitNamen) {
+      return `${name} gleich mit Namen erkannt. Ab jetzt geht es um das Aroma selbst.`;
+    }
     if (a.stufenwechsel === 'auf') {
       return a.stufe === 'c' ? `${name} sitzt. Ab jetzt fragst du frei nach dem Namen.` : `Bei ${name} sitzt die Familie. Ab jetzt geht es um das Aroma selbst.`;
     }
@@ -1489,8 +1505,27 @@
         {#if item.formStufe === 'a'}
           <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}
-            <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={(w) => (tipFamilie = w)} platzhalter="Familie wählen …" />
+            <AuswahlListe optionen={familien} wert={tipFamilie} onWahl={familieGewaehlt} platzhalter="Familie wählen …" />
           {/key}
+          {#if tipFamilie && !mitbenennen}
+            <div class="knopfreihe">
+              <Knopf stufe="still" onKlick={() => (mitbenennen = true)}>auch das Aroma benennen</Knopf>
+            </div>
+          {:else if tipFamilie}
+            <p class="frage-titel zweite-frage">Welches Aroma aus „{familieVon(tipFamilie)}“?</p>
+            {#key tipFamilie}
+              <AuswahlListe
+                optionen={aromenDerGewaehltenFamilie}
+                wert={tipAroma}
+                onWahl={(w) => (tipAroma = w)}
+                platzhalter="Aroma wählen …"
+                suchbar
+              />
+            {/key}
+            <div class="knopfreihe">
+              <Knopf stufe="still" onKlick={() => ((mitbenennen = false), (tipAroma = ''))}>nur die Familie</Knopf>
+            </div>
+          {/if}
         {:else if item.formStufe === 'b'}
           <p class="frage-titel">Welche Familie riechst du?</p>
           {#key item}

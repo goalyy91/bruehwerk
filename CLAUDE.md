@@ -36,9 +36,19 @@ Es gibt **keine API und kein Backend als Wahrheit.**
 - **IndexedDB ist die Wahrheit.** Schreiben ist sofort und offline. Es gibt
   keinen Zustand, in dem ein Netzfehler das Loggen blockiert.
 - **Cloud-Backup ist entkoppelt** und darf ausfallen, ohne dass die Bedienung
-  es merkt. Der Backend-Anbieter ist noch nicht gewählt (Kandidaten: Supabase,
-  Cloudflare D1, Firebase). Auswahlkriterium neben den Freikontingenten: manche
-  pausieren Projekte bei Inaktivität.
+  es merkt. Seit 14.11.2026: ein **privates GitHub-Repo** (`daten/cloud.ts`),
+  beschrieben direkt aus der App über die Contents-API mit einem Token, der nur
+  dieses eine Repo darf. Gewählt, weil kostenlos, ohne Stilllegung bei
+  Inaktivität (Supabase legt kostenlose Projekte nach 7 Tagen still) und ohne
+  eigenen Server — jede Sicherung ist ein Commit. Zugang und Zustand liegen im
+  **localStorage, nie in IndexedDB**, sonst stünde der Token in jedem Export.
+  Zwei Schutzregeln, beide getestet: ein neues Gerät sichert erst nach der
+  Entscheidung „holen oder überschreiben", und ein anderes Gerät wird nie
+  still überschrieben (`sha`-Prüfung → Konflikt → „zusammenführen", dabei
+  gilt dieses Gerät). In der Bar erscheint „Sicherung wartet" erst nach
+  **drei Tagen** ohne gelungene Sicherung (ersetzt K77s „ab dem zweiten
+  Versuch"). Echter Abgleich je Datensatz für parallele Geräte ist Stufe 2
+  und noch nicht gebaut: Löschungen kommen beim Zusammenführen zurück.
 - **Der Speicher wird angefordert, nicht angenommen.** `daten/speicher.ts` bittet
   beim Start um `navigator.storage.persist()`. Ohne das gilt IndexedDB dem
   Browser als *best effort* — bei Speicherdruck darf Chrome die Datenbank
@@ -342,6 +352,12 @@ Treffer in einer *leichteren* Form als die Stufe beweist nichts
 lässt Aromen auf Stufe C für eine richtige Familie aufsteigen. Ein
 Stufenaufstieg setzt die Box auf 2, statt die Box der Vorstufe zu erben.
 
+**Freiwillig mitbenennen** (Nachzug 14.11.2026): Plätze in Familienform
+bieten optional die Aroma-Frage aus Stufe B an. Ein Aroma auf Stufe A, das
+beim Namen getroffen wird (nicht „eher geraten“), geht **direkt auf B** —
+und nie weiter: die zwei zeitlich getrennten Treffer für B → C bleiben,
+dieser zählt nur als erster.
+
 **Die Intervalle bleiben absichtlich stur.** Eine App, die eine faule Woche
 als Präferenz läse und die Intervalle streckt, löst eine Abwärtsspirale aus:
 weniger Erinnerungen, noch weniger Training. Was sich stattdessen anpasst,
@@ -570,4 +586,3 @@ Nicht raten, nicht mit Platzhaltern füllen, die später wie Daten aussehen:
   Messungen. Vor Paket 06 einmal gegenprüfen.
 - **Cold-Brew-Mahlgrad** — bewusst unbeziffert. Deutlich gröber als 65 Klicks
   am K6; die Zahl liefert der erste Ansatz.
-- **Backend für das Cloud-Backup** — noch nicht gewählt.

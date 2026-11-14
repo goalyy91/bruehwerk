@@ -63,6 +63,13 @@ export const Uebungsantwort = z.object({
   unerwarteteNummer: z.boolean().default(false),
   /** "nur geraten" angetippt — ein Treffer zählte dann für die Box wie ein Teilerfolg. Fehlt bei älteren Antworten. */
   geraten: z.boolean().optional(),
+  /**
+   * true, wenn das Aroma freiwillig mitbenannt wurde, obwohl der Platz nur
+   * die Familie fragte (Nachzug 14.11.2026). `form` ist dann
+   * "aromaInFamilie", weil genau das beantwortet wurde — dieses Feld hält
+   * nur fest, dass es nicht verlangt war. Fehlt bei allen anderen Antworten.
+   */
+  freiwillig: z.boolean().optional(),
   /** Beim ersten Kontakt blind gewählte Beschreibungswörter (daten/aroma-merkhilfen.ts::BESCHREIBUNGSWOERTER) — ohne Wertung. */
   beschreibung: z.array(z.string()).optional(),
 });

@@ -82,9 +82,9 @@
     {/each}
   </Blattliste>
   <p class="hinweis nachsatz">
-    Ersetzt danach den gesamten Datenbestand durch diesen Stand — was
-    seitdem dazugekommen ist, geht verloren. Im Zweifel vorher eine Datei
-    exportieren.
+    Setzt jeden Eintrag, den es in der Sicherung gibt, auf ihren Stand
+    zurück. Was seitdem neu dazugekommen ist, bleibt erhalten; was seitdem
+    gelöscht wurde, kommt wieder. Im Zweifel vorher eine Datei exportieren.
   </p>
   {#if zurueckErfolg}<p class="hinweis">Sicherung zurückgespielt.</p>{/if}
   {#if zurueckFehler}<p class="fehler">Zurückspielen abgelehnt — kein Datensatz wurde geschrieben: {zurueckFehler}</p>{/if}
