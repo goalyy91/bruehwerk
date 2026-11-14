@@ -362,48 +362,126 @@ export async function ueberschreiben(u: Umgebung = standardUmgebung()): Promise<
   if (nachher.letzterFehler) throw new CloudFehler('sonstig', nachher.letzterFehler);
 }
 
+/**
+ * Sichern und Abholen laufen nie gleichzeitig — beide lesen und schreiben
+ * denselben Zustand (`sha`, `pruefsumme`). Ein zweiter Aufruf derselben Art,
+ * während einer läuft, teilt sich dessen Lauf.
+ */
 let laufend: Promise<void> | undefined;
+let laufendArt: 'sichern' | 'abholen' | undefined;
+
+function exklusiv(art: 'sichern' | 'abholen', tat: () => Promise<void>): Promise<void> {
+  if (laufend && laufendArt === art) return laufend;
+  const vorher = laufend ?? Promise.resolve();
+  const lauf = vorher.then(tat).finally(() => {
+    if (laufend === lauf) {
+      laufend = undefined;
+      laufendArt = undefined;
+    }
+  });
+  laufend = lauf;
+  laufendArt = art;
+  return lauf;
+}
+
+function alsCloudFehler(e: unknown): CloudFehler {
+  return e instanceof CloudFehler ? e : new CloudFehler('sonstig', e instanceof Error ? e.message : String(e));
+}
 
 /**
  * Sichert den Bestand, wenn eingerichtet, freigegeben und ohne Konflikt.
- * Wirft nie — jedes Ergebnis steht danach im Zustand. Gleichzeitige Aufrufe
- * teilen sich einen Lauf.
+ * Wirft nie — jedes Ergebnis steht danach im Zustand.
  */
 export function sichern(u: Umgebung = standardUmgebung(), optionen: { erzwingen?: boolean } = {}): Promise<void> {
-  if (laufend) return laufend;
-  laufend = (async () => {
+  return exklusiv('sichern', async () => {
     const z = zustandLesen(u);
     if (!z.zugang || !z.freigegeben || z.konflikt) return;
     try {
       const datei = await exportiere();
       const summe = pruefsummeVon(JSON.stringify(datei.sammlungen));
       if (!optionen.erzwingen && summe === z.pruefsumme) {
-        // Nichts Neues — trotzdem zählt das als "Sicherung ist aktuell".
+        // Nichts Neues — der letzte Stand dieses Geräts liegt schon oben.
         zustandAendern(u, { letzteSicherungAm: u.jetzt(), letzterFehler: undefined, letzterFehlerAm: undefined });
         return;
       }
       const sha = await hochladen(z.zugang, datei, z.sha, u);
       zustandAendern(u, { sha, pruefsumme: summe, letzteSicherungAm: u.jetzt(), letzterFehler: undefined, letzterFehlerAm: undefined });
     } catch (e) {
-      const fehler = e instanceof CloudFehler ? e : new CloudFehler('sonstig', e instanceof Error ? e.message : String(e));
+      const fehler = alsCloudFehler(e);
       zustandAendern(u, {
         konflikt: fehler.art === 'konflikt' ? true : z.konflikt,
         letzterFehler: fehler.message,
         letzterFehlerAm: u.jetzt(),
       });
     }
-  })().finally(() => {
-    laufend = undefined;
   });
-  return laufend;
+}
+
+export type Abholergebnis = 'aus' | 'aktuell' | 'geholt' | 'konflikt' | 'fehler';
+
+/**
+ * Holt den Stand eines anderen Geräts, wenn eins inzwischen gesichert hat
+ * (Nachzug 14.11.2026: "am Tablet ist nichts drin" — Sichern allein bringt
+ * nichts auf das zweite Gerät).
+ *
+ * - Cloud unverändert seit der letzten eigenen Sicherung → nichts zu tun.
+ * - Cloud neuer, dieses Gerät ohne Ungesichertes → still übernehmen. Ohne
+ *   Sicherung im Gerät davor: alles, was hier lag, liegt bereits in der
+ *   Versionsgeschichte des Repos — und drei Gerätesicherungen, die bei jedem
+ *   Öffnen rotieren, wären für den Update-Fall verloren.
+ * - Cloud neuer UND hier Ungesichertes → Konflikt, wie beim Sichern. Nichts
+ *   wird still überschrieben.
+ *
+ * Wirft nie.
+ */
+export function abholen(u: Umgebung = standardUmgebung()): Promise<Abholergebnis> {
+  let ergebnis: Abholergebnis = 'aus';
+  return exklusiv('abholen', async () => {
+    const z = zustandLesen(u);
+    if (!z.zugang || !z.freigegeben || z.konflikt) return;
+    try {
+      const stand = await cloudLesen(z.zugang, u);
+      if (!stand || stand.sha === z.sha) {
+        ergebnis = 'aktuell';
+        return;
+      }
+      const hier = await exportiere();
+      const ungesichert = z.pruefsumme === undefined || pruefsummeVon(JSON.stringify(hier.sammlungen)) !== z.pruefsumme;
+      if (ungesichert) {
+        zustandAendern(u, { konflikt: true });
+        ergebnis = 'konflikt';
+        return;
+      }
+      await importiere(stand.datei);
+      const nachher = pruefsummeVon(JSON.stringify((await exportiere()).sammlungen));
+      const cloud = pruefsummeVon(JSON.stringify(stand.datei.sammlungen));
+      // Gleich: nichts hochzuladen. Verschieden (hier lag etwas, das oben
+      // fehlt): Prüfsumme leer lassen, damit die nächste Sicherung es nachträgt.
+      zustandAendern(u, {
+        sha: stand.sha,
+        pruefsumme: nachher === cloud ? nachher : undefined,
+        letzteSicherungAm: u.jetzt(),
+        letzterFehler: undefined,
+        letzterFehlerAm: undefined,
+      });
+      ergebnis = 'geholt';
+    } catch (e) {
+      zustandAendern(u, { letzterFehler: alsCloudFehler(e).message, letzterFehlerAm: u.jetzt() });
+      ergebnis = 'fehler';
+    }
+  }).then(() => ergebnis);
 }
 
 /**
- * Hängt die automatische Sicherung an: verzögert nach jeder Änderung, sofort
- * beim Verlassen der App (Wechsel in den Hintergrund), und einmal beim Start.
+ * Hängt die Automatik an:
+ * - Sichern verzögert nach jeder Änderung und sofort beim Wechsel in den
+ *   Hintergrund.
+ * - Abholen beim Start und bei jeder Rückkehr in die App; danach sichern,
+ *   falls hier etwas lag, das oben fehlte.
+ * `onGeholt` meldet der Oberfläche, dass sie den Bestand neu laden muss.
  * Gibt die Abmeldung zurück.
  */
-export function automatikStarten(u: Umgebung = standardUmgebung()): () => void {
+export function automatikStarten(u: Umgebung = standardUmgebung(), onGeholt?: () => void): () => void {
   let zeitgeber: ReturnType<typeof setTimeout> | undefined;
   let offen = false;
   const jetztSichern = () => {
@@ -412,16 +490,33 @@ export function automatikStarten(u: Umgebung = standardUmgebung()): () => void {
     offen = false;
     void sichern(u);
   };
+  const abgleichen = async () => {
+    if ((await abholen(u)) === 'geholt') onGeholt?.();
+    await sichern(u);
+  };
   const abmelden = aufAenderungHoeren(() => {
     offen = true;
     clearTimeout(zeitgeber);
     zeitgeber = setTimeout(jetztSichern, VERZOEGERUNG_MS);
   });
   const sichtbarkeit = () => {
-    if (globalThis.document?.visibilityState === 'hidden' && offen) jetztSichern();
+    const zustand = globalThis.document?.visibilityState;
+    if (zustand === 'hidden' && offen) jetztSichern();
+    // Ungesichertes zuerst hoch, sonst wäre jede Rückkehr mit offener
+    // Änderung ein Konflikt mit dem eigenen, noch nicht gesicherten Stand.
+    if (zustand === 'visible') {
+      if (offen) {
+        clearTimeout(zeitgeber);
+        zeitgeber = undefined;
+        offen = false;
+        void sichern(u).then(abgleichen);
+      } else {
+        void abgleichen();
+      }
+    }
   };
   globalThis.document?.addEventListener('visibilitychange', sichtbarkeit);
-  void sichern(u);
+  void abgleichen();
   return () => {
     abmelden();
     clearTimeout(zeitgeber);

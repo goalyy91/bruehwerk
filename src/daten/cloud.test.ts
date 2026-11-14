@@ -7,6 +7,7 @@ import {
   ueberschreiben,
   tokenErsetzen,
   zusammenfuehren,
+  abholen,
   zustandLesen,
   wartetSeit,
   cloudLesen,
@@ -260,6 +261,77 @@ describe('Sichern', () => {
     await einrichten(ZUGANG, u);
     const stand = await cloudLesen(ZUGANG, u);
     expect(stand?.datei.sammlungen.muehle[0]?.name).toBe('Mühle „Größe“ ☕');
+  });
+});
+
+describe('Abholen — das zweite Geraet bekommt den Stand des ersten', () => {
+  /** Telefon und Tablet sind eingerichtet und auf demselben Stand; die DB gehoert jeweils dem aktiven Geraet. */
+  async function zweiGeraete() {
+    const gh = falschesGithub();
+    const telefon = umgebung(gh.fetchFn);
+    await schreiben('muehle', MUEHLE_SCULPTOR);
+    await einrichten(ZUGANG, telefon);
+    const telefonBestand = await alle('muehle');
+
+    await _datenbankZuruecksetzen();
+    const tablet = umgebung(gh.fetchFn);
+    await einrichten(ZUGANG, tablet);
+    await zurueckholen(tablet);
+    await sichern(tablet);
+    const tabletBestand = await alle('muehle');
+    return { gh, telefon, tablet, telefonBestand, tabletBestand };
+  }
+  async function aufGeraet(bestandListe: Awaited<ReturnType<typeof alle<'muehle'>>>) {
+    await _datenbankZuruecksetzen();
+    for (const m of bestandListe) await schreiben('muehle', m);
+  }
+
+  it('Telefon sichert Neues, Tablet ohne eigene Aenderung holt es still', async () => {
+    const { gh, telefon, tablet, telefonBestand, tabletBestand } = await zweiGeraete();
+
+    await aufGeraet(telefonBestand);
+    // Telefon: der Zustand kennt noch den Stand vor dem Tablet — erst abholen, dann aendern
+    expect(await abholen(telefon)).toBe('geholt');
+    await schreiben('muehle', MUEHLE_K6);
+    await sichern(telefon);
+    const commitsNachTelefon = gh.commits.length;
+
+    await aufGeraet(tabletBestand);
+    expect(await abholen(tablet)).toBe('geholt');
+    expect((await alle('muehle')).map((m) => m.id)).toContain(MUEHLE_K6.id);
+    expect(zustandLesen(tablet).konflikt).toBeFalsy();
+
+    // Kein unnoetiger Commit: der geholte Stand ist der Cloud-Stand.
+    await sichern(tablet);
+    expect(gh.commits.length).toBe(commitsNachTelefon);
+    // Und beim naechsten Mal ist nichts mehr zu holen.
+    expect(await abholen(tablet)).toBe('aktuell');
+  });
+
+  it('Tablet mit eigenem Ungesichertem holt NICHT still, sondern meldet Konflikt', async () => {
+    const { telefon, tablet, telefonBestand, tabletBestand } = await zweiGeraete();
+
+    await aufGeraet(telefonBestand);
+    await abholen(telefon);
+    await schreiben('muehle', MUEHLE_K6);
+    await sichern(telefon);
+
+    await aufGeraet(tabletBestand);
+    await schreiben('muehle', { ...MUEHLE_SCULPTOR, name: 'am Tablet geaendert' });
+    expect(await abholen(tablet)).toBe('konflikt');
+    expect((await alle('muehle')).find((m) => m.id === MUEHLE_SCULPTOR.id)?.name).toBe('am Tablet geaendert');
+    expect((await alle('muehle')).some((m) => m.id === MUEHLE_K6.id)).toBe(false);
+  });
+
+  it('ohne Netz: Ergebnis "fehler", nichts geaendert, wirft nicht', async () => {
+    const { tablet } = await zweiGeraete();
+    const ohneNetz: Umgebung = { ...tablet, fetch: (async () => { throw new TypeError('Failed to fetch'); }) as typeof fetch };
+    await expect(abholen(ohneNetz)).resolves.toBe('fehler');
+  });
+
+  it('nicht eingerichtet oder nicht freigegeben: tut nichts', async () => {
+    const u = umgebung(falschesGithub().fetchFn);
+    expect(await abholen(u)).toBe('aus');
   });
 });
 
