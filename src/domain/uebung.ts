@@ -419,6 +419,12 @@ export interface AntwortAuswertung {
   readonly stufe: UebungStufe;
   /** Gesetzt, wenn sich die Stufe mit dieser Antwort geändert hat. */
   readonly stufenwechsel?: 'auf' | 'ab';
+  /**
+   * true, wenn der Aufstieg A → B nicht aus der Familienserie kam, sondern
+   * daraus, dass das Aroma gleich mit Namen getroffen wurde (Nachzug
+   * 14.11.2026, siehe werteAntwortAus Schritt 4).
+   */
+  readonly aufstiegMitNamen?: boolean;
   readonly familienSerie: number;
   readonly abrufSerie: number;
   readonly abrufSerieZuletzt?: number;
@@ -521,9 +527,23 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
   if (wertung === 'richtig') fehlerSerie = 0;
   else if (wertung === 'teilweise' || wertung === 'falsch') fehlerSerie += 1;
 
+  // Name statt Familie (Nachzug 14.11.2026): wer ein Aroma auf Stufe A gleich
+  // mit Namen trifft — freiwillig in Form A oder in einer schwereren Form —,
+  // hat mehr bewiesen als drei Familientreffer. Familie und Aroma zufällig zu
+  // treffen liegt bei etwa 1 zu 60 bis 1 zu 100; drei Familien in Folge bei
+  // etwa 1 zu 700, aber ohne jede Aussage über den Namen. Deshalb: direkt auf
+  // B, und dieser Treffer zählt als erster der zwei zeitlich getrennten für
+  // B → C. **Nie direkt auf C** — die Prüfung über mehrere Tage ist es, die
+  // aus einem guten Moment ein sitzendes Aroma macht. "Nur geraten" macht
+  // aus dem Treffer einen Teilerfolg und beschleunigt deshalb nicht.
+  let aufstiegMitNamen = false;
   if (stufe === 'a' && wertung !== 'ohneAussage') {
     familienSerie = wertung === 'richtig' ? familienSerie + 1 : 0;
     if (familienSerie >= FAMILIENSERIE_SCHWELLE) stufenwechsel = 'auf';
+    if (wertung === 'richtig' && aromaRichtig === true) {
+      stufenwechsel = 'auf';
+      aufstiegMitNamen = true;
+    }
   } else if (stufe === 'b' && wertung !== 'ohneAussage') {
     if (wertung === 'richtig') {
       if (abrufSerieZuletzt === undefined || jetzt - abrufSerieZuletzt >= ABRUFSERIE_MINDESTABSTAND_MS) {
@@ -552,6 +572,10 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
       box = BOX_NACH_AUFSTIEG;
       faellig = naechsteFaelligkeit(box, jetzt);
     }
+    if (aufstiegMitNamen) {
+      abrufSerie = 1;
+      abrufSerieZuletzt = jetzt;
+    }
   }
 
   return {
@@ -561,6 +585,7 @@ export function werteAntwortAus(eingabe: AntwortEingabe, jetzt: number): Antwort
     faellig,
     stufe,
     stufenwechsel,
+    aufstiegMitNamen: aufstiegMitNamen || undefined,
     familienSerie,
     abrufSerie,
     abrufSerieZuletzt,

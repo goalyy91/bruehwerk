@@ -342,6 +342,12 @@ Treffer in einer *leichteren* Form als die Stufe beweist nichts
 lässt Aromen auf Stufe C für eine richtige Familie aufsteigen. Ein
 Stufenaufstieg setzt die Box auf 2, statt die Box der Vorstufe zu erben.
 
+**Freiwillig mitbenennen** (Nachzug 14.11.2026): Plätze in Familienform
+bieten optional die Aroma-Frage aus Stufe B an. Ein Aroma auf Stufe A, das
+beim Namen getroffen wird (nicht „eher geraten“), geht **direkt auf B** —
+und nie weiter: die zwei zeitlich getrennten Treffer für B → C bleiben,
+dieser zählt nur als erster.
+
 **Die Intervalle bleiben absichtlich stur.** Eine App, die eine faule Woche
 als Präferenz läse und die Intervalle streckt, löst eine Abwärtsspirale aus:
 weniger Erinnerungen, noch weniger Training. Was sich stattdessen anpasst,

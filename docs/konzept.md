@@ -939,6 +939,22 @@ Familie, die Familienform nur eine Familie.
   Aroma nicht.
 - **Schwerere Form:** gewertet nach den Regeln der eigenen Stufe — ein Aroma auf A, frei
   abgerufen mit einem Tipp aus der richtigen Familie, ist für A ein Treffer.
+- **Schwerere Form, Aroma beim Namen getroffen, Stufe A** *(Nachzug 14.11.2026)*: direkt
+  auf B, und dieser Treffer zählt als erster der zwei zeitlich getrennten für B → C.
+  Familie und Aroma zufällig zu treffen liegt bei etwa 1 zu 60 bis 1 zu 100 — mehr Beleg
+  als drei Familientreffer, die über den Namen nichts sagen. **Nie direkt auf C:** die
+  Prüfung über mehrere Tage macht aus einem guten Moment ein sitzendes Aroma. „Eher
+  geraten" beschleunigt nicht.
+
+**Freiwillig mitbenennen** *(Nachzug 14.11.2026)*. Ein Platz, der nur die Familie fragt,
+bietet nach der Familienwahl „auch das Aroma benennen" an — dieselbe Auswahl wie auf
+Stufe B, also nur die Aromen der eben gewählten Familie (die Einschränkung kommt aus der
+eigenen Antwort, nicht aus dem Durchgang). Wer es nutzt, hat eine Aroma-in-Familie-Frage
+beantwortet und wird genau so gewertet, inklusive eines Teilerfolgs bei falschem Namen
+auf einem Aroma ab Stufe B: die Box ist der Wiederholungsplan, keine Strafe, und wer
+unsicher ist, lässt den Namen weg. Auf Stufe A kostet ein falscher Name nichts — dort
+zählt nur die Familie. Ohne Antippen bleibt der Platz so kurz wie vorher; die Antwort
+trägt `freiwillig: true`.
 
 Angezeigt wird weiterhin das Urteil über die *gezeigte* Frage; ein Satz darunter sagt,
 wenn die Antwort für den Lernstand nicht zählt.
