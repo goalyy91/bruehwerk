@@ -47,8 +47,12 @@ Es gibt **keine API und kein Backend als Wahrheit.**
   still überschrieben (`sha`-Prüfung → Konflikt → „zusammenführen", dabei
   gilt dieses Gerät). In der Bar erscheint „Sicherung wartet" erst nach
   **drei Tagen** ohne gelungene Sicherung (ersetzt K77s „ab dem zweiten
-  Versuch"). Echter Abgleich je Datensatz für parallele Geräte ist Stufe 2
-  und noch nicht gebaut: Löschungen kommen beim Zusammenführen zurück.
+  Versuch"). **Abholen** (Nachzug 14.11.2026, `abholen`): beim Start und bei
+  jeder Rückkehr in die App holt ein Gerät den Stand eines anderen still —
+  aber nur, wenn es selbst nichts Ungesichertes hat; sonst Konflikt. Ohne das
+  sicherte das Tablet nur und zeigte nie, was am Telefon geloggt wurde.
+  Echter Abgleich je Datensatz für parallele Geräte ist Stufe 2 und noch
+  nicht gebaut: Löschungen kommen beim Zusammenführen zurück.
 - **Der Speicher wird angefordert, nicht angenommen.** `daten/speicher.ts` bittet
   beim Start um `navigator.storage.persist()`. Ohne das gilt IndexedDB dem
   Browser als *best effort* — bei Speicherdruck darf Chrome die Datenbank

@@ -1345,7 +1345,7 @@ Aber sie ist auch eine Zeile, die man nach dem zwanzigsten Mal nicht mehr liest.
 
 Deine Backup-Anforderung wird auf **zwei unabhängigen Wegen** erfüllt, weil ein einzelner Weg immer einen Anbieter voraussetzt, der in fünf Jahren noch existiert:
 
-- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. *(Nachzug 14.11.2026: gewählt ist ein privates GitHub-Repo — kostenlos, ohne Stilllegung bei Inaktivität, ohne eigenen Server, jede Sicherung ein Commit. Supabase schied aus, weil es kostenlose Projekte nach 7 Tagen geringer Aktivität stilllegt; Vercel Blob wegen knapper Schreibkontingente. Umsetzung: `daten/cloud.ts`, Bildschirm Einstellungen → Daten → Cloud-Sicherung.)*
+- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. *(Nachzug 14.11.2026: gewählt ist ein privates GitHub-Repo — kostenlos, ohne Stilllegung bei Inaktivität, ohne eigenen Server, jede Sicherung ein Commit. Supabase schied aus, weil es kostenlose Projekte nach 7 Tagen geringer Aktivität stilllegt; Vercel Blob wegen knapper Schreibkontingente. Umsetzung: `daten/cloud.ts`, Bildschirm Einstellungen → Daten → Cloud-Sicherung. Beim Start und bei jeder Rückkehr in die App holt ein Gerät still den Stand, den ein anderes inzwischen gesichert hat — nur, wenn es selbst nichts Ungesichertes hat; sonst Konflikt mit „zusammenführen".)*
 - **Manueller Export als Datei** — ein Tap, vollständiger Bestand, kein Backend beteiligt. Der Weg, der auch dann noch funktioniert, wenn alles andere weg ist.
 
 Die Datenmenge ist unkritisch: fünf Shots am Tag ergeben rund 1.800 Datensätze im Jahr, also wenige hundert Kilobyte. Es gibt keinen Grund, jemals etwas zu löschen.
