@@ -23,13 +23,14 @@
   import type { AppEinstellungen } from '../../daten/schema';
   import { EINSTELLUNGEN_ID } from '../../daten/schema';
 
-  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenGetraenke, onOeffnenPersonen, onOeffnenSicherungen }: {
+  let { onOeffnenGeraete, onOeffnenVerhalten, onOeffnenBeobachtungen, onOeffnenGetraenke, onOeffnenPersonen, onOeffnenSicherungen, onOeffnenCloud }: {
     onOeffnenGeraete: () => void;
     onOeffnenVerhalten: () => void;
     onOeffnenBeobachtungen: () => void;
     onOeffnenGetraenke: () => void;
     onOeffnenPersonen: () => void;
     onOeffnenSicherungen: () => void;
+    onOeffnenCloud: () => void;
   } = $props();
 
   async function einstellungAendern<K extends keyof AppEinstellungen>(feld: K, wert: AppEinstellungen[K]) {
@@ -93,7 +94,7 @@
 
 <h2>Daten</h2>
 <Migration />
-<Backup {onOeffnenSicherungen} />
+<Backup {onOeffnenSicherungen} {onOeffnenCloud} />
 <!-- Fund 2026-09-08: ohne ausdrückliche Anforderung darf der Browser die
      Datenbank bei Speicherdruck räumen. Angefragt wird beim Start
      (daten/speicher.ts); zugesagt wird sie nicht immer. Der Satz steht

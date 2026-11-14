@@ -1345,14 +1345,14 @@ Aber sie ist auch eine Zeile, die man nach dem zwanzigsten Mal nicht mehr liest.
 
 Deine Backup-Anforderung wird auf **zwei unabhängigen Wegen** erfüllt, weil ein einzelner Weg immer einen Anbieter voraussetzt, der in fünf Jahren noch existiert:
 
-- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. Kandidaten mit kostenfreier Stufe: Supabase, Cloudflare D1, Firebase. Die genauen Limits prüfe ich vor der Umsetzung — *ein Punkt gehört jetzt schon auf den Tisch:* manche kostenfreien Stufen pausieren Projekte bei Inaktivität. Bei täglicher Nutzung ist das unkritisch, aber es ist ein Auswahlkriterium.
+- **Automatischer Snapshot in die Cloud**, nach jeder Änderung verzögert ausgelöst. *(Nachzug 14.11.2026: gewählt ist ein privates GitHub-Repo — kostenlos, ohne Stilllegung bei Inaktivität, ohne eigenen Server, jede Sicherung ein Commit. Supabase schied aus, weil es kostenlose Projekte nach 7 Tagen geringer Aktivität stilllegt; Vercel Blob wegen knapper Schreibkontingente. Umsetzung: `daten/cloud.ts`, Bildschirm Einstellungen → Daten → Cloud-Sicherung.)*
 - **Manueller Export als Datei** — ein Tap, vollständiger Bestand, kein Backend beteiligt. Der Weg, der auch dann noch funktioniert, wenn alles andere weg ist.
 
 Die Datenmenge ist unkritisch: fünf Shots am Tag ergeben rund 1.800 Datensätze im Jahr, also wenige hundert Kilobyte. Es gibt keinen Grund, jemals etwas zu löschen.
 
 Zwei Zustände sind aus der Gestaltung mitgekommen, weil ein Alltagspfad, der Netz und Speicher als selbstverständlich behandelt, irgendwann falsch liegt:
 
-- **Die Cloud-Sicherung wartet.** Schlägt sie fehl, erscheint keine Fehlermeldung, sondern eine ruhige Zeile in der Bar mit halbem Zeichen — und erst **ab dem zweiten vergeblichen Versuch**, ohne Zeitschwelle. Die Reihenfolge der Wörter ist „lokal gesichert · Sicherung wartet": das Wichtige zuerst, das Wort „Fehler" kommt nicht vor, weil lokal ja nichts verloren ist K65 K77.
+- **Die Cloud-Sicherung wartet.** Schlägt sie fehl, erscheint keine Fehlermeldung, sondern eine ruhige Zeile in der Bar — *(Nachzug 14.11.2026, ersetzt „ab dem zweiten vergeblichen Versuch, ohne Zeitschwelle")* erst, wenn **seit drei Tagen** keine Sicherung gelungen ist, obwohl Ungesichertes wartet. Kurze Ausfälle sieht man so nie, einen abgelaufenen Token aber rechtzeitig. Die Reihenfolge der Wörter ist „lokal gesichert · Sicherung wartet": das Wichtige zuerst, das Wort „Fehler" kommt nicht vor, weil lokal ja nichts verloren ist K65 K77.
 - **Lokales Schreiben scheitert** — der einzige kritische Zustand im Alltagspfad, weil hier tatsächlich etwas verloren gehen könnte. Ein schraffiertes Zeichen, die eingegebenen Werte bleiben im Feld stehen, „nochmal speichern" als Bodenaktion und „Shot verwerfen" als zweite, bewusst kleinere Option. Diesen Bildschirm verlässt man nicht ohne eine der beiden Entscheidungen K66.
 
 ## Die LLM-Naht

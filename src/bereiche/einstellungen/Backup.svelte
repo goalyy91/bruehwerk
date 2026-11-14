@@ -28,7 +28,12 @@
   import Blattliste from '../../muster/Blattliste.svelte';
   import Blattzeile from '../../muster/Blattzeile.svelte';
 
-  let { onOeffnenSicherungen }: { onOeffnenSicherungen: () => void } = $props();
+  import { zustandLesen, zustandBeobachten, statusSatz, type CloudZustand } from '../../daten/cloud';
+
+  let { onOeffnenSicherungen, onOeffnenCloud }: { onOeffnenSicherungen: () => void; onOeffnenCloud: () => void } = $props();
+
+  let cloud = $state<CloudZustand>(zustandLesen());
+  $effect(() => zustandBeobachten((z) => (cloud = z)));
 
   let exportFehler = $state<string | undefined>(undefined);
   let importFehler = $state<string[] | undefined>(undefined);
@@ -82,6 +87,7 @@
     <Blattzeile label="Datei exportieren" akzent chevron={false} onKlick={datenExportieren} />
     <Blattzeile label="Datei importieren" akzent chevron={false} onKlick={() => dateiEingabe?.click()} />
     <Blattzeile label="Sicherungen" akzent onKlick={onOeffnenSicherungen} />
+    <Blattzeile label="Cloud-Sicherung" meta={statusSatz(cloud, Date.now())} akzent onKlick={onOeffnenCloud} />
   </Blattliste>
 </div>
 <input bind:this={dateiEingabe} type="file" accept="application/json" onchange={dateiAusgewaehlt} hidden />

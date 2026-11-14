@@ -19,6 +19,7 @@
   import { neueId } from '../../daten/id';
   import { rangiereGetraenke, vorbelegung } from '../../domain/ranking';
   import { begruessung } from '../../domain/begruessung';
+  import { zustandLesen, zustandBeobachten, wartetSeit, type CloudZustand } from '../../daten/cloud';
   import { bohnenSchnittmenge } from '../../domain/getraenk';
   import { restGramm, geschaetzteBezuege, benoetigtProBezug, altersTage, brauchtAufmerksamkeit } from '../../domain/vorrat';
   import { offeneBeobachtungen } from '../../domain/beobachtungen';
@@ -48,6 +49,7 @@
     onOeffnenBeobachtungen,
     onOeffnenShot,
     onOeffnenUebung,
+    onOeffnenCloud,
   }: {
     onOeffnenBestellung: () => void;
     onOeffnenKaffee: (kaffeeId: string) => void;
@@ -57,7 +59,15 @@
     onOeffnenShot: (kaffeeId: string, profilId: string) => void;
     /** Aromapaket, Etappe 8 — Prio-A-Meldung "uebungFaellig" öffnet den Übungsmodus. */
     onOeffnenUebung: () => void;
+    /** Cloud-Sicherung, 14.11.2026 — die Meldung "sicherungWartet" öffnet ihren Bildschirm. */
+    onOeffnenCloud: () => void;
   } = $props();
+
+  // Nicht im reaktiven Bestand: der Zustand liegt im localStorage
+  // (daten/cloud.ts), nicht in IndexedDB. Beobachtet, damit die Meldung
+  // verschwindet, sobald eine Sicherung gelingt.
+  let cloud = $state<CloudZustand>(zustandLesen());
+  $effect(() => zustandBeobachten((z) => (cloud = z)));
 
   /** Rückmeldung 2026-09-06: 1-2 sichtbar, optimiert fürs Galaxy S25 — kein Scrollen auf dem Dashboard. */
   const MAX_MELDUNGEN = 2;
@@ -155,6 +165,20 @@
   const meldungsKandidaten = $derived.by((): MeldungsAnzeige[] => {
     const jetzt = Date.now();
     const kandidaten: MeldungsAnzeige[] = [];
+
+    // Vor allem anderen: die Cloud-Sicherung wartet seit mindestens drei
+    // Tagen (daten/cloud.ts::wartetSeit). Wortlaut nach K65 — das Wichtige
+    // zuerst, kein "Fehler", denn lokal ist nichts verloren.
+    const wartetSeitAm = wartetSeit(cloud, jetzt);
+    if (wartetSeitAm !== undefined) {
+      const tage = Math.floor((jetzt - wartetSeitAm) / (24 * 60 * 60 * 1000));
+      kandidaten.push({
+        art: 'sicherungWartet',
+        name: 'Cloud-Sicherung',
+        meta: `lokal gesichert · Sicherung wartet seit ${tage} Tagen`,
+        onKlick: onOeffnenCloud,
+      });
+    }
 
     // Prio A: Aroma-Training. Rückmeldung 2026-09-17 — zeigt jetzt vorrangig
     // den rollierenden Wochenabgleich (domain/uebungsauswertung.ts::
@@ -531,7 +555,8 @@
               eintrag.art === 'restUnbekannt' ||
               eintrag.art === 'dialinOffen' ||
               eintrag.art === 'beobachtung' ||
-              eintrag.art === 'uebungFaellig'
+              eintrag.art === 'uebungFaellig' ||
+              eintrag.art === 'sicherungWartet'
             }
             onclick={eintrag.onKlick}
           >
