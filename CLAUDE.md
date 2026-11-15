@@ -332,6 +332,13 @@ Zwei eng begrenzte Ausnahmen sind bewusst und stehen nicht zur Disposition:
   Leistung, zwei ähnliche Gerüche direkt gegeneinander abzuwägen, fände nicht
   statt.
 
+**Erst nachfragen, dann werten** (Nachzug 15.11.2026, `pruefeNummer`): eine
+abgelesene Nummer außerhalb der bereitgelegten Fläschchen (Kontrast: außerhalb
+des Paares) oder eine in diesem Durchgang schon gezogene löst vor der Wertung
+die Rückfrage „Stimmt die Nummer?“ aus — „andere Nummer“ oder „stimmt so“.
+Sonst bewegt ein Tippfehler die Box eines falschen Aromas oder führt es unter
+falschem Namen ein.
+
 **Leitner mit fünf Boxen, Intervalle fix — nicht an die Trainingshäufigkeit
 angepasst:**
 

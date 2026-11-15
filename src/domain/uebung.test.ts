@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  pruefeNummer,
   bereinigteQuote,
   gesamtquote,
   effektiverZustand,
@@ -787,5 +788,24 @@ describe('eingefuehrt — ein in der neuen Fassung geuebtes Aroma (Korrektur 08.
     const plan = planeDurchgang(alle, staende, JETZT);
     // Die zwei wirklich neuen kommen dran, die zwoelf geuebten zaehlen nicht als neu.
     expect(plan.abgefragt.filter((a) => a.id === 'x13' || a.id === 'x14')).toHaveLength(2);
+  });
+});
+
+describe('pruefeNummer — Rückfrage vor der Wertung (Nachzug 15.11.2026)', () => {
+  const bereit = ['a', 'b', 'c'];
+  it('eine bereitgelegte, noch nicht gezogene Nummer passt', () => {
+    expect(pruefeNummer('b', bereit, ['a'])).toBe('passt');
+  });
+  it('eine Nummer außerhalb der Bereitgelegten wird beanstandet', () => {
+    expect(pruefeNummer('x', bereit, [])).toBe('nichtBereitgelegt');
+  });
+  it('eine schon gezogene Nummer wird beanstandet', () => {
+    expect(pruefeNummer('a', bereit, ['a'])).toBe('schonGezogen');
+  });
+  it('nicht bereitgelegt hat Vorrang vor schon gezogen', () => {
+    expect(pruefeNummer('x', bereit, ['x'])).toBe('nichtBereitgelegt');
+  });
+  it('ohne Liste der Gezogenen (Kontrastpaar) zählt nur die Zugehörigkeit', () => {
+    expect(pruefeNummer('a', ['a', 'b'])).toBe('passt');
   });
 });

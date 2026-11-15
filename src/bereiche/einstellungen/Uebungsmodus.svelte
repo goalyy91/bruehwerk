@@ -95,6 +95,8 @@
     type AromaOption,
     type GesamtStand,
     type AntwortAuswertung,
+    pruefeNummer,
+    type NummernBefund,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
   import {
@@ -499,9 +501,31 @@
     beschreibung = beschreibung.includes(wort) ? beschreibung.filter((w) => w !== wort) : [...beschreibung, wort];
   }
 
+  /**
+   * Rückfrage vor der Wertung (Nachzug 15.11.2026, domain/uebung.ts::
+   * pruefeNummer): eine Nummer außerhalb der Bereitgelegten oder eine schon
+   * gezogene ist fast immer vertippt. Gewertet wird erst nach „stimmt so" —
+   * sonst bewegte sie ein falsches Aroma oder führte es unter falschem Namen
+   * ein. Eine neue Nummernwahl hebt die Rückfrage auf.
+   */
+  let nummerRueckfrage = $state<Exclude<NummernBefund, 'passt'> | undefined>(undefined);
+
+  function nummerGewaehlt(w: string) {
+    tipNummer = w;
+    nummerRueckfrage = undefined;
+  }
+
   /** Nach der Nummer: ein neues Aroma wird erst beschrieben, dann aufgelöst. */
-  function nachNummer() {
-    if (!tipNummer) return;
+  function nachNummer(bestaetigt = false) {
+    if (!tipNummer || !durchgang) return;
+    if (!bestaetigt) {
+      const befund = pruefeNummer(tipNummer, durchgang.verdeckt, durchgang.beantwortet);
+      if (befund !== 'passt') {
+        nummerRueckfrage = befund;
+        return;
+      }
+    }
+    nummerRueckfrage = undefined;
     if (!effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt) {
       itemPhase = 'beschreiben';
       return;
@@ -568,6 +592,7 @@
     tipAroma = '';
     mitbenennen = false;
     tipNummer = '';
+    nummerRueckfrage = undefined;
     tipGeraten = false;
     nachgerochenErledigt = false;
     beschreibung = [];
@@ -846,6 +871,7 @@
     kontrastSchritt = 'erstesRiechen';
     kontrastReihenfolge = '';
     kontrastErsteNummer = '';
+    kontrastRueckfrage = false;
     kontrastUnerwartet = false;
     kontrastAuswertung = undefined;
     kontrastNachgerochenErledigt = false;
@@ -886,11 +912,25 @@
     });
   }
 
-  async function kontrastAufloesen() {
+  /** Rückfrage vor der Wertung, wie `nummerRueckfrage` im normalen Durchgang. */
+  let kontrastRueckfrage = $state(false);
+
+  function kontrastNummerGewaehlt(w: string) {
+    kontrastErsteNummer = w;
+    kontrastRueckfrage = false;
+  }
+
+  async function kontrastAufloesen(bestaetigt = false) {
     if (!durchgang || !set || !kontrastErsteNummer || kontrastOptionen.length !== 2) return;
     const [optA, optB] = kontrastOptionen as readonly [AromaOption, AromaOption];
     const ersteId = kontrastErsteNummer;
     const jetzt = Date.now();
+
+    if (!bestaetigt && pruefeNummer(ersteId, [optA.id, optB.id]) !== 'passt') {
+      kontrastRueckfrage = true;
+      return;
+    }
+    kontrastRueckfrage = false;
 
     if (ersteId !== optA.id && ersteId !== optB.id) {
       // Seltener echter Bereitlegen-Fehler: die Nummer gehört nicht zu diesem
@@ -1561,10 +1601,28 @@
 
       {#if itemPhase === 'nummer'}
         <p class="frage-satz abschnitt">Augen auf. Welche Nummer trägt das Fläschchen?</p>
-        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
-        </div>
+        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={nummerGewaehlt} platzhalter="Nummer suchen …" suchbar />
+        {#if nummerRueckfrage}
+          {@const nr = alleAromen.find((a) => a.id === tipNummer)}
+          <p class="hinweis auftrag">
+            {#if nummerRueckfrage === 'schonGezogen'}
+              Nr. {nr?.nummer} war in diesem Durchgang schon dran. Stimmt die Nummer?
+            {:else}
+              Nr. {nr?.nummer} gehört nicht zu den Fläschchen, die für diesen Durchgang bereitliegen. Stimmt die Nummer?
+            {/if}
+          </p>
+          {#if !effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt}
+            <p class="hinweis">Es wäre ein neues Aroma — mit einer falschen Nummer lernst du den Geruch unter falschem Namen.</p>
+          {/if}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => nummerGewaehlt('')}>andere Nummer</Knopf>
+            <Knopf onKlick={() => nachNummer(true)}>stimmt so</Knopf>
+          </div>
+        {:else}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => nachNummer()} deaktiviert={!tipNummer}>auflösen</Knopf>
+          </div>
+        {/if}
       {/if}
 
       {#if itemPhase === 'beschreiben'}
@@ -1666,10 +1724,20 @@
         </div>
       {:else if kontrastSchritt === 'nummer'}
         <p class="frage-satz">Augen auf. Welche Nummer trägt Probe 1?</p>
-        <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
-        </div>
+        <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={kontrastNummerGewaehlt} platzhalter="Nummer suchen …" suchbar />
+        {#if kontrastRueckfrage}
+          <p class="hinweis auftrag">
+            Nr. {alleAromen.find((a) => a.id === kontrastErsteNummer)?.nummer} ist keins der beiden angekündigten Fläschchen. Stimmt die Nummer?
+          </p>
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => kontrastNummerGewaehlt('')}>andere Nummer</Knopf>
+            <Knopf onKlick={() => kontrastAufloesen(true)}>stimmt so</Knopf>
+          </div>
+        {:else}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => kontrastAufloesen()} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
+          </div>
+        {/if}
       {:else if kontrastSchritt === 'aufgeloest'}
         {#if kontrastUnerwartet}
           <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieses Paar bleibt unbewertet.</p>

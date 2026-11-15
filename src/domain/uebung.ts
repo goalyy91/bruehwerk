@@ -831,3 +831,35 @@ export function werteKontrastAus(
 export function kontrastNachriechenAngebracht(ergebnis: 'richtig' | 'falsch', paareImDurchgang: number, bisherNachgerochen: number): boolean {
   return ergebnis === 'falsch' && 2 * paareImDurchgang + bisherNachgerochen + 2 <= RIECHGRENZE;
 }
+
+// ============================================================================
+// Nummernprüfung vor der Wertung (Nachzug 15.11.2026)
+// ============================================================================
+
+/**
+ * Ob die abgelesene Nummer zu diesem Durchgang passt — geprüft, **bevor**
+ * gewertet wird. Eine vertippte Nummer würde sonst ein falsches Aroma bewegen
+ * und, wenn es noch nicht eingeführt war, unter falschem Namen einführen:
+ * der Geruch im Fläschchen wäre im Kopf mit dem Namen auf dem Bildschirm
+ * verknüpft. Deshalb fragt die App in beiden Fällen unten nach, statt erst
+ * hinterher zu melden.
+ *
+ * - `nichtBereitgelegt`: die Nummer gehört zu keinem verdeckt bereitgelegten
+ *   Fläschchen (bzw. beim Kontrastdurchgang nicht zum laufenden Paar).
+ * - `schonGezogen`: die Nummer war in diesem Durchgang schon dran — ein
+ *   gezogenes Fläschchen geht nicht zurück zu den verdeckten.
+ *
+ * Verrät nichts vom Kandidatenkreis, was nicht schon feststeht: geprüft wird
+ * erst nach der Antwort, und nur die eine eingegebene Nummer.
+ */
+export type NummernBefund = 'passt' | 'nichtBereitgelegt' | 'schonGezogen';
+
+export function pruefeNummer(
+  aromaId: string,
+  bereitgelegt: readonly string[],
+  schonGezogen: readonly string[] = [],
+): NummernBefund {
+  if (!bereitgelegt.includes(aromaId)) return 'nichtBereitgelegt';
+  if (schonGezogen.includes(aromaId)) return 'schonGezogen';
+  return 'passt';
+}
