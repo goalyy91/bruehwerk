@@ -191,8 +191,8 @@
 
   // Alle 60, in ihrer natürlichen Nummernfolge, nie auf die zwölf des
   // Durchgangs verkürzt. Beim Auflösen wird die Nummer seit 15.11.2026
-  // getippt (Snippet `nummernfeld`); die Liste trägt noch die Reverse-Wahl,
-  // das Protokoll und den gültigen Bereich im Hinweis des Nummernfelds.
+  // angetippt (Snippet `nummernraster`); die Liste trägt noch die Reverse-Wahl,
+  // das Protokoll und das Raster selbst.
   const alleNachNummer = $derived([...alleAromen].sort((a, b) => (a.nummer ?? 0) - (b.nummer ?? 0)));
   // Nur die Nummer, kein Name (Lern-Nachzug Etappe 4): der Name erscheint
   // erst beim Auflösen. Sonst stünde er schon beim Nummer-Suchen da — und ein
@@ -514,31 +514,11 @@
     nummerRueckfrage = undefined;
   }
 
-  // Nummernfeld statt Auswahlliste (Nachzug 15.11.2026): beim Auflösen liest
-  // man die Zahl vom Deckel ab und tippt sie — schneller als in einer
-  // 60er-Liste zu suchen. Der Text bleibt neben der Id stehen, damit eine
-  // ungültige Eingabe sichtbar bleibt statt zu verschwinden. Weiterhin alle
-  // 60 Nummern gültig, nicht nur die bereitgelegten (Kandidatenkreis bleibt
-  // verdeckt).
-  let nummerText = $state('');
-  let nummernInput = $state<HTMLInputElement | undefined>(undefined);
-  let kontrastNummerText = $state('');
-
-  /** Aroma-Id zur getippten Fläschchennummer — leer, solange keine gültige dasteht. */
-  function idZuNummer(text: string): string {
-    const t = text.trim();
-    if (!/^\d{1,3}$/.test(t)) return '';
-    return alleAromen.find((a) => a.nummer === Number(t))?.id ?? '';
-  }
-
-  const nummernBereich = $derived(
-    alleNachNummer.length > 0 ? `${alleNachNummer[0]!.nummer} bis ${alleNachNummer[alleNachNummer.length - 1]!.nummer}` : '',
-  );
-
-  function nummerGetippt(text: string) {
-    nummerText = text;
-    nummerGewaehlt(idZuNummer(text));
-  }
+  // Nummernraster statt Auswahlliste (Nachzug 15.11.2026, Snippet
+  // `nummernraster`): alle 60 Deckel wie in der Statistik, antippen, dann
+  // „auflösen". Neutral — ohne Familienfarbe und Lernstand, sonst verriete
+  // es vor dem blinden Beschreiben eines neuen Aromas die Familie. Immer alle
+  // 60, nie nur die bereitgelegten (Kandidatenkreis bleibt verdeckt).
 
   /** Nach der Nummer: ein neues Aroma wird erst beschrieben, dann aufgelöst. */
   function nachNummer(bestaetigt = false) {
@@ -617,7 +597,6 @@
     tipAroma = '';
     mitbenennen = false;
     tipNummer = '';
-    nummerText = '';
     nummerRueckfrage = undefined;
     tipGeraten = false;
     nachgerochenErledigt = false;
@@ -897,7 +876,6 @@
     kontrastSchritt = 'erstesRiechen';
     kontrastReihenfolge = '';
     kontrastErsteNummer = '';
-    kontrastNummerText = '';
     kontrastRueckfrage = false;
     kontrastUnerwartet = false;
     kontrastAuswertung = undefined;
@@ -942,9 +920,8 @@
   /** Rückfrage vor der Wertung, wie `nummerRueckfrage` im normalen Durchgang. */
   let kontrastRueckfrage = $state(false);
 
-  function kontrastNummerGetippt(text: string) {
-    kontrastNummerText = text;
-    kontrastErsteNummer = idZuNummer(text);
+  function kontrastNummerGewaehlt(w: string) {
+    kontrastErsteNummer = w;
     kontrastRueckfrage = false;
   }
 
@@ -1422,35 +1399,18 @@
      schließt sich in 25 Sekunden, statt nur eine Zahl im Knopf herunterzu-
      zählen. Die eine erlaubte Uhr der App (CLAUDE.md, "Kein Timer") — sie
      soll das Warten zur Atempause machen, nicht zum Countdown. -->
-{#snippet nummernfeld(text: string, onText: (t: string) => void, onFertig: () => void, gesperrt: boolean)}
-  <!-- Ziffernfeld statt 60er-Liste: Nummer vom Deckel ablesen, tippen,
-       Enter. Tastatur geht sofort auf — hier gibt es nichts anderes zu tun,
-       und keine Liste, die sie verdecken könnte. -->
-  <input
-    bind:this={nummernInput}
-    {@attach (el) => el.focus()}
-    class="eingabefeld-text nummernfeld"
-    type="text"
-    inputmode="numeric"
-    pattern="[0-9]*"
-    enterkeyhint="done"
-    autocomplete="off"
-    maxlength="3"
-    placeholder="Nummer"
-    aria-label="Fläschchennummer"
-    value={text}
-    oninput={(e) => {
-      const nur = e.currentTarget.value.replace(/\D/g, '');
-      e.currentTarget.value = nur;
-      onText(nur);
-    }}
-    onkeydown={(e) => {
-      if (e.key === 'Enter' && !gesperrt) onFertig();
-    }}
-  />
-  {#if text !== '' && idZuNummer(text) === ''}
-    <p class="hinweis">Keine Fläschchennummer — gültig sind {nummernBereich}.</p>
-  {/if}
+{#snippet nummernraster(gewaehlt: string, onWahl: (id: string) => void)}
+  <div class="nummernraster" role="group" aria-label="Fläschchennummer">
+    {#each alleNachNummer as a (a.id)}
+      <button
+        type="button"
+        class="rasterdeckel"
+        class:gewaehlt={a.id === gewaehlt}
+        aria-pressed={a.id === gewaehlt}
+        onclick={() => onWahl(a.id)}>{a.nummer}</button
+      >
+    {/each}
+  </div>
 {/snippet}
 
 {#snippet atempause()}
@@ -1660,7 +1620,7 @@
 
       {#if itemPhase === 'nummer'}
         <p class="frage-satz abschnitt">Augen auf. Welche Nummer trägt das Fläschchen?</p>
-        {@render nummernfeld(nummerText, nummerGetippt, () => nachNummer(), !!nummerRueckfrage)}
+        {@render nummernraster(tipNummer, nummerGewaehlt)}
         {#if nummerRueckfrage}
           {@const nr = alleAromen.find((a) => a.id === tipNummer)}
           <p class="hinweis auftrag">
@@ -1674,10 +1634,7 @@
             <p class="hinweis">Es wäre ein neues Aroma — mit einer falschen Nummer lernst du den Geruch unter falschem Namen.</p>
           {/if}
           <div class="knopfreihe">
-            <Knopf stufe="primaer" onKlick={() => {
-                nummerGetippt('');
-                nummernInput?.focus();
-              }}>andere Nummer</Knopf>
+            <Knopf stufe="primaer" onKlick={() => nummerGewaehlt('')}>andere Nummer</Knopf>
             <Knopf onKlick={() => nachNummer(true)}>stimmt so</Knopf>
           </div>
         {:else}
@@ -1786,16 +1743,13 @@
         </div>
       {:else if kontrastSchritt === 'nummer'}
         <p class="frage-satz">Augen auf. Welche Nummer trägt Probe 1?</p>
-        {@render nummernfeld(kontrastNummerText, kontrastNummerGetippt, () => kontrastAufloesen(), kontrastRueckfrage)}
+        {@render nummernraster(kontrastErsteNummer, kontrastNummerGewaehlt)}
         {#if kontrastRueckfrage}
           <p class="hinweis auftrag">
             Nr. {alleAromen.find((a) => a.id === kontrastErsteNummer)?.nummer} ist keins der beiden angekündigten Fläschchen. Stimmt die Nummer?
           </p>
           <div class="knopfreihe">
-            <Knopf stufe="primaer" onKlick={() => {
-                kontrastNummerGetippt('');
-                nummernInput?.focus();
-              }}>andere Nummer</Knopf>
+            <Knopf stufe="primaer" onKlick={() => kontrastNummerGewaehlt('')}>andere Nummer</Knopf>
             <Knopf onKlick={() => kontrastAufloesen(true)}>stimmt so</Knopf>
           </div>
         {:else}
@@ -2131,13 +2085,34 @@
 
   /* ---- Ein Item als wachsende Karte, Auflösung als Moment (Gestaltung
      Aromaschule, 08.11.2026) ------------------------------------------- */
-  .nummernfeld {
-    /* Volle Breite statt der Standardbreite eines input — ein großes Ziel
-       für den Daumen, und die Zahl steht groß wie auf dem Deckel. */
-    display: block;
+  /* Dieselbe Anordnung wie das Raster der Statistik (6 Spalten), damit eine
+     Nummer an derselben Stelle steht — aber tippbar und neutral. */
+  .nummernraster {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    /* Enger als die Statistik: zehn Reihen sollen samt „auflösen" auf einen
+       Telefonbildschirm passen. 44 px bleibt die Mindest-Trefferfläche. */
+    gap: var(--r1) var(--r2);
+    justify-items: center;
+    margin: var(--r3) 0;
+  }
+  .rasterdeckel {
     width: 100%;
-    box-sizing: border-box;
-    font-variant-numeric: tabular-nums;
+    max-width: 44px;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    color: var(--tinte);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
+    font-variant-numeric: tabular-nums lining-nums;
+    cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
+  }
+  .rasterdeckel.gewaehlt {
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
   }
   .protokoll {
     font-family: var(--schrift-sans);
