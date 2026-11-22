@@ -95,6 +95,8 @@
     type AromaOption,
     type GesamtStand,
     type AntwortAuswertung,
+    pruefeNummer,
+    type NummernBefund,
   } from '../../domain/uebung';
   import { einfuehrungErlaubt } from '../../domain/leitner';
   import {
@@ -187,11 +189,10 @@
     new Map([...staende].filter((eintrag): eintrag is [string, GesamtStand] => eintrag[1] !== undefined)),
   );
 
-  // Alle 60, in ihrer natürlichen Nummernfolge — dieselbe Liste für Antwort
-  // (Stufe C) und Nummerneingabe, nie eine auf die zwölf des Durchgangs
-  // verkürzte. Nummern-Label trägt zusätzlich den Namen: nach dem Riechen und
-  // Tippen ist der Name kein Geheimnis mehr, und das erleichtert das Finden
-  // der richtigen Zeile beim Ablesen.
+  // Alle 60, in ihrer natürlichen Nummernfolge, nie auf die zwölf des
+  // Durchgangs verkürzt. Beim Auflösen wird die Nummer seit 15.11.2026
+  // angetippt (Snippet `nummernraster`); die Liste trägt noch die Reverse-Wahl,
+  // das Protokoll und das Raster selbst.
   const alleNachNummer = $derived([...alleAromen].sort((a, b) => (a.nummer ?? 0) - (b.nummer ?? 0)));
   // Nur die Nummer, kein Name (Lern-Nachzug Etappe 4): der Name erscheint
   // erst beim Auflösen. Sonst stünde er schon beim Nummer-Suchen da — und ein
@@ -499,9 +500,37 @@
     beschreibung = beschreibung.includes(wort) ? beschreibung.filter((w) => w !== wort) : [...beschreibung, wort];
   }
 
+  /**
+   * Rückfrage vor der Wertung (Nachzug 15.11.2026, domain/uebung.ts::
+   * pruefeNummer): eine Nummer außerhalb der Bereitgelegten oder eine schon
+   * gezogene ist fast immer vertippt. Gewertet wird erst nach „stimmt so" —
+   * sonst bewegte sie ein falsches Aroma oder führte es unter falschem Namen
+   * ein. Eine neue Nummernwahl hebt die Rückfrage auf.
+   */
+  let nummerRueckfrage = $state<Exclude<NummernBefund, 'passt'> | undefined>(undefined);
+
+  function nummerGewaehlt(w: string) {
+    tipNummer = w;
+    nummerRueckfrage = undefined;
+  }
+
+  // Nummernraster statt Auswahlliste (Nachzug 15.11.2026, Snippet
+  // `nummernraster`): alle 60 Deckel wie in der Statistik, antippen, dann
+  // „auflösen". Neutral — ohne Familienfarbe und Lernstand, sonst verriete
+  // es vor dem blinden Beschreiben eines neuen Aromas die Familie. Immer alle
+  // 60, nie nur die bereitgelegten (Kandidatenkreis bleibt verdeckt).
+
   /** Nach der Nummer: ein neues Aroma wird erst beschrieben, dann aufgelöst. */
-  function nachNummer() {
-    if (!tipNummer) return;
+  function nachNummer(bestaetigt = false) {
+    if (!tipNummer || !durchgang) return;
+    if (!bestaetigt) {
+      const befund = pruefeNummer(tipNummer, durchgang.verdeckt, durchgang.beantwortet);
+      if (befund !== 'passt') {
+        nummerRueckfrage = befund;
+        return;
+      }
+    }
+    nummerRueckfrage = undefined;
     if (!effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt) {
       itemPhase = 'beschreiben';
       return;
@@ -568,6 +597,7 @@
     tipAroma = '';
     mitbenennen = false;
     tipNummer = '';
+    nummerRueckfrage = undefined;
     tipGeraten = false;
     nachgerochenErledigt = false;
     beschreibung = [];
@@ -846,6 +876,7 @@
     kontrastSchritt = 'erstesRiechen';
     kontrastReihenfolge = '';
     kontrastErsteNummer = '';
+    kontrastRueckfrage = false;
     kontrastUnerwartet = false;
     kontrastAuswertung = undefined;
     kontrastNachgerochenErledigt = false;
@@ -886,11 +917,25 @@
     });
   }
 
-  async function kontrastAufloesen() {
+  /** Rückfrage vor der Wertung, wie `nummerRueckfrage` im normalen Durchgang. */
+  let kontrastRueckfrage = $state(false);
+
+  function kontrastNummerGewaehlt(w: string) {
+    kontrastErsteNummer = w;
+    kontrastRueckfrage = false;
+  }
+
+  async function kontrastAufloesen(bestaetigt = false) {
     if (!durchgang || !set || !kontrastErsteNummer || kontrastOptionen.length !== 2) return;
     const [optA, optB] = kontrastOptionen as readonly [AromaOption, AromaOption];
     const ersteId = kontrastErsteNummer;
     const jetzt = Date.now();
+
+    if (!bestaetigt && pruefeNummer(ersteId, [optA.id, optB.id]) !== 'passt') {
+      kontrastRueckfrage = true;
+      return;
+    }
+    kontrastRueckfrage = false;
 
     if (ersteId !== optA.id && ersteId !== optB.id) {
       // Seltener echter Bereitlegen-Fehler: die Nummer gehört nicht zu diesem
@@ -1354,6 +1399,20 @@
      schließt sich in 25 Sekunden, statt nur eine Zahl im Knopf herunterzu-
      zählen. Die eine erlaubte Uhr der App (CLAUDE.md, "Kein Timer") — sie
      soll das Warten zur Atempause machen, nicht zum Countdown. -->
+{#snippet nummernraster(gewaehlt: string, onWahl: (id: string) => void)}
+  <div class="nummernraster" role="group" aria-label="Fläschchennummer">
+    {#each alleNachNummer as a (a.id)}
+      <button
+        type="button"
+        class="rasterdeckel"
+        class:gewaehlt={a.id === gewaehlt}
+        aria-pressed={a.id === gewaehlt}
+        onclick={() => onWahl(a.id)}>{a.nummer}</button
+      >
+    {/each}
+  </div>
+{/snippet}
+
 {#snippet atempause()}
   <div class="atempause">
     <svg class="atem-ring" viewBox="0 0 36 36" aria-hidden="true">
@@ -1561,10 +1620,28 @@
 
       {#if itemPhase === 'nummer'}
         <p class="frage-satz abschnitt">Augen auf. Welche Nummer trägt das Fläschchen?</p>
-        <AuswahlListe optionen={nummernOptionen} wert={tipNummer} onWahl={(w) => (tipNummer = w)} platzhalter="Nummer suchen …" suchbar />
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={nachNummer} deaktiviert={!tipNummer}>auflösen</Knopf>
-        </div>
+        {@render nummernraster(tipNummer, nummerGewaehlt)}
+        {#if nummerRueckfrage}
+          {@const nr = alleAromen.find((a) => a.id === tipNummer)}
+          <p class="hinweis auftrag">
+            {#if nummerRueckfrage === 'schonGezogen'}
+              Nr. {nr?.nummer} war in diesem Durchgang schon dran. Stimmt die Nummer?
+            {:else}
+              Nr. {nr?.nummer} gehört nicht zu den Fläschchen, die für diesen Durchgang bereitliegen. Stimmt die Nummer?
+            {/if}
+          </p>
+          {#if !effektiverZustand(staende.get(tipNummer), Date.now()).eingefuehrt}
+            <p class="hinweis">Es wäre ein neues Aroma — mit einer falschen Nummer lernst du den Geruch unter falschem Namen.</p>
+          {/if}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => nummerGewaehlt('')}>andere Nummer</Knopf>
+            <Knopf onKlick={() => nachNummer(true)}>stimmt so</Knopf>
+          </div>
+        {:else}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => nachNummer()} deaktiviert={!tipNummer}>auflösen</Knopf>
+          </div>
+        {/if}
       {/if}
 
       {#if itemPhase === 'beschreiben'}
@@ -1666,10 +1743,20 @@
         </div>
       {:else if kontrastSchritt === 'nummer'}
         <p class="frage-satz">Augen auf. Welche Nummer trägt Probe 1?</p>
-        <AuswahlListe optionen={nummernOptionen} wert={kontrastErsteNummer} onWahl={(w) => (kontrastErsteNummer = w)} platzhalter="Nummer suchen …" suchbar />
-        <div class="knopfreihe">
-          <Knopf stufe="primaer" onKlick={kontrastAufloesen} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
-        </div>
+        {@render nummernraster(kontrastErsteNummer, kontrastNummerGewaehlt)}
+        {#if kontrastRueckfrage}
+          <p class="hinweis auftrag">
+            Nr. {alleAromen.find((a) => a.id === kontrastErsteNummer)?.nummer} ist keins der beiden angekündigten Fläschchen. Stimmt die Nummer?
+          </p>
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => kontrastNummerGewaehlt('')}>andere Nummer</Knopf>
+            <Knopf onKlick={() => kontrastAufloesen(true)}>stimmt so</Knopf>
+          </div>
+        {:else}
+          <div class="knopfreihe">
+            <Knopf stufe="primaer" onKlick={() => kontrastAufloesen()} deaktiviert={!kontrastErsteNummer}>auflösen</Knopf>
+          </div>
+        {/if}
       {:else if kontrastSchritt === 'aufgeloest'}
         {#if kontrastUnerwartet}
           <p class="hinweis">Diese Nummer gehörte zu keinem der beiden angekündigten Fläschchen — dieses Paar bleibt unbewertet.</p>
@@ -1998,6 +2085,35 @@
 
   /* ---- Ein Item als wachsende Karte, Auflösung als Moment (Gestaltung
      Aromaschule, 08.11.2026) ------------------------------------------- */
+  /* Dieselbe Anordnung wie das Raster der Statistik (6 Spalten), damit eine
+     Nummer an derselben Stelle steht — aber tippbar und neutral. */
+  .nummernraster {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    /* Enger als die Statistik: zehn Reihen sollen samt „auflösen" auf einen
+       Telefonbildschirm passen. 44 px bleibt die Mindest-Trefferfläche. */
+    gap: var(--r1) var(--r2);
+    justify-items: center;
+    margin: var(--r3) 0;
+  }
+  .rasterdeckel {
+    width: 100%;
+    max-width: 44px;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 50%;
+    background: var(--vertiefung);
+    color: var(--tinte);
+    font-family: var(--schrift-sans);
+    font-size: var(--fs-bedienwort);
+    font-variant-numeric: tabular-nums lining-nums;
+    cursor: pointer;
+    transition: background var(--t-auswahl) var(--e-rein);
+  }
+  .rasterdeckel.gewaehlt {
+    background: var(--fuellung);
+    color: var(--auf-fuellung);
+  }
   .protokoll {
     font-family: var(--schrift-sans);
     font-size: var(--fs-erklaerung);
