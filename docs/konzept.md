@@ -1037,9 +1037,17 @@ Familiengrenzen: Holzig–Zeder, Teer–Rauchig), dann einseitig genannte aus **
 Familie** (39), zuletzt einseitig genannte über Familiengrenzen (85, etwa Zeder–Pappe, aber
 auch Zitrone–Jasmin). Bewusst kein Familienfilter: er striche Holzig–Zeder. Ob ein Paar
 wirklich verwechselt wird, sagen ohnehin erst die eigenen Fehler — ab drei rückt es nach
-vorn. „durchgang starten" wird in etwa **jedem vierten Fall** von selbst ein
-Kontrastdurchgang, wenn mindestens drei Paare da sind; die Vorschlagskarte für eine belegte
-Verwechslung bleibt und startet ebenfalls alle verfügbaren Paare.
+vorn. „durchgang starten" wählt **nach Zustand, nicht per Zufall** (Nachzug 27.11.2026,
+Lern-Review Aromatraining; vorher: etwa jeder vierte Durchgang ab drei Paaren): ein
+Kontrastdurchgang, sobald ein Verwechslungspaar über der Schwelle **gerade wieder dran**
+ist — noch nie im Kontrast gewesen, seit dem letzten Kontrast in einem normalen Durchgang
+wieder verwechselt, oder der letzte Kontrast endete vertauscht. Ein Paar, dessen letzter
+Kontrast gelang, wartet, bis es sich wieder zeigt. **Nie zwei Kontraste hintereinander**:
+war der zuletzt abgeschlossene Durchgang einer, folgt ein normaler (Reverse zählt dabei
+nicht). Frische Paare stehen im Durchgang vorn. Bewusst eine Regel statt eines lernenden
+Verfahrens — bei einem Menschen und etwa einem Durchgang am Tag fehlen die Daten dafür, und
+eine Regel ist nachvollziehbar. Die Vorschlagskarte für eine belegte Verwechslung bleibt
+und startet ebenfalls alle verfügbaren Paare.
 
 **Ein Paar bewegt keine Box.** Bei zwei Antwortmöglichkeiten liegt Raten zur Hälfte
 richtig; ein Treffer schöbe sonst bei jedem zweiten Versuch beide Boxen hoch, auch für ein
@@ -1087,6 +1095,15 @@ Merkhilfe; der Ende-Screen die gerochenen Aromen mit Nummer im Deckel-Kreis.
 **Reverse** — ungescort, kein Einfluss auf die Boxen: die App zeigt einen Namen, du
 suchst das Fläschchen selbst und schätzt danach „getroffen / daneben" ein. Stärkt die
 Verknüpfung in Gegenrichtung.
+
+**Frei riechen** (Nachzug 27.11.2026) — ein Aroma nach Name oder Nummer suchen und mit
+offenem Datenblatt riechen, außerhalb jeder Abfrage. **Ohne jede Wirkung auf den
+Lernplan**, ausdrücklich entschieden: kein Ausschluss aus dem nächsten Übungsdurchgang
+(der verriete den Kandidatenkreis — was heute fehlt, kann es nicht sein) und keine
+gedämpfte Wertung eines späteren Treffers. Festgehalten wird es trotzdem, in einer eigenen
+Sammlung `riechprotokoll` außerhalb der Antworten, damit sich später mit den eigenen Daten
+prüfen lässt, ob frei Gerochenes besser sitzt. Kein Zähler, keine Riechpause — die
+Pause-Ausnahme gilt nur zwischen zwei Fläschchen eines Übungsdurchgangs.
 
 Verwandte Noten aus dem Datenblatt erscheinen **immer erst nach der Auflösung** — vorher
 wären sie ein Rateschema, danach festigen sie das assoziative Netz.

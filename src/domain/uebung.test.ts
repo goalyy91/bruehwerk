@@ -12,6 +12,8 @@ import {
   werteKontrastAus,
   kontrastpaare,
   waehleDurchgangsart,
+  frischeVerwechslungspaare,
+  type AntwortSpur,
   kontrastNachriechenAngebracht,
   KONTRAST_PAARE_MAX,
   KONTRASTDURCHGANG_SCHWELLE,
@@ -650,13 +652,75 @@ describe('kontrastpaare — Rangfolge, jedes Aroma hoechstens einmal', () => {
   });
 });
 
-describe('waehleDurchgangsart — etwa jeder vierte, nur ab drei Paaren', () => {
-  it('unter drei Paaren immer normal', () => {
-    expect(waehleDurchgangsart(2, () => 0)).toBe('normal');
+describe('waehleDurchgangsart — nach Zustand, nie zwei Kontraste hintereinander', () => {
+  it('ohne frisches Paar normal', () => {
+    expect(waehleDurchgangsart(0, undefined)).toBe('normal');
+    expect(waehleDurchgangsart(0, 'normal')).toBe('normal');
   });
-  it('ab drei Paaren: Kontrast bei Zufall unter 25 %', () => {
-    expect(waehleDurchgangsart(3, () => 0.24)).toBe('kontrast');
-    expect(waehleDurchgangsart(3, () => 0.25)).toBe('normal');
+  it('mit frischem Paar Kontrast', () => {
+    expect(waehleDurchgangsart(1, 'normal')).toBe('kontrast');
+    expect(waehleDurchgangsart(1, undefined)).toBe('kontrast');
+  });
+  it('nach einem Kontrast immer normal', () => {
+    expect(waehleDurchgangsart(4, 'kontrast')).toBe('normal');
+  });
+});
+
+describe('frischeVerwechslungspaare — welche Paare gerade wieder dran sind', () => {
+  const PAAR = { aId: 'a', bId: 'b', anzahl: 3 };
+  const verwechselt = (ts: number, aromaId = 'a', getipptId = 'b'): AntwortSpur => ({ aromaId, getipptId, form: 'freierAbruf', ergebnis: 'falsch', zeitstempel: ts, durchgangId: 'n' + ts });
+  const kontrast = (ts: number, ergebnis: 'richtig' | 'falsch'): AntwortSpur[] => [
+    { aromaId: 'a', form: 'kontrast', ergebnis, zeitstempel: ts, durchgangId: 'k' + ts },
+    { aromaId: 'b', form: 'kontrast', ergebnis, zeitstempel: ts, durchgangId: 'k' + ts },
+  ];
+
+  it('nie im Kontrast gewesen: frisch (auch ohne Protokoll, Altbestand)', () => {
+    expect(frischeVerwechslungspaare([PAAR], [])).toEqual([PAAR]);
+  });
+  it('letzter Kontrast gelungen, seither nicht verwechselt: wartet', () => {
+    expect(frischeVerwechslungspaare([PAAR], [verwechselt(1), ...kontrast(2, 'richtig')])).toEqual([]);
+  });
+  it('nach gelungenem Kontrast wieder verwechselt — in beide Richtungen: frisch', () => {
+    expect(frischeVerwechslungspaare([PAAR], [...kontrast(2, 'richtig'), verwechselt(3)])).toEqual([PAAR]);
+    expect(frischeVerwechslungspaare([PAAR], [...kontrast(2, 'richtig'), verwechselt(3, 'b', 'a')])).toEqual([PAAR]);
+  });
+  it('letzter Kontrast vertauscht: frisch', () => {
+    expect(frischeVerwechslungspaare([PAAR], [...kontrast(1, 'richtig'), ...kontrast(2, 'falsch')])).toEqual([PAAR]);
+  });
+  it('zählt nur den jüngsten Kontrast', () => {
+    expect(frischeVerwechslungspaare([PAAR], [...kontrast(1, 'falsch'), ...kontrast(2, 'richtig')])).toEqual([]);
+  });
+  it('Kontrast eines anderen Paares und eine Einzelantwort ohne Ergebnis zählen nicht', () => {
+    const fremd: AntwortSpur[] = [
+      { aromaId: 'a', form: 'kontrast', ergebnis: 'richtig', zeitstempel: 2, durchgangId: 'k' },
+      { aromaId: 'c', form: 'kontrast', ergebnis: 'richtig', zeitstempel: 2, durchgangId: 'k' },
+      { aromaId: 'b', form: 'kontrast', zeitstempel: 3, durchgangId: 'k2' },
+    ];
+    expect(frischeVerwechslungspaare([PAAR], fremd)).toEqual([PAAR]);
+  });
+  it('Reverse ist keine Verwechslung', () => {
+    const rev: AntwortSpur = { aromaId: 'a', getipptId: 'b', form: 'reverse', ergebnis: 'falsch', zeitstempel: 3, durchgangId: 'r' };
+    expect(frischeVerwechslungspaare([PAAR], [...kontrast(2, 'richtig'), rev])).toEqual([]);
+  });
+});
+
+describe('kontrastpaare — frische Paare zuerst', () => {
+  const opt = (id: string): AromaOption => ({ id, label: id, kategorieId: 'k' });
+  const EINGEFUEHRT = { benennen: { versuche: 3, treffer: 2 } };
+  it('ein frisches, seltener verwechseltes Paar verdrängt häufigere', () => {
+    const ids = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'x', 'y'];
+    const alle = ids.map((id) => opt(id));
+    const staende = new Map<string, GesamtStand>(ids.map((id) => [id, STAND({ ...EINGEFUEHRT })]));
+    const setze = (a: string, b: string, n: number) => staende.set(a, STAND({ ...EINGEFUEHRT, verwechslungen: { [b]: n } }));
+    setze('a', 'b', 9);
+    setze('c', 'd', 8);
+    setze('e', 'f', 7);
+    setze('g', 'h', 6);
+    setze('x', 'y', 3);
+    const ohne = kontrastpaare(alle, staende, JETZT, () => 0.5, 4);
+    expect(ohne.some((p) => p.aId === 'x')).toBe(false);
+    const mit = kontrastpaare(alle, staende, JETZT, () => 0.5, 4, [{ aId: 'x', bId: 'y', anzahl: 3 }]);
+    expect(mit[0]).toMatchObject({ aId: 'x', bId: 'y' });
   });
 });
 

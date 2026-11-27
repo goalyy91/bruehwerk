@@ -36,6 +36,7 @@ import {
   Uebung,
   Uebungsantwort,
   Uebungsdurchgang,
+  Riechprotokoll,
 } from './schema';
 import { aenderungMelden } from './aenderung';
 
@@ -68,6 +69,7 @@ export const SCHEMA_FUER: { [S in Sammlung]: ZodType<SammlungWert[S]> } = {
   uebung: Uebung,
   uebungsantwort: Uebungsantwort,
   uebungsdurchgang: Uebungsdurchgang,
+  riechprotokoll: Riechprotokoll,
 };
 
 export class SchreibFehler extends Error {

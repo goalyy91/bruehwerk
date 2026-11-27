@@ -30,6 +30,7 @@ import type {
   Uebung,
   Uebungsantwort,
   Uebungsdurchgang,
+  Riechprotokoll,
 } from './schema';
 // Nur der Typ — zur Laufzeit bleibt db.ts abhaengigkeitsfrei, sonst gaebe
 // es einen Kreis (schnappschuss.ts -> export.ts -> db.ts).
@@ -42,12 +43,13 @@ const DB_NAME = 'bruehwerk';
  * Store 'uebung' (Paket 05, Uebungsmodus), Version 5 den Store
  * 'schnappschuss' (2026-09-08, Sicherung vor jeder Aktualisierung), Version 6
  * die Stores 'uebungsantwort' und 'uebungsdurchgang' (Aromapaket Etappe 6,
- * Neubau des Übungsmodus nach Lastenheft). upgrade() legt Stores deshalb nur
+ * Neubau des Übungsmodus nach Lastenheft), Version 7 den Store
+ * 'riechprotokoll' (27.11.2026, frei riechen). upgrade() legt Stores deshalb nur
  * noch an, wenn sie fehlen — sonst wuerde ein Versionssprung auf einer
  * bereits bestehenden DB an einem erneuten createObjectStore() fuer 'setup'
  * etc. krachen.
  */
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 /**
  * Der Store-Katalog steht als eine Konstante da, nicht verstreut — Paket 03
@@ -78,6 +80,7 @@ export const SAMMLUNGEN = [
   'uebung',
   'uebungsantwort',
   'uebungsdurchgang',
+  'riechprotokoll',
 ] as const;
 export type Sammlung = (typeof SAMMLUNGEN)[number];
 
@@ -124,6 +127,7 @@ export interface BruehwerkSchema extends DBSchema {
   uebung: { key: string; value: Uebung; indexes: { 'by-set': string } };
   uebungsantwort: { key: string; value: Uebungsantwort; indexes: { 'by-durchgang': string; 'by-set': string } };
   uebungsdurchgang: { key: string; value: Uebungsdurchgang; indexes: { 'by-set': string } };
+  riechprotokoll: { key: string; value: Riechprotokoll; indexes: { 'by-set': string } };
   schnappschuss: { key: string; value: Schnappschuss; indexes: { 'by-ts': number } };
 }
 
@@ -217,6 +221,11 @@ export function oeffneDB(name: string = DB_NAME): Promise<BruehwerkDB> {
         if (!hat('uebungsdurchgang')) {
           const uebungsdurchgang = db.createObjectStore('uebungsdurchgang', { keyPath: 'id' });
           uebungsdurchgang.createIndex('by-set', 'setId');
+        }
+
+        if (!hat('riechprotokoll')) {
+          const riechprotokoll = db.createObjectStore('riechprotokoll', { keyPath: 'id' });
+          riechprotokoll.createIndex('by-set', 'setId');
         }
 
         if (!hat('schnappschuss')) {

@@ -33,6 +33,23 @@ describe('export/import — Rundlauf', () => {
     expect(bruehgeraete).toEqual([BRUEHGERAET_MOZZAFIATO]);
   });
 
+  it('Riechprotokoll läuft mit, und ein älteres Backup ohne diese Sammlung lässt sich weiter einlesen (27.11.2026)', async () => {
+    const eintrag = { id: 'r1', setId: 's1', aromaId: 'a1', zeitstempel: 1_700_000_000_000 };
+    await schreiben('riechprotokoll', eintrag);
+    const datei = await exportiere();
+    expect(datei.sammlungen.riechprotokoll).toEqual([eintrag]);
+
+    await _datenbankZuruecksetzen();
+    await importiere(datei);
+    expect(await alle('riechprotokoll')).toEqual([eintrag]);
+
+    const { riechprotokoll: _weg, ...aelter } = datei.sammlungen;
+    await _datenbankZuruecksetzen();
+    await schreiben('muehle', MUEHLE_K6);
+    await importiere({ ...datei, sammlungen: aelter as typeof datei.sammlungen });
+    expect(await alle('riechprotokoll')).toEqual([]);
+  });
+
   it('ein Backup mit einem kaputten Datensatz wird komplett abgelehnt — nichts wird geschrieben', async () => {
     const datei = await exportiere();
     const kaputterBestand = {
