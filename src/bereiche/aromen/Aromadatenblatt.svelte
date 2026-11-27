@@ -145,7 +145,16 @@
     color: var(--gedaempft);
     margin: 0 0 var(--r2);
   }
+  /* Versalien in Sans — ausdrücklich gewählt (27.11.2026), nicht mehr nur von
+     der globalen h2-Regel geerbt. Lange Einzelwörter ("KAFFEEFRUCHTFLEISCH")
+     liefen sonst unter den Nummernkreis: deutsche Silbentrennung über
+     lang="de" (index.html), break-word als Netz, falls der Browser kein
+     Trennwörterbuch hat. */
   .name {
+    font-family: var(--schrift-sans);
+    text-transform: uppercase;
+    hyphens: auto;
+    overflow-wrap: break-word;
     font-size: var(--fs-blattitel);
     font-weight: var(--gw-titel);
     line-height: 1.12;
