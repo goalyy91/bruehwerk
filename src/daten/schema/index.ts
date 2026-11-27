@@ -14,3 +14,4 @@ export * from './einstellungen';
 export * from './uebung';
 export * from './uebungsantwort';
 export * from './uebungsdurchgang';
+export * from './riechprotokoll';

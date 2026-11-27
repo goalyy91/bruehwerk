@@ -339,6 +339,13 @@ die Rückfrage „Stimmt die Nummer?“ aus — „andere Nummer“ oder „stim
 Sonst bewegt ein Tippfehler die Box eines falschen Aromas oder führt es unter
 falschem Namen ein.
 
+**Kontrast nach Zustand, nicht per Zufall** (Nachzug 27.11.2026,
+`frischeVerwechslungspaare`, `waehleDurchgangsart`): „durchgang starten" wird
+ein Kontrastdurchgang, sobald ein Verwechslungspaar wieder dran ist — nie zwei
+hintereinander. **Frei riechen** (Sammlung `riechprotokoll`) wirkt bewusst
+auf nichts: ein Ausschluss aus dem nächsten Durchgang verriete den
+Kandidatenkreis.
+
 **Leitner mit fünf Boxen, Intervalle fix — nicht an die Trainingshäufigkeit
 angepasst:**
 

@@ -21,9 +21,10 @@
  *     Leitner-Bewegung, nachdem die Nummer feststeht.
  *  4. Verwechslungspaare (verwechslungspaare) — welche Aromen sich ein
  *     Kontrastdurchgang vornehmen darf (Aromapaket, Etappe 7).
- *  5. Kontrastdurchgang (kontrastpaare, waehleDurchgangsart,
- *     werteKontrastAus) — bis zu vier Paare, eine Zuordnungsfrage je Paar,
- *     gewertet am Verwechslungszähler statt an der Box.
+ *  5. Kontrastdurchgang (kontrastpaare, frischeVerwechslungspaare,
+ *     waehleDurchgangsart, werteKontrastAus) — bis zu vier Paare, eine
+ *     Zuordnungsfrage je Paar, gewertet am Verwechslungszähler statt an der
+ *     Box; ausgelöst nach Zustand, nicht per Zufall.
  */
 import type { Uebungsart, UebungStufe } from '../daten/schema/uebung';
 import { UEBUNGSARTEN } from '../daten/schema/uebung';
@@ -684,11 +685,8 @@ export function verwechslungspaare(staende: ReadonlyMap<string, GesamtStand>): r
 
 /** Höchstens so viele Paare je Kontrastdurchgang — 8 Riechvorgänge, Rest der Riechgrenze fürs Nachriechen. */
 export const KONTRAST_PAARE_MAX = 4;
-/** Ab so vielen verfügbaren Paaren darf die App einen Kontrastdurchgang von sich aus wählen. */
-export const KONTRAST_PAARE_MIN_ZUFALL = 3;
-/** Anteil der Durchgänge, die die App als Kontrast wählt, wenn genug Paare da sind. */
-export const KONTRAST_ANTEIL = 0.25;
 
+const paarSchluessel = (a: string, b: string) => [a, b].sort().join('|');
 export interface Kontrastpaar {
   readonly aId: string;
   readonly bId: string;
@@ -713,12 +711,22 @@ export function kontrastpaare(
   jetzt: number,
   zufall: () => number = Math.random,
   max: number = KONTRAST_PAARE_MAX,
+  /**
+   * Frische Paare (frischeVerwechslungspaare) kommen zuerst — sonst könnte
+   * genau das Paar, das den Durchgang ausgelöst hat, hinter vier älteren,
+   * häufigeren Paaren zurückbleiben.
+   */
+  vorrang: readonly Verwechslungspaar[] = [],
 ): readonly Kontrastpaar[] {
   const zustand = (id: string) => effektiverZustand(staende.get(id), jetzt);
   const bekannt = new Set(alleAromen.map((a) => a.id));
   const kandidaten: Kontrastpaar[] = [];
 
-  for (const p of verwechslungspaare(staende)) {
+  const frisch = new Set(vorrang.map((p) => paarSchluessel(p.aId, p.bId)));
+  const nachVorrang = [...verwechslungspaare(staende)].sort(
+    (x, y) => Number(frisch.has(paarSchluessel(y.aId, y.bId))) - Number(frisch.has(paarSchluessel(x.aId, x.bId))),
+  );
+  for (const p of nachVorrang) {
     if (bekannt.has(p.aId) && bekannt.has(p.bId)) kandidaten.push({ aId: p.aId, bId: p.bId, quelle: 'verwechslung' });
   }
 
@@ -771,12 +779,88 @@ export function kontrastpaare(
 }
 
 /**
- * Welche Art Durchgang "durchgang starten" beginnt: etwa jeder vierte wird
- * ein Kontrastdurchgang, aber nur, wenn mindestens drei Paare da sind —
- * sonst wäre er zu kurz, um die Riechvorbereitung zu lohnen.
+ * Was eine Antwort für die Frage "ist dieses Paar gerade wieder dran?"
+ * hergibt — ein Ausschnitt von `daten/schema/uebungsantwort.ts`, damit die
+ * Domäne das Schema nicht importieren muss.
  */
-export function waehleDurchgangsart(verfuegbarePaare: number, zufall: () => number = Math.random): 'normal' | 'kontrast' {
-  return verfuegbarePaare >= KONTRAST_PAARE_MIN_ZUFALL && zufall() < KONTRAST_ANTEIL ? 'kontrast' : 'normal';
+export interface AntwortSpur {
+  readonly aromaId: string;
+  readonly getipptId?: string;
+  readonly form: string;
+  readonly ergebnis?: Uebungsergebnis;
+  readonly zeitstempel: number;
+  readonly durchgangId: string;
+}
+
+/**
+ * Die Verwechslungspaare, die **gerade wieder dran** sind (Nachzug
+ * 27.11.2026, Lern-Review: Kontrast nach Zustand statt nach Zufall). Ein
+ * Paar über der Schwelle ist frisch, wenn
+ *
+ * - es noch nie in einem Kontrastdurchgang war (auch: Verwechslungen aus
+ *   einem Altbestand ohne Antwortprotokoll), oder
+ * - es in einem normalen Übungsdurchgang **nach** seinem letzten Kontrast
+ *   wieder verwechselt wurde, oder
+ * - sein letzter Kontrast "vertauscht" endete — das Paar sitzt noch nicht,
+ *   und Unterscheiden mit Rückmeldung ist genau das, was es braucht.
+ *
+ * Ein Paar, dessen letzter Kontrast gelang und das seither nicht wieder
+ * verwechselt wurde, wartet — es kommt erst zurück, wenn es sich wieder
+ * zeigt. Gelingt es oft genug, fällt es ohnehin unter die Schwelle
+ * (werteKontrastAus).
+ *
+ * Ein Kontrastpaar erkennt man im Protokoll an zwei Kontrastantworten
+ * desselben Durchgangs mit demselben Zeitstempel (beide schreibt
+ * kontrastAufloesen in einem Zug). Eine Einzelantwort ohne Ergebnis (falsche
+ * Nummer beim Bereitlegen) war keine Zuordnung und zählt nicht.
+ */
+export function frischeVerwechslungspaare(paare: readonly Verwechslungspaar[], antworten: readonly AntwortSpur[]): readonly Verwechslungspaar[] {
+  const letzteVerwechslung = new Map<string, number>();
+  const kontrastGruppen = new Map<string, AntwortSpur[]>();
+  for (const a of antworten) {
+    if (a.form === 'kontrast') {
+      if (a.ergebnis === undefined) continue;
+      const k = `${a.durchgangId}|${a.zeitstempel}`;
+      kontrastGruppen.set(k, [...(kontrastGruppen.get(k) ?? []), a]);
+    } else if (a.form !== 'reverse' && a.getipptId !== undefined && a.getipptId !== a.aromaId) {
+      const k = paarSchluessel(a.aromaId, a.getipptId);
+      letzteVerwechslung.set(k, Math.max(letzteVerwechslung.get(k) ?? 0, a.zeitstempel));
+    }
+  }
+  const letzterKontrast = new Map<string, { zeitstempel: number; ergebnis: Uebungsergebnis }>();
+  for (const gruppe of kontrastGruppen.values()) {
+    if (gruppe.length !== 2) continue;
+    const [x, y] = gruppe as [AntwortSpur, AntwortSpur];
+    const k = paarSchluessel(x.aromaId, y.aromaId);
+    const bisher = letzterKontrast.get(k);
+    if (!bisher || x.zeitstempel > bisher.zeitstempel) letzterKontrast.set(k, { zeitstempel: x.zeitstempel, ergebnis: x.ergebnis! });
+  }
+  return paare.filter((p) => {
+    const k = paarSchluessel(p.aId, p.bId);
+    const kontrast = letzterKontrast.get(k);
+    if (!kontrast) return true;
+    if (kontrast.ergebnis !== 'richtig') return true;
+    return (letzteVerwechslung.get(k) ?? 0) > kontrast.zeitstempel;
+  });
+}
+
+/**
+ * Welche Art Durchgang "durchgang starten" beginnt (Nachzug 27.11.2026,
+ * ersetzt "etwa jeder vierte, per Zufall"): ein Kontrastdurchgang, sobald
+ * mindestens ein Verwechslungspaar frisch ist (frischeVerwechslungspaare) —
+ * aber **nie zwei hintereinander**. War der zuletzt abgeschlossene
+ * Durchgang ein Kontrast, folgt ein normaler; sonst verdrängte ein Paar,
+ * das nicht gelingen will, das Abrufen aller übrigen Aromen. Reverse zählt
+ * dabei nicht mit: es ist ein freiwilliger Nebenweg, kein Durchgang im
+ * Wechsel.
+ *
+ * Bewusst eine Regel und kein Zufall und kein lernendes Verfahren: bei
+ * einem Menschen und etwa einem Durchgang am Tag fehlen die Daten für mehr,
+ * und eine Regel lässt sich nachvollziehen (Lern-Review 27.11.2026).
+ */
+export function waehleDurchgangsart(frischePaare: number, letzteArt: 'normal' | 'kontrast' | undefined): 'normal' | 'kontrast' {
+  if (letzteArt === 'kontrast') return 'normal';
+  return frischePaare > 0 ? 'kontrast' : 'normal';
 }
 
 export interface KontrastAuswertung {

@@ -9,7 +9,7 @@
    * Übersicht (Rückmeldung 08.11.2026, "Reverse üben" tat scheinbar nichts).
    * Wird beim ersten Lesen verbraucht.
    */
-  let angeforderteAktivitaet: 'reverse' | undefined;
+  let angeforderteAktivitaet: 'reverse' | 'frei' | undefined;
 </script>
 
 <script lang="ts">
@@ -58,8 +58,9 @@
   // Dokument dieses Umbaus). Eine einzige Zuordnungsfrage danach, nicht zwei
   // Einzelfragen — die zweite wäre nach der ersten durch Ausschluss geschenkt.
   // Seit Etappe 3 des Lern-Nachzugs: bis zu vier Paare je Durchgang, jedes
-  // Paar für sich verdeckt; "durchgang starten" wählt in etwa jedem vierten
-  // Fall selbst einen Kontrastdurchgang (domain/uebung.ts::waehleDurchgangsart).
+  // Paar für sich verdeckt; "durchgang starten" wählt selbst einen
+  // Kontrastdurchgang, sobald ein Verwechslungspaar wieder dran ist — nie zwei
+  // hintereinander (Nachzug 27.11.2026, domain/uebung.ts::waehleDurchgangsart).
   // Ein Paar bewegt keine Box, nur den Verwechslungszähler.
   //
   // Reverse — ungescort, ohne jede Wirkung auf Box/Fälligkeit: kein Aufruf
@@ -88,6 +89,7 @@
     werteKontrastAus,
     kontrastpaare,
     waehleDurchgangsart,
+    frischeVerwechslungspaare,
     kontrastNachriechenAngebracht,
     type Kontrastpaar,
     reverseVorschlag,
@@ -199,6 +201,9 @@
   // neues Aroma ließe sich nicht mehr blind beschreiben.
   const nummernOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `Nr. ${a.nummer}` })));
   const namenOptionen = $derived(alleAromen.map((a) => ({ wert: a.id, label: a.label })));
+  // Frei riechen: Nummer und Name offen — hier wird nichts abgefragt, also
+  // auch nichts verraten. Suchbar nach beidem.
+  const freiOptionen = $derived(alleNachNummer.map((a) => ({ wert: a.id, label: `${a.nummer} · ${a.label}` })));
 
   // ---- Übersicht: Kennzahl-Kacheln statt roher Boxenliste --------------
   // (Livebetrieb-Rückmeldung: "Boxen ohne Namen" sagen niemandem etwas, der
@@ -327,7 +332,7 @@
   // 'uebung'), keine Phase mehr. Startwert ohne Bedeutung: gerendert wird
   // er erst, sobald `aktiv` wahr ist, und dann setzt genau der Weg dorthin
   // (Start-Funktion oder versucheWiederaufnahme()) ihn ohnehin neu.
-  type Phase = 'bereitlegen' | 'item' | 'kontrast' | 'reverse' | 'ende';
+  type Phase = 'bereitlegen' | 'item' | 'kontrast' | 'reverse' | 'frei' | 'ende';
   let phase = $state<Phase>('bereitlegen');
   let durchgang = $state<SammlungWert['uebungsdurchgang'] | undefined>(undefined);
   let index = $state(0);
@@ -354,12 +359,23 @@
 
   async function durchgangStarten() {
     if (!set) return;
-    // Etwa jeder vierte Durchgang wird ein Kontrastdurchgang, sobald drei
-    // Paare da sind (domain/uebung.ts::waehleDurchgangsart).
-    const paare = kontrastpaare(alleAromen, bekannteStaende, Date.now());
-    if (waehleDurchgangsart(paare.length) === 'kontrast') {
-      await kontrastdurchgangStarten(paare);
-      return;
+    // Kontrast nach Zustand (Nachzug 27.11.2026): sobald ein Verwechslungs-
+    // paar wieder dran ist, nie zwei Kontraste hintereinander
+    // (domain/uebung.ts::frischeVerwechslungspaare, waehleDurchgangsart).
+    const frisch = frischeVerwechslungspaare(
+      verwechslungspaare(bekannteStaende),
+      bestand.uebungsantworten.filter((a) => a.setId === set!.id),
+    );
+    const letzter = bestand.uebungsdurchgaenge
+      .filter((d) => d.setId === set!.id && d.status === 'abgeschlossen' && d.art !== 'reverse')
+      .sort((x, y) => (y.abgeschlossenAm ?? y.begonnenAm) - (x.abgeschlossenAm ?? x.begonnenAm))[0];
+    const letzteArt = letzter?.art === 'kontrast' ? 'kontrast' : letzter ? 'normal' : undefined;
+    if (waehleDurchgangsart(frisch.length, letzteArt) === 'kontrast') {
+      const paare = kontrastpaare(alleAromen, bekannteStaende, Date.now(), Math.random, undefined, frisch);
+      if (paare.length > 0) {
+        await kontrastdurchgangStarten(paare);
+        return;
+      }
     }
     await alteLaufendeDurchgaengeAufraeumen();
     const jetzt = Date.now();
@@ -1238,6 +1254,33 @@
     zurueckZurUebersicht();
   }
 
+  // ---- Frei riechen (Nachzug 27.11.2026, Lern-Review Aromatraining) --------
+  // Ein Aroma suchen und mit Namen riechen, außerhalb jeder Abfrage. Ohne
+  // jede Wirkung auf den Lernplan (ausdrückliche Entscheidung, siehe
+  // daten/schema/riechprotokoll.ts): kein Durchgang, keine Antwort, kein
+  // Schreiben in `uebung`. Protokolliert wird beim Öffnen des Datenblatts —
+  // wer hier ein Aroma wählt, will es riechen; ein eigener "gerochen"-Knopf
+  // wäre ein Tap ohne Information. Querverweise im Datenblatt werden nicht
+  // protokolliert: dorthin führt Lesen, nicht die Wahl, es zu riechen.
+
+  function freiRiechen() {
+    phase = 'frei';
+    angeforderteAktivitaet = 'frei';
+    navigation.gehe({ name: 'uebungLaufend' });
+  }
+
+  async function freiGewaehlt(aromaId: string) {
+    const option = alleAromen.find((a) => a.id === aromaId);
+    if (!set || !option || option.nummer === undefined) return;
+    try {
+      await schreiben('riechprotokoll', { id: neueId(), setId: set.id, aromaId, zeitstempel: Date.now() });
+    } catch (e) {
+      // Das Protokoll ist Beiwerk — das Datenblatt öffnet trotzdem.
+      fehler = e instanceof Error ? e.message : String(e);
+    }
+    datenblatt = datenblattZu(option.nummer);
+  }
+
   /** Übersicht → Reverse: Aromawahl zurücksetzen, kein Durchgang bis zur Bestätigung. */
   function reverseUeben() {
     reverseSchritt = 'wahl';
@@ -1294,6 +1337,12 @@
     );
     const angefordert = angeforderteAktivitaet;
     angeforderteAktivitaet = undefined;
+    // Frei riechen gehört zu keinem Durchgang — auch ein noch offener
+    // bleibt unberührt liegen und wird beim nächsten Start wieder gefunden.
+    if (angefordert === 'frei') {
+      phase = 'frei';
+      return;
+    }
     if (!laufender && angefordert === 'reverse') {
       reverseSchritt = 'wahl';
       reverseAromaId = '';
@@ -1512,6 +1561,7 @@
         </div>
       {/if}
       <Blattzeile label="Reverse üben" meta="ein Aroma nennen, suchen, riechen" onKlick={reverseUeben} />
+      <Blattzeile label="Frei riechen" meta="ein Aroma suchen und riechen, ohne Abfrage" onKlick={freiRiechen} />
     </Blattliste>
 
     <!-- Statistik als eigenständiger Eintrag, abgesetzt von den Übungen. -->
@@ -1843,6 +1893,13 @@
           <Knopf stufe="sekundaer" onKlick={zurStatistik}>zur Statistik</Knopf>
         </div>
       {/if}
+    </div>
+    {#if fehler}<p class="fehler">{fehler}</p>{/if}
+  {:else if phase === 'frei'}
+    <div class="frage-block">
+      <p class="frage-satz">Welches Aroma willst du riechen?</p>
+      <AuswahlListe optionen={freiOptionen} wert="" onWahl={freiGewaehlt} platzhalter="Aroma oder Nummer suchen …" suchbar />
+      <p class="hinweis">Ohne Abfrage — an deinem Lernplan ändert das nichts.</p>
     </div>
     {#if fehler}<p class="fehler">{fehler}</p>{/if}
   {:else if phase === 'ende'}
